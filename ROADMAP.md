@@ -7,10 +7,10 @@ usable before the next begins.
 
 ---
 
-## v0.1.0 — OpenCode Baseline
+## v0.1.0 — OpenCode + Claude Baseline
 
-**Goal:** A functional preset for OpenCode + Spring Boot Kotlin. Manual install.
-No CLI.
+**Goal:** Functional presets for OpenCode and Claude Code + Spring Boot Kotlin.
+Manual install. No CLI.
 
 - [x] Repository structure
 - [x] README
@@ -22,17 +22,18 @@ No CLI.
 - [x] docs/agent-scorecard.md
 - [x] docs/prompt-versioning.md
 - [x] OpenCode preset (`presets/opencode/`)
+- [x] Claude Code preset (`presets/claude/`)
 - [x] 8 core Conductor Agents (orchestrator, task-coach, architect, implementer,
       tester, reviewer, docs, repo-explorer)
-- [x] Commands: feature, fix, refactor, review, test-plan
+- [x] Commands: feature, fix, refactor, review, test-plan (both targets)
 - [x] Skills: spring-boot-kotlin, api-versioning, jpa-postgres, testing-strategy
 - [x] Routing Policy v0.1.0
 - [x] Task Card template
 - [x] Scorecard template
 - [x] End-to-end example (Spring Boot Kotlin)
+- [x] Manual install guides (OpenCode + Claude Code)
 
-**Does not include:** CLI, multi-provider support, automated evaluation,
-dashboard.
+**Does not include:** CLI, automated evaluation, dashboard.
 
 ---
 
@@ -76,12 +77,13 @@ dashboard.
 **Goal:** Generate Claude-compatible configuration from the same CodeConductor
 contract.
 
-- [ ] Claude target renderer
-- [ ] `CLAUDE.md` generation
-- [ ] `.claude/skills/` generation
-- [ ] `codeconductor sync claude` command
-- [ ] Provider compatibility matrix (OpenCode vs Claude)
-- [ ] Migration guide from OpenCode preset to Claude preset
+- [x] Claude target renderer (`presets/claude/` — manual, shipped in v0.1.0)
+- [x] `CLAUDE.md` generation — agent contracts + routing policy embedded
+- [x] `.claude/skills/` generation — 4 skills, tool-agnostic content
+- [x] Manual install guide (`docs/guides/manual-install-claude.md`)
+- [ ] `codeconductor sync claude` command (CLI — deferred to v0.2.0+)
+- [ ] Provider compatibility matrix (OpenCode vs Claude) — formal doc
+- [ ] `codeconductor update --target claude` command
 
 ---
 

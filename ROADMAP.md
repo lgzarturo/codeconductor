@@ -12,24 +12,24 @@ usable before the next begins.
 **Goal:** A functional preset for OpenCode + Spring Boot Kotlin. Manual install.
 No CLI.
 
-- [ ] Repository structure
-- [ ] README
-- [ ] AGENTS.md base
-- [ ] docs/philosophy.md
-- [ ] docs/architecture.md
-- [ ] docs/routing-policy.md
-- [ ] docs/task-card-template.md
-- [ ] docs/agent-scorecard.md
-- [ ] docs/prompt-versioning.md
-- [ ] OpenCode preset (`presets/opencode/`)
-- [ ] 8 core Conductor Agents (orchestrator, task-coach, architect, implementer,
+- [x] Repository structure
+- [x] README
+- [x] AGENTS.md base
+- [x] docs/philosophy.md
+- [x] docs/architecture.md
+- [x] docs/routing-policy.md
+- [x] docs/task-card-template.md
+- [x] docs/agent-scorecard.md
+- [x] docs/prompt-versioning.md
+- [x] OpenCode preset (`presets/opencode/`)
+- [x] 8 core Conductor Agents (orchestrator, task-coach, architect, implementer,
       tester, reviewer, docs, repo-explorer)
-- [ ] Commands: feature, fix, refactor, review, test-plan
-- [ ] Skills: spring-boot-kotlin, api-versioning, jpa-postgres, testing-strategy
-- [ ] Routing Policy v0.1.0
-- [ ] Task Card template
-- [ ] Scorecard template
-- [ ] End-to-end example (Spring Boot Kotlin)
+- [x] Commands: feature, fix, refactor, review, test-plan
+- [x] Skills: spring-boot-kotlin, api-versioning, jpa-postgres, testing-strategy
+- [x] Routing Policy v0.1.0
+- [x] Task Card template
+- [x] Scorecard template
+- [x] End-to-end example (Spring Boot Kotlin)
 
 **Does not include:** CLI, multi-provider support, automated evaluation,
 dashboard.

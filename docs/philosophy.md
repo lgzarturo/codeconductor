@@ -25,7 +25,7 @@ CodeConductor provides that system.
 
 It does not make the model smarter. It makes the workflow reproducible.
 
-```
+```text
 Most teams prompt.
 CodeConductor orchestrates.
 ```
@@ -106,9 +106,9 @@ That is designing an abstraction for requirements you have not yet measured. The
 result is a framework built around hypothetical use cases that serves no real
 workflow well.
 
-CodeConductor starts with one target (OpenCode), one stack (Spring Boot Kotlin),
-and one complete end-to-end workflow. That workflow must be proven to work in a
-real project before anything else is added.
+CodeConductor starts with one target (OpenCode, Claude), one stack (Spring
+Boot+Kotlin), and one complete end-to-end workflow. That workflow must be proven
+to work in a real project before anything else is added.
 
 First: a preset that works. Then: a CLI that installs it. Then: a second stack.
 Then: a second provider.

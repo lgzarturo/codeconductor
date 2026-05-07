@@ -30,6 +30,14 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - 5 commands: feature, fix, refactor, review, test-plan
   - Versioned Agent Contracts under `prompts/v0.1.0/`
   - 4 Skills: spring-boot-kotlin, api-versioning, jpa-postgres, testing-strategy
+- Claude Code preset (`presets/claude/`) with:
+  - `CLAUDE.md` — all 8 Conductor Agent role contracts embedded, routing policy, skill activation rules
+  - `settings.json` — permission allowlist and denylist in Claude Code format
+  - 5 commands: feature, fix, refactor, review, test-plan (adapted — role adoption instead of `@agent` invocation)
+  - 4 Skills: spring-boot-kotlin, api-versioning, jpa-postgres, testing-strategy (identical to OpenCode)
+- Installation guides:
+  - `docs/guides/manual-install-opencode.md` — step-by-step install for OpenCode target
+  - `docs/guides/manual-install-claude.md` — step-by-step install for Claude Code target
 - End-to-end example: Spring Boot Kotlin feature workflow
 - `policy.yml` — sandboxed agent execution policy
 - `CONTRIBUTING.md` with vocabulary enforcement and contribution requirements
@@ -38,9 +46,12 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Design Decisions
 
-- OpenCode is the only supported target for v0.1.0
+- Two targets shipped in v0.1.0: OpenCode and Claude Code — both use the same Agent Contracts from `prompts/v0.1.0/`; the presets are tool-specific integration layers
+- OpenCode target: agents invoked via `@agent-name` runtime syntax; config in `opencode.jsonc`
+- Claude Code target: agent roles embedded in `CLAUDE.md`; commands use role-adoption language; permissions in `.claude/settings.json`
+- Skills are tool-agnostic — identical content, different destination path (`.opencode/skills/` vs `.claude/skills/`)
 - Stack detection is deterministic-first (files > deps > scripts > structure); LLM enrichment deferred to v2+
-- CLI (`npx codeconductor init`) deferred to v0.2.0 — preset must be proven manually first
+- CLI (`npx codeconductor init`) deferred to v0.2.0 — presets must be proven manually first
 - Multi-provider abstraction deferred to v0.3.0+
 - `package.json` is the single source of truth for version
 

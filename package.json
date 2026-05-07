@@ -1,0 +1,25 @@
+{
+  "name": "codeconductor",
+  "version": "0.1.0",
+  "description": "A multi-agent orchestration framework for AI-assisted software engineering workflows.",
+  "keywords": [
+    "ai",
+    "agents",
+    "orchestration",
+    "workflow",
+    "opencode",
+    "claude",
+    "codex"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codeconductor/codeconductor"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "version:check": "node -e \"console.log(require('./package.json').version)\""
+  }
+}

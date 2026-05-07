@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json.schemastore.org/claude-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(./gradlew test*)",
+      "Bash(./gradlew build*)",
+      "Bash(./gradlew check*)",
+      "Bash(npm test*)",
+      "Bash(npm run lint*)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(sudo *)",
+      "Bash(su *)",
+      "Bash(chmod 777 *)",
+      "Bash(chown *)",
+      "Bash(dd *)",
+      "Bash(mkfs *)",
+      "Bash(diskutil *)",
+      "Bash(mount *)",
+      "Bash(umount *)",
+      "Bash(systemctl *)",
+      "Bash(launchctl *)",
+      "Bash(curl * | sh)",
+      "Bash(curl * | bash)",
+      "Bash(wget * | sh)",
+      "Bash(wget * | bash)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git rebase *)",
+      "Bash(git reset --hard *)"
+    ]
+  }
+}

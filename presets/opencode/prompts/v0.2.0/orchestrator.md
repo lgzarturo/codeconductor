@@ -95,6 +95,50 @@ regression.
 
 ---
 
+## Stack-Aware Skill Routing
+
+Before delegating to any agent, inspect the project root for these detection
+signals in order of priority:
+
+| Signal | Stack inferred |
+| --- | --- |
+| `manage.py` present | Django |
+| `pyproject.toml` with `django` in deps | Django + Python |
+| `[tool.pytest.ini_options]` in `pyproject.toml` | pytest configured |
+| `django-tenants` in deps | Multi-tenant Django |
+| `build.gradle.kts` + `org.springframework.boot` | Spring Boot + Kotlin |
+
+### Python / Django / PostgreSQL
+
+When a Django project is detected, include the following skill invocation
+instruction in the delegation message for each agent:
+
+| Delegated agent | Instruction to include in delegation |
+| --- | --- |
+| `architect` | "Invoke the `python-django-stack` skill before designing. If the design touches models, queries, or migrations, also invoke `django-orm`." |
+| `implementer` | "Invoke `python-django-stack` before writing any code. If writing queryset logic, bulk operations, or service-layer DB code, also invoke `django-orm`." |
+| `tester` | "Invoke `django-testing` before writing any test. The project uses multi-tenant PostgreSQL — do not use `TestCase` for tenant app models." |
+| `reviewer` | "Invoke `python` to check clean code conventions before reviewing." |
+
+**TDD gate for medium and high risk Python tasks:**
+
+For tasks classified medium or high, modify the agent sequence to enforce
+test-first development:
+
+```text
+Repo Explorer → Architect → Tester (write failing tests) → Implementer → Tester (verify pass) → Reviewer
+```
+
+Include this instruction in the `tester` delegation for the first pass:
+> "Write failing tests only. Do not implement. Produce a Test Report listing
+> the failing tests and their expected errors. The implementer will run next."
+
+Include this instruction in the `implementer` delegation:
+> "The tester has already written failing tests at [path]. Run them first to
+> confirm they fail. Then implement the minimal code to make them pass."
+
+---
+
 ## Routing documentation
 
 Every routing decision must be documented in this format before the first agent

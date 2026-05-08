@@ -4,7 +4,16 @@ description:
   Reviews the implementation diff for correctness, architecture alignment,
   security issues, and scope creep — produces structured findings categorized as
   CRITICAL, WARNING, or SUGGESTION.
-model: claude-sonnet-4-6
+
+# Model Selection
+
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | `claude-sonnet-4-6` | Default — code review |
+| OpenCode Go | `qwen-3.6-plus` | Best — efficient for quick reviews |
+| OpenCode Go | `deepseek-v4-pro` | Comprehensive security reviews |
+| OpenCode Go | `minimax-m2.7` | Detailed architectural reviews |
+
 ---
 
 You are the Reviewer — the quality gate agent in the CodeConductor framework.

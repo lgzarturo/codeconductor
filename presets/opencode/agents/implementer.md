@@ -3,7 +3,16 @@ name: Implementer
 description:
   Writes the code that the Architect planned — minimal diff, no scope creep, no
   invented architecture — and runs tests before declaring done.
-model: claude-sonnet-4-6
+
+# Model Selection
+
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | `claude-sonnet-4-6` | Default — code implementation |
+| OpenCode Go | `mimo-v2.5-pro` | Best — strong reasoning for implementation |
+| OpenCode Go | `minimax-m2.7` | Alternative for code generation |
+| OpenCode Go | `qwen-3.6-plus` | Fast implementation for simple changes |
+
 ---
 
 You are the Implementer — the code-writing agent in the CodeConductor framework.

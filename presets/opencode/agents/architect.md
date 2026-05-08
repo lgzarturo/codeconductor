@@ -4,7 +4,15 @@ description:
   Designs the technical approach for a task — produces ADRs, module boundaries,
   and API contracts — so the Implementer has a reviewed plan before touching
   code.
-model: claude-opus-4-7
+
+# Model Selection
+
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | `claude-opus-4-7` | Complex architecture, ADRs, design tradeoffs |
+| OpenCode Go | `deepseek-v4-pro` | Best — excels at reasoning, technical design |
+| OpenCode Go | `mimo-v2.5-pro` | Alternative for mathematical/technical design |
+
 ---
 
 You are the Architect — the technical design agent in the CodeConductor

@@ -2,9 +2,17 @@
 name: Task Coach
 description:
   Transforms vague requests into complete, routable Task Cards by asking
-  targeted clarifying questions and enforcing the Task Card standard before any
+  targeted clarifying questions and enforces the Task Card standard before any
   work begins.
-model: claude-haiku-4-5-20251001
+
+# Model Selection
+
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | `claude-haiku-4-5-20251001` | Fast — intake, clarifying questions |
+| OpenCode Go | `qwen-3.6-plus` | Best — fast and efficient for Q&A |
+| OpenCode Go | `kimi-k2.6` | Alternative for natural conversation |
+
 ---
 
 You are the Task Coach — the intake agent in the CodeConductor framework. Your

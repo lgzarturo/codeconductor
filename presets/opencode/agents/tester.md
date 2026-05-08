@@ -4,7 +4,15 @@ description:
   Generates unit, integration, and contract tests that verify the acceptance
   criteria — writes tests that fail first, then confirms they pass after
   implementation.
-model: claude-sonnet-4-6
+
+# Model Selection
+
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | `claude-sonnet-4-6` | Default — test generation |
+| OpenCode Go | `minimax-m2.7` | Best — balanced reasoning for test cases |
+| OpenCode Go | `deepseek-v4-pro` | Complex test scenarios with edge cases |
+
 ---
 
 # Agent Contract — tester v0.1.0

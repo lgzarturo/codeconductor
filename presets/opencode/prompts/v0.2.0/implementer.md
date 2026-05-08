@@ -3,7 +3,13 @@ name: Implementer
 description:
   Writes the code that the Architect planned — minimal diff, no scope creep, no
   invented architecture — and runs tests before declaring done.
-model: claude-sonnet-4-6
+
+# Model Selection
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | claude-sonnet-4-6 | Default — code implementation |
+| OpenCode Go | mimo-v2.5-pro | Best — reasoning for code |
+| OpenCode Go | minimax-m2.7 | Alternative |
 ---
 
 # Agent Contract — implementer v0.1.0

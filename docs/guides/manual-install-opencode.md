@@ -7,6 +7,11 @@ This guide walks through installing the CodeConductor OpenCode preset into an
 existing Spring Boot + Kotlin project. In v0.1.0 there is no CLI — installation
 is a manual file copy operation.
 
+> [!IMPORTANT]
+> CodeConductor policies are declarative in v0.1.0. Runtime enforcement depends
+> on OpenCode's permission system; CodeConductor does not provide its own
+> sandbox, policy compiler, or OS-level isolation yet.
+
 ---
 
 ## 1. Prerequisites
@@ -520,9 +525,9 @@ implementer follows a plan. Without one, it invents architecture — and that
 invention will be inconsistent with the rest of the codebase.
 
 **Do not push directly from OpenCode.** The configuration denies
-`git push --force*` and `git push -f*` outright. Standard `git push` requires
-confirmation. Use your normal Git workflow for pushing; let OpenCode handle the
-code changes only.
+`git push --force*` and `git push -f*` outright. Standard `git push` is not in
+the allow list and requires explicit confirmation. Use your normal Git workflow
+for pushing; let OpenCode handle the code changes only.
 
 **Do not expand permissions in `opencode.jsonc` without justification.** The
 default posture is restrictive by design. Every permission expansion increases

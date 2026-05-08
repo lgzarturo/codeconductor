@@ -1,4 +1,6 @@
 {
+  // CodeConductor policies are declarative until the policy compiler exists.
+  // Enforcement depends on OpenCode permission support.
   "$schema": "https://opencode.ai/config.json",
   "model": "anthropic/claude-sonnet-4-6",
   "permission": {
@@ -42,7 +44,10 @@
       "make lint*": "allow",
       "make verifymigrations*": "allow",
       "uv run djlint --check*": "allow",
+      "git add*": "ask",
       "git commit*": "ask",
+      "git push*": "ask",
+      "git pull*": "ask",
       "git checkout*": "ask",
       "git switch*": "ask",
       "uv run python manage.py migrate_schemas*": "ask",

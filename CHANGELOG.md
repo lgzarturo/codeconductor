@@ -11,6 +11,14 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `SECURITY.md` with supported versions, current security model, and vulnerability
+  reporting guidance
+- `docs/security-model.md` documenting current guarantees, non-guarantees, trust
+  boundaries, and planned runtime isolation
+- `docs/current-limitations.md` clarifying that CodeConductor has no runtime,
+  CLI, policy compiler, or automated evaluation yet
+- `docs/cli-contract.md` and `docs/policy-schema.md` defining future CLI and
+  policy contracts before implementation
 - `presets/opencode/skills/python/` — Python clean code patterns (naming,
   type hints, decorators, exceptions, service/repository patterns)
 - `presets/opencode/skills/python-django-stack/` — Django conventions (FBV,
@@ -27,24 +35,39 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- `README.md` now states the current pre-CLI scope, what works today, what is
+  planned, and the current security limitations
+- `CLAUDE.md` now reflects the repository's current documentation-first and
+  preset-based state
+- `docs/architecture.md` and `ROADMAP.md` now separate implemented preset
+  documentation from planned runtime security capabilities
+- Version documentation now treats `package.json` `0.1.0` as the active
+  canonical version
 - `presets/opencode/opencode.jsonc` — added Python/Django bash patterns:
   `uv run pytest*`, `make tests*`, `make lint*`, `make verifymigrations*`,
   `uv run djlint --check*` to allow; Django DB operations to ask
-- `presets/opencode/agents/orchestrator.md` (v0.2.0) — added Stack-Aware Skill
+- `presets/opencode/agents/orchestrator.md` — added Stack-Aware Skill
   Routing section with Python/Django detection signals, per-agent skill
   injection, and TDD gate for medium/high tasks
-- `presets/opencode/agents/tester.md` (v0.2.0) — added Python/Django Testing
+- `presets/opencode/agents/tester.md` — added Python/Django Testing
   section: base class selection table, Django runner commands, TDD sequence,
   module docstring requirement
-- `presets/opencode/prompts/v0.2.0/` — new versioned prompt directory with
+- `presets/opencode/prompts/v0.2.0/` — unreleased draft prompt directory with
   updated orchestrator and tester contracts
-- `docs/routing-policy.md` (v0.2.0) — added Django high-risk path patterns
+- `docs/routing-policy.md` — added Django high-risk path patterns
   (`apps/*/migrations/**`, `config/settings*.py`, `apps/users/**`) and DRF
   public contract path (`apps/*/serializers.py`)
-- `docs/prompt-versioning.md` — v0.1.0 marked deprecated, v0.2.0 added as
-  active
+- `docs/prompt-versioning.md` — keeps v0.1.0 active while v0.2.0 remains an
+  unreleased draft
 - `presets/claude/CLAUDE.md` — added skill activation rules for the 4 new
   Python/Django skills
+
+### Fixed
+
+- `policy.yml` and OpenCode preset permissions now require confirmation for
+  `git push`
+- `policy.yml` now labels current execution as target-tool-dependent instead of
+  a CodeConductor-enforced sandbox
 
 ---
 
@@ -76,7 +99,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - `docs/guides/manual-install-opencode.md` — step-by-step install for OpenCode target
   - `docs/guides/manual-install-claude.md` — step-by-step install for Claude Code target
 - End-to-end example: Spring Boot Kotlin feature workflow
-- `policy.yml` — sandboxed agent execution policy
+- `policy.yml` — declarative agent execution policy
 - `CONTRIBUTING.md` with vocabulary enforcement and contribution requirements
 - `ROADMAP.md` with versioned milestone plan
 - `LICENSE` — MIT

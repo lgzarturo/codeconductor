@@ -1,0 +1,101 @@
+version: 1
+
+# NOTE:
+# This policy is declarative. Until the CodeConductor policy compiler exists,
+# enforcement depends on the target tool.
+
+runtime:
+  user: cc-agent
+  mode: native
+  cleanEnv: true
+  network:
+    default: deny
+    allowDomains:
+      - google.com
+      - github.com
+      - openai.com
+      - repo.maven.apache.org
+      - registry.npmjs.org
+
+filesystem:
+  workspace: rw
+
+denyRead:
+  - "~/*"
+  - "/Users/*/**"
+  - "/home/*/**"
+  - "**/.env"
+  - "**/.env.*"
+  - "**/secrets/**"
+  - "**/.aws/**"
+  - "**/.kube/**"
+  - "**/.ssh/**"
+  - "**/config/**"
+  - "**/kubeconfig/**"
+  - "**/ssh/**"
+  - "**/.gnupg/**"
+  - "**/.npm/**"
+  - "**/.npmrc"
+  - "**/.pypirc"
+
+denyWrite:
+  - ".git/**"
+  - ".claude/**"
+  - ".opencode/**"
+  - ".code-conductor/policy.yml"
+  - "/etc/**"
+  - "/var/**"
+  - "~/**"
+
+commands:
+  allow:
+    - "git status"
+    - "git log"
+    - "git diff"
+    - "./gradlew clean"
+    - "./gradlew build"
+    - "./gradlew test"
+    
+  ask:
+    - "git add"
+    - "git commit"
+    - "git push"
+    - "git pull"
+    - "git switch*"
+    - "git checkout*"
+    - "docker compose*"
+    
+  deny:
+    - "git push --force"
+    - "git push -f"
+    - "git rebase *"
+    - "git reset --hard *"
+    - "git rm --cached *"
+    - "rm -rf *"
+    - "sudo *"
+    - "chmod 777 *"
+    - "chown *"
+    - "dd *"
+    - "mkfs *"
+    - "mount *"
+    - "umount *"
+    - "launchctl *"
+    - "systemctl *"
+    - "ln -s *"
+    - "symlink *"
+    - "curl * | sh"
+    - "curl * | bash"
+    - "wget * | sh"
+    - "wget * | bash"
+
+git:
+  protectedBranches:
+    - "master"
+    - "main"
+    - "develop"
+
+  deny:
+    - forcePush
+    - pushProtectedBranch
+    - rebaseProtectedBranch
+    - resetProtectedBranch

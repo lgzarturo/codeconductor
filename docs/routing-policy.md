@@ -1,6 +1,6 @@
 # Routing Policy
 
-**Version:** v0.2.0
+**Version:** v0.1.0
 
 ---
 
@@ -137,7 +137,6 @@ must record the reviewer's name.
 
 ## Version History
 
-| Version | Date       | Change                                                          |
-| ------- | ---------- | --------------------------------------------------------------- |
-| v0.2.0  | 2026-05-07 | Added Python/Django high-risk path patterns and DRF contract paths |
-| v0.1.0  | —          | Initial routing policy. OpenCode target.                        |
+| Version | Date       | Change                                                                                  |
+| ------- | ---------- | --------------------------------------------------------------------------------------- |
+| v0.1.0  | 2026-05-07 | Initial routing policy with OpenCode, Claude, Spring Boot/Kotlin, and Python/Django guidance. |

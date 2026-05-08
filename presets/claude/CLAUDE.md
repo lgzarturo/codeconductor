@@ -494,6 +494,18 @@ When the active task touches JPA or PostgreSQL, apply
 When the active task touches test design, apply
 `.claude/skills/testing-strategy/SKILL.md`.
 
+When the active task touches Python code (any file), apply
+`.claude/skills/python/SKILL.md`.
+
+When the active task touches Django views, services, models, or API endpoints,
+apply `.claude/skills/python-django-stack/SKILL.md`.
+
+When the active task touches Django ORM queries, bulk operations, or
+DB-touching service code, apply `.claude/skills/django-orm/SKILL.md`.
+
+When the active task involves writing or reviewing Django tests, apply
+`.claude/skills/django-testing/SKILL.md`.
+
 ---
 
 ## What Never Changes

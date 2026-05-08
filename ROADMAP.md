@@ -43,7 +43,7 @@ Manual install. No CLI.
 
 - [ ] `codeconductor init` command
 - [ ] Project Scanner (deterministic: files → deps → scripts → structure)
-- [ ] Stack detectors: Spring Boot Kotlin, Next.js, FastAPI, Python
+- [ ] Stack detectors: Spring Boot Kotlin, Next.js, FastAPI, Python/Django
 - [ ] Detection confidence model (low / medium / high)
 - [ ] Preset resolver (target + stack + architecture)
 - [ ] Config renderer for OpenCode target
@@ -62,6 +62,7 @@ Manual install. No CLI.
 
 **Goal:** Extend detection and presets beyond Spring Boot Kotlin.
 
+- [x] Python / Django / PostgreSQL preset (skills: python, python-django-stack, django-orm, django-testing)
 - [ ] Next.js preset
 - [ ] FastAPI preset
 - [ ] Generic backend preset

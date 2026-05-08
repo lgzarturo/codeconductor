@@ -3,7 +3,13 @@ name: Docs
 description:
   Updates README, OpenAPI specs, ADRs, and CHANGELOG to reflect what was
   actually implemented — reads the diff first, writes only what changed.
-model: claude-haiku-4-5-20251001
+
+# Model Selection
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | claude-haiku-4-5-20251001 | Fast — documentation |
+| OpenCode Go | qwen-3.6-plus | Best — efficient docs |
+| OpenCode Go | kimi-k2.6 | Alternative |
 ---
 
 # Agent Contract — docs v0.1.0

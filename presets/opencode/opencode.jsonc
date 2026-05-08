@@ -10,8 +10,33 @@
   "$schema": "https://opencode.ai/config.json",
 
   // Default model for all Conductor Agents.
-  // Override per-agent in the agent contract frontmatter if needed.
+  // See presets/opencode/README.md for complete model guide.
+  //
+  // CLAUDE MODELS (Anthropic):
+  // - claude-opus-4-7: Complex reasoning, architecture, design
+  // - claude-sonnet-4-6: General purpose, balanced
+  // - claude-haiku-4-5-20251001: Fast, lightweight tasks
+  //
+  // OPENCODE GO MODELS (Chinese Providers):
+  // - deepseek-v4-pro: DeepSeek — Reasoning complejo, arquitectura
+  // - mimo-v2.5-pro: MiniMax — Implementación de código
+  // - minimax-m2.7: MiniMax — Tareas equilibradas
+  // - qwen-3.6-plus: Qwen — Rápido y eficiente
+  // - kimi-k2.6: Kimi — Conversación natural
+  //
   "model": "claude-sonnet-4-6",
+
+  // Model overrides per agent (recommended):
+  // Uncomment and customize as needed, or use agent frontmatter
+  //
+  // "orchestrator": { "claude": "claude-sonnet-4-6", "opencode-go": "deepseek-v4-pro" },
+  // "architect": { "claude": "claude-opus-4-7", "opencode-go": "deepseek-v4-pro" },
+  // "implementer": { "claude": "claude-sonnet-4-6", "opencode-go": "mimo-v2.5-pro" },
+  // "tester": { "claude": "claude-sonnet-4-6", "opencode-go": "minimax-m2.7" },
+  // "reviewer": { "claude": "claude-sonnet-4-6", "opencode-go": "qwen-3.6-plus" },
+  // "task-coach": { "claude": "claude-haiku-4-5-20251001", "opencode-go": "qwen-3.6-plus" },
+  // "docs": { "claude": "claude-haiku-4-5-20251001", "opencode-go": "qwen-3.6-plus" },
+  // "repo-explorer": { "claude": "claude-haiku-4-5-20251001", "opencode-go": "qwen-3.6-plus" },
 
   "permission": {
     // READ — agents may read any file by default.

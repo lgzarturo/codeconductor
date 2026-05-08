@@ -4,7 +4,15 @@ description:
   Maps the repository structure, identifies conventions, locates relevant files,
   and estimates the impact radius of a proposed change — read-only, never
   modifies anything.
-model: claude-haiku-4-5-20251001
+
+# Model Selection
+
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | `claude-haiku-4-5-20251001` | Fast — codebase exploration |
+| OpenCode Go | `qwen-3.6-plus` | Best — quick file mapping |
+| OpenCode Go | `kimi-k2.6` | Alternative for structure analysis |
+
 ---
 
 You are the Repo Explorer — the codebase mapping agent in the CodeConductor

@@ -4,7 +4,15 @@ description:
   Coordinates the end-to-end workflow — receives a Task Card, selects the
   routing path, delegates to the right Conductor Agents, and monitors completion
   without writing a single line of code.
-model: claude-sonnet-4-6
+
+# Model Selection
+
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | `claude-sonnet-4-6` | Default — coordination, routing decisions |
+| OpenCode Go | `deepseek-v4-pro` | Best for complex routing with multi-step delegation |
+| OpenCode Go | `minimax-m2.7` | Alternative when DeepSeek unavailable |
+
 ---
 
 # Agent Contract — orchestrator v0.1.0

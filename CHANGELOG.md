@@ -9,6 +9,43 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `presets/opencode/skills/python/` — Python clean code patterns (naming,
+  type hints, decorators, exceptions, service/repository patterns)
+- `presets/opencode/skills/python-django-stack/` — Django conventions (FBV,
+  service layer, JSON API shapes, pagination, PDF, cart, models)
+- `presets/opencode/skills/django-orm/` — ORM patterns (N+1, select_related,
+  bulk ops, transactions, multi-tenant upload paths)
+- `presets/opencode/skills/django-testing/` — Django test constraints
+  (SimpleTestCase + mocks for tenant apps, RequestFactory, FakeSession,
+  MagicMock traps, queryset chain mocking)
+- Same 4 skills mirrored to `presets/claude/skills/`
+- `docs/stacks/python-django-postgresql.md` — stack definition and reference
+- `examples/python-django-postgresql/` — end-to-end feature example with Task
+  Card and Technical Plan
+
+### Changed
+
+- `presets/opencode/opencode.jsonc` — added Python/Django bash patterns:
+  `uv run pytest*`, `make tests*`, `make lint*`, `make verifymigrations*`,
+  `uv run djlint --check*` to allow; Django DB operations to ask
+- `presets/opencode/agents/orchestrator.md` (v0.2.0) — added Stack-Aware Skill
+  Routing section with Python/Django detection signals, per-agent skill
+  injection, and TDD gate for medium/high tasks
+- `presets/opencode/agents/tester.md` (v0.2.0) — added Python/Django Testing
+  section: base class selection table, Django runner commands, TDD sequence,
+  module docstring requirement
+- `presets/opencode/prompts/v0.2.0/` — new versioned prompt directory with
+  updated orchestrator and tester contracts
+- `docs/routing-policy.md` (v0.2.0) — added Django high-risk path patterns
+  (`apps/*/migrations/**`, `config/settings*.py`, `apps/users/**`) and DRF
+  public contract path (`apps/*/serializers.py`)
+- `docs/prompt-versioning.md` — v0.1.0 marked deprecated, v0.2.0 added as
+  active
+- `presets/claude/CLAUDE.md` — added skill activation rules for the 4 new
+  Python/Django skills
+
 ---
 
 ## [0.1.0] — 2026-05-07

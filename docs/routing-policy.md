@@ -1,6 +1,6 @@
 # Routing Policy
 
-**Version:** v0.1.0
+**Version:** v0.2.0
 
 ---
 
@@ -84,6 +84,10 @@ auth/**
 payment/**
 db/migration/**
 migrations/**
+# Python / Django additions
+apps/*/migrations/**     # Django schema migrations — always high
+config/settings*.py      # Application configuration
+apps/users/**            # User model and authentication
 ```
 
 If a task touches any file matching these patterns, it cannot be classified
@@ -103,6 +107,7 @@ openapi.yml
 **/openapi.json
 **/swagger.yaml
 **/swagger.yml
+apps/*/serializers.py      # DRF serializers — public API shape
 ```
 
 A bug fix classified as `low` that modifies `api/v1/users.yaml` still routes
@@ -132,6 +137,7 @@ must record the reviewer's name.
 
 ## Version History
 
-| Version | Change                                   |
-| ------- | ---------------------------------------- |
-| v0.1.0  | Initial routing policy. OpenCode target. |
+| Version | Date       | Change                                                          |
+| ------- | ---------- | --------------------------------------------------------------- |
+| v0.2.0  | 2026-05-07 | Added Python/Django high-risk path patterns and DRF contract paths |
+| v0.1.0  | —          | Initial routing policy. OpenCode target.                        |

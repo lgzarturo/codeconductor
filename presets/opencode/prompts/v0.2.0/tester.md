@@ -80,6 +80,90 @@ Good: `shouldReturnNotFoundWhenProductDoesNotExist` Bad: `testGetProduct`
 
 ---
 
+## Python / Django Testing
+
+When Django is detected (`manage.py` present, or `django` in `pyproject.toml`
+deps):
+
+**Mandatory first step:** Invoke the `django-testing` skill before writing any
+test. The skill contains the DoesNotExist trap, MagicMock.name trap, queryset
+chain mock helper, and FakeSession pattern — all of which you must follow.
+
+### Test base class selection
+
+This project uses `django-tenants` with multi-schema PostgreSQL. The test
+runner runs against the public schema. Tenant app tables do not exist during
+tests.
+
+| Condition | Base class | Reason |
+| --- | --- | --- |
+| No DB access needed | `SimpleTestCase` | No transaction, no schema required |
+| Only public schema models (`User`, `Store`) | `TestCase` | Uses public schema |
+| Any tenant app model (`Product`, `Order`, `Cart`, `Employee`, etc.) | `SimpleTestCase` + mocks | Tenant tables don't exist |
+
+**Default to `SimpleTestCase`.** Use `TestCase` only when you have confirmed
+the model is declared in `SHARED_APPS` in the Django settings.
+
+### Test file paths
+
+```text
+apps/{app}/tests.py                    # single-file tests for simple apps
+apps/{app}/tests/__init__.py           # package root for multi-file apps
+apps/{app}/tests/test_{feature}.py    # one file per feature
+```
+
+### Test runner commands
+
+```bash
+# Run a specific test file
+uv run pytest apps/{app}/tests/test_{feature}.py -v
+
+# Run a single test method
+uv run pytest apps/{app}/tests/test_{feature}.py::TestClass::test_method -v
+
+# Run full suite
+make tests
+
+# Run with coverage
+make tests-coverage
+
+# Re-run only failed tests
+uv run pytest --lf
+
+# Force fresh DB schema (after migration changes)
+uv run pytest --create-db
+```
+
+### TDD sequence for Django
+
+1. Write the test file with class and method stubs — import the view or service
+   under test even though it may not exist yet.
+2. Run the test: `uv run pytest apps/{app}/tests/test_{feature}.py -v`
+3. Confirm it fails with an expected error (`ImportError` or `AssertionError`) —
+   not with a Python syntax error or wrong import path. A `SyntaxError` in your
+   test means the test is broken, not the implementation.
+4. Produce the Test Report listing failing tests and their expected errors.
+5. Hand the failing test file path to the `implementer`.
+6. After implementation, run again and confirm PASS.
+7. Run the full suite: `make tests`
+
+### Module docstring requirement
+
+Every test file must start with a docstring explaining the multi-tenant
+constraint:
+
+```python
+"""
+Tests for {app} {feature}.
+
+NOTE: {app} models are TENANT_APP — they live in per-store schemas.
+The test runner uses the public schema, so these tables don't exist.
+All tests use SimpleTestCase + mocks.
+"""
+```
+
+---
+
 ## Process
 
 1. Read the acceptance criteria from the Task Card.

@@ -91,7 +91,8 @@ Manual install. No CLI.
 
 **Goal:** Extend detection and presets beyond Spring Boot Kotlin.
 
-- [x] Python / Django / PostgreSQL preset (skills: python, python-django-stack, django-orm, django-testing)
+- [x] Python / Django / PostgreSQL preset (skills: python, python-django-stack,
+      django-orm, django-testing)
 - [ ] Next.js preset
 - [ ] FastAPI preset
 - [ ] Generic backend preset

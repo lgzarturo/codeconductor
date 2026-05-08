@@ -139,11 +139,11 @@ Validates the installed configuration.
 
 ## Targets
 
-| Target   | Status                   | Notes                                      |
-| -------- | ------------------------ | ------------------------------------------ |
-| OpenCode | Implemented in v0.1.0    | Manual preset support.                     |
-| Claude   | Implemented in v0.1.0    | Manual Claude Code-compatible preset.      |
-| Codex    | Planned                  | No timeline. Depends on target stability.  |
+| Target   | Status                | Notes                                     |
+| -------- | --------------------- | ----------------------------------------- |
+| OpenCode | Implemented in v0.1.0 | Manual preset support.                    |
+| Claude   | Implemented in v0.1.0 | Manual Claude Code-compatible preset.     |
+| Codex    | Planned               | No timeline. Depends on target stability. |
 
 Target-specific rendering means the same preset content is rendered differently
 per target. Agent contracts that work for OpenCode's `AGENTS.md` format are not

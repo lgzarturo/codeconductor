@@ -137,6 +137,6 @@ must record the reviewer's name.
 
 ## Version History
 
-| Version | Date       | Change                                                                                  |
-| ------- | ---------- | --------------------------------------------------------------------------------------- |
+| Version | Date       | Change                                                                                        |
+| ------- | ---------- | --------------------------------------------------------------------------------------------- |
 | v0.1.0  | 2026-05-07 | Initial routing policy with OpenCode, Claude, Spring Boot/Kotlin, and Python/Django guidance. |

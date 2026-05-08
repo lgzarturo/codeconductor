@@ -52,20 +52,20 @@ Generate or update OpenCode-compatible files from CodeConductor contracts.
 
 ## Exit Codes
 
-| Code | Meaning               |
-| ---- | --------------------- |
-| 0    | success               |
-| 1    | validation error      |
-| 2    | unsafe operation      |
-| 3    | unsupported project   |
-| 4    | config conflict       |
+| Code | Meaning             |
+| ---- | ------------------- |
+| 0    | success             |
+| 1    | validation error    |
+| 2    | unsafe operation    |
+| 3    | unsupported project |
+| 4    | config conflict     |
 
 ## Output Modes
 
 ### `human`
 
-Default mode for interactive terminal use. Output should be concise,
-actionable, and grouped by status.
+Default mode for interactive terminal use. Output should be concise, actionable,
+and grouped by status.
 
 ### `json`
 

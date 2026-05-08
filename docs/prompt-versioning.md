@@ -123,9 +123,9 @@ retirement.
 
 ## Version Table
 
-| Version | Status           | Date       | Changes                                                                         |
-| ------- | ---------------- | ---------- | ------------------------------------------------------------------------------- |
-| v0.1.0  | active           | 2026-05-07 | Initial contracts — all 8 Conductor Agents                                      |
+| Version | Status           | Date       | Changes                                                                                                                       |
+| ------- | ---------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| v0.1.0  | active           | 2026-05-07 | Initial contracts — all 8 Conductor Agents                                                                                    |
 | v0.2.0  | unreleased draft | 2026-05-07 | Draft orchestrator and tester updates for Python/Django routing and tests. Not released while `package.json` remains `0.1.0`. |
 
 ---

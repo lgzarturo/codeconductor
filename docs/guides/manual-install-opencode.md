@@ -7,10 +7,9 @@ This guide walks through installing the CodeConductor OpenCode preset into an
 existing Spring Boot + Kotlin project. In v0.1.0 there is no CLI — installation
 is a manual file copy operation.
 
-> [!IMPORTANT]
-> CodeConductor policies are declarative in v0.1.0. Runtime enforcement depends
-> on OpenCode's permission system; CodeConductor does not provide its own
-> sandbox, policy compiler, or OS-level isolation yet.
+> [!IMPORTANT] CodeConductor policies are declarative in v0.1.0. Runtime
+> enforcement depends on OpenCode's permission system; CodeConductor does not
+> provide its own sandbox, policy compiler, or OS-level isolation yet.
 
 ---
 

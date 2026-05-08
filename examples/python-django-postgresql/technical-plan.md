@@ -6,12 +6,14 @@ offset/limit pattern from `python-django-stack` skill. Tests use
 `SimpleTestCase` + mocks because `catalog.Product` is a TENANT_APP model.
 
 **Tradeoffs**:
+
 - Chosen: FBV + direct ORM — consistent with all existing API views in
   `apps/catalog/views.py` and `apps/pos/views.py`
 - Rejected: DRF ViewSet — out of scope per Task Card; adds serializer
   abstraction not needed for this endpoint
 
 **Files Affected**:
+
 - `apps/catalog/views.py` — add `api_catalog_products` function
 - `apps/catalog/urls.py` — add `path("api/products/", ...)` entry
 - `apps/catalog/tests/test_api_catalog_products.py` — create test file
@@ -184,6 +186,7 @@ class TestApiCatalogProducts(SimpleTestCase):
 
 - Criterion 1: `test_returns_active_products_with_pagination` — response shape
 - Criterion 2: `test_limit_clamped_to_100` — limit boundary
-- Criterion 3: `test_returns_active_products_with_pagination` — fields in values()
+- Criterion 3: `test_returns_active_products_with_pagination` — fields in
+  values()
 - Criterion 4: `Product.objects.filter(is_active=True)` — ORM filter in view
 - Criterion 5: three test methods covering happy path, empty, limit boundary

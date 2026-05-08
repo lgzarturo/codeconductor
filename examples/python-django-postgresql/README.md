@@ -6,21 +6,25 @@ using the Python / Django / PostgreSQL stack.
 **Feature:** Add a paginated REST endpoint to list active catalog products.
 
 **Stack signals detected:**
+
 - `manage.py` → Django project
 - `[tool.pytest.ini_options]` → pytest runner
 - `django-tenants` in deps → multi-tenant architecture
 
 **Skills activated:**
+
 - `python-django-stack` — view and URL conventions
 - `django-orm` — queryset and pagination patterns
 - `django-testing` — SimpleTestCase + mock constraints
 
 **Agent sequence (medium risk):**
+
 ```text
 Repo Explorer → Architect → Tester (write failing tests) → Implementer → Tester (verify pass) → Reviewer
 ```
 
 **Files in this example:**
+
 - `task-card.md` — validated Task Card (task-coach output)
 - `technical-plan.md` — Technical Plan (architect output)
 

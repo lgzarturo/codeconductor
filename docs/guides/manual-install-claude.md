@@ -1,11 +1,15 @@
 # Manual Installation: CodeConductor Preset for Claude Code
 
-**Framework version:** CodeConductor v0.1.0 **Target tool:** Claude Code **Target
-stack:** Spring Boot 3.x + Kotlin + Gradle + PostgreSQL
+**Framework version:** CodeConductor v0.1.0 **Target tool:** Claude Code
+**Target stack:** Spring Boot 3.x + Kotlin + Gradle + PostgreSQL
 
 This guide walks through installing the CodeConductor Claude Code preset into an
 existing Spring Boot + Kotlin project. In v0.1.0 there is no CLI — installation
 is a manual file copy operation.
+
+> [!IMPORTANT] CodeConductor policies are declarative in v0.1.0. Runtime
+> enforcement depends on Claude Code's permission system; CodeConductor does not
+> provide its own sandbox, policy compiler, or OS-level isolation yet.
 
 ---
 
@@ -89,8 +93,8 @@ presets/claude/skills/testing-strategy/SKILL.md             -> .claude/skills/te
 AGENTS.md (managed section)                                 -> AGENTS.md (merge with existing or create)
 ```
 
-Total: 1 project instructions file, 1 settings file, 5 command definitions,
-4 skill files, 1 AGENTS.md.
+Total: 1 project instructions file, 1 settings file, 5 command definitions, 4
+skill files, 1 AGENTS.md.
 
 ---
 
@@ -99,8 +103,8 @@ Total: 1 project instructions file, 1 settings file, 5 command definitions,
 **Claude Code vs OpenCode — key difference**
 
 OpenCode has runtime-level named agents (`@architect`, `@tester`). Claude Code
-does not. Instead, the CodeConductor Claude preset embeds all agent contracts
-in `CLAUDE.md`, which Claude Code loads automatically at session start.
+does not. Instead, the CodeConductor Claude preset embeds all agent contracts in
+`CLAUDE.md`, which Claude Code loads automatically at session start.
 
 When you run a command such as `/feature`, the command instructs Claude to adopt
 each Conductor Agent role in sequence ("Adopt the Architect role as defined in
@@ -111,13 +115,13 @@ The behavior is equivalent. The mechanism is different.
 
 **File roles**
 
-| File | Purpose |
-| --- | --- |
-| `CLAUDE.md` | Defines all Conductor Agent roles, routing policy, and skill activation rules. Loaded automatically by Claude Code at session start. |
-| `.claude/settings.json` | Permission allowlist and denylist — controls which shell commands Claude Code may run automatically vs. which require confirmation. |
-| `.claude/commands/*.md` | Slash commands — `/feature`, `/fix`, `/refactor`, `/review`, `/test-plan`. Each orchestrates the full workflow for its task type. |
-| `.claude/skills/*.md` | Domain knowledge files activated automatically when the task context matches (Spring Boot, JPA, API versioning, testing). |
-| `AGENTS.md` | Shared conventions file — read by all AI tools, not just Claude Code. |
+| File                    | Purpose                                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `CLAUDE.md`             | Defines all Conductor Agent roles, routing policy, and skill activation rules. Loaded automatically by Claude Code at session start. |
+| `.claude/settings.json` | Permission allowlist and denylist — controls which shell commands Claude Code may run automatically vs. which require confirmation.  |
+| `.claude/commands/*.md` | Slash commands — `/feature`, `/fix`, `/refactor`, `/review`, `/test-plan`. Each orchestrates the full workflow for its task type.    |
+| `.claude/skills/*.md`   | Domain knowledge files activated automatically when the task context matches (Spring Boot, JPA, API versioning, testing).            |
+| `AGENTS.md`             | Shared conventions file — read by all AI tools, not just Claude Code.                                                                |
 
 ---
 
@@ -185,16 +189,15 @@ your project's base package to make the skill activation rules precise:
 ```markdown
 ## Project Context
 
-Base package: `com.example.myapp`
-Build tool: Gradle (Kotlin DSL)
-Database: PostgreSQL 15
+Base package: `com.example.myapp` Build tool: Gradle (Kotlin DSL) Database:
+PostgreSQL 15
 ```
 
 **High-risk paths**
 
 Add a section to CLAUDE.md that lists your project's sensitive paths. Claude
-Code uses this to flag or request extra confirmation when edits are proposed
-to these paths:
+Code uses this to flag or request extra confirmation when edits are proposed to
+these paths:
 
 ```markdown
 ## High-Risk Paths
@@ -253,9 +256,9 @@ attempts to run them.
 
 **Deny list review**
 
-The preset ships a conservative deny list. Review it and confirm it matches
-your team's constraints. Do not remove entries from the deny list without a
-specific, documented reason.
+The preset ships a conservative deny list. Review it and confirm it matches your
+team's constraints. Do not remove entries from the deny list without a specific,
+documented reason.
 
 ### Step 6 — Create or update AGENTS.md
 
@@ -281,8 +284,8 @@ CodeConductor `AGENTS.md` to the bottom of your existing file. The section
 starts at `<!-- CODECONDUCTOR:BEGIN managed -->` and ends at
 `<!-- CODECONDUCTOR:END managed -->`.
 
-Do not modify the content between the markers manually. That section is owned
-by CodeConductor and will be overwritten on each update. Use the
+Do not modify the content between the markers manually. That section is owned by
+CodeConductor and will be overwritten on each update. Use the
 `## Project-Specific Notes` section below the markers for your own additions.
 
 To extract only the managed section from the CodeConductor file:
@@ -373,8 +376,8 @@ claude
 /feature add GET /api/v1/products endpoint with pagination and a name filter. It should accept page, size, and name query parameters. Results must be pageable.
 ```
 
-The `/feature` command triggers the full workflow automatically:
-Task Coach → Architect → Implementer → Tester → Reviewer → Docs (if needed).
+The `/feature` command triggers the full workflow automatically: Task Coach →
+Architect → Implementer → Tester → Reviewer → Docs (if needed).
 
 Each step pauses for human confirmation before continuing to the next.
 
@@ -389,9 +392,9 @@ not proceed past the Task Card step until the card is complete and confirmed.
 
 **Step 4 — Review the Technical Plan before implementation**
 
-When the Architect role produces a Technical Plan, read it. If it does not
-match your intent, tell Claude what to change before confirming. The Implementer
-role will follow this plan exactly.
+When the Architect role produces a Technical Plan, read it. If it does not match
+your intent, tell Claude what to change before confirming. The Implementer role
+will follow this plan exactly.
 
 **Step 5 — Monitor implementation**
 
@@ -402,12 +405,12 @@ Review each proposed change before approving.
 
 ## 6. Using Commands
 
-Commands are slash commands that trigger the appropriate workflow for their
-task type.
+Commands are slash commands that trigger the appropriate workflow for their task
+type.
 
 | Command                  | When to use                                                                                                                    |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| `/feature [description]` | New functionality. Runs the full workflow: Task Coach (if needed) → Architect → Implementer → Tester → Reviewer.              |
+| `/feature [description]` | New functionality. Runs the full workflow: Task Coach (if needed) → Architect → Implementer → Tester → Reviewer.               |
 | `/fix [bug description]` | Bug fix. Routes based on risk: low risk goes directly to Implementer; medium-high risk adds Architect and Reviewer.            |
 | `/refactor [scope]`      | Refactor. Always starts with Architect regardless of risk.                                                                     |
 | `/review`                | Before committing or opening a PR. Produces a structured findings report with CRITICAL / WARNING / SUGGESTION severity levels. |
@@ -423,16 +426,16 @@ adoption rather than agent invocation.
 
 ## 7. Conductor Agent Role Reference
 
-| Role            | Adopted when                                                                                                      |
-| --------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Orchestrator    | Task requires multiple roles, routing is unclear, or you want a complete plan before any implementation starts.  |
-| Task Coach      | Request is vague, acceptance criteria are missing, or risk cannot be classified without more information.         |
-| Architect       | Need a design decision, ADR, module boundary change, API contract, or data model change.                         |
-| Implementer     | Technical Plan is accepted and the implementation scope is clear.                                                 |
-| Tester          | New behavior was introduced, a bug was fixed, or a refactor carries behavioral risk.                             |
-| Reviewer        | Before committing or opening a pull request.                                                                     |
-| Docs            | Public API changed, new module was added, or existing documentation is incorrect.                                |
-| Repo Explorer   | You need to understand the codebase before starting a task or need to locate the impact radius of a change.      |
+| Role          | Adopted when                                                                                                    |
+| ------------- | --------------------------------------------------------------------------------------------------------------- |
+| Orchestrator  | Task requires multiple roles, routing is unclear, or you want a complete plan before any implementation starts. |
+| Task Coach    | Request is vague, acceptance criteria are missing, or risk cannot be classified without more information.       |
+| Architect     | Need a design decision, ADR, module boundary change, API contract, or data model change.                        |
+| Implementer   | Technical Plan is accepted and the implementation scope is clear.                                               |
+| Tester        | New behavior was introduced, a bug was fixed, or a refactor carries behavioral risk.                            |
+| Reviewer      | Before committing or opening a pull request.                                                                    |
+| Docs          | Public API changed, new module was added, or existing documentation is incorrect.                               |
+| Repo Explorer | You need to understand the codebase before starting a task or need to locate the impact radius of a change.     |
 
 All roles are defined in `CLAUDE.md`. You can invoke a role directly by
 describing what you need in plain language:
@@ -477,7 +480,8 @@ Minimum `SKILL.md` structure:
 Reference the skill in `CLAUDE.md` under the Skills section:
 
 ```markdown
-When working with [context], apply `.claude/skills/your-project-conventions/SKILL.md`.
+When working with [context], apply
+`.claude/skills/your-project-conventions/SKILL.md`.
 ```
 
 ### Modifying role behavior

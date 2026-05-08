@@ -1,7 +1,6 @@
 # Stack: Python / Django / PostgreSQL
 
-**Version:** v0.1.0
-**Target tools:** OpenCode, Claude Code
+**Version:** v0.1.0 **Target tools:** OpenCode, Claude Code
 
 ---
 
@@ -17,14 +16,14 @@ run, and what path patterns trigger elevated risk classification.
 
 Detection follows the framework priority: files > dependencies > scripts.
 
-| Signal | Inference |
-| --- | --- |
-| `manage.py` present | Django project |
-| `pyproject.toml` with `django` in `[project.dependencies]` | Django + Python |
-| `[tool.pytest.ini_options]` in `pyproject.toml` | pytest as test runner |
-| `django-tenants` in dependencies | Multi-tenant architecture |
-| `psycopg2` or `psycopg` in dependencies | PostgreSQL backend |
-| `apps/` directory with `models.py` files | Django app structure |
+| Signal                                                     | Inference                 |
+| ---------------------------------------------------------- | ------------------------- |
+| `manage.py` present                                        | Django project            |
+| `pyproject.toml` with `django` in `[project.dependencies]` | Django + Python           |
+| `[tool.pytest.ini_options]` in `pyproject.toml`            | pytest as test runner     |
+| `django-tenants` in dependencies                           | Multi-tenant architecture |
+| `psycopg2` or `psycopg` in dependencies                    | PostgreSQL backend        |
+| `apps/` directory with `models.py` files                   | Django app structure      |
 
 All signals are evaluated; the first match is sufficient for Django detection.
 
@@ -32,12 +31,12 @@ All signals are evaluated; the first match is sufficient for Django detection.
 
 ## Skills
 
-| Context | Skill ID | When to activate |
-| --- | --- | --- |
-| Any Python file | `python` | When writing or reviewing Python code |
-| Views, services, models, API | `python-django-stack` | When touching `views.py`, `services.py`, `models.py`, `urls.py` |
-| ORM queries, bulk ops, DB service code | `django-orm` | When writing queryset logic, `save()`, signals, migrations |
-| Test files | `django-testing` | Before writing any test in `apps/*/tests/` |
+| Context                                | Skill ID              | When to activate                                                |
+| -------------------------------------- | --------------------- | --------------------------------------------------------------- |
+| Any Python file                        | `python`              | When writing or reviewing Python code                           |
+| Views, services, models, API           | `python-django-stack` | When touching `views.py`, `services.py`, `models.py`, `urls.py` |
+| ORM queries, bulk ops, DB service code | `django-orm`          | When writing queryset logic, `save()`, signals, migrations      |
+| Test files                             | `django-testing`      | Before writing any test in `apps/*/tests/`                      |
 
 Skills are additive — multiple skills can and should be active simultaneously.
 
@@ -45,12 +44,12 @@ Skills are additive — multiple skills can and should be active simultaneously.
 
 ## Agents Affected
 
-| Agent | Skills invoked | Notes |
-| --- | --- | --- |
-| `architect` | `python-django-stack`, `django-orm` | Design patterns for Django |
-| `implementer` | `python-django-stack`, `django-orm` | Implement views and services |
-| `tester` | `django-testing` | Multi-tenant test constraints |
-| `reviewer` | `python` | Clean code conventions |
+| Agent         | Skills invoked                      | Notes                         |
+| ------------- | ----------------------------------- | ----------------------------- |
+| `architect`   | `python-django-stack`, `django-orm` | Design patterns for Django    |
+| `implementer` | `python-django-stack`, `django-orm` | Implement views and services  |
+| `tester`      | `django-testing`                    | Multi-tenant test constraints |
+| `reviewer`    | `python`                            | Clean code conventions        |
 
 ---
 
@@ -65,6 +64,7 @@ uv run pytest --create-db           # force fresh DB schema
 ```
 
 **Test configuration** (`pyproject.toml`):
+
 ```toml
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
@@ -151,6 +151,6 @@ changes before `implementer` runs.
 
 ## Version History
 
-| Version | Date | Notes |
-| --- | --- | --- |
-| v0.1.0 | 2026-05-07 | Initial stack definition |
+| Version | Date       | Notes                    |
+| ------- | ---------- | ------------------------ |
+| v0.1.0  | 2026-05-07 | Initial stack definition |

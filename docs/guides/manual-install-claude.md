@@ -128,7 +128,7 @@ The behavior is equivalent. The mechanism is different.
 Clone the repository to a temporary location:
 
 ```bash
-git clone https://github.com/codeconductor/codeconductor /tmp/codeconductor
+git clone https://github.com/lgzarturo/codeconductor /tmp/codeconductor
 ```
 
 If a tagged release is available, prefer downloading the release archive from

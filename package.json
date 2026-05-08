@@ -14,7 +14,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/codeconductor/codeconductor"
+    "url": "https://github.com/lgzarturo/codeconductor"
   },
   "engines": {
     "node": ">=20"

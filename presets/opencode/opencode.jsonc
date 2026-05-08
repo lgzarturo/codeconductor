@@ -69,11 +69,27 @@
         "./gradlew build*",
         "npm test*",
         "npm run lint*",
+        // Python / Django / TDD — safe, read-only or idempotent
+        "uv run pytest*",
+        "make tests*",
+        "make tests-coverage*",
+        "make lint*",
+        "make verifymigrations*",
+        "uv run djlint --check*",
       ],
 
       // State-changing git operations that affect history or workspace.
       // Always require explicit user confirmation.
-      "ask": ["git commit*", "git checkout*", "git switch*"],
+      "ask": [
+        "git commit*",
+        "git checkout*",
+        "git switch*",
+        // Django DB operations — require user confirmation
+        "uv run python manage.py migrate_schemas*",
+        "uv run python manage.py makemigrations*",
+        "make migrate*",
+        "make format*",
+      ],
 
       // Hard denials. These commands can cause irreversible damage to the
       // repository, filesystem, or operating system. No exception path exists.

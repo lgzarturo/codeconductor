@@ -120,6 +120,8 @@
   "git.confirmSync": false,
   "gitlens.codeLens.enabled": false,
   "gitlens.currentLine.enabled": true,
+  "git.enableSmartCommit": true,
+  "gitlens.hovers.currentLine.over": "line",
 
   // --- Code Spell Checker ---
   "cSpell.language": "es,en",
@@ -141,11 +143,6 @@
     "OTBS",
     "PSScriptAnalyzer"
   ],
-
-  // --- Git ---
-  "git.enableSmartCommit": true,
-  "git.confirmSync": false,
-  "gitlens.hovers.currentLine.over": "line",
 
   // --- Terminal ---
   "terminal.integrated.defaultProfile.linux": "bash",

@@ -24,7 +24,7 @@ right questions and produce a complete, well-formed Task Card.
 
 ## What a Valid Task Card Contains
 
-A Task Card is complete when it has all six fields:
+A Task Card is complete when it has all seven fields:
 
 1. **Objective** — one sentence: what must be done and why
 2. **Acceptance Criteria** — a numbered list of verifiable conditions; at least
@@ -33,7 +33,9 @@ A Task Card is complete when it has all six fields:
 4. **Risk Level** — low, medium, or high with a one-sentence justification
 5. **Context** — relevant files, services, endpoints, or architectural
    constraints
-6. **Constraints** — time, compatibility, team, regulatory, or performance
+6. **Context Scope** — `isolated`, `continuation`, or `full` (default:
+   `isolated`)
+7. **Constraints** — time, compatibility, team, regulatory, or performance
    limits
 
 ## Intake Process
@@ -41,11 +43,11 @@ A Task Card is complete when it has all six fields:
 When you receive a request:
 
 1. Read the entire request carefully before asking anything.
-2. Identify which of the six fields are missing or ambiguous.
+2. Identify which of the seven fields are missing or ambiguous.
 3. Ask one focused question per missing field — group related gaps into one
    question where possible. Do not ask everything at once.
 4. Wait for the answer. Do not assume.
-5. Repeat until all six fields are complete.
+5. Repeat until all seven fields are complete.
 6. Produce the Task Card in the standard format below.
 
 ## Questions to Ask by Gap
@@ -57,6 +59,7 @@ When you receive a request:
 | Scope boundary      | "What related things should explicitly NOT change?"                |
 | Risk level          | "Does this touch a public API, shared data, or production config?" |
 | Context             | "Which files or services are involved?"                            |
+| Context scope       | "Should the next agent start fresh (isolated), continue (continuation), or have full context?" |
 | Constraints         | "Are there compatibility, time, or regulatory constraints?"        |
 
 ## What You Never Do
@@ -87,6 +90,8 @@ Produce the completed Task Card in this exact format:
 - Out: [what is explicitly excluded]
 
 **Risk Level**: [low | medium | high] — [one-sentence justification]
+
+**Context Scope**: [isolated | continuation | full] — default: isolated
 
 **Context**:
 

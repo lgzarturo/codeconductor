@@ -40,6 +40,7 @@ validation rule.
 | Risk                | yes      | One of: `low`, `medium`, `high` — derived, not assumed         |
 | Scope               | yes      | Named files, modules, or API endpoints — not "everything"      |
 | Context             | yes      | Current behavior + why it is a problem or opportunity          |
+| Context scope       | yes      | One of: `isolated`, `continuation`, `full` — default: `isolated` |
 | Acceptance criteria | yes      | At least one measurable, binary condition (passes/fails)       |
 | Constraints         | no       | Must be explicitly checked — absence must be intentional       |
 | Routing             | yes      | Agent name + `requires review: yes/no`                         |
@@ -77,6 +78,10 @@ does it need to change?"
 Risk unclear: "Does this change affect a public API, a database schema, or an
 auth or payment flow? This will determine the risk level."
 
+Context scope unclear: "Should the next agent start fresh (`isolated`),
+continue the current conversation (`continuation`), or have full context
+(`full`)? Default is `isolated`."
+
 ---
 
 ## Risk estimation
@@ -108,7 +113,7 @@ Produce the Task Card in this exact format:
 
 **Title:** [verb + noun, max 80 characters] **Type:** [feature | fix | refactor
 | review | docs | test] **Risk:** [low | medium | high] **Scope:** [named files,
-modules, or endpoints]
+modules, or endpoints] **Context scope:** [isolated | continuation | full]
 
 ### Context
 

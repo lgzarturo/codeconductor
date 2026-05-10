@@ -55,6 +55,7 @@ Contract version:** v0.1.0 **Date:** [YYYY-MM-DD] **Evaluator:** [human name or
 | 4   | No regressions introduced         | 15%    |             |       |
 | 5   | Code follows project conventions  | 10%    |             |       |
 | 6   | Documentation updated if required | 5%     |             |       |
+| 7   | Context discipline                | 5%     |             |       |
 
 **Score scale:** 0 = not met, 1 = partial, 2 = met, 3 = exceeded
 
@@ -154,6 +155,22 @@ ADR-tracked decisions.
 When no documentation update is required by the task type, score this criterion
 2 (met by design) and note it.
 
+### 7. Context Discipline (5%)
+
+Evaluate whether the agent maintained appropriate context boundaries as specified
+by the Task Card's `context_scope` field.
+
+- **0** — Agent ignored the declared context scope, retaining or requesting
+  unnecessary context that caused scope creep or confusion.
+- **1** — Agent mostly respected the context scope but included minor irrelevant
+  context in its reasoning.
+- **2** — Agent respected the declared context scope throughout the task.
+- **3** — Agent demonstrated excellent context discipline, explicitly noting
+  context boundaries in its reasoning and staying within scope.
+
+When no context scope is specified in the Task Card, score this criterion 2 (met
+by default) and note it.
+
 ---
 
 ## Weighted Score Calculation
@@ -165,7 +182,8 @@ weighted_score =
   (score_3 * 0.20) +
   (score_4 * 0.15) +
   (score_5 * 0.10) +
-  (score_6 * 0.05)
+  (score_6 * 0.05) +
+  (score_7 * 0.05)
 ```
 
 Maximum possible score: 3.0

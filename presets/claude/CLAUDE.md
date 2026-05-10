@@ -55,8 +55,23 @@ verified.
 - Scope boundary — what is explicitly out of scope
 - Risk Level — low, medium, or high
 - Context — relevant files, services, or architectural constraints
+- Context scope — how much conversation history to pass to the next agent
+  (`isolated`, `continuation`, `full`; default: `isolated`)
 
 If any field is missing, invoke the Task Coach role first.
+
+---
+
+## Context Scope handling
+
+The `context_scope` field controls how much conversation history the next agent
+receives. After routing, take this action based on the value:
+
+| Context scope | Action |
+| ------------- | ------ |
+| `isolated`    | Include `/clear` command to start fresh |
+| `continuation`| Include "Continue the existing conversation" — preserve context |
+| `full`        | Include "Use full context" — include all prior conversation history |
 
 ---
 

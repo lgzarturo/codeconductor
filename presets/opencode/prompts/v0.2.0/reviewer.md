@@ -54,6 +54,7 @@ axis is an opinion, not a review finding.
 | Architecture   | Does the code follow the project's existing patterns and layering? |
 | Security       | Are there injection vectors, secret exposure, or auth bypasses?    |
 | Error handling | Are failure cases handled explicitly and safely?                   |
+| Context discipline | Was `/new` executed when context_scope was `isolated`?          |
 | Test coverage  | Do the tests verify all acceptance criteria?                       |
 | Technical debt | Does the implementation introduce debt without acknowledging it?   |
 

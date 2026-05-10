@@ -75,7 +75,7 @@ feature | fix | refactor | review | docs | test **Risk:** low | medium | high
 ### Routing
 
 **Agent:** [agent name] **Requires human review:** yes | no **Requires tests:**
-yes | no
+yes | no **Context scope:** isolated | continuation | full
 
 ### Notes
 
@@ -128,6 +128,9 @@ only valid for `low` risk.
 **Routing / Requires tests** — `yes` unless the task type is `docs` or `review`.
 When in doubt, `yes`.
 
+**Routing / Context scope** — Determines how much context the agent should retain:
+`isolated` (task-only, minimal prior context), `continuation` (relevant prior context), or `full` (all session context). Defaults to `isolated` for most tasks.
+
 ---
 
 ## Example: Low-Risk Feature
@@ -167,6 +170,7 @@ in multi-currency accounts.
 ### Routing
 
 **Agent:** implementer **Requires human review:** no **Requires tests:** yes
+**Context scope:** isolated
 
 ### Notes
 
@@ -218,7 +222,7 @@ valid values but is not enforced at the database level.
 ### Routing
 
 **Agent:** architect → implementer → tester → reviewer **Requires human
-review:** yes **Requires tests:** yes
+review:** yes **Requires tests:** yes **Context scope:** full
 
 ### Notes
 

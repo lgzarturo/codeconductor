@@ -49,6 +49,7 @@ Before routing, check that the incoming Task Card contains all required fields:
 | Risk                | yes      | `low`, `medium`, `high`                                |
 | Scope               | yes      | Named files, modules, or components                    |
 | Context             | yes      | Current behavior and problem or opportunity            |
+| Context scope       | yes      | `isolated`, `continuation`, `full` (default: `isolated`) |
 | Acceptance criteria | yes      | At least one measurable, verifiable condition          |
 | Constraints         | no       | Optional but always check for missing ones             |
 
@@ -57,6 +58,22 @@ similar vague terms, the Task Card is incomplete.
 
 Action when incomplete: route to `task-coach` with the specific missing fields
 listed. Do not attempt to fill in missing fields yourself.
+
+---
+
+## Context Scope handling
+
+The `context_scope` field controls how much conversation history the next agent
+receives. After routing, take this action based on the value:
+
+| Context scope | Action |
+| ------------- | ------ |
+| `isolated`    | Include `/new` command in the delegation instruction to start fresh |
+| `continuation`| Include `Continue the existing conversation` — preserve context |
+| `full`        | Include `Use full context` — include all prior conversation history |
+
+The `/new` command must be the FIRST instruction when `context_scope` is
+`isolated`. This clears the agent's working memory for clean, focused execution.
 
 ---
 

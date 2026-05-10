@@ -1,7 +1,7 @@
 ---
 description: >-
-  Run the bug fix workflow — risk-based routing through task validation,
-  implementation, testing, and optional review.
+  [cc: alias] Run the bug fix workflow — risk-based routing through task
+  validation, implementation, testing, and optional review.
 ---
 
 # Bug Fix Workflow

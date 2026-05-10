@@ -1,6 +1,6 @@
 ---
 description: >-
-  Run the full feature workflow — task validation, technical design,
+  [cc: alias] Run the full feature workflow — task validation, technical design,
   implementation, testing, review, and documentation.
 ---
 

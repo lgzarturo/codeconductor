@@ -11,6 +11,13 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `presets/claude/commands/tdd-cycle.md` — new `/tdd-cycle` command implementing
+  a structured Red-Green-Refactor workflow with phase gates (RED report → GREEN
+  report → REFACTOR report + Reviewer), enforcing strict TDD discipline
+- `presets/claude/commands/cc/` — CodeConductor-namespaced aliases for all
+  Claude preset commands (`/cc:feature`, `/cc:fix`, `/cc:refactor`, `/cc:review`,
+  `/cc:test-plan`, `/cc:tdd-cycle`); enabled via Claude Code subdirectory
+  namespacing
 - `SECURITY.md` with supported versions, current security model, and
   vulnerability reporting guidance
 - `docs/security-model.md` documenting current guarantees, non-guarantees, trust

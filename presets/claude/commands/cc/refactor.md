@@ -1,7 +1,7 @@
 ---
 description: >-
-  Run the refactor workflow — mandatory architectural justification, test
-  verification, risk-based implementation, and scope enforcement.
+  [cc: alias] Run the refactor workflow — mandatory architectural justification,
+  test verification, risk-based implementation, and scope enforcement.
 ---
 
 # Refactor Workflow

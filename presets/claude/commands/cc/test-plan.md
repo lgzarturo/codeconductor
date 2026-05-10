@@ -1,7 +1,7 @@
 ---
 description: >-
-  Generate a structured test plan for a feature or module — covers unit,
-  integration, contract, and edge cases without writing any implementation code.
+  [cc: alias] Generate a structured test plan for a feature or module — covers
+  unit, integration, contract, and edge cases without writing implementation code.
 ---
 
 # Test Plan Workflow

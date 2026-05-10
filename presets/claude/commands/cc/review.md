@@ -1,7 +1,7 @@
 ---
 description: >-
-  Run a structured code review — produces a Review Report with CRITICAL,
-  WARNING, and SUGGESTION findings; CRITICAL findings block merge.
+  [cc: alias] Run a structured code review — produces a Review Report with
+  CRITICAL, WARNING, and SUGGESTION findings; CRITICAL findings block merge.
 ---
 
 # Code Review Workflow

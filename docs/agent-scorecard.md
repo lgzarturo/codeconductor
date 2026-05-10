@@ -157,8 +157,8 @@ When no documentation update is required by the task type, score this criterion
 
 ### 7. Context Discipline (5%)
 
-Evaluate whether the agent maintained appropriate context boundaries as specified
-by the Task Card's `context_scope` field.
+Evaluate whether the agent maintained appropriate context boundaries as
+specified by the Task Card's `context_scope` field.
 
 - **0** — Agent ignored the declared context scope, retaining or requesting
   unnecessary context that caused scope creep or confusion.

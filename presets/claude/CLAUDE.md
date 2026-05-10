@@ -67,11 +67,11 @@ If any field is missing, invoke the Task Coach role first.
 The `context_scope` field controls how much conversation history the next agent
 receives. After routing, take this action based on the value:
 
-| Context scope | Action |
-| ------------- | ------ |
-| `isolated`    | Include `/clear` command to start fresh |
-| `continuation`| Include "Continue the existing conversation" — preserve context |
-| `full`        | Include "Use full context" — include all prior conversation history |
+| Context scope  | Action                                                              |
+| -------------- | ------------------------------------------------------------------- |
+| `isolated`     | Include `/clear` command to start fresh                             |
+| `continuation` | Include "Continue the existing conversation" — preserve context     |
+| `full`         | Include "Use full context" — include all prior conversation history |
 
 ---
 
@@ -586,5 +586,6 @@ or tests), apply `.claude/skills/spring-boot-feature/SKILL.md`.
 
 ## Context Budget
 
-- If the task type differs from the previous one, execute "/clear" before starting.
+- If the task type differs from the previous one, execute "/clear" before
+  starting.
 - Delegate verbose operations to sub-agents.

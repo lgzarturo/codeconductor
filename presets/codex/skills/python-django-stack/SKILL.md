@@ -96,7 +96,8 @@ apps/catalog/
 | **FBV** (Function-Based) | All API endpoints, all POS/manager views, any view with business logic | `api_cart_add`, `api_search_products`, `pos_checkout` |
 | **CBV** (Class-Based)    | Only basic storefront list/detail                                      | `HomeView`, `CategoryListView`, `ProductDetailView`   |
 
-**Rule**: CBV for generic read-only views with simple templates. FBV for everything else (APIs, complex logic, POS).
+**Rule**: CBV for generic read-only views with simple templates. FBV for
+everything else (APIs, complex logic, POS).
 
 ```python
 # FBV — always for APIs
@@ -129,11 +130,13 @@ def api_cart_add(request):
     ...
 ```
 
-**Always use** `@require_POST` / `@require_GET` explicitly. Never `if request.method == "POST"` inside an API view.
+**Always use** `@require_POST` / `@require_GET` explicitly. Never
+`if request.method == "POST"` inside an API view.
 
 ## Service Layer
 
-Business logic lives in `services.py` modules. Services are classes with `@staticmethod` only — no instance state, no `__init__`:
+Business logic lives in `services.py` modules. Services are classes with
+`@staticmethod` only — no instance state, no `__init__`:
 
 ```python
 class OrderService:
@@ -227,7 +230,8 @@ return JsonResponse({
 
 ## PDF Patterns
 
-Pure functions, no classes. Take primitive data, return `bytes`. Internal helpers prefixed with `_`:
+Pure functions, no classes. Take primitive data, return `bytes`. Internal
+helpers prefixed with `_`:
 
 ```python
 import io
@@ -308,7 +312,8 @@ class POSCart:
 
 ## Type Hints
 
-**Minimal**: Only on public service/utility function signatures, not on views or helpers:
+**Minimal**: Only on public service/utility function signatures, not on views or
+helpers:
 
 ```python
 # Service — annotate

@@ -11,10 +11,9 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `AUTHORS.md` — project author and maintainer information
 - `CODE_OF_CONDUCT.md` — community code of conduct (Contributor Covenant v2.1)
   and content usage guidelines for presets, templates, and skill files
-
-
 
 **Codex CLI preset (new target tool)**
 
@@ -24,7 +23,8 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   agent file system); includes routing policy, hard rules, OpenAI model matrix,
   and trigger phrases replacing slash commands
 - `presets/codex/skills/` — 11 skill files copied verbatim from the OpenCode
-  preset (skills are tool-agnostic; all declare `tools: [claude, codex, opencode]`)
+  preset (skills are tool-agnostic; all declare
+  `tools: [claude, codex, opencode]`)
 - `docs/guides/manual-install-codex.md` — step-by-step Codex installation guide:
   prerequisites, file mapping, AGENTS.md creation, model configuration (`o3`,
   `o4-mini`, `gpt-4o`), trigger phrases, skill activation, session management,
@@ -32,20 +32,20 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 **OpenCode agents: Codex model support**
 
-- `presets/opencode/agents/orchestrator.md` — added Codex model rows:
-  `gpt-5.2` (best, long-running agents), `gpt-5.5` (alternative, complex routing)
-- `presets/opencode/agents/architect.md` — added Codex model rows:
-  `gpt-5.5` (best, frontier for complex design), `gpt-5.4` (alternative)
+- `presets/opencode/agents/orchestrator.md` — added Codex model rows: `gpt-5.2`
+  (best, long-running agents), `gpt-5.5` (alternative, complex routing)
+- `presets/opencode/agents/architect.md` — added Codex model rows: `gpt-5.5`
+  (best, frontier for complex design), `gpt-5.4` (alternative)
 - `presets/opencode/agents/implementer.md` — added Codex model rows:
   `gpt-5.3-codex` (best, coding-optimized), `gpt-5.4` (alternative)
-- `presets/opencode/agents/tester.md` — added Codex model rows:
-  `gpt-5.3-codex` (best, coding-optimized for test cases), `gpt-5.4` (alternative)
-- `presets/opencode/agents/reviewer.md` — added Codex model rows:
-  `gpt-5.4` (best, reliable diff analysis), `gpt-5.5` (alternative, security reviews)
+- `presets/opencode/agents/tester.md` — added Codex model rows: `gpt-5.3-codex`
+  (best, coding-optimized for test cases), `gpt-5.4` (alternative)
+- `presets/opencode/agents/reviewer.md` — added Codex model rows: `gpt-5.4`
+  (best, reliable diff analysis), `gpt-5.5` (alternative, security reviews)
 - `presets/opencode/agents/task-coach.md` — added Codex model rows:
   `gpt-5.4-mini` (best, fast cost-efficient intake), `gpt-5.4` (alternative)
-- `presets/opencode/agents/docs.md` — added Codex model rows:
-  `gpt-5.4-mini` (best, fast for changelog/README), `gpt-5.4` (alternative)
+- `presets/opencode/agents/docs.md` — added Codex model rows: `gpt-5.4-mini`
+  (best, fast for changelog/README), `gpt-5.4` (alternative)
 - `presets/opencode/agents/repo-explorer.md` — added Codex model rows:
   `gpt-5.4-mini` (best, fast for file mapping), `gpt-5.4` (alternative)
 
@@ -56,8 +56,9 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   workflow with phase gates (RED report → GREEN report → REFACTOR report +
   Reviewer), enforcing strict TDD discipline
 - `presets/claude/commands/cc/` — CodeConductor-namespaced aliases for all
-  Claude preset commands (`/cc:feature`, `/cc:fix`, `/cc:refactor`, `/cc:review`,
-  `/cc:test-plan`, `/cc:tdd-cycle`); enabled via Claude Code subdirectory namespacing
+  Claude preset commands (`/cc:feature`, `/cc:fix`, `/cc:refactor`,
+  `/cc:review`, `/cc:test-plan`, `/cc:tdd-cycle`); enabled via Claude Code
+  subdirectory namespacing
 - `docs/complementary-tools.md` — reference for tools that operate in distinct
   layers alongside CodeConductor (Engram, Gentle AI, and ecosystem utilities)
 - `SECURITY.md` — supported versions, current security model, and vulnerability
@@ -92,10 +93,11 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `docs/agent-scorecard.md` — added `context_discipline` metric (0–3 scale)
   evaluating whether the agent respected the declared `context_scope`; score 2
   when no scope is declared
-- `presets/opencode/agents/orchestrator.md` — added Context Scope handling table:
-  maps `isolated` → `/new`, `continuation` → preserve context, `full` → full history
-- `presets/opencode/agents/reviewer.md` — added `context discipline` review axis:
-  checks whether `/new` was executed when `context_scope` was `isolated`
+- `presets/opencode/agents/orchestrator.md` — added Context Scope handling
+  table: maps `isolated` → `/new`, `continuation` → preserve context, `full` →
+  full history
+- `presets/opencode/agents/reviewer.md` — added `context discipline` review
+  axis: checks whether `/new` was executed when `context_scope` was `isolated`
 - `presets/opencode/agents/task-coach.md` — added `context_scope` as the 6th
   required Task Card field with intake question pattern
 - `presets/opencode/prompts/v0.2.0/orchestrator.md`, `reviewer.md`,
@@ -112,14 +114,14 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `presets/opencode/opencode.jsonc` — added Python/Django bash patterns:
   `uv run pytest*`, `make tests*`, `make lint*`, `make verifymigrations*`,
-  `uv run djlint --check*` to allow list; Django DB operations (`migrate_schemas`,
-  `makemigrations`, `migrate`) added to ask list
+  `uv run djlint --check*` to allow list; Django DB operations
+  (`migrate_schemas`, `makemigrations`, `migrate`) added to ask list
 - `presets/opencode/agents/orchestrator.md` — added Stack-Aware Skill Routing
   section: Python/Django detection signals, per-agent skill injection
   instructions, and TDD gate for medium/high risk tasks
 - `presets/opencode/agents/tester.md` — added Python/Django Testing section:
-  base class selection table (SimpleTestCase vs TestCase for tenant apps), Django
-  runner commands, TDD sequence, module docstring requirement
+  base class selection table (SimpleTestCase vs TestCase for tenant apps),
+  Django runner commands, TDD sequence, module docstring requirement
 - `presets/opencode/prompts/v0.2.0/` — new versioned prompt directory with
   updated orchestrator and tester contracts
 - `docs/routing-policy.md` — added Django high-risk path patterns
@@ -133,9 +135,8 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `presets/codex/AGENTS.md` — aligned the embedded routing table with the
   documented CodeConductor policy, added a self-contained Scorecard format, and
-  changed skill activation instructions to use installed paths
-  (`.codex/skills/` or `.opencode/skills/`) instead of a root `skills/`
-  directory
+  changed skill activation instructions to use installed paths (`.codex/skills/`
+  or `.opencode/skills/`) instead of a root `skills/` directory
 - `presets/codex/README.md` — corrected installation and runtime guidance to
   distinguish Codex-only and Codex + OpenCode skill layouts
 - `docs/guides/manual-install-codex.md` — removed the obsolete AGENTS skill-path
@@ -145,8 +146,8 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 **Scope corrections**
 
-- `README.md` — states current pre-CLI scope, what works today, what is
-  planned, and current security limitations
+- `README.md` — states current pre-CLI scope, what works today, what is planned,
+  and current security limitations
 - `CLAUDE.md` — reflects repository's documentation-first and preset-based state
 - `docs/architecture.md` and `ROADMAP.md` — separate implemented preset
   documentation from planned runtime security capabilities
@@ -157,8 +158,8 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `policy.yml` and OpenCode preset permissions now require confirmation for
   `git push`
-- `policy.yml` — execution model labeled as target-tool-dependent instead of
-  a CodeConductor-enforced sandbox
+- `policy.yml` — execution model labeled as target-tool-dependent instead of a
+  CodeConductor-enforced sandbox
 
 ---
 

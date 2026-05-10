@@ -12,15 +12,34 @@ insert_final_newline = true
 indent_size = 2
 max_line_length = 100
 
-[*.md]
+[*.{md,mdx}]
+indent_style = space
+indent_size = 2
 trim_trailing_whitespace = false
 max_line_length = 80
 
 [*.{yml,yaml}]
+indent_style = space
 indent_size = 2
 
-[*.json]
+[*.{json,jsonc}]
+indent_style = space
 indent_size = 2
 
 [Makefile]
 indent_style = tab
+
+[.git*]
+indent_style = tab
+
+[*.txt]
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = false
+
+[LICENSE]
+indent_style = space
+indent_size = 2
+
+[VERSION]
+insert_final_newline = false

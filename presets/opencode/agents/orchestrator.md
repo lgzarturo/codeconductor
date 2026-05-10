@@ -46,16 +46,16 @@ Your only output is routing decisions, status reports, and escalations.
 
 Before routing, check that the incoming Task Card contains all required fields:
 
-| Field               | Required | Valid values                                           |
-| ------------------- | -------- | ------------------------------------------------------ |
-| Title               | yes      | Short description, max 80 characters                   |
-| Type                | yes      | `feature`, `fix`, `refactor`, `review`, `docs`, `test` |
-| Risk                | yes      | `low`, `medium`, `high`                                |
-| Scope               | yes      | Named files, modules, or components                    |
-| Context             | yes      | Current behavior and problem or opportunity            |
+| Field               | Required | Valid values                                             |
+| ------------------- | -------- | -------------------------------------------------------- |
+| Title               | yes      | Short description, max 80 characters                     |
+| Type                | yes      | `feature`, `fix`, `refactor`, `review`, `docs`, `test`   |
+| Risk                | yes      | `low`, `medium`, `high`                                  |
+| Scope               | yes      | Named files, modules, or components                      |
+| Context             | yes      | Current behavior and problem or opportunity              |
 | Context scope       | yes      | `isolated`, `continuation`, `full` (default: `isolated`) |
-| Acceptance criteria | yes      | At least one measurable, verifiable condition          |
-| Constraints         | no       | Optional but always check for missing ones             |
+| Acceptance criteria | yes      | At least one measurable, verifiable condition            |
+| Constraints         | no       | Optional but always check for missing ones               |
 
 If any required field is missing or the scope is stated as "everything" or
 similar vague terms, the Task Card is incomplete.
@@ -70,11 +70,11 @@ listed. Do not attempt to fill in missing fields yourself.
 The `context_scope` field controls how much conversation history the next agent
 receives. After routing, take this action based on the value:
 
-| Context scope | Action |
-| ------------- | ------ |
-| `isolated`    | Include `/new` command in the delegation instruction to start fresh |
-| `continuation`| Include `Continue the existing conversation` — preserve context |
-| `full`        | Include `Use full context` — include all prior conversation history |
+| Context scope  | Action                                                              |
+| -------------- | ------------------------------------------------------------------- |
+| `isolated`     | Include `/new` command in the delegation instruction to start fresh |
+| `continuation` | Include `Continue the existing conversation` — preserve context     |
+| `full`         | Include `Use full context` — include all prior conversation history |
 
 The `/new` command must be the FIRST instruction when `context_scope` is
 `isolated`. This clears the agent's working memory for clean, focused execution.
@@ -127,12 +127,12 @@ regression.
 Before delegating to any agent, inspect the project root for these detection
 signals in order of priority:
 
-| Signal | Stack inferred |
-| --- | --- |
-| `manage.py` present | Django |
-| `pyproject.toml` with `django` in deps | Django + Python |
-| `[tool.pytest.ini_options]` in `pyproject.toml` | pytest configured |
-| `django-tenants` in deps | Multi-tenant Django |
+| Signal                                          | Stack inferred       |
+| ----------------------------------------------- | -------------------- |
+| `manage.py` present                             | Django               |
+| `pyproject.toml` with `django` in deps          | Django + Python      |
+| `[tool.pytest.ini_options]` in `pyproject.toml` | pytest configured    |
+| `django-tenants` in deps                        | Multi-tenant Django  |
 | `build.gradle.kts` + `org.springframework.boot` | Spring Boot + Kotlin |
 
 ### Python / Django / PostgreSQL
@@ -140,12 +140,12 @@ signals in order of priority:
 When a Django project is detected, include the following skill invocation
 instruction in the delegation message for each agent:
 
-| Delegated agent | Instruction to include in delegation |
-| --- | --- |
-| `architect` | "Invoke the `python-django-stack` skill before designing. If the design touches models, queries, or migrations, also invoke `django-orm`." |
-| `implementer` | "Invoke `python-django-stack` before writing any code. If writing queryset logic, bulk operations, or service-layer DB code, also invoke `django-orm`." |
-| `tester` | "Invoke `django-testing` before writing any test. The project uses multi-tenant PostgreSQL — do not use `TestCase` for tenant app models." |
-| `reviewer` | "Invoke `python` to check clean code conventions before reviewing." |
+| Delegated agent | Instruction to include in delegation                                                                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `architect`     | "Invoke the `python-django-stack` skill before designing. If the design touches models, queries, or migrations, also invoke `django-orm`."              |
+| `implementer`   | "Invoke `python-django-stack` before writing any code. If writing queryset logic, bulk operations, or service-layer DB code, also invoke `django-orm`." |
+| `tester`        | "Invoke `django-testing` before writing any test. The project uses multi-tenant PostgreSQL — do not use `TestCase` for tenant app models."              |
+| `reviewer`      | "Invoke `python` to check clean code conventions before reviewing."                                                                                     |
 
 **TDD gate for medium and high risk Python tasks:**
 
@@ -157,10 +157,12 @@ Repo Explorer → Architect → Tester (write failing tests) → Implementer →
 ```
 
 Include this instruction in the `tester` delegation for the first pass:
-> "Write failing tests only. Do not implement. Produce a Test Report listing
-> the failing tests and their expected errors. The implementer will run next."
+
+> "Write failing tests only. Do not implement. Produce a Test Report listing the
+> failing tests and their expected errors. The implementer will run next."
 
 Include this instruction in the `implementer` delegation:
+
 > "The tester has already written failing tests at [path]. Run them first to
 > confirm they fail. Then implement the minimal code to make them pass."
 

@@ -49,7 +49,8 @@ quality:
 
 ### The N+1 Problem
 
-The most common Django mistake: iterating over a queryset and accessing FK fields without `select_related`. Each access generates a separate DB query.
+The most common Django mistake: iterating over a queryset and accessing FK
+fields without `select_related`. Each access generates a separate DB query.
 
 ```
 # Initial query: 1 query
@@ -313,7 +314,8 @@ with transaction.atomic():
 
 ### 8. Upload Paths with Schema
 
-Every `FileField`/`ImageField` must include `connection.schema_name` to isolate files per tenant:
+Every `FileField`/`ImageField` must include `connection.schema_name` to isolate
+files per tenant:
 
 ```python
 import os
@@ -445,8 +447,10 @@ def on_order_save(sender, instance, created, **kwargs):
 
 ## Resources
 
-- **Bulk write pattern**: `apps/orders/services.py`, `apps/pos/views.py` lines 216-246
+- **Bulk write pattern**: `apps/orders/services.py`, `apps/pos/views.py` lines
+  216-246
 - **Annotation examples**: `apps/pos/views.py` lines 59-75
 - **Exists usage**: `apps/catalog/views.py` line 112
 - **Upload paths**: `apps/catalog/models.py`
-- **Django ORM docs**: https://docs.djangoproject.com/en/5.2/topics/db/queries/
+- **Django ORM docs**:
+  <https://docs.djangoproject.com/en/5.2/topics/db/queries/>

@@ -5,11 +5,11 @@
 ### Our Pledge
 
 We as contributors and maintainers pledge to make participation in CodeConductor
-a harassment-free experience for everyone, regardless of age, body size,
-visible or invisible disability, ethnicity, sex characteristics, gender
-identity and expression, level of experience, education, socio-economic status,
-nationality, personal appearance, race, caste, color, religion, or sexual
-identity and orientation.
+a harassment-free experience for everyone, regardless of age, body size, visible
+or invisible disability, ethnicity, sex characteristics, gender identity and
+expression, level of experience, education, socio-economic status, nationality,
+personal appearance, race, caste, color, religion, or sexual identity and
+orientation.
 
 We pledge to act and interact in ways that contribute to an open, welcoming,
 diverse, inclusive, and healthy community.
@@ -51,20 +51,20 @@ This Code of Conduct is adapted from the
 ## Part 2 — Content Usage
 
 CodeConductor ships documentation, declarative policies, agent contracts,
-workflow templates, and skill files. This section clarifies how that content
-may be used.
+workflow templates, and skill files. This section clarifies how that content may
+be used.
 
 ### License
 
-All content in this repository is released under the
-[MIT License](./LICENSE). You are free to use, copy, modify, merge, publish,
-distribute, sublicense, and sell copies — provided the copyright notice and
-license text are included in all distributions.
+All content in this repository is released under the [MIT License](./LICENSE).
+You are free to use, copy, modify, merge, publish, distribute, sublicense, and
+sell copies — provided the copyright notice and license text are included in all
+distributions.
 
 ### Presets and Templates
 
-The files under `presets/` are ready-to-install configurations for supported
-AI coding tools (Claude Code, OpenCode, Codex CLI). You may:
+The files under `presets/` are ready-to-install configurations for supported AI
+coding tools (Claude Code, OpenCode, Codex CLI). You may:
 
 - Copy them into your own projects unchanged
 - Adapt them to your team's conventions

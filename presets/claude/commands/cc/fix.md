@@ -51,8 +51,8 @@ Proceed directly to Step 3a.
 
 ### Medium or high-risk route
 
-Applies when: the bug touches shared state, a public API, auth or payment
-paths, database writes, or the root cause is not yet understood.
+Applies when: the bug touches shared state, a public API, auth or payment paths,
+database writes, or the root cause is not yet understood.
 
 Route: Task Coach → Architect → Implementer → Tester → Reviewer
 

@@ -56,7 +56,8 @@ installation and invoke skills from that path.
 
 ### 3. Follow the manual installation guide
 
-Use [docs/guides/manual-install-codex.md](../../docs/guides/manual-install-codex.md)
+Use
+[docs/guides/manual-install-codex.md](../../docs/guides/manual-install-codex.md)
 for the full installation flow, verification checklist, and first-task examples.
 
 ## How to Use
@@ -64,15 +65,15 @@ for the full installation flow, verification checklist, and first-task examples.
 Codex does not load custom slash commands from this preset. Use these natural
 language trigger phrases:
 
-| Workflow | Trigger phrase |
-|----------|---------------|
-| Full feature | `Run the feature workflow for: [description]` |
-| Bug fix | `Run the fix workflow for: [description]` |
-| Refactor | `Run the refactor workflow for: [scope]` |
-| Code review | `Run a structured review of: [target]` |
-| Test plan | `Create a test plan for: [scope]` |
-| Task intake | `Help me define a Task Card for: [vague request]` |
-| Codebase map | `Explore the codebase and produce a Repo Map` |
+| Workflow     | Trigger phrase                                    |
+| ------------ | ------------------------------------------------- |
+| Full feature | `Run the feature workflow for: [description]`     |
+| Bug fix      | `Run the fix workflow for: [description]`         |
+| Refactor     | `Run the refactor workflow for: [scope]`          |
+| Code review  | `Run a structured review of: [target]`            |
+| Test plan    | `Create a test plan for: [scope]`                 |
+| Task intake  | `Help me define a Task Card for: [vague request]` |
+| Codebase map | `Explore the codebase and produce a Repo Map`     |
 
 ---
 
@@ -84,18 +85,18 @@ language trigger phrases:
   commands.
 - For `context_scope: isolated` tasks, start a new Codex session before
   beginning the task.
-- The workflow contract remains the same as the rest of CodeConductor: Task
-  Card first, then risk classification, routing, implementation, verification,
-  and human review.
+- The workflow contract remains the same as the rest of CodeConductor: Task Card
+  first, then risk classification, routing, implementation, verification, and
+  human review.
 
 ---
 
 ## Compatibility
 
-Skills in `presets/codex/skills/` declare Codex compatibility in frontmatter
-and are intended to work across the supported presets. At install time they
-live in `.codex/skills/` for Codex-only projects or remain in
-`.opencode/skills/` for combined projects.
+Skills in `presets/codex/skills/` declare Codex compatibility in frontmatter and
+are intended to work across the supported presets. At install time they live in
+`.codex/skills/` for Codex-only projects or remain in `.opencode/skills/` for
+combined projects.
 
-The `AGENTS.md` and skill formats may evolve. Check current Codex
-documentation if runtime behavior changes.
+The `AGENTS.md` and skill formats may evolve. Check current Codex documentation
+if runtime behavior changes.

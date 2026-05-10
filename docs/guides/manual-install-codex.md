@@ -1,22 +1,19 @@
 # Manual Installation: Codex Preset
 
-**Framework version:** CodeConductor v0.1.0
-**Target tool:** OpenAI Codex CLI
+**Framework version:** CodeConductor v0.1.0 **Target tool:** OpenAI Codex CLI
 
 This guide walks through installing the CodeConductor Codex preset into an
-existing project. In v0.1.0 there is no CLI — installation is a manual file
-copy operation.
+existing project. In v0.1.0 there is no CLI — installation is a manual file copy
+operation.
 
-> [!IMPORTANT]
-> CodeConductor policies are declarative in v0.1.0. Runtime enforcement depends
-> on Codex's permission model; CodeConductor does not provide its own sandbox,
-> policy compiler, or OS-level isolation yet.
+> [!IMPORTANT] CodeConductor policies are declarative in v0.1.0. Runtime
+> enforcement depends on Codex's permission model; CodeConductor does not
+> provide its own sandbox, policy compiler, or OS-level isolation yet.
 
-> [!NOTE]
-> The Codex preset differs architecturally from the Claude and OpenCode presets.
-> Codex has no named agent files and no slash commands. All 8 agent contracts are
-> embedded in a single `AGENTS.md`. Workflows are triggered by natural language
-> phrases instead of `/commands`.
+> [!NOTE] The Codex preset differs architecturally from the Claude and OpenCode
+> presets. Codex has no named agent files and no slash commands. All 8 agent
+> contracts are embedded in a single `AGENTS.md`. Workflows are triggered by
+> natural language phrases instead of `/commands`.
 
 ---
 
@@ -63,8 +60,9 @@ Before installing, determine which setup applies to your project.
 
 ### Option A — Codex only
 
-Your project uses Codex as the only AI coding tool. Skills go in `.codex/skills/`
-at the project root. `AGENTS.md` references them via relative paths.
+Your project uses Codex as the only AI coding tool. Skills go in
+`.codex/skills/` at the project root. `AGENTS.md` references them via relative
+paths.
 
 ```text
 your-project/
@@ -124,7 +122,8 @@ presets/codex/skills/sqlalchemy/SKILL.md                 -> .codex/skills/sqlalc
 presets/codex/skills/testing-strategy/SKILL.md           -> .codex/skills/testing-strategy/SKILL.md
 ```
 
-Total: 1 `AGENTS.md`, up to 11 skill files (install only the ones for your stack).
+Total: 1 `AGENTS.md`, up to 11 skill files (install only the ones for your
+stack).
 
 ### Option B — Codex + OpenCode
 
@@ -272,11 +271,11 @@ codex --model o3
 
 Recommended models by role:
 
-| Role | Model | Reason |
-|------|-------|--------|
-| Architect, Orchestrator | `o3` | Complex reasoning, routing decisions |
-| Implementer, Tester, Reviewer | `o4-mini` | Balanced, cost-effective |
-| Task Coach, Docs, Repo Explorer | `gpt-4o` | Fast, conversational |
+| Role                            | Model     | Reason                               |
+| ------------------------------- | --------- | ------------------------------------ |
+| Architect, Orchestrator         | `o3`      | Complex reasoning, routing decisions |
+| Implementer, Tester, Reviewer   | `o4-mini` | Balanced, cost-effective             |
+| Task Coach, Docs, Repo Explorer | `gpt-4o`  | Fast, conversational                 |
 
 Codex does not support per-agent model assignment in the same session. Choose
 the model that matches the primary agent you plan to use for that session, or
@@ -317,7 +316,8 @@ Expected state:
 
 - [ ] `AGENTS.md` exists in project root
 - [ ] All 8 agent sections are present in `AGENTS.md`
-- [ ] Skill files exist at the path referenced in `AGENTS.md` (`.codex/skills/` or `.opencode/skills/`)
+- [ ] Skill files exist at the path referenced in `AGENTS.md` (`.codex/skills/`
+      or `.opencode/skills/`)
 - [ ] `codex --version` exits with code 0
 
 ---
@@ -342,9 +342,9 @@ Run the feature workflow for: add GET /api/v1/products with pagination and a
 name filter — accepts page, size, and name query parameters.
 ```
 
-Codex reads `AGENTS.md` and follows the orchestrator contract. Because this
-adds a public endpoint, it should classify the task as an API change and route
-it through `architect` → `implementer` → `reviewer`, with tests run before the
+Codex reads `AGENTS.md` and follows the orchestrator contract. Because this adds
+a public endpoint, it should classify the task as an API change and route it
+through `architect` → `implementer` → `reviewer`, with tests run before the
 Deliverable is accepted and human review before merge.
 
 **Step 3 — Vague request: start with task-coach**
@@ -399,15 +399,15 @@ quality. Do not merge on `REVISE` or `REJECT`.
 
 Codex has no slash command system. Use these natural language phrases:
 
-| Workflow | Trigger phrase |
-|----------|---------------|
-| Full feature | `Run the feature workflow for: [description]` |
-| Bug fix | `Run the fix workflow for: [description]` |
-| Refactor | `Run the refactor workflow for: [scope]` |
-| Code review | `Run a structured review of: [target]` |
-| Test plan | `Create a test plan for: [scope]` |
-| Task intake | `Help me define a Task Card for: [vague request]` |
-| Codebase map | `Explore the codebase and produce a Repo Map` |
+| Workflow     | Trigger phrase                                    |
+| ------------ | ------------------------------------------------- |
+| Full feature | `Run the feature workflow for: [description]`     |
+| Bug fix      | `Run the fix workflow for: [description]`         |
+| Refactor     | `Run the refactor workflow for: [scope]`          |
+| Code review  | `Run a structured review of: [target]`            |
+| Test plan    | `Create a test plan for: [scope]`                 |
+| Task intake  | `Help me define a Task Card for: [vague request]` |
+| Codebase map | `Explore the codebase and produce a Repo Map`     |
 
 For individual agent invocation:
 
@@ -419,16 +419,16 @@ Act as the [agent-name] agent. [your instruction]
 
 ## 7. Agent Reference Card
 
-| Agent | Recommended model | Invoke when |
-|-------|------------------|-------------|
-| orchestrator | `o3` | Task requires multiple agents, routing is unclear, or you want a complete plan before implementation starts. |
-| task-coach | `gpt-4o` | Request is vague, acceptance criteria are missing, or risk cannot be classified. |
-| architect | `o3` | Need a design decision, ADR, module boundary change, API contract, or data model. |
-| implementer | `o4-mini` | Technical Plan is accepted and implementation scope is clear. |
-| tester | `o4-mini` | New behavior was introduced, a bug was fixed, or a refactor carries behavioral risk. |
-| reviewer | `o4-mini` | Before committing or opening a pull request. |
-| docs | `gpt-4o` | Public API changed, new module was added, or existing documentation is incorrect. |
-| repo-explorer | `gpt-4o` | You need to understand the codebase or locate the impact radius of a change. |
+| Agent         | Recommended model | Invoke when                                                                                                  |
+| ------------- | ----------------- | ------------------------------------------------------------------------------------------------------------ |
+| orchestrator  | `o3`              | Task requires multiple agents, routing is unclear, or you want a complete plan before implementation starts. |
+| task-coach    | `gpt-4o`          | Request is vague, acceptance criteria are missing, or risk cannot be classified.                             |
+| architect     | `o3`              | Need a design decision, ADR, module boundary change, API contract, or data model.                            |
+| implementer   | `o4-mini`         | Technical Plan is accepted and implementation scope is clear.                                                |
+| tester        | `o4-mini`         | New behavior was introduced, a bug was fixed, or a refactor carries behavioral risk.                         |
+| reviewer      | `o4-mini`         | Before committing or opening a pull request.                                                                 |
+| docs          | `gpt-4o`          | Public API changed, new module was added, or existing documentation is incorrect.                            |
+| repo-explorer | `gpt-4o`          | You need to understand the codebase or locate the impact radius of a change.                                 |
 
 ---
 
@@ -459,19 +459,19 @@ code you write in this session.
 
 Available skills:
 
-| Skill | When to activate |
-|-------|-----------------|
-| `testing-strategy` | Writing or reviewing tests for Spring Boot + Kotlin |
-| `spring-boot-kotlin` | Spring Boot + Kotlin features and patterns |
-| `spring-boot-feature` | Step-by-step Spring Boot feature creation |
-| `jpa-postgres` | JPA queries, PostgreSQL, bulk operations |
-| `api-versioning` | REST API versioning and deprecation workflows |
-| `python` | Python clean code conventions |
-| `python-django-stack` | Django views, services, models, endpoints |
-| `django-orm` | Django ORM queries, bulk operations, migrations |
-| `django-testing` | Django test patterns, tenant-aware testing |
-| `python-fastapi-stack` | FastAPI routers, endpoints, schemas |
-| `sqlalchemy` | SQLAlchemy models, sessions, Alembic migrations |
+| Skill                  | When to activate                                    |
+| ---------------------- | --------------------------------------------------- |
+| `testing-strategy`     | Writing or reviewing tests for Spring Boot + Kotlin |
+| `spring-boot-kotlin`   | Spring Boot + Kotlin features and patterns          |
+| `spring-boot-feature`  | Step-by-step Spring Boot feature creation           |
+| `jpa-postgres`         | JPA queries, PostgreSQL, bulk operations            |
+| `api-versioning`       | REST API versioning and deprecation workflows       |
+| `python`               | Python clean code conventions                       |
+| `python-django-stack`  | Django views, services, models, endpoints           |
+| `django-orm`           | Django ORM queries, bulk operations, migrations     |
+| `django-testing`       | Django test patterns, tenant-aware testing          |
+| `python-fastapi-stack` | FastAPI routers, endpoints, schemas                 |
+| `sqlalchemy`           | SQLAlchemy models, sessions, Alembic migrations     |
 
 ---
 
@@ -479,11 +479,11 @@ Available skills:
 
 The CodeConductor workflow uses a `Context Scope` field in each Task Card:
 
-| Context scope | Meaning | Action |
-|---------------|---------|--------|
-| `isolated` | Task should start with no prior context | Close and reopen Codex before starting |
-| `continuation` | Task continues a previous conversation | Keep the same Codex session open |
-| `full` | Task needs all prior context | Keep the same session and reference prior output |
+| Context scope  | Meaning                                 | Action                                           |
+| -------------- | --------------------------------------- | ------------------------------------------------ |
+| `isolated`     | Task should start with no prior context | Close and reopen Codex before starting           |
+| `continuation` | Task continues a previous conversation  | Keep the same Codex session open                 |
+| `full`         | Task needs all prior context            | Keep the same session and reference prior output |
 
 Codex has no `/new` command equivalent to OpenCode. For `isolated` tasks, the
 only way to clear context is to start a new session. This is the default for
@@ -497,17 +497,17 @@ start of each new session to restore context.
 
 ## 10. Differences from Claude and OpenCode Presets
 
-| Feature | Claude Code | OpenCode | Codex |
-|---------|-------------|----------|-------|
-| Config file | `CLAUDE.md` | `opencode.jsonc` + `agents/*.md` | `AGENTS.md` only |
-| Named agents | `.claude/commands/cc/*.md` | `.opencode/agents/*.md` | Embedded in `AGENTS.md` |
-| Slash commands | `/cc:feature`, `/cc:fix`, etc. | `/cc:feature`, `/cc:fix`, etc. | Not supported — use trigger phrases |
-| Session reset | `/clear` | `/new` | Close and reopen session |
-| Models | Anthropic (`claude-*`) | Anthropic or Chinese providers | OpenAI (`o3`, `o4-mini`, `gpt-4o`) |
-| Permission config | `settings.json` | `opencode.jsonc` | `~/.codex/config.toml` (global only) |
-| Project-level config | yes | yes | no |
-| Skills location | `.claude/skills/` | `.opencode/skills/` | `.codex/skills/` or `.opencode/skills/` |
-| Skills format | `SKILL.md` | `SKILL.md` | `SKILL.md` (same format) |
+| Feature              | Claude Code                    | OpenCode                         | Codex                                   |
+| -------------------- | ------------------------------ | -------------------------------- | --------------------------------------- |
+| Config file          | `CLAUDE.md`                    | `opencode.jsonc` + `agents/*.md` | `AGENTS.md` only                        |
+| Named agents         | `.claude/commands/cc/*.md`     | `.opencode/agents/*.md`          | Embedded in `AGENTS.md`                 |
+| Slash commands       | `/cc:feature`, `/cc:fix`, etc. | `/cc:feature`, `/cc:fix`, etc.   | Not supported — use trigger phrases     |
+| Session reset        | `/clear`                       | `/new`                           | Close and reopen session                |
+| Models               | Anthropic (`claude-*`)         | Anthropic or Chinese providers   | OpenAI (`o3`, `o4-mini`, `gpt-4o`)      |
+| Permission config    | `settings.json`                | `opencode.jsonc`                 | `~/.codex/config.toml` (global only)    |
+| Project-level config | yes                            | yes                              | no                                      |
+| Skills location      | `.claude/skills/`              | `.opencode/skills/`              | `.codex/skills/` or `.opencode/skills/` |
+| Skills format        | `SKILL.md`                     | `SKILL.md`                       | `SKILL.md` (same format)                |
 
 ---
 
@@ -530,11 +530,11 @@ sync step required.
 
 The only file unique to each tool:
 
-| Tool | Unique files |
-|------|-------------|
+| Tool     | Unique files                                                         |
+| -------- | -------------------------------------------------------------------- |
 | OpenCode | `opencode.jsonc`, `.opencode/agents/*.md`, `.opencode/commands/*.md` |
-| Codex | `AGENTS.md` |
-| Shared | `.opencode/skills/*/SKILL.md` |
+| Codex    | `AGENTS.md`                                                          |
+| Shared   | `.opencode/skills/*/SKILL.md`                                        |
 
 ---
 
@@ -547,9 +547,9 @@ one, it invents architecture inconsistent with the rest of the codebase.
 `git push --force*` outright. Standard `git push` requires explicit
 confirmation. Use your normal Git workflow for pushing.
 
-**Do not skip routing to go faster.** Skipping the architect for an API
-contract change or skipping the reviewer before a merge moves the cost to the
-incident that follows.
+**Do not skip routing to go faster.** Skipping the architect for an API contract
+change or skipping the reviewer before a merge moves the cost to the incident
+that follows.
 
 **Do not store secrets in any file Codex can read.** Hard rules in `AGENTS.md`
 deny reads on `.env`, `.env.*`, `secrets/**`, and common credential paths. Keep

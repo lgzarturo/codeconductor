@@ -128,8 +128,10 @@ only valid for `low` risk.
 **Routing / Requires tests** — `yes` unless the task type is `docs` or `review`.
 When in doubt, `yes`.
 
-**Routing / Context scope** — Determines how much context the agent should retain:
-`isolated` (task-only, minimal prior context), `continuation` (relevant prior context), or `full` (all session context). Defaults to `isolated` for most tasks.
+**Routing / Context scope** — Determines how much context the agent should
+retain: `isolated` (task-only, minimal prior context), `continuation` (relevant
+prior context), or `full` (all session context). Defaults to `isolated` for most
+tasks.
 
 ---
 

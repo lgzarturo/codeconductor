@@ -129,7 +129,8 @@ class Settings(BaseSettings):
 settings = Settings()
 ```
 
-Never hardcode secrets. Never import `os.environ` directly in app code — always go through `settings`.
+Never hardcode secrets. Never import `os.environ` directly in app code — always
+go through `settings`.
 
 ## Routers
 
@@ -179,6 +180,7 @@ async def delete_product(product_id: int, db: AsyncSession = Depends(get_db)):
 ```
 
 **HTTP method rules**:
+
 - `GET` — read, never mutates
 - `POST` — create → `201`
 - `PATCH` — partial update → `200`
@@ -232,12 +234,14 @@ class ProductListResponse(BaseModel):
 ```
 
 **Schema split rule**:
+
 - `Base` — shared fields
 - `Create` — input for POST (no id, no timestamps)
 - `Update` — all fields optional (PATCH semantics)
 - `Read` — output with `from_attributes = True` (ORM → schema)
 
-Never return ORM model objects directly from endpoints — always go through a `Read` schema.
+Never return ORM model objects directly from endpoints — always go through a
+`Read` schema.
 
 ## Dependency Injection
 
@@ -258,8 +262,8 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             raise
 ```
 
-**Rule**: commit in the dependency, not in the service. Services are commit-agnostic.
-The dependency owns the transaction boundary.
+**Rule**: commit in the dependency, not in the service. Services are
+commit-agnostic. The dependency owns the transaction boundary.
 
 ## Error Handling
 
@@ -296,18 +300,18 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
 **Status code table**:
 
-| Code | When |
-| ---- | ---- |
-| 200 | Successful GET, PATCH, PUT |
-| 201 | Successful POST (resource created) |
-| 204 | Successful DELETE (no body) |
-| 400 | Validation error, bad input |
-| 401 | Not authenticated |
-| 403 | Authenticated but not authorized |
-| 404 | Resource not found |
-| 409 | Conflict (duplicate, constraint violation) |
-| 422 | Pydantic validation error (automatic) |
-| 500 | Unhandled server error |
+| Code | When                                       |
+| ---- | ------------------------------------------ |
+| 200  | Successful GET, PATCH, PUT                 |
+| 201  | Successful POST (resource created)         |
+| 204  | Successful DELETE (no body)                |
+| 400  | Validation error, bad input                |
+| 401  | Not authenticated                          |
+| 403  | Authenticated but not authorized           |
+| 404  | Resource not found                         |
+| 409  | Conflict (duplicate, constraint violation) |
+| 422  | Pydantic validation error (automatic)      |
+| 500  | Unhandled server error                     |
 
 Never return `200` for a creation — use `201`. Never return a body for `204`.
 
@@ -350,11 +354,11 @@ class ProductService:
 
 ## Async vs Sync Endpoints
 
-| Use async | Use sync |
-| --------- | -------- |
-| DB queries (AsyncSession) | CPU-bound transformations |
-| External HTTP calls (httpx.AsyncClient) | Pure in-memory logic |
-| Any `await` inside the handler | No I/O at all |
+| Use async                               | Use sync                  |
+| --------------------------------------- | ------------------------- |
+| DB queries (AsyncSession)               | CPU-bound transformations |
+| External HTTP calls (httpx.AsyncClient) | Pure in-memory logic      |
+| Any `await` inside the handler          | No I/O at all             |
 
 ```python
 # async — has I/O
@@ -373,19 +377,20 @@ Use `httpx.AsyncClient` for external HTTP.
 
 ## Naming Conventions
 
-| Concern | Convention | Example |
-| ------- | ---------- | ------- |
-| Router files | `snake_case.py` | `product_variants.py` |
-| Schema classes | `PascalCase` + suffix | `ProductCreate`, `ProductRead` |
-| Endpoint functions | `verb_resource` | `list_products`, `create_order` |
-| Service methods | `@staticmethod`, verb_noun | `get_or_404`, `create`, `list` |
-| Dependency functions | `get_*` | `get_db`, `get_current_user` |
-| Router prefix | lowercase, plural, kebab | `/product-variants` |
-| Tags | lowercase, plural | `["product-variants"]` |
+| Concern              | Convention                 | Example                         |
+| -------------------- | -------------------------- | ------------------------------- |
+| Router files         | `snake_case.py`            | `product_variants.py`           |
+| Schema classes       | `PascalCase` + suffix      | `ProductCreate`, `ProductRead`  |
+| Endpoint functions   | `verb_resource`            | `list_products`, `create_order` |
+| Service methods      | `@staticmethod`, verb_noun | `get_or_404`, `create`, `list`  |
+| Dependency functions | `get_*`                    | `get_db`, `get_current_user`    |
+| Router prefix        | lowercase, plural, kebab   | `/product-variants`             |
+| Tags                 | lowercase, plural          | `["product-variants"]`          |
 
 ## Service Layer
 
-Business logic lives in `services/`. Services are classes with `@staticmethod` only:
+Business logic lives in `services/`. Services are classes with `@staticmethod`
+only:
 
 ```python
 # services/product.py
@@ -428,9 +433,11 @@ class ProductService:
 ```
 
 **Rules**:
+
 - `db.flush()` to get the ID without committing — commit is in `get_db`
 - `db.refresh(product)` to reload relationships after flush
-- `payload.model_dump(exclude_unset=True)` for PATCH — only update provided fields
+- `payload.model_dump(exclude_unset=True)` for PATCH — only update provided
+  fields
 
 ## Commands
 
@@ -444,6 +451,7 @@ ruff format .                          # format
 
 ## Resources
 
-- **FastAPI docs**: https://fastapi.tiangolo.com/
-- **Pydantic v2 docs**: https://docs.pydantic.dev/latest/
-- **pydantic-settings**: https://docs.pydantic.dev/latest/concepts/pydantic_settings/
+- **FastAPI docs**: <https://fastapi.tiangolo.com/>
+- **Pydantic v2 docs**: <https://docs.pydantic.dev/latest/>
+- **pydantic-settings**:
+  <https://docs.pydantic.dev/latest/concepts/pydantic_settings/>

@@ -52,9 +52,11 @@ quality:
 This project uses `django-tenants` with multi-schema PostgreSQL:
 
 - **Shared apps** (public schema): `core`, `users`, Django contrib
-- **Tenant apps** (per-store schema): `employees`, `catalog`, `cart`, `orders`, `pos`, `storefront`, `analytics`
+- **Tenant apps** (per-store schema): `employees`, `catalog`, `cart`, `orders`,
+  `pos`, `storefront`, `analytics`
 
-**The test runner uses the public schema**, so tenant app tables DON'T exist in tests. This profoundly affects how we write tests.
+**The test runner uses the public schema**, so tenant app tables DON'T exist in
+tests. This profoundly affects how we write tests.
 
 ### Base Class Selection
 
@@ -82,7 +84,8 @@ class TestProductAPI(SimpleTestCase):
 
 ### 1. RequestFactory — Never TestClient
 
-`TestClient` runs `TenantMainMiddleware`, which redirects tenant URLs and breaks view tests. Use `RequestFactory` and call the view directly:
+`TestClient` runs `TenantMainMiddleware`, which redirects tenant URLs and breaks
+view tests. Use `RequestFactory` and call the view directly:
 
 ```python
 from django.test import RequestFactory
@@ -107,7 +110,8 @@ response = api_search_products(request)
 
 ### 2. Bypass Access Decorators
 
-`require_pos_access` and `require_manager_access` check `EmployeeProfile` (tenant app). Bypass with `is_superuser`:
+`require_pos_access` and `require_manager_access` check `EmployeeProfile`
+(tenant app). Bypass with `is_superuser`:
 
 ```python
 # The decorator does:
@@ -143,7 +147,8 @@ request.session["pos_cart"] = {}
 
 ### 4. MagicMock.DoesNotExist Trap
 
-`except Model.DoesNotExist` won't catch a plain `MagicMock`. Create a real exception class:
+`except Model.DoesNotExist` won't catch a plain `MagicMock`. Create a real
+exception class:
 
 ```python
 # When mocking a model
@@ -397,7 +402,8 @@ def test_order_creation(self, mock_atomic):
 
 - **Canonical queryset mock**: `apps/pos/tests/test_search_products.py`
 - **FakeSession + transaction mock**: `apps/pos/tests/test_cart_checkout.py`
-- **DoesNotExist + MagicMock.name traps**: `apps/pos/tests/test_temporal_cart.py`
+- **DoesNotExist + MagicMock.name traps**:
+  `apps/pos/tests/test_temporal_cart.py`
 - **Multi-decorator bypass**: `apps/catalog/tests/test_api_catalog_products.py`
 - **pytest config**: `pyproject.toml` → `[tool.pytest.ini_options]`
 - **pytest-django docs**: https://pytest-django.readthedocs.io/

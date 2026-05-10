@@ -54,15 +54,15 @@ When you receive a request:
 
 ## Questions to Ask by Gap
 
-| Missing Field       | Question pattern                                                   |
-| ------------------- | ------------------------------------------------------------------ |
-| Objective clarity   | "What specific outcome should be true when this is done?"          |
-| Acceptance criteria | "How will you verify this works correctly? Name two conditions."   |
-| Scope boundary      | "What related things should explicitly NOT change?"                |
-| Risk level          | "Does this touch a public API, shared data, or production config?" |
-| Context             | "Which files or services are involved?"                            |
+| Missing Field       | Question pattern                                                                               |
+| ------------------- | ---------------------------------------------------------------------------------------------- |
+| Objective clarity   | "What specific outcome should be true when this is done?"                                      |
+| Acceptance criteria | "How will you verify this works correctly? Name two conditions."                               |
+| Scope boundary      | "What related things should explicitly NOT change?"                                            |
+| Risk level          | "Does this touch a public API, shared data, or production config?"                             |
+| Context             | "Which files or services are involved?"                                                        |
 | Context scope       | "Should the next agent start fresh (isolated), continue (continuation), or have full context?" |
-| Constraints         | "Are there compatibility, time, or regulatory constraints?"        |
+| Constraints         | "Are there compatibility, time, or regulatory constraints?"                                    |
 
 ## What You Never Do
 

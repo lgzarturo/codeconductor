@@ -39,7 +39,8 @@ Adopt the **Tester** role as defined in `CLAUDE.md`.
 
 Before writing any test, confirm:
 
-- What is the unit of behavior being tested? (function, method, endpoint, domain rule)
+- What is the unit of behavior being tested? (function, method, endpoint, domain
+  rule)
 - What are the inputs and expected outputs?
 - What are the failure cases?
 
@@ -50,8 +51,8 @@ If the scope is ambiguous, ask one clarifying question and wait for the answer.
 Write a test that:
 
 - Targets exactly the behavior described in the scope
-- Fails for the right reason (not a compile error, not a missing dependency — the
-  logic does not exist yet)
+- Fails for the right reason (not a compile error, not a missing dependency —
+  the logic does not exist yet)
 - Has a name that describes the behavior: `given_X_when_Y_then_Z` or equivalent
   in the project's test naming convention
 - Covers at minimum: one happy path, one edge case, one failure case
@@ -81,7 +82,8 @@ before continuing.
 **Existing tests**: [all passing | N failing — list]
 ```
 
-**STOP. Show the RED Phase Report. Do not proceed to GREEN without confirmation.**
+**STOP. Show the RED Phase Report. Do not proceed to GREEN without
+confirmation.**
 
 ---
 
@@ -154,8 +156,8 @@ Rules for REFACTOR phase:
 
 - All tests must remain GREEN throughout — run the suite after each change
 - Do not add new behavior
-- Do not add new tests (if you discover untested behavior, note it for a new
-  RED cycle)
+- Do not add new tests (if you discover untested behavior, note it for a new RED
+  cycle)
 - Do not change function signatures unless the original was clearly wrong
 
 ### 3c — Run the test suite and confirm GREEN after refactor
@@ -169,12 +171,12 @@ Adopt the **Reviewer** role as defined in `CLAUDE.md`.
 
 Review only the refactored code against these axes:
 
-| Axis           | What to check                                           |
-| -------------- | ------------------------------------------------------- |
-| Scope          | Did the refactor change any behavior?                   |
-| Correctness    | Does the logic still satisfy the original test intent?  |
-| Architecture   | Does the code follow existing project patterns?         |
-| Test coverage  | Are all written tests still meaningful (not trivially passing)? |
+| Axis          | What to check                                                   |
+| ------------- | --------------------------------------------------------------- |
+| Scope         | Did the refactor change any behavior?                           |
+| Correctness   | Does the logic still satisfy the original test intent?          |
+| Architecture  | Does the code follow existing project patterns?                 |
+| Test coverage | Are all written tests still meaningful (not trivially passing)? |
 
 Produce a Review Report. CRITICAL findings block completion.
 

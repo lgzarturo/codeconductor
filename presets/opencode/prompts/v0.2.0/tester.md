@@ -97,18 +97,17 @@ chain mock helper, and FakeSession pattern — all of which you must follow.
 
 ### Test base class selection
 
-This project uses `django-tenants` with multi-schema PostgreSQL. The test
-runner runs against the public schema. Tenant app tables do not exist during
-tests.
+This project uses `django-tenants` with multi-schema PostgreSQL. The test runner
+runs against the public schema. Tenant app tables do not exist during tests.
 
-| Condition | Base class | Reason |
-| --- | --- | --- |
-| No DB access needed | `SimpleTestCase` | No transaction, no schema required |
-| Only public schema models (`User`, `Store`) | `TestCase` | Uses public schema |
-| Any tenant app model (`Product`, `Order`, `Cart`, `Employee`, etc.) | `SimpleTestCase` + mocks | Tenant tables don't exist |
+| Condition                                                           | Base class               | Reason                             |
+| ------------------------------------------------------------------- | ------------------------ | ---------------------------------- |
+| No DB access needed                                                 | `SimpleTestCase`         | No transaction, no schema required |
+| Only public schema models (`User`, `Store`)                         | `TestCase`               | Uses public schema                 |
+| Any tenant app model (`Product`, `Order`, `Cart`, `Employee`, etc.) | `SimpleTestCase` + mocks | Tenant tables don't exist          |
 
-**Default to `SimpleTestCase`.** Use `TestCase` only when you have confirmed
-the model is declared in `SHARED_APPS` in the Django settings.
+**Default to `SimpleTestCase`.** Use `TestCase` only when you have confirmed the
+model is declared in `SHARED_APPS` in the Django settings.
 
 ### Test file paths
 

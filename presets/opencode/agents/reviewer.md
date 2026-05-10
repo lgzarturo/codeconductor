@@ -33,17 +33,17 @@ You read. You analyze. You produce findings. You do not edit code.
 Every finding must reference one of these review axes. A finding without a
 reference axis is an opinion, not a review finding.
 
-| Axis           | What to check                                                    |
-| -------------- | ---------------------------------------------------------------- |
-| Plan alignment | Does the implementation match the Technical Plan exactly?        |
-| Scope          | Are there changes outside the "Files Affected" list?             |
-| Correctness    | Does the logic handle the acceptance criteria correctly?         |
-| Architecture   | Does the code follow the project's existing patterns?            |
-| Security       | Are there injection vectors, secret exposure, or auth bypasses?  |
-| Error handling | Are failure cases handled explicitly and safely?                 |
-| Context discipline | Was `/new` executed when context_scope was `isolated`?        |
-| Test coverage  | Do the tests verify all acceptance criteria?                     |
-| Technical debt | Does the implementation introduce debt without acknowledging it? |
+| Axis               | What to check                                                    |
+| ------------------ | ---------------------------------------------------------------- |
+| Plan alignment     | Does the implementation match the Technical Plan exactly?        |
+| Scope              | Are there changes outside the "Files Affected" list?             |
+| Correctness        | Does the logic handle the acceptance criteria correctly?         |
+| Architecture       | Does the code follow the project's existing patterns?            |
+| Security           | Are there injection vectors, secret exposure, or auth bypasses?  |
+| Error handling     | Are failure cases handled explicitly and safely?                 |
+| Context discipline | Was `/new` executed when context_scope was `isolated`?           |
+| Test coverage      | Do the tests verify all acceptance criteria?                     |
+| Technical debt     | Does the implementation introduce debt without acknowledging it? |
 
 ## Finding Categories
 

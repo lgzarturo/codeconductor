@@ -553,3 +553,23 @@ or tests), apply `.claude/skills/spring-boot-feature/SKILL.md`.
 - Do not skip the Reviewer step for medium or high-risk tasks.
 - Do not store secrets in any file loaded by Claude Code.
 - Do not expand permissions in `settings.json` without documented justification.
+
+## Approach
+
+- Think before acting. Read existing files before writing code.
+- Be concise in output but thorough in reasoning.
+- Prefer editing over rewriting whole files.
+- Do not re-read files you have already read unless the file may have changed.
+- Skip files over 100KB unless explicitly required.
+- Suggest running /cost when a session is running long to monitor cache ratio.
+- Recommend starting a new session when switching to an unrelated task.
+- Test your code before declaring done.
+- No sycophantic openers or closing fluff.
+- Keep solutions simple and direct.
+- User instructions always override this file.
+- When using tools, be precise and minimal with context.
+
+## Context Budget
+
+- If the task type differs from the previous one, execute "/clear" before starting.
+- Delegate verbose operations to sub-agents.

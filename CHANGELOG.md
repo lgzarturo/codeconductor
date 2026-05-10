@@ -11,6 +11,11 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `CODE_OF_CONDUCT.md` — community code of conduct (Contributor Covenant v2.1)
+  and content usage guidelines for presets, templates, and skill files
+
+
+
 **Codex CLI preset (new target tool)**
 
 - `presets/codex/` — CodeConductor preset for OpenAI Codex CLI; all 8 agent

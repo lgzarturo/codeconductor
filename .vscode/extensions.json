@@ -4,7 +4,6 @@
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "ms-vscode.vscode-typescript-next",
-    "streetsidesoftware.code-spell-checker",
     // Markdown
     "yzhang.markdown-all-in-one",
     "DavidAnson.vscode-markdownlint",
@@ -20,6 +19,10 @@
     "mikestead.dotenv",
     // YAML / JSON
     "redhat.vscode-yaml",
-    "mohsen1.prettify-json"
+    "mohsen1.prettify-json",
+    "remcohaszing.schemastore",
+    // Utilidades
+    "streetsidesoftware.code-spell-checker",
+    "streetsidesoftware.code-spell-checker-language-es"
   ]
 }

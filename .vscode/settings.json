@@ -39,6 +39,9 @@
 
   // --- Markdown ---
   "[markdown]": {
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true,
+    "files.trimTrailingWhitespace": false,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.wordWrap": "wordWrapColumn",
     "editor.wordWrapColumn": 80,
@@ -54,23 +57,37 @@
   "markdown.preview.fontSize": 15,
   "markdown.preview.lineHeight": 1.6,
   "markdownlint.config": {
-    "MD013": { "line_length": 80 },
+    "MD013": {
+      "line_length": 80,
+      "heading_line_length": 80,
+      "code_block_line_length": 120,
+      "tables": false
+    },
+    "MD024": { "siblings_only": true },
     "MD033": false,
     "MD041": false
   },
 
   // --- YAML ---
   "[yaml]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true
   },
   "yaml.format.enable": true,
+  "yaml.validate": true,
+  "yaml.completion": true,
 
   // --- JSON ---
   "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true
   },
 
   // --- Files ---
@@ -83,6 +100,11 @@
     "**/node_modules": true,
     "**/dist": true,
     "**/.next": true
+  },
+  "files.associations": {
+    "**/skills/*/SKILL.md": "markdown",
+    "**/agents/*.md": "markdown",
+    "**/commands/*.md": "markdown"
   },
 
   // --- Search ---
@@ -101,6 +123,40 @@
 
   // --- Code Spell Checker ---
   "cSpell.language": "es,en",
+  "cSpell.words": [
+    "opencode",
+    "shellcheck",
+    "shfmt",
+    "testcontainers",
+    "pydantic",
+    "sqlalchemy",
+    "fastapi",
+    "tanstack",
+    "nextjs",
+    "pytest",
+    "kotest",
+    "subagent",
+    "frontmatter",
+    "POSIX",
+    "OTBS",
+    "PSScriptAnalyzer"
+  ],
+
+  // --- Git ---
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
+  "gitlens.hovers.currentLine.over": "line",
+
+  // --- Terminal ---
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.defaultProfile.osx": "bash",
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": {
+      "source": "PowerShell"
+    }
+  },
+  "terminal.integrated.shellIntegration.enable": true,
 
   // --- Error Lens ---
   "errorLens.enabledDiagnosticLevels": ["error", "warning"],

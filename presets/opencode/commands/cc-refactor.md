@@ -28,7 +28,7 @@ behavioral consequences.
 If coverage is insufficient:
 
 1. **STOP**. Report the coverage gap to the human.
-2. Suggest invoking `/test-plan` first to establish coverage.
+2. Suggest invoking `/cc:test-plan` first to establish coverage.
 3. Do not proceed with the refactor until coverage is confirmed.
 
 ---

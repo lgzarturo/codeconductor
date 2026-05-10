@@ -541,6 +541,9 @@ dependencies, apply `.claude/skills/python-fastapi-stack/SKILL.md`.
 When the active task touches SQLAlchemy models, queries, sessions, bulk
 operations, or Alembic migrations, apply `.claude/skills/sqlalchemy/SKILL.md`.
 
+When the user asks to create a Spring Boot feature (entity, service, controller,
+or tests), apply `.claude/skills/spring-boot-feature/SKILL.md`.
+
 ---
 
 ## What Never Changes

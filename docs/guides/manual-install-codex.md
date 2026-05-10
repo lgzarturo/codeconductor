@@ -134,9 +134,8 @@ FROM (CodeConductor repo)                                   TO (your project roo
 presets/codex/AGENTS.md                                  -> AGENTS.md
 ```
 
-Total: 1 file. Skills already exist in `.opencode/skills/` — update the
-`Skills` section of `AGENTS.md` to reference `.opencode/skills/` paths (see
-Step 5B).
+Total: 1 file. Skills already exist in `.opencode/skills/` — use those same
+installed paths when invoking skills from Codex. No duplication needed.
 
 ---
 
@@ -218,13 +217,10 @@ cp /tmp/codeconductor/presets/codex/AGENTS.md ./AGENTS.md
 
 **If AGENTS.md already exists:**
 
-Append the full content of the preset file below your existing content:
+Merge the CodeConductor sections manually. Keep one authoritative `AGENTS.md`
+per directory scope. Do not append duplicate copies of the agent contracts.
 
-```bash
-cat /tmp/codeconductor/presets/codex/AGENTS.md >> ./AGENTS.md
-```
-
-After appending, verify the file contains all 8 agent role sections:
+After merging, verify the file contains all 8 agent role sections:
 
 ```bash
 grep "^### " AGENTS.md
@@ -235,59 +231,26 @@ Expected output includes: `orchestrator`, `task-coach`, `architect`,
 
 ---
 
-### Step 5A — Codex only: update skill paths in AGENTS.md
+### Step 5 — Skill activation uses the installed path
 
-The preset `AGENTS.md` references skills under `skills/` at the project root.
-Update the `Skills` section to point to `.codex/skills/` instead.
+No `AGENTS.md` rewrite is required. The Codex preset documents both supported
+skill locations:
 
-Open `AGENTS.md`, locate the Skills table, and replace the path prefix:
+- Codex-only: invoke skills from `.codex/skills/`
+- Codex + OpenCode: invoke skills from `.opencode/skills/`
 
-```markdown
-<!-- Before -->
-Apply the testing-strategy skill from skills/testing-strategy/SKILL.md.
+Examples:
 
-<!-- After -->
+```text
 Apply the testing-strategy skill from .codex/skills/testing-strategy/SKILL.md.
 ```
 
-Or update the Skills reference table at the bottom of `AGENTS.md`:
-
-```markdown
-## Skills
-
-| Skill | Path |
-|-------|------|
-| `testing-strategy` | `.codex/skills/testing-strategy/SKILL.md` |
-| `spring-boot-kotlin` | `.codex/skills/spring-boot-kotlin/SKILL.md` |
-| ... | ... |
+```text
+Apply the testing-strategy skill from .opencode/skills/testing-strategy/SKILL.md.
 ```
 
----
-
-### Step 5B — Codex + OpenCode: redirect skill paths to `.opencode/skills/`
-
-Open `AGENTS.md` and update the Skills reference table at the bottom to point
-to the existing OpenCode skill location:
-
-```markdown
-## Skills
-
-| Skill | Path |
-|-------|------|
-| `testing-strategy` | `.opencode/skills/testing-strategy/SKILL.md` |
-| `spring-boot-kotlin` | `.opencode/skills/spring-boot-kotlin/SKILL.md` |
-| `python-django-stack` | `.opencode/skills/python-django-stack/SKILL.md` |
-| `django-orm` | `.opencode/skills/django-orm/SKILL.md` |
-| `django-testing` | `.opencode/skills/django-testing/SKILL.md` |
-| `jpa-postgres` | `.opencode/skills/jpa-postgres/SKILL.md` |
-| `api-versioning` | `.opencode/skills/api-versioning/SKILL.md` |
-| `python` | `.opencode/skills/python/SKILL.md` |
-| `python-fastapi-stack` | `.opencode/skills/python-fastapi-stack/SKILL.md` |
-| `sqlalchemy` | `.opencode/skills/sqlalchemy/SKILL.md` |
-| `spring-boot-feature` | `.opencode/skills/spring-boot-feature/SKILL.md` |
-```
-
-No files are copied. No directories are created. Skills stay in one place.
+In the combined setup, skills stay in one place. No files are copied and no
+directories are created under `.codex/skills/`.
 
 ---
 
@@ -379,8 +342,10 @@ Run the feature workflow for: add GET /api/v1/products with pagination and a
 name filter — accepts page, size, and name query parameters.
 ```
 
-Codex reads `AGENTS.md` and follows the orchestrator contract. It classifies
-the risk and routes to the appropriate agents in sequence.
+Codex reads `AGENTS.md` and follows the orchestrator contract. Because this
+adds a public endpoint, it should classify the task as an API change and route
+it through `architect` → `implementer` → `reviewer`, with tests run before the
+Deliverable is accepted and human review before merge.
 
 **Step 3 — Vague request: start with task-coach**
 
@@ -411,14 +376,10 @@ Act as the implementer agent. Execute this Technical Plan:
 [paste Technical Plan here]
 ```
 
-**Step 7 — Test**
+The implementer must run the relevant project tests before declaring the task
+complete.
 
-```text
-Act as the tester agent. Write tests for this Task Card and implementation:
-[paste Task Card and implementation summary here]
-```
-
-**Step 8 — Review before committing**
+**Step 7 — Review before committing**
 
 ```text
 Act as the reviewer agent. Review the current changes against this Task Card:
@@ -426,6 +387,11 @@ Act as the reviewer agent. Review the current changes against this Task Card:
 ```
 
 Address `CRITICAL` and `WARNING` findings before merging.
+
+**Step 8 — Record the Scorecard and stop for human review**
+
+Use the Scorecard format embedded in `AGENTS.md` to record the Deliverable
+quality. Do not merge on `REVISE` or `REJECT`.
 
 ---
 
@@ -554,10 +520,8 @@ fully-installed OpenCode project:
 # Step 1 — Copy AGENTS.md only
 cp /tmp/codeconductor/presets/codex/AGENTS.md ./AGENTS.md
 
-# Step 2 — Update the Skills table in AGENTS.md to point to .opencode/skills/
-# (edit manually — replace 'skills/' with '.opencode/skills/' in the Skills section)
-
-# Step 3 — Done. No new skill files, no new directories.
+# Step 2 — Done. No new skill files, no new directories.
+# Invoke skills from .opencode/skills/ when you need them.
 ```
 
 Both tools then use the same skill files. When a skill is updated in
@@ -591,9 +555,9 @@ incident that follows.
 deny reads on `.env`, `.env.*`, `secrets/**`, and common credential paths. Keep
 secrets in a secrets manager entirely outside the project directory.
 
-**Do not duplicate skill files when using both Codex and OpenCode.** Reference
-`.opencode/skills/` from `AGENTS.md` instead. Duplication creates drift — the
-two copies will diverge on updates.
+**Do not duplicate skill files when using both Codex and OpenCode.** Invoke
+skills directly from `.opencode/skills/` instead. Duplication creates drift —
+the two copies will diverge on updates.
 
 ---
 
@@ -625,8 +589,8 @@ If your `AGENTS.md` contains only CodeConductor content, replace it entirely:
 cp /tmp/codeconductor/presets/codex/AGENTS.md ./AGENTS.md
 ```
 
-If it contains project-specific additions, re-apply the Skills path override
-(Step 5A or 5B) after replacing.
+If it contains project-specific additions, merge the updated CodeConductor
+sections carefully and keep using the installed skill paths from Step 5.
 
 **Step 4 — Update skill files (Codex-only setup)**
 

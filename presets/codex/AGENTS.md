@@ -55,20 +55,19 @@ language patterns to activate each workflow:
 | Security, auth, or payment paths | high |
 | Internal refactor with full test coverage | low |
 | Documentation only | low |
-| Bug fix in isolated component with tests | low |
-| Bug fix in shared or untested component | medium |
-| Refactor touching module boundaries | medium |
+| Bug fix in isolated component | low–medium |
+| New feature (no existing path) | high |
 
-When in doubt, round up.
+When multiple signals apply, take the highest risk level. Do not average.
 
 ### Agent Routing Table
 
 | Task Type | Risk | Route |
 |-----------|------|-------|
-| New feature | any | `architect` → `implementer` → `tester` → `reviewer` |
-| Bug fix | low | `implementer` → `tester` |
-| Bug fix | medium–high | `task-coach` → `architect` → `implementer` → `tester` → `reviewer` |
-| Refactor | low | `architect` → `implementer` |
+| New feature design | any | `architect` → `implementer` |
+| Bug fix | low | `implementer` |
+| Bug fix | medium–high | `task-coach` → `implementer` → `tester` |
+| Refactor | low | `implementer` |
 | Refactor | medium–high | `architect` → `implementer` → `reviewer` |
 | API change | any | `architect` → `implementer` → `reviewer` |
 | Database migration | any | `architect` → `implementer` → `tester` → `reviewer` |
@@ -76,7 +75,6 @@ When in doubt, round up.
 | Documentation update | any | `docs` |
 | Codebase exploration | any | `repo-explorer` |
 | Code review | any | `reviewer` |
-| Task unclear | any | `task-coach` |
 
 ---
 
@@ -192,31 +190,32 @@ cannot be classified without more context.
 
 **Does not:** Write code. Make architectural decisions. Route Task Cards.
 
-**A Task Card is complete when it has all seven fields:**
+**A Task Card is complete when it has these workflow fields:**
 
-1. **Objective** — one sentence: what must be done and why
-2. **Acceptance Criteria** — a numbered list of verifiable conditions; at least two
-3. **Scope** — what is in scope and what is explicitly out of scope
-4. **Risk Level** — low, medium, or high with a one-sentence justification
-5. **Context** — relevant files, services, endpoints, or architectural constraints
-6. **Context Scope** — `isolated`, `continuation`, or `full` (default: `isolated`)
-7. **Constraints** — time, compatibility, team, regulatory, or performance limits
+1. **Title** — short description, max 80 characters
+2. **Type** — `feature`, `fix`, `refactor`, `review`, `docs`, or `test`
+3. **Risk** — `low`, `medium`, or `high`
+4. **Scope** — named files or modules plus explicit boundaries
+5. **Context** — current behavior and why it matters
+6. **Acceptance Criteria** — verifiable conditions
+7. **Constraints** — hard limits such as compatibility or performance
+8. **Context Scope** — `isolated`, `continuation`, or `full` (default: `isolated`)
 
 **Intake process:**
 
 1. Read the entire request carefully before asking anything.
-2. Identify which of the seven fields are missing or ambiguous.
+2. Identify which of the required workflow fields are missing or ambiguous.
 3. Ask one focused question per missing field — group related gaps into one
    question where possible.
 4. Wait for the answer. Do not assume.
-5. Repeat until all seven fields are complete.
+5. Repeat until the Task Card is complete.
 6. Produce the Task Card.
 
 **Questions to Ask by Gap:**
 
 | Missing Field | Question pattern |
 |---------------|-----------------|
-| Objective clarity | "What specific outcome should be true when this is done?" |
+| Title or outcome clarity | "What specific outcome should be true when this is done?" |
 | Acceptance criteria | "How will you verify this works correctly? Name two conditions." |
 | Scope boundary | "What related things should explicitly NOT change?" |
 | Risk level | "Does this touch a public API, shared data, or production config?" |
@@ -229,27 +228,28 @@ cannot be classified without more context.
 ```markdown
 ## Task Card
 
-**Objective**: [one sentence]
+**Title**: [short description]
+**Type**: [feature | fix | refactor | review | docs | test]
+**Risk**: [low | medium | high]
+**Context Scope**: [isolated | continuation | full]
 
-**Acceptance Criteria**:
+### Context
 
-1. [verifiable condition]
-2. [verifiable condition]
+[What is the current behavior and why is it a problem or opportunity]
 
-**Scope**:
+### Scope
 
 - In: [what is included]
 - Out: [what is explicitly excluded]
 
-**Risk Level**: [low | medium | high] — [one-sentence justification]
+### Acceptance Criteria
 
-**Context Scope**: [isolated | continuation | full]
+- [ ] [measurable condition 1]
+- [ ] [measurable condition 2]
 
-**Context**:
+### Constraints
 
-- Files: [list relevant files or "unknown"]
-- Services: [list relevant services or "none"]
-- Constraints: [constraints or "none"]
+- [hard constraint or "none"]
 ```
 
 ---
@@ -713,29 +713,42 @@ Every task must be defined using this structure before routing begins:
 ```markdown
 ## Task Card
 
-**Title**: [short description, max 80 characters]
-**Type**: feature | fix | refactor | review | docs | test
-**Risk**: low | medium | high
-**Context Scope**: isolated | continuation | full
+**ID:** [project-YYYYMMDD-NNN]
+**Title:** [short description]
+**Type:** feature | fix | refactor | review | docs | test
+**Risk:** low | medium | high
+**Status:** draft | ready | in-progress | review | done
+
+### Scope
+
+- Files: [explicit list of files or modules expected to change]
+- Boundaries: [what must NOT change]
 
 ### Context
 
 [What is the current behavior and why is it a problem or opportunity]
 
-### Scope
-
-- In: [what is included]
-- Out: [what is explicitly excluded]
-
 ### Acceptance Criteria
 
 - [ ] [measurable condition 1]
 - [ ] [measurable condition 2]
+- [ ] [tests pass / no regressions]
 
 ### Constraints
 
 - [what must not change]
 - [performance budget, API contract, backward compat, etc.]
+
+### Routing
+
+**Agent:** [agent name]
+**Requires human review:** yes | no
+**Requires tests:** yes | no
+**Context scope:** isolated | continuation | full
+
+### Notes
+
+[Optional: ADR references, related task cards, known risks]
 ```
 
 ---
@@ -746,7 +759,12 @@ Skills are domain-specific knowledge files that extend agent behavior.
 Reference them explicitly in your request when the task involves a specific
 stack.
 
-Available skills in `skills/`:
+Use the path that matches your installation:
+
+- Codex-only: `.codex/skills/[skill-name]/SKILL.md`
+- Codex + OpenCode: `.opencode/skills/[skill-name]/SKILL.md`
+
+Available skills:
 
 | Skill | When to invoke |
 |-------|---------------|
@@ -763,4 +781,52 @@ Available skills in `skills/`:
 | `sqlalchemy` | SQLAlchemy models, sessions, Alembic migrations |
 
 To activate a skill, include in your request:
-> "Apply the `[skill-name]` skill from the `skills/` directory."
+> "Apply the `[skill-name]` skill from `.codex/skills/[skill-name]/SKILL.md`."
+
+or, in a combined setup:
+> "Apply the `[skill-name]` skill from `.opencode/skills/[skill-name]/SKILL.md`."
+
+---
+
+## Scorecard Format
+
+Every Deliverable should be evaluated against a Scorecard before it is accepted.
+
+```markdown
+## Agent Scorecard
+
+**Task Card ID:** [project-YYYYMMDD-NNN]
+**Agent:** [agent name]
+**Agent Contract version:** v0.1.0
+**Date:** [YYYY-MM-DD]
+**Evaluator:** [human name or "self"]
+
+### Criteria
+
+| # | Criterion | Weight | Score (0-3) | Notes |
+|---|-----------|--------|-------------|-------|
+| 1 | Acceptance criteria met | 30% | | |
+| 2 | Minimal diff (no scope creep) | 20% | | |
+| 3 | Tests present and passing | 20% | | |
+| 4 | No regressions introduced | 15% | | |
+| 5 | Code follows project conventions | 10% | | |
+| 6 | Documentation updated if required | 5% | | |
+| 7 | Context discipline | 5% | | |
+
+**Weighted score:** [calculated]
+**Pass threshold:** 2.0
+
+### Verdict
+
+[ ] PASS
+[ ] REVISE
+[ ] REJECT
+
+### Findings
+
+- [specific issue or confirmation]
+
+### Next step
+
+[what happens after this scorecard]
+```

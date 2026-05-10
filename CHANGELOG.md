@@ -124,6 +124,20 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `presets/claude/CLAUDE.md` — added skill activation rules for the 4 new
   Python/Django skills
 
+**Codex preset contract alignment**
+
+- `presets/codex/AGENTS.md` — aligned the embedded routing table with the
+  documented CodeConductor policy, added a self-contained Scorecard format, and
+  changed skill activation instructions to use installed paths
+  (`.codex/skills/` or `.opencode/skills/`) instead of a root `skills/`
+  directory
+- `presets/codex/README.md` — corrected installation and runtime guidance to
+  distinguish Codex-only and Codex + OpenCode skill layouts
+- `docs/guides/manual-install-codex.md` — removed the obsolete AGENTS skill-path
+  rewrite step, fixed the AGENTS merge guidance, and updated the first-task
+  walkthrough to reflect API-change routing plus Scorecard and human-review
+  gates
+
 **Scope corrections**
 
 - `README.md` — states current pre-CLI scope, what works today, what is

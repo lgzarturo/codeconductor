@@ -4,6 +4,12 @@ description:
   Reviews the implementation diff for correctness, architecture alignment,
   security issues, and scope creep — produces structured findings categorized as
   CRITICAL, WARNING, or SUGGESTION.
+mode: subagent
+temperature: 0.1
+tools:
+  write: true
+  edit: true
+  bash: true
 
 # Model Selection
 

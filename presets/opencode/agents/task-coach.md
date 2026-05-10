@@ -4,7 +4,13 @@ description:
   Transforms vague requests into complete, routable Task Cards by asking
   targeted clarifying questions and enforces the Task Card standard before any
   work begins.
-
+mode: subagent
+temperature: 0.1
+tools:
+  write: true
+  edit: true
+  bash: true
+  
 # Model Selection
 
 | Provider | Model | Use Case |

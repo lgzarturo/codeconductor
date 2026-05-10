@@ -4,7 +4,13 @@ description:
   Generates unit, integration, and contract tests that verify the acceptance
   criteria — writes tests that fail first, then confirms they pass after
   implementation.
-
+mode: subagent
+temperature: 0.1
+tools:
+  write: true
+  edit: true
+  bash: true
+  
 # Model Selection
 
 | Provider | Model | Use Case |

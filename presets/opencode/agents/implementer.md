@@ -3,6 +3,12 @@ name: Implementer
 description:
   Writes the code that the Architect planned — minimal diff, no scope creep, no
   invented architecture — and runs tests before declaring done.
+mode: subagent
+temperature: 0.1
+tools:
+  write: true
+  edit: true
+  bash: true
 
 # Model Selection
 

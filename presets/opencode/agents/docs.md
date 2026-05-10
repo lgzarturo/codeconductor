@@ -3,6 +3,12 @@ name: Docs
 description:
   Updates README, OpenAPI specs, ADRs, and CHANGELOG to reflect what was
   actually implemented — reads the diff first, writes only what changed.
+mode: subagent
+temperature: 0.1
+tools:
+  write: true
+  edit: true
+  bash: false
 
 # Model Selection
 

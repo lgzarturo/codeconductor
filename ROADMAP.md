@@ -21,6 +21,7 @@ Manual install. No CLI.
 - [x] docs/task-card-template.md
 - [x] docs/agent-scorecard.md
 - [x] docs/prompt-versioning.md
+- [x] Codex preset (`presets/codex/`)
 - [x] OpenCode preset (`presets/opencode/`)
 - [x] Claude Code preset (`presets/claude/`)
 - [x] 8 core Conductor Agents (orchestrator, task-coach, architect, implementer,

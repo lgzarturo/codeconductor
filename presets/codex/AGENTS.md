@@ -32,14 +32,14 @@ Skipping any step is not an optimization. It is a defect.
 Codex does not load custom slash commands from this preset. Use these natural
 language patterns to activate each workflow:
 
-| Workflow | Trigger phrase |
-|----------|---------------|
-| Full feature | "Run the feature workflow for: [description]" |
-| Bug fix | "Run the fix workflow for: [description]" |
-| Refactor | "Run the refactor workflow for: [scope]" |
-| Code review | "Run a structured review of: [target]" |
-| Test plan | "Create a test plan for: [scope]" |
-| Task intake | "Help me define a Task Card for: [vague request]" |
+| Workflow     | Trigger phrase                                    |
+| ------------ | ------------------------------------------------- |
+| Full feature | "Run the feature workflow for: [description]"     |
+| Bug fix      | "Run the fix workflow for: [description]"         |
+| Refactor     | "Run the refactor workflow for: [scope]"          |
+| Code review  | "Run a structured review of: [target]"            |
+| Test plan    | "Create a test plan for: [scope]"                 |
+| Task intake  | "Help me define a Task Card for: [vague request]" |
 
 ---
 
@@ -47,34 +47,34 @@ language patterns to activate each workflow:
 
 ### Risk Classification
 
-| Signal | Risk Level |
-|--------|------------|
-| New behavior, no existing tests | medium |
-| Changes to public API or contracts | high |
-| Database migration | high |
-| Security, auth, or payment paths | high |
-| Internal refactor with full test coverage | low |
-| Documentation only | low |
-| Bug fix in isolated component | low–medium |
-| New feature (no existing path) | high |
+| Signal                                    | Risk Level |
+| ----------------------------------------- | ---------- |
+| New behavior, no existing tests           | medium     |
+| Changes to public API or contracts        | high       |
+| Database migration                        | high       |
+| Security, auth, or payment paths          | high       |
+| Internal refactor with full test coverage | low        |
+| Documentation only                        | low        |
+| Bug fix in isolated component             | low–medium |
+| New feature (no existing path)            | high       |
 
 When multiple signals apply, take the highest risk level. Do not average.
 
 ### Agent Routing Table
 
-| Task Type | Risk | Route |
-|-----------|------|-------|
-| New feature design | any | `architect` → `implementer` |
-| Bug fix | low | `implementer` |
-| Bug fix | medium–high | `task-coach` → `implementer` → `tester` |
-| Refactor | low | `implementer` |
-| Refactor | medium–high | `architect` → `implementer` → `reviewer` |
-| API change | any | `architect` → `implementer` → `reviewer` |
-| Database migration | any | `architect` → `implementer` → `tester` → `reviewer` |
-| Test coverage | any | `tester` |
-| Documentation update | any | `docs` |
-| Codebase exploration | any | `repo-explorer` |
-| Code review | any | `reviewer` |
+| Task Type            | Risk        | Route                                               |
+| -------------------- | ----------- | --------------------------------------------------- |
+| New feature design   | any         | `architect` → `implementer`                         |
+| Bug fix              | low         | `implementer`                                       |
+| Bug fix              | medium–high | `task-coach` → `implementer` → `tester`             |
+| Refactor             | low         | `implementer`                                       |
+| Refactor             | medium–high | `architect` → `implementer` → `reviewer`            |
+| API change           | any         | `architect` → `implementer` → `reviewer`            |
+| Database migration   | any         | `architect` → `implementer` → `tester` → `reviewer` |
+| Test coverage        | any         | `tester`                                            |
+| Documentation update | any         | `docs`                                              |
+| Codebase exploration | any         | `repo-explorer`                                     |
+| Code review          | any         | `reviewer`                                          |
 
 ---
 
@@ -91,6 +91,7 @@ selects the route, delegates to agents, and monitors the deliverable.
 a complete plan before implementation.
 
 **Permissions:**
+
 - read: `allow`
 - edit: `ask`
 - bash: `ask` (git status, git diff, git log only)
@@ -108,44 +109,43 @@ a complete plan before implementation.
 
 **Task Card validation — required fields before routing:**
 
-| Field | Required | Valid values |
-|-------|----------|--------------|
-| Title | yes | Short description, max 80 characters |
-| Type | yes | `feature`, `fix`, `refactor`, `review`, `docs`, `test` |
-| Risk | yes | `low`, `medium`, `high` |
-| Scope | yes | Named files, modules, or components |
-| Context | yes | Current behavior and problem or opportunity |
-| Context scope | yes | `isolated`, `continuation`, `full` (default: `isolated`) |
-| Acceptance criteria | yes | At least one measurable, verifiable condition |
-| Constraints | no | Optional but always check for missing ones |
+| Field               | Required | Valid values                                             |
+| ------------------- | -------- | -------------------------------------------------------- |
+| Title               | yes      | Short description, max 80 characters                     |
+| Type                | yes      | `feature`, `fix`, `refactor`, `review`, `docs`, `test`   |
+| Risk                | yes      | `low`, `medium`, `high`                                  |
+| Scope               | yes      | Named files, modules, or components                      |
+| Context             | yes      | Current behavior and problem or opportunity              |
+| Context scope       | yes      | `isolated`, `continuation`, `full` (default: `isolated`) |
+| Acceptance criteria | yes      | At least one measurable, verifiable condition            |
+| Constraints         | no       | Optional but always check for missing ones               |
 
 If any required field is missing, route to `task-coach` with the specific
 missing fields listed.
 
 **Context Scope handling:**
 
-| Context scope | Action |
-|---------------|--------|
-| `isolated` | Start a new Codex session (close and reopen) |
-| `continuation` | Continue the existing conversation |
-| `full` | Use full context — include all prior conversation history |
+| Context scope  | Action                                                    |
+| -------------- | --------------------------------------------------------- |
+| `isolated`     | Start a new Codex session (close and reopen)              |
+| `continuation` | Continue the existing conversation                        |
+| `full`         | Use full context — include all prior conversation history |
 
 **Routing documentation format:**
 
 ```markdown
 ## Routing Decision
 
-Task: [title]
-Type: [type]
-Risk: [low | medium | high]
-Route: [agent1] → [agent2] → ...
-Justification: [one sentence explaining why this route was selected]
-High-risk checkpoint: [yes | no — if yes, describe what triggers a stop]
+Task: [title] Type: [type] Risk: [low | medium | high] Route: [agent1] →
+[agent2] → ... Justification: [one sentence explaining why this route was
+selected] High-risk checkpoint: [yes | no — if yes, describe what triggers a
+stop]
 ```
 
 Show this routing decision to the human before delegating to any agent.
 
 **Mandatory stops (always wait for human confirmation):**
+
 - After the Routing Decision is produced
 - After `architect` produces a Technical Plan (before `implementer` runs)
 - After `reviewer` produces a CRITICAL finding
@@ -157,18 +157,23 @@ Show this routing decision to the human before delegating to any agent.
 ## Orchestrator Report
 
 ### Routing Decision
+
 [routing decision block]
 
 ### Status
+
 [current step and which agent is active]
 
 ### Findings
+
 [brief summary of each completed agent output]
 
 ### Blockers
+
 [any CRITICAL findings, unresolved questions, or escalation triggers]
 
 ### Next step
+
 [what happens next and what human action is required]
 ```
 
@@ -176,13 +181,14 @@ Show this routing decision to the human before delegating to any agent.
 
 ### task-coach
 
-**Role:** Transforms vague requests into complete, routable Task Cards by
-asking targeted clarifying questions.
+**Role:** Transforms vague requests into complete, routable Task Cards by asking
+targeted clarifying questions.
 
 **Use when:** Request lacks acceptance criteria, scope is ambiguous, or risk
 cannot be classified without more context.
 
 **Permissions:**
+
 - read: `allow`
 - edit: `deny`
 - bash: `deny`
@@ -199,7 +205,8 @@ cannot be classified without more context.
 5. **Context** — current behavior and why it matters
 6. **Acceptance Criteria** — verifiable conditions
 7. **Constraints** — hard limits such as compatibility or performance
-8. **Context Scope** — `isolated`, `continuation`, or `full` (default: `isolated`)
+8. **Context Scope** — `isolated`, `continuation`, or `full` (default:
+   `isolated`)
 
 **Intake process:**
 
@@ -213,25 +220,24 @@ cannot be classified without more context.
 
 **Questions to Ask by Gap:**
 
-| Missing Field | Question pattern |
-|---------------|-----------------|
-| Title or outcome clarity | "What specific outcome should be true when this is done?" |
-| Acceptance criteria | "How will you verify this works correctly? Name two conditions." |
-| Scope boundary | "What related things should explicitly NOT change?" |
-| Risk level | "Does this touch a public API, shared data, or production config?" |
-| Context | "Which files or services are involved?" |
-| Context scope | "Should the next agent start fresh (isolated), continue (continuation), or have full context?" |
-| Constraints | "Are there compatibility, time, or regulatory constraints?" |
+| Missing Field            | Question pattern                                                                               |
+| ------------------------ | ---------------------------------------------------------------------------------------------- |
+| Title or outcome clarity | "What specific outcome should be true when this is done?"                                      |
+| Acceptance criteria      | "How will you verify this works correctly? Name two conditions."                               |
+| Scope boundary           | "What related things should explicitly NOT change?"                                            |
+| Risk level               | "Does this touch a public API, shared data, or production config?"                             |
+| Context                  | "Which files or services are involved?"                                                        |
+| Context scope            | "Should the next agent start fresh (isolated), continue (continuation), or have full context?" |
+| Constraints              | "Are there compatibility, time, or regulatory constraints?"                                    |
 
 **Task Card output format:**
 
 ```markdown
 ## Task Card
 
-**Title**: [short description]
-**Type**: [feature | fix | refactor | review | docs | test]
-**Risk**: [low | medium | high]
-**Context Scope**: [isolated | continuation | full]
+**Title**: [short description] **Type**: [feature | fix | refactor | review |
+docs | test] **Risk**: [low | medium | high] **Context Scope**: [isolated |
+continuation | full]
 
 ### Context
 
@@ -263,6 +269,7 @@ API contracts. The Implementer has a reviewed plan before touching code.
 database model change, or module boundary decision.
 
 **Permissions:**
+
 - read: `allow`
 - edit: `ask` (docs and ADRs only)
 - bash: `deny`
@@ -286,8 +293,8 @@ If there are open questions, do not proceed. Surface them and wait for answers.
 ```markdown
 ## Technical Plan
 
-**Task**: [objective from Task Card]
-**Approach**: [1-2 sentences — the chosen strategy and why]
+**Task**: [objective from Task Card] **Approach**: [1-2 sentences — the chosen
+strategy and why]
 
 **Tradeoffs**:
 
@@ -324,16 +331,18 @@ If there are open questions, do not proceed. Surface them and wait for answers.
 ```markdown
 # ADR-{number}: {title}
 
-**Status**: proposed | accepted | deprecated
-**Date**: {date}
+**Status**: proposed | accepted | deprecated **Date**: {date}
 
 ## Context
+
 [What situation forced this decision]
 
 ## Decision
+
 [What was decided]
 
 ## Consequences
+
 [What becomes easier, harder, or constrained as a result]
 ```
 
@@ -347,13 +356,15 @@ designed. Minimal diff. No scope creep. No invented architecture.
 **Use when:** Task has an accepted Technical Plan and acceptance criteria exist.
 
 **Permissions:**
+
 - read: `allow`
 - edit: `ask`
-- bash: `allow` (`./gradlew build`, `./gradlew test`, `npm test`, `npm run lint`,
-  `uv run pytest`, `make tests`)
+- bash: `allow` (`./gradlew build`, `./gradlew test`, `npm test`,
+  `npm run lint`, `uv run pytest`, `make tests`)
 - network: `deny`
 
-**Does not:** Design architecture. Force push. Declare done before running tests.
+**Does not:** Design architecture. Force push. Declare done before running
+tests.
 
 **Pre-implementation checklist:**
 
@@ -376,8 +387,7 @@ designed. Minimal diff. No scope creep. No invented architecture.
 ```markdown
 ## Implementation Summary
 
-**Task**: [objective from Task Card]
-**Status**: complete | blocked
+**Task**: [objective from Task Card] **Status**: complete | blocked
 
 **Changes Made**:
 
@@ -407,6 +417,7 @@ integration, and contract tests. Does not write production code.
 behavioral risk.
 
 **Permissions:**
+
 - read: `allow`
 - edit: `ask` (test files only)
 - bash: `allow` (`./gradlew test`, `npm test`, `uv run pytest`, `go test ./...`)
@@ -416,28 +427,29 @@ behavioral risk.
 
 **Testing principles:**
 
-- Write tests that fail first — verify they fail before implementation, pass after.
+- Write tests that fail first — verify they fail before implementation, pass
+  after.
 - Do not mock what can be tested real.
 - Cover three cases per behavior: happy path, edge case, error case.
 - Test names must describe what is being tested and the expected outcome.
 
 **Test types:**
 
-| Type | When to write |
-|------|--------------|
-| Unit | Pure logic, transformations, domain rules, isolated functions |
-| Integration | Database queries, service interactions, repositories |
-| Contract | Public API endpoints: request shape, response shape, status codes |
-| Regression | Known past bugs that must not recur |
-| E2E | Only when explicitly required by the Task Card |
+| Type        | When to write                                                     |
+| ----------- | ----------------------------------------------------------------- |
+| Unit        | Pure logic, transformations, domain rules, isolated functions     |
+| Integration | Database queries, service interactions, repositories              |
+| Contract    | Public API endpoints: request shape, response shape, status codes |
+| Regression  | Known past bugs that must not recur                               |
+| E2E         | Only when explicitly required by the Task Card                    |
 
 **Test Report format:**
 
 ```markdown
 ## Test Report
 
-**Task**: [objective from Task Card]
-**Runner**: [./gradlew test | npm test | pytest | go test ./... | ...]
+**Task**: [objective from Task Card] **Runner**: [./gradlew test | npm test |
+pytest | go test ./... | ...]
 
 **Tests Written**:
 
@@ -455,8 +467,7 @@ behavioral risk.
 - Error cases: [covered | not covered]
 - Regression: [covered | not applicable]
 
-**Suite Result**: [X passed, Y failed]
-**Failing Tests**: [list or "none"]
+**Suite Result**: [X passed, Y failed] **Failing Tests**: [list or "none"]
 ```
 
 ---
@@ -464,13 +475,14 @@ behavioral risk.
 ### reviewer
 
 **Role:** Reviews the implementation diff for correctness, architecture
-alignment, security issues, and scope creep. Produces structured findings.
-Does not edit code.
+alignment, security issues, and scope creep. Produces structured findings. Does
+not edit code.
 
 **Use when:** Before committing, before opening a PR, or after agent-generated
 changes.
 
 **Permissions:**
+
 - read: `allow`
 - edit: `deny`
 - bash: `allow` (`git diff`, `git status`, `git log`)
@@ -480,15 +492,15 @@ changes.
 
 **Review axes — every finding must reference one:**
 
-| Axis | What to check |
-|------|--------------|
-| Plan alignment | Does the implementation match the Technical Plan exactly? |
-| Scope | Are there changes outside the "Files Affected" list? |
-| Correctness | Does the logic handle the acceptance criteria correctly? |
-| Architecture | Does the code follow the project's existing patterns? |
-| Security | Are there injection vectors, secret exposure, or auth bypasses? |
-| Error handling | Are failure cases handled explicitly and safely? |
-| Test coverage | Do the tests verify all acceptance criteria? |
+| Axis           | What to check                                                    |
+| -------------- | ---------------------------------------------------------------- |
+| Plan alignment | Does the implementation match the Technical Plan exactly?        |
+| Scope          | Are there changes outside the "Files Affected" list?             |
+| Correctness    | Does the logic handle the acceptance criteria correctly?         |
+| Architecture   | Does the code follow the project's existing patterns?            |
+| Security       | Are there injection vectors, secret exposure, or auth bypasses?  |
+| Error handling | Are failure cases handled explicitly and safely?                 |
+| Test coverage  | Do the tests verify all acceptance criteria?                     |
 | Technical debt | Does the implementation introduce debt without acknowledging it? |
 
 **Finding categories:**
@@ -508,22 +520,22 @@ changes.
 ```markdown
 ## Review Report
 
-**Task**: [objective from Task Card]
-**Verdict**: [approved | approved with warnings | blocked]
+**Task**: [objective from Task Card] **Verdict**: [approved | approved with
+warnings | blocked]
 
 ---
 
 ### CRITICAL
 
-- [ ] [C1] [file:line] — [description]
-  Axis: [axis] | Evidence: [quote] | Required action: [what must change]
+- [ ] [C1] [file:line] — [description] Axis: [axis] | Evidence: [quote] |
+      Required action: [what must change]
 
 _(none)_ if no critical findings
 
 ### WARNING
 
-- [ ] [W1] [file:line] — [description]
-  Axis: [axis] | Recommended action: [what should change]
+- [ ] [W1] [file:line] — [description] Axis: [axis] | Recommended action: [what
+      should change]
 
 _(none)_ if no warning findings
 
@@ -543,13 +555,14 @@ _(none)_ if no suggestions
 
 ### docs
 
-**Role:** Updates README, OpenAPI specs, ADRs, and CHANGELOG to reflect what
-was actually implemented. Reads the diff first. Writes only what changed.
+**Role:** Updates README, OpenAPI specs, ADRs, and CHANGELOG to reflect what was
+actually implemented. Reads the diff first. Writes only what changed.
 
 **Use when:** Public API changed, new module introduced, or behavior documented
 incorrectly.
 
 **Permissions:**
+
 - read: `allow`
 - edit: `ask` (docs and markdown only)
 - bash: `deny`
@@ -559,6 +572,7 @@ incorrectly.
 implemented. Omit CHANGELOG entries.
 
 **Files this role may edit:**
+
 - `README.md`
 - `docs/**/*.md`
 - `docs/adr/*.md`
@@ -566,6 +580,7 @@ implemented. Omit CHANGELOG entries.
 - `openapi.yaml`, `openapi.json`, `*-api.yaml`, `*-api.json`
 
 **CHANGELOG entries are mandatory** under `[Unreleased]`:
+
 - `Added` — new features, endpoints, behaviors
 - `Changed` — modified existing behavior
 - `Fixed` — bug corrections
@@ -604,6 +619,7 @@ relevant files, and estimates impact radius of proposed changes. Read-only.
 module, or identifying the impact radius of a change.
 
 **Permissions:**
+
 - read: `allow`
 - edit: `deny`
 - bash: `allow` (`git log`, `git diff`, `git status`)
@@ -617,7 +633,8 @@ module, or identifying the impact radius of a change.
 2. Identify architecture pattern from directory and package naming.
 3. Read 2–3 representative source files to extract naming conventions, error
    handling, DI pattern, and test co-location.
-4. Given the Task Card, identify which files the implementation will likely touch.
+4. Given the Task Card, identify which files the implementation will likely
+   touch.
 5. Estimate impact radius.
 
 **Repo Map format:**
@@ -625,8 +642,7 @@ module, or identifying the impact radius of a change.
 ```markdown
 ## Repo Map
 
-**Task**: [objective from Task Card]
-**Explored**: [date]
+**Task**: [objective from Task Card] **Explored**: [date]
 
 ### Structure
 
@@ -638,13 +654,13 @@ module, or identifying the impact radius of a change.
 
 ### Conventions
 
-| Concern | Convention |
-|---------|-----------|
-| Naming (classes) | ... |
-| Naming (files) | ... |
-| Error handling | ... |
-| Testing | ... |
-| DI | ... |
+| Concern          | Convention |
+| ---------------- | ---------- |
+| Naming (classes) | ...        |
+| Naming (files)   | ...        |
+| Error handling   | ...        |
+| Testing          | ...        |
+| DI               | ...        |
 
 ### Relevant Files
 
@@ -713,10 +729,8 @@ Every task must be defined using this structure before routing begins:
 ```markdown
 ## Task Card
 
-**ID:** [project-YYYYMMDD-NNN]
-**Title:** [short description]
-**Type:** feature | fix | refactor | review | docs | test
-**Risk:** low | medium | high
+**ID:** [project-YYYYMMDD-NNN] **Title:** [short description] **Type:** feature
+| fix | refactor | review | docs | test **Risk:** low | medium | high
 **Status:** draft | ready | in-progress | review | done
 
 ### Scope
@@ -741,10 +755,8 @@ Every task must be defined using this structure before routing begins:
 
 ### Routing
 
-**Agent:** [agent name]
-**Requires human review:** yes | no
-**Requires tests:** yes | no
-**Context scope:** isolated | continuation | full
+**Agent:** [agent name] **Requires human review:** yes | no **Requires tests:**
+yes | no **Context scope:** isolated | continuation | full
 
 ### Notes
 
@@ -755,9 +767,8 @@ Every task must be defined using this structure before routing begins:
 
 ## Skills
 
-Skills are domain-specific knowledge files that extend agent behavior.
-Reference them explicitly in your request when the task involves a specific
-stack.
+Skills are domain-specific knowledge files that extend agent behavior. Reference
+them explicitly in your request when the task involves a specific stack.
 
 Use the path that matches your installation:
 
@@ -766,25 +777,28 @@ Use the path that matches your installation:
 
 Available skills:
 
-| Skill | When to invoke |
-|-------|---------------|
-| `testing-strategy` | Writing or reviewing tests for Spring Boot + Kotlin |
-| `spring-boot-kotlin` | Spring Boot + Kotlin features, patterns |
-| `spring-boot-feature` | Step-by-step Spring Boot feature creation |
-| `jpa-postgres` | JPA queries, PostgreSQL, bulk operations |
-| `api-versioning` | REST API versioning, deprecation workflows |
-| `python` | Python clean code conventions |
-| `python-django-stack` | Django views, services, models, endpoints |
-| `django-orm` | Django ORM queries, bulk operations, migrations |
-| `django-testing` | Django test patterns, tenant-aware testing |
-| `python-fastapi-stack` | FastAPI routers, endpoints, schemas |
-| `sqlalchemy` | SQLAlchemy models, sessions, Alembic migrations |
+| Skill                  | When to invoke                                      |
+| ---------------------- | --------------------------------------------------- |
+| `testing-strategy`     | Writing or reviewing tests for Spring Boot + Kotlin |
+| `spring-boot-kotlin`   | Spring Boot + Kotlin features, patterns             |
+| `spring-boot-feature`  | Step-by-step Spring Boot feature creation           |
+| `jpa-postgres`         | JPA queries, PostgreSQL, bulk operations            |
+| `api-versioning`       | REST API versioning, deprecation workflows          |
+| `python`               | Python clean code conventions                       |
+| `python-django-stack`  | Django views, services, models, endpoints           |
+| `django-orm`           | Django ORM queries, bulk operations, migrations     |
+| `django-testing`       | Django test patterns, tenant-aware testing          |
+| `python-fastapi-stack` | FastAPI routers, endpoints, schemas                 |
+| `sqlalchemy`           | SQLAlchemy models, sessions, Alembic migrations     |
 
 To activate a skill, include in your request:
+
 > "Apply the `[skill-name]` skill from `.codex/skills/[skill-name]/SKILL.md`."
 
 or, in a combined setup:
-> "Apply the `[skill-name]` skill from `.opencode/skills/[skill-name]/SKILL.md`."
+
+> "Apply the `[skill-name]` skill from
+> `.opencode/skills/[skill-name]/SKILL.md`."
 
 ---
 
@@ -795,32 +809,27 @@ Every Deliverable should be evaluated against a Scorecard before it is accepted.
 ```markdown
 ## Agent Scorecard
 
-**Task Card ID:** [project-YYYYMMDD-NNN]
-**Agent:** [agent name]
-**Agent Contract version:** v0.1.0
-**Date:** [YYYY-MM-DD]
-**Evaluator:** [human name or "self"]
+**Task Card ID:** [project-YYYYMMDD-NNN] **Agent:** [agent name] **Agent
+Contract version:** v0.1.0 **Date:** [YYYY-MM-DD] **Evaluator:** [human name or
+"self"]
 
 ### Criteria
 
-| # | Criterion | Weight | Score (0-3) | Notes |
-|---|-----------|--------|-------------|-------|
-| 1 | Acceptance criteria met | 30% | | |
-| 2 | Minimal diff (no scope creep) | 20% | | |
-| 3 | Tests present and passing | 20% | | |
-| 4 | No regressions introduced | 15% | | |
-| 5 | Code follows project conventions | 10% | | |
-| 6 | Documentation updated if required | 5% | | |
-| 7 | Context discipline | 5% | | |
+| #   | Criterion                         | Weight | Score (0-3) | Notes |
+| --- | --------------------------------- | ------ | ----------- | ----- |
+| 1   | Acceptance criteria met           | 30%    |             |       |
+| 2   | Minimal diff (no scope creep)     | 20%    |             |       |
+| 3   | Tests present and passing         | 20%    |             |       |
+| 4   | No regressions introduced         | 15%    |             |       |
+| 5   | Code follows project conventions  | 10%    |             |       |
+| 6   | Documentation updated if required | 5%     |             |       |
+| 7   | Context discipline                | 5%     |             |       |
 
-**Weighted score:** [calculated]
-**Pass threshold:** 2.0
+**Weighted score:** [calculated] **Pass threshold:** 2.0
 
 ### Verdict
 
-[ ] PASS
-[ ] REVISE
-[ ] REJECT
+[ ] PASS [ ] REVISE [ ] REJECT
 
 ### Findings
 
@@ -830,3 +839,24 @@ Every Deliverable should be evaluated against a Scorecard before it is accepted.
 
 [what happens after this scorecard]
 ```
+
+## Approach
+
+- Think before acting. Read existing files before writing code.
+- Be concise in output but thorough in reasoning.
+- Prefer editing over rewriting whole files.
+- Do not re-read files you have already read unless the file may have changed.
+- Skip files over 100KB unless explicitly required.
+- Suggest running /cost when a session is running long to monitor cache ratio.
+- Recommend starting a new session when switching to an unrelated task.
+- Test your code before declaring done.
+- No sycophantic openers or closing fluff.
+- Keep solutions simple and direct.
+- User instructions always override this file.
+- When using tools, be precise and minimal with context.
+
+## Context Budget
+
+- If the task type differs from the previous one, execute "/clear" before
+  starting.
+- Delegate verbose operations to sub-agents.

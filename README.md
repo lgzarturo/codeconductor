@@ -9,8 +9,6 @@ It helps developers and teams coordinate specialized agents for planning,
 implementation, testing, documentation, and review — using versioned agent
 contracts, task cards, and risk-based routing.
 
-# <<<<<<< HEAD
-
 > [!IMPORTANT]
 >
 > ## Current Scope
@@ -41,8 +39,6 @@ contracts, task cards, and risk-based routing.
 > guardrails. It does not yet enforce OS-level isolation, shell sandboxing, or
 > runtime permission boundaries by itself. Treat all agent execution as
 > dependent on the capabilities and limitations of the target tool.
-
-> > > > > > > 1a22bd5df341eaa1797194850bbd7c0f10613271
 
 ---
 
@@ -97,14 +93,11 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 
 ## Current Support (v0.1.0)
 
-- OpenCode preset <<<<<<< HEAD
-- # Spring Boot / Kotlin workflow
+- OpenCode preset
 - Claude Code-compatible preset
+- Codex preset
 - Spring Boot / Kotlin workflow
 - Python / Django workflow guidance
-
-> > > > > > > 1a22bd5df341eaa1797194850bbd7c0f10613271
-
 - 8 core Conductor Agents
 - Routing Policy v0.1.0
 - Task Card template

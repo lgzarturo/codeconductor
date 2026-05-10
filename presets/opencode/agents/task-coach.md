@@ -9,7 +9,7 @@ temperature: 0.1
 tools:
   write: true
   edit: true
-  bash: true
+  bash: false
   
 # Model Selection
 

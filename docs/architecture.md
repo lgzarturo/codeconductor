@@ -5,9 +5,13 @@
 CodeConductor installs reproducible AI-assisted engineering workflows into
 software projects.
 
-It is not a prompt collection. It is a configurator: given a project, it detects
-the stack, resolves the matching preset, and writes a structured, idempotent set
-of agent contracts, routing rules, and skill definitions into the repository.
+It is not a prompt collection. In v0.1.x, it is a documentation-first preset
+framework: teams manually install versioned agent contracts, routing rules,
+skills, and policy templates into the repository.
+
+The CLI configurator is planned. Once implemented, it will detect the stack,
+resolve the matching preset, and write a structured, idempotent set of agent
+contracts, routing rules, and skill definitions into the repository.
 
 The output is commitable, reviewable, and reproducible — identical on any
 machine, for any team member, across time.
@@ -15,6 +19,9 @@ machine, for any team member, across time.
 ---
 
 ## Core Pipeline
+
+**Status:** Planned for the CLI runtime. Manual preset installation is the
+implemented v0.1.x path.
 
 ```text
 scan → classify → resolve preset → render → merge → validate
@@ -63,6 +70,8 @@ known commands registered.
 
 ### Project Scanner
 
+**Status:** Planned for v0.2.0
+
 Traverses the project directory and collects raw detection signals.
 
 - Reads file presence (e.g., `build.gradle.kts`, `pom.xml`, `package.json`)
@@ -71,6 +80,8 @@ Traverses the project directory and collects raw detection signals.
 - Produces a signal map consumed by the Stack Detector
 
 ### Stack Detector
+
+**Status:** Planned for v0.2.0
 
 Evaluates signals and computes a confidence score for each known stack.
 
@@ -82,6 +93,8 @@ Evaluates signals and computes a confidence score for each known stack.
 
 ### Preset Resolver
 
+**Status:** Planned for v0.2.0
+
 Maps a detected stack to a registered preset.
 
 - Reads the preset registry (file-based, no remote calls)
@@ -90,6 +103,8 @@ Maps a detected stack to a registered preset.
 
 ### Target Renderer
 
+**Status:** Planned
+
 Processes preset templates and produces a concrete file plan.
 
 - Substitutes template variables with project-specific values
@@ -97,6 +112,8 @@ Processes preset templates and produces a concrete file plan.
 - Does not write to disk — produces a plan only
 
 ### Safe Merger
+
+**Status:** Planned for v0.2.0
 
 Applies the file plan to the project without clobbering user content.
 
@@ -109,6 +126,8 @@ Applies the file plan to the project without clobbering user content.
 
 ### Doctor
 
+**Status:** Planned for v0.2.0
+
 Validates the installed configuration.
 
 - Checks that required files are present and non-empty
@@ -120,11 +139,11 @@ Validates the installed configuration.
 
 ## Targets
 
-| Target   | Status               | Notes                                   |
-| -------- | -------------------- | --------------------------------------- |
-| OpenCode | v0.1.0 (first-class) | Primary target. Full preset support.    |
-| Claude   | v0.4.0 (planned)     | Claude Code compatible agent contracts. |
-| Codex    | planned              | No timeline. Depends on API stability.  |
+| Target   | Status                | Notes                                     |
+| -------- | --------------------- | ----------------------------------------- |
+| OpenCode | Implemented in v0.1.0 | Manual preset support.                    |
+| Claude   | Implemented in v0.1.0 | Manual Claude Code-compatible preset.     |
+| Codex    | Planned               | No timeline. Depends on target stability. |
 
 Target-specific rendering means the same preset content is rendered differently
 per target. Agent contracts that work for OpenCode's `AGENTS.md` format are not
@@ -250,9 +269,12 @@ updates.
 
 ## Security
 
-**Policy compiler.** `policy.yml` defines what each agent is allowed to read,
-write, and execute. The compiler validates the policy file at install time and
-embeds the effective rules into the generated agent contracts.
+**Policy files.** **Status:** Implemented as declarative configuration.
+`policy.yml` defines what each agent should be allowed to read, write, and
+execute. CodeConductor does not enforce this file at runtime in v0.1.x.
+
+**Policy Compiler.** **Status:** Planned. The policy compiler is not implemented
+yet. Current policies are declarative and depend on target-tool support.
 
 **Isolated execution (planned).** In future versions, each agent session runs as
 a dedicated low-privilege OS user (`cc-agent`) with no access to secrets,
@@ -261,6 +283,7 @@ credentials directories, or protected branches.
 **Worktree per session (planned).** Each agent session operates in an isolated
 Git worktree. The main working tree is not exposed during agent execution.
 
-**Hard-denied commands.** `rm -rf`, `sudo`, `curl | sh`, force push, and reset
-on protected branches are denied at the policy level — not by convention, but by
-explicit rule.
+**Hard-denied commands.** **Status:** Documented and target-tool dependent.
+`rm -rf`, `sudo`, `curl | sh`, force push, and reset on protected branches are
+listed as denied policy rules. They are not independently enforced by
+CodeConductor until the policy compiler and runtime enforcement exist.

@@ -1,8 +1,12 @@
 version: 1
 
+# NOTE:
+# This policy is declarative. Until the CodeConductor policy compiler exists,
+# enforcement depends on the target tool.
+
 runtime:
   user: cc-agent
-  mode: sandboxed
+  mode: native
   cleanEnv: true
   network:
     default: deny
@@ -46,21 +50,21 @@ denyWrite:
 commands:
   allow:
     - "git status"
-    - "git add"
-    - "git push"
-    - "git pull"
     - "git log"
     - "git diff"
     - "./gradlew clean"
     - "./gradlew build"
     - "./gradlew test"
-    
+
   ask:
+    - "git add"
     - "git commit"
+    - "git push"
+    - "git pull"
     - "git switch*"
-    - "git checkout"
+    - "git checkout*"
     - "docker compose*"
-    
+
   deny:
     - "git push --force"
     - "git push -f"

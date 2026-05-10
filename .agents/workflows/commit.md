@@ -1,7 +1,6 @@
 ---
 description:
-  Genera un commit en español siguiendo Conventional Commits basado en los
-  cambios en staging.
+  Genera un commit en inglés siguiendo Conventional Commits basado en los
 ---
 
 // turbo-all

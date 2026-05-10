@@ -1,125 +1,31 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with
-code in this repository.
+This repository uses CodeConductor to maintain CodeConductor itself.
 
-## Project Identity
+## Repository State
 
-**CodeConductor** — a multi-agent orchestration framework for AI-assisted
-software engineering.
+CodeConductor is currently documentation-first and preset-based. The CLI and
+runtime enforcement are planned but not implemented.
 
-Tagline: _Stop prompting. Start orchestrating._
+The repository currently ships manual presets, agent contracts, workflow
+templates, policy documentation, and installation guides. It does not ship a
+runtime sandbox, policy compiler, doctor command, or automated project scanner.
 
-This is a framework, not a prompt collection. The distinction is intentional and
-must be preserved in all contributions. Every piece must reinforce structured
-workflows, not ad-hoc prompting.
+## Canonical Sources
 
-## Current State
+- `README.md`: project overview and current scope
+- `ROADMAP.md`: release plan
+- `docs/architecture.md`: current and planned architecture
+- `docs/security-model.md`: current security model and non-guarantees
+- `docs/current-limitations.md`: known limitations
+- `policy.yml`: declarative policy model
+- `AGENTS.md`: repository agent workflow
 
-The repository is in early design phase (pre-v0.1.0). The codebase contains:
+## Working Rules
 
-- `implementacion.md` — complete design document: project identity, architecture
-  decisions, MVP scope, CLI experience spec, and stack detection logic
-- `policy.yml` — agent execution policy (sandboxed runtime, filesystem
-  permissions, allowed/denied commands)
-- `.vscode/` — editor config for TypeScript and Markdown
-
-No CLI, no source code, no tests exist yet.
-
-## Architecture
-
-```text
-codeconductor init
-  └── Project Scanner (deterministic — files > deps > scripts > structure)
-  └── Stack Classifier
-  └── Preset Resolver
-  └── Config Renderer
-  └── Safe Merger
-  └── Doctor / Validator
-```
-
-Detection is **deterministic first** (file presence, dependency keys, directory
-layout). LLM enrichment is a v2+ concern — do not add it early.
-
-### Planned repo structure (from design doc)
-
-```text
-presets/opencode/
-  opencode.jsonc
-  agents/          # orchestrator, task-coach, architect, implementer, tester, reviewer, docs, repo-explorer
-  commands/        # feature, fix, refactor, review, test-plan
-  prompts/v0.1.0/
-  skills/          # spring-boot-kotlin, api-versioning, jpa-postgres, testing-strategy
-docs/
-  philosophy.md
-  architecture.md
-  routing-policy.md
-  task-card-template.md
-  agent-scorecard.md
-  prompt-versioning.md
-examples/spring-boot-kotlin/
-```
-
-## Core Terminology
-
-Use the framework's own vocabulary — never call these "prompts":
-
-| Concept            | Name in CodeConductor |
-| ------------------ | --------------------- |
-| Structured request | Task Card             |
-| Flow decision      | Route                 |
-| Specialized agent  | Conductor Agent       |
-| Decision rules     | Routing Policy        |
-| Versioned prompts  | Agent Contracts       |
-| Reusable knowledge | Skills                |
-| Evaluable output   | Deliverable           |
-| Agent metrics      | Scorecard             |
-
-## MVP Scope (v0.1.0)
-
-Target: OpenCode only. Do not design abstractions for multi-provider until
-v0.3.0+.
-
-Includes: AGENTS.md, OpenCode preset, versioned prompts, commands
-(feature/fix/refactor/review), Spring Boot/Kotlin skills, routing policy, task
-card template, scorecard, one end-to-end example.
-
-Excludes: Claude/OpenAI integration, dashboard, automated evaluation, CLI
-binary, multi-provider abstraction.
-
-## CLI Commands (planned)
-
-```bash
-npx codeconductor init                          # detect + scaffold
-npx codeconductor init --target opencode --stack spring-boot-kotlin
-npx codeconductor init --dry-run               # preview without writing
-npx codeconductor doctor                        # validate config
-npx codeconductor update                        # update existing config
-```
-
-## Stack Detection Signals
-
-Detection priority: `files > dependencies > scripts > structure > conventions`
-
-| Signal file        | Stack inferred           |
-| ------------------ | ------------------------ |
-| `build.gradle.kts` | Gradle + Kotlin          |
-| `pom.xml`          | Maven + Java/Kotlin      |
-| `package.json`     | Node / TS / React / Next |
-| `pyproject.toml`   | Python (modern)          |
-| `go.mod`           | Go                       |
-| `Cargo.toml`       | Rust                     |
-
-Spring Boot Kotlin strong signals: `build.gradle.kts` + `src/main/kotlin` +
-`org.springframework.boot` + `kotlin("plugin.spring")`.
-
-## Agent Policy
-
-`policy.yml` defines sandboxed execution rules. Key constraints:
-
-- Network: deny by default; allowlist includes `github.com`,
-  `registry.npmjs.org`, `repo.maven.apache.org`
-- Protected branches: `main`, `master`, `develop` — no force push, no rebase, no
-  reset
-- `git commit` and `git checkout` require user confirmation
-- `rm -rf`, `sudo`, `curl | sh` and similar are hard-denied
+- Keep documentation honest about what exists today and what is planned.
+- Do not describe planned CLI or runtime behavior as implemented.
+- Keep policy language clear that enforcement depends on the target tool until
+  the policy compiler exists.
+- Preserve CodeConductor vocabulary: Task Card, Route, Conductor Agent, Routing
+  Policy, Agent Contract, Skill, Deliverable, and Scorecard.

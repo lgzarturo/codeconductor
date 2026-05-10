@@ -9,6 +9,41 @@ It helps developers and teams coordinate specialized agents for planning,
 implementation, testing, documentation, and review — using versioned agent
 contracts, task cards, and risk-based routing.
 
+# <<<<<<< HEAD
+
+> [!IMPORTANT]
+>
+> ## Current Scope
+>
+> CodeConductor is currently in an early pre-CLI stage.
+>
+> What works today:
+>
+> - Manual installation of OpenCode and Claude-compatible presets
+> - Versioned Agent Contracts
+> - Routing Policy documentation
+> - Task Card, Scorecard, and workflow templates
+> - Spring Boot/Kotlin and Python/Django workflow guidance
+>
+> What does not exist yet:
+>
+> - `npx codeconductor init`
+> - Automated project detection
+> - Safe Merger
+> - `codeconductor doctor`
+> - Runtime sandbox enforcement
+> - Policy compiler
+> - Automated agent evaluation
+>
+> Security note:
+>
+> CodeConductor currently provides declarative policies and documented
+> guardrails. It does not yet enforce OS-level isolation, shell sandboxing, or
+> runtime permission boundaries by itself. Treat all agent execution as
+> dependent on the capabilities and limitations of the target tool.
+
+> > > > > > > 1a22bd5df341eaa1797194850bbd7c0f10613271
+
 ---
 
 ## Why CodeConductor?
@@ -62,8 +97,14 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 
 ## Current Support (v0.1.0)
 
-- OpenCode preset
+- OpenCode preset <<<<<<< HEAD
+- # Spring Boot / Kotlin workflow
+- Claude Code-compatible preset
 - Spring Boot / Kotlin workflow
+- Python / Django workflow guidance
+
+> > > > > > > 1a22bd5df341eaa1797194850bbd7c0f10613271
+
 - 8 core Conductor Agents
 - Routing Policy v0.1.0
 - Task Card template
@@ -122,25 +163,37 @@ codeconductor/
 ├── LICENSE
 ├── CHANGELOG.md
 ├── ROADMAP.md
+├── SECURITY.md
 ├── CONTRIBUTING.md
 ├── AGENTS.md
+├── CLAUDE.md
 │
 ├── docs/
 │   ├── philosophy.md
 │   ├── architecture.md
+│   ├── security-model.md
+│   ├── current-limitations.md
+│   ├── cli-contract.md
+│   ├── policy-schema.md
 │   ├── routing-policy.md
 │   ├── task-card-template.md
 │   ├── agent-scorecard.md
 │   ├── prompt-versioning.md
+│   ├── guides/
 │   └── examples/
 │       └── spring-boot-kotlin-feature.md
 │
 ├── presets/
-│   └── opencode/
-│       ├── opencode.jsonc
-│       ├── agents/
+│   ├── opencode/
+│   │   ├── opencode.jsonc
+│   │   ├── agents/
+│   │   ├── commands/
+│   │   ├── prompts/v0.1.0/
+│   │   └── skills/
+│   └── claude/
+│       ├── CLAUDE.md
+│       ├── settings.json
 │       ├── commands/
-│       ├── prompts/v0.1.0/
 │       └── skills/
 │
 └── examples/
@@ -151,14 +204,14 @@ codeconductor/
 
 ## Roadmap
 
-| Version | Focus                                                              |
-| ------- | ------------------------------------------------------------------ |
-| v0.1.0  | OpenCode preset, Spring Boot/Kotlin, 8 core agents, manual install |
-| v0.2.0  | `codeconductor init` CLI, deterministic detection, doctor          |
-| v0.3.0  | Next.js, FastAPI, generic presets, monorepo support                |
-| v0.4.0  | Claude target renderer, CLAUDE.md generation                       |
-| v0.5.0  | Scorecard CLI, task outcome tracking, prompt regression            |
-| v1.0.0  | Stable contracts, stable routing, documented evaluation            |
+| Version | Focus                                                       |
+| ------- | ----------------------------------------------------------- |
+| v0.1.0  | OpenCode and Claude presets, stack guidance, manual install |
+| v0.2.0  | `codeconductor init` CLI, deterministic detection, doctor   |
+| v0.3.0  | Next.js, FastAPI, generic presets, monorepo support         |
+| v0.4.0  | Provider compatibility matrix and target sync workflows     |
+| v0.5.0  | Scorecard CLI, task outcome tracking, prompt regression     |
+| v1.0.0  | Stable contracts, stable routing, documented evaluation     |
 
 See [ROADMAP.md](ROADMAP.md) for details.
 

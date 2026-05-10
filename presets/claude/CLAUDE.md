@@ -2,24 +2,24 @@
 
 **Tagline:** Stop prompting. Start orchestrating.
 
-This is a framework, not a prompt collection. When you receive a `/command`,
-you orchestrate a structured multi-agent workflow. Each step is executed by a
+This is a framework, not a prompt collection. When you receive a `/command`, you
+orchestrate a structured multi-agent workflow. Each step is executed by a
 specialized role. Roles do not overlap. Steps are not skipped.
 
 ---
 
 ## Core Terminology
 
-| Concept            | Name                  |
-| ------------------ | --------------------- |
-| Structured request | Task Card             |
-| Flow decision      | Route                 |
-| Specialized agent  | Conductor Agent       |
-| Decision rules     | Routing Policy        |
-| Versioned prompts  | Agent Contracts       |
-| Reusable knowledge | Skills                |
-| Evaluable output   | Deliverable           |
-| Agent metrics      | Scorecard             |
+| Concept            | Name            |
+| ------------------ | --------------- |
+| Structured request | Task Card       |
+| Flow decision      | Route           |
+| Specialized agent  | Conductor Agent |
+| Decision rules     | Routing Policy  |
+| Versioned prompts  | Agent Contracts |
+| Reusable knowledge | Skills          |
+| Evaluable output   | Deliverable     |
+| Agent metrics      | Scorecard       |
 
 ---
 
@@ -81,7 +81,8 @@ route Task Cards.
 2. **Acceptance Criteria** — numbered list, at least two verifiable conditions
 3. **Scope** — what is in scope and what is explicitly out of scope
 4. **Risk Level** — low, medium, or high with one-sentence justification
-5. **Context** — relevant files, services, endpoints, or architectural constraints
+5. **Context** — relevant files, services, endpoints, or architectural
+   constraints
 6. **Constraints** — time, compatibility, regulatory, or performance limits
 
 **Task Card format:**
@@ -137,31 +138,39 @@ anything.
 **Task**: [objective from Task Card]
 
 ### Structure
+
 [directory tree — relevant portions only]
 
 ### Architecture Pattern
+
 [Identified pattern and evidence]
 
 ### Conventions
-| Concern | Convention |
-| --- | --- |
-| Naming (classes) | ... |
-| Naming (files) | ... |
-| Error handling | ... |
-| Testing | ... |
-| DI | ... |
+
+| Concern          | Convention |
+| ---------------- | ---------- |
+| Naming (classes) | ...        |
+| Naming (files)   | ...        |
+| Error handling   | ...        |
+| Testing          | ...        |
+| DI               | ...        |
 
 ### Relevant Files
+
 - [path/to/file] — [role and relevance to the task]
 
 ### Impact Radius
+
 **Direct** (files the implementation will change):
+
 - [path/to/file] — [why]
 
 **Indirect** (files that depend on changed files):
+
 - [path/to/file] — [dependency type]
 
 ### Open Questions
+
 - [anything ambiguous the Architect should address]
 ```
 
@@ -172,8 +181,8 @@ execute build or test commands; make assumptions about intent.
 
 ### Architect
 
-Designs the technical approach for a task. Produces ADRs, module boundaries,
-and API contracts. The Implementer has a reviewed plan before touching code.
+Designs the technical approach for a task. Produces ADRs, module boundaries, and
+API contracts. The Implementer has a reviewed plan before touching code.
 
 **Does not:** write implementation code, write tests, modify source files.
 
@@ -193,29 +202,36 @@ If there are open questions, do not proceed. Surface them and wait for answers.
 ```markdown
 ## Technical Plan
 
-**Task**: [objective from Task Card]
-**Approach**: [1-2 sentences — the chosen strategy and why]
+**Task**: [objective from Task Card] **Approach**: [1-2 sentences — the chosen
+strategy and why]
 
 **Tradeoffs**:
+
 - Chosen: [approach] because [reason]
 - Rejected: [alternative] because [reason it was rejected]
 
 **Files Affected**:
+
 - [path/to/file] — [what changes and why]
 
 **API Contracts** (if applicable):
+
 - [endpoint or interface signature]
 
 **Data Shapes** (if applicable):
+
 - [new or modified data structures]
 
 **Risks**:
+
 - [risk description] — mitigation: [how to handle it]
 
 **Acceptance Criteria Validation**:
+
 - Criterion 1: [how the plan satisfies it]
 
 **Open Questions** (if any):
+
 - [question that requires human input before implementation proceeds]
 ```
 
@@ -224,16 +240,18 @@ If there are open questions, do not proceed. Surface them and wait for answers.
 ```markdown
 # ADR-{number}: {title}
 
-**Status**: proposed | accepted | deprecated
-**Date**: {date}
+**Status**: proposed | accepted | deprecated **Date**: {date}
 
 ## Context
+
 [What situation forced this decision]
 
 ## Decision
+
 [What was decided]
 
 ## Consequences
+
 [What becomes easier, harder, or constrained as a result]
 ```
 
@@ -269,13 +287,14 @@ branch, declare done before running tests.
 ```markdown
 ## Implementation Summary
 
-**Task**: [objective from Task Card]
-**Status**: complete | blocked
+**Task**: [objective from Task Card] **Status**: complete | blocked
 
 **Changes Made**:
+
 - [path/to/file] — [what changed, one sentence]
 
 **Tests**:
+
 - Runner: [./gradlew test | npm test | ...]
 - Result: [passed | failed]
 - Failed tests: [list or "none"]
@@ -283,6 +302,7 @@ branch, declare done before running tests.
 **Deviations from Plan**: [list any, or "none"]
 
 **Suggestions for Future Work** (out of scope for this task):
+
 - [suggestion or "none"]
 ```
 
@@ -314,22 +334,24 @@ contract tests. Does not write production code.
 ```markdown
 ## Test Report
 
-**Task**: [objective from Task Card]
-**Runner**: [./gradlew test | npm test | pytest | ...]
+**Task**: [objective from Task Card] **Runner**: [./gradlew test | npm test |
+pytest | ...]
 
 **Tests Written**:
+
 - [TestClass#method] — [what it verifies]
 
 **Coverage**:
+
 - Happy path: [covered | not covered]
 - Edge cases: [covered | not covered]
 - Error cases: [covered | not covered]
 
 **Acceptance Criteria**:
+
 - Criterion 1: [test name] — [pass | fail]
 
-**Suite Result**: [X passed, Y failed]
-**Failing Tests**: [list or "none"]
+**Suite Result**: [X passed, Y failed] **Failing Tests**: [list or "none"]
 ```
 
 **Never:** edit production source files, write tests that pass trivially, skip
@@ -375,29 +397,33 @@ code.
 ```markdown
 ## Review Report
 
-**Task**: [objective from Task Card]
-**Verdict**: [approved | approved with warnings | blocked]
+**Task**: [objective from Task Card] **Verdict**: [approved | approved with
+warnings | blocked]
 
 ---
 
 ### CRITICAL
-- [ ] [C1] [file:line] — [description]
-  Axis: [axis] | Evidence: [quote] | Required action: [what must change]
+
+- [ ] [C1] [file:line] — [description] Axis: [axis] | Evidence: [quote] |
+      Required action: [what must change]
 
 _(none)_ if no critical findings
 
 ### WARNING
-- [ ] [W1] [file:line] — [description]
-  Axis: [axis] | Recommended action: [what should change]
+
+- [ ] [W1] [file:line] — [description] Axis: [axis] | Recommended action: [what
+      should change]
 
 _(none)_ if no warning findings
 
 ### SUGGESTION
+
 - [ ] [S1] — [description] | Rationale: [brief reason]
 
 _(none)_ if no suggestions
 
 ### Summary
+
 - Critical: [count] | Warning: [count] | Suggestion: [count]
 - **Verdict justification**: [one sentence]
 ```
@@ -406,8 +432,8 @@ _(none)_ if no suggestions
 
 ### Docs
 
-Updates README, OpenAPI specs, ADRs, and CHANGELOG to reflect what was
-actually implemented. Reads the diff first. Writes only what changed.
+Updates README, OpenAPI specs, ADRs, and CHANGELOG to reflect what was actually
+implemented. Reads the diff first. Writes only what changed.
 
 **Files this role may edit:**
 
@@ -436,13 +462,16 @@ behavior that was not implemented. Omit CHANGELOG entries.
 **Task**: [objective from Task Card]
 
 **Updated**:
+
 - [path/to/file] — [what changed, one sentence]
 - CHANGELOG.md — added entries under [section name]
 
 **Not Updated** (and why):
+
 - [path/to/file] — [reason]
 
 **Open Documentation Gaps** (if any):
+
 - [description]
 ```
 
@@ -450,33 +479,33 @@ behavior that was not implemented. Omit CHANGELOG entries.
 
 ## Routing Policy
 
-| Risk Level | Route                                                                          |
-| ---------- | ------------------------------------------------------------------------------ |
-| low        | Repo Explorer → Implementer → Tester                                           |
-| medium     | Repo Explorer → Architect → Implementer → Tester → Reviewer                   |
+| Risk Level | Route                                                                                            |
+| ---------- | ------------------------------------------------------------------------------------------------ |
+| low        | Repo Explorer → Implementer → Tester                                                             |
+| medium     | Repo Explorer → Architect → Implementer → Tester → Reviewer                                      |
 | high       | Task Coach → Repo Explorer → Architect → [human review] → Implementer → Tester → Reviewer → Docs |
 
 **Classification heuristics:**
 
-| Signal | Risk bump |
-| --- | --- |
+| Signal                                             | Risk bump     |
+| -------------------------------------------------- | ------------- |
 | Touches public API, auth, payment, or shared state | medium → high |
-| Root cause of bug is unknown | medium |
-| Refactor changes module boundaries | medium → high |
-| New endpoint with pagination | medium |
-| CSS change or copy update | low |
+| Root cause of bug is unknown                       | medium        |
+| Refactor changes module boundaries                 | medium → high |
+| New endpoint with pagination                       | medium        |
+| CSS change or copy update                          | low           |
 
 ---
 
 ## Available Commands
 
-| Command                  | When to use                                                        |
-| ------------------------ | ------------------------------------------------------------------ |
-| `/feature [description]` | New functionality — full workflow                                  |
-| `/fix [bug description]` | Bug fix — risk-based routing                                       |
-| `/refactor [scope]`      | Refactor — always starts with Architect                            |
-| `/review [target]`       | Structured code review before committing or opening a PR           |
-| `/test-plan [scope]`     | Plan tests before implementation — produces a test matrix          |
+| Command                  | When to use                                               |
+| ------------------------ | --------------------------------------------------------- |
+| `/feature [description]` | New functionality — full workflow                         |
+| `/fix [bug description]` | Bug fix — risk-based routing                              |
+| `/refactor [scope]`      | Refactor — always starts with Architect                   |
+| `/review [target]`       | Structured code review before committing or opening a PR  |
+| `/test-plan [scope]`     | Plan tests before implementation — produces a test matrix |
 
 ---
 
@@ -500,11 +529,17 @@ When the active task touches Python code (any file), apply
 When the active task touches Django views, services, models, or API endpoints,
 apply `.claude/skills/python-django-stack/SKILL.md`.
 
-When the active task touches Django ORM queries, bulk operations, or
-DB-touching service code, apply `.claude/skills/django-orm/SKILL.md`.
+When the active task touches Django ORM queries, bulk operations, or DB-touching
+service code, apply `.claude/skills/django-orm/SKILL.md`.
 
 When the active task involves writing or reviewing Django tests, apply
 `.claude/skills/django-testing/SKILL.md`.
+
+When the active task touches FastAPI routers, endpoints, schemas, or
+dependencies, apply `.claude/skills/python-fastapi-stack/SKILL.md`.
+
+When the active task touches SQLAlchemy models, queries, sessions, bulk
+operations, or Alembic migrations, apply `.claude/skills/sqlalchemy/SKILL.md`.
 
 ---
 

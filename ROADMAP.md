@@ -37,6 +37,35 @@ Manual install. No CLI.
 
 ---
 
+## Security Roadmap
+
+### v0.1.x
+
+- Declarative policy files
+- Target-specific permissions
+- Manual security guidance
+
+### v0.2.x
+
+- Policy schema validation
+- Doctor checks for risky permissions
+- Documentation warnings for unenforced policies
+
+### v0.3.x+
+
+- Policy compiler
+- Structured command allowlist
+- Filesystem boundary validation
+- Symlink escape checks
+
+### Future
+
+- Dedicated low-privilege OS user
+- Worktree-per-session runtime
+- Optional containerized execution
+
+---
+
 ## v0.2.0 — Init CLI
 
 **Goal:** `npx codeconductor init` with deterministic stack detection.
@@ -62,7 +91,8 @@ Manual install. No CLI.
 
 **Goal:** Extend detection and presets beyond Spring Boot Kotlin.
 
-- [x] Python / Django / PostgreSQL preset (skills: python, python-django-stack, django-orm, django-testing)
+- [x] Python / Django / PostgreSQL preset (skills: python, python-django-stack,
+      django-orm, django-testing)
 - [ ] Next.js preset
 - [ ] FastAPI preset
 - [ ] Generic backend preset
@@ -73,10 +103,11 @@ Manual install. No CLI.
 
 ---
 
-## v0.4.0 — Claude Target
+## v0.4.0 — Target Sync and Compatibility
 
-**Goal:** Generate Claude-compatible configuration from the same CodeConductor
-contract.
+**Goal:** Formalize provider compatibility and add CLI sync commands for target
+configurations. Manual OpenCode and Claude Code-compatible presets already ship
+in v0.1.0.
 
 - [x] Claude target renderer (`presets/claude/` — manual, shipped in v0.1.0)
 - [x] `CLAUDE.md` generation — agent contracts + routing policy embedded
@@ -119,7 +150,6 @@ contract.
 
 These are intentionally deferred to avoid premature abstraction:
 
-- Security sandbox / runtime isolation (separate concern, separate module)
 - Web dashboard
 - Agent marketplace
 - Automated PR bot

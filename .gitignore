@@ -56,3 +56,6 @@ pnpm-lock.yaml
 
 # Planners
 _*.md
+.claude/
+.opencode/
+.remember/

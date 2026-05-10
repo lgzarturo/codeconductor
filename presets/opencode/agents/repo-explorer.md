@@ -12,6 +12,8 @@ description:
 | Claude | `claude-haiku-4-5-20251001` | Fast — codebase exploration |
 | OpenCode Go | `qwen-3.6-plus` | Best — quick file mapping |
 | OpenCode Go | `kimi-k2.6` | Alternative for structure analysis |
+| Codex | `gpt-5.4-mini` | Best — fast, cost-efficient for directory mapping and convention extraction |
+| Codex | `gpt-5.4` | Alternative for large codebases with complex dependency analysis |
 
 ---
 

@@ -12,6 +12,8 @@ description:
 | Claude | `claude-opus-4-7` | Complex architecture, ADRs, design tradeoffs |
 | OpenCode Go | `deepseek-v4-pro` | Best — excels at reasoning, technical design |
 | OpenCode Go | `mimo-v2.5-pro` | Alternative for mathematical/technical design |
+| Codex | `gpt-5.5` | Best — frontier model, complex coding research and design decisions |
+| Codex | `gpt-5.4` | Alternative for straightforward architecture tasks |
 
 ---
 

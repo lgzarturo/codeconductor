@@ -13,6 +13,8 @@ description:
 | OpenCode Go | `qwen-3.6-plus` | Best — efficient for quick reviews |
 | OpenCode Go | `deepseek-v4-pro` | Comprehensive security reviews |
 | OpenCode Go | `minimax-m2.7` | Detailed architectural reviews |
+| Codex | `gpt-5.4` | Best — strong everyday coding model, reliable diff analysis |
+| Codex | `gpt-5.5` | Alternative for security-focused or complex architectural reviews |
 
 ---
 

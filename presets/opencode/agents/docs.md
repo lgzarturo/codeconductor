@@ -11,6 +11,8 @@ description:
 | Claude | `claude-haiku-4-5-20251001` | Fast — documentation updates |
 | OpenCode Go | `qwen-3.6-plus` | Best — efficient documentation |
 | OpenCode Go | `kimi-k2.6` | Alternative for markdown generation |
+| Codex | `gpt-5.4-mini` | Best — fast, cost-efficient for changelog and README updates |
+| Codex | `gpt-5.4` | Alternative for OpenAPI spec generation or complex doc rewrites |
 
 ---
 

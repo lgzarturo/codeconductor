@@ -58,4 +58,5 @@ pnpm-lock.yaml
 _*.md
 .claude/
 .opencode/
+.codex/
 .remember/

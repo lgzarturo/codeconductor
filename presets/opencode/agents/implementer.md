@@ -12,6 +12,8 @@ description:
 | OpenCode Go | `mimo-v2.5-pro` | Best — strong reasoning for implementation |
 | OpenCode Go | `minimax-m2.7` | Alternative for code generation |
 | OpenCode Go | `qwen-3.6-plus` | Fast implementation for simple changes |
+| Codex | `gpt-5.3-codex` | Best — coding-optimized model, purpose-built for implementation |
+| Codex | `gpt-5.4` | Alternative for everyday code changes |
 
 ---
 

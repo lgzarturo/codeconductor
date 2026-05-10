@@ -11,21 +11,58 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- `presets/claude/commands/tdd-cycle.md` — new `/tdd-cycle` command implementing
-  a structured Red-Green-Refactor workflow with phase gates (RED report → GREEN
-  report → REFACTOR report + Reviewer), enforcing strict TDD discipline
+**Codex CLI preset (new target tool)**
+
+- `presets/codex/` — CodeConductor preset for OpenAI Codex CLI; all 8 agent
+  contracts (orchestrator, task-coach, architect, implementer, tester, reviewer,
+  docs, repo-explorer) embedded in a single `AGENTS.md` (Codex has no named
+  agent file system); includes routing policy, hard rules, OpenAI model matrix,
+  and trigger phrases replacing slash commands
+- `presets/codex/skills/` — 11 skill files copied verbatim from the OpenCode
+  preset (skills are tool-agnostic; all declare `tools: [claude, codex, opencode]`)
+- `docs/guides/manual-install-codex.md` — step-by-step Codex installation guide:
+  prerequisites, file mapping, AGENTS.md creation, model configuration (`o3`,
+  `o4-mini`, `gpt-4o`), trigger phrases, skill activation, session management,
+  and update procedure
+
+**OpenCode agents: Codex model support**
+
+- `presets/opencode/agents/orchestrator.md` — added Codex model rows:
+  `gpt-5.2` (best, long-running agents), `gpt-5.5` (alternative, complex routing)
+- `presets/opencode/agents/architect.md` — added Codex model rows:
+  `gpt-5.5` (best, frontier for complex design), `gpt-5.4` (alternative)
+- `presets/opencode/agents/implementer.md` — added Codex model rows:
+  `gpt-5.3-codex` (best, coding-optimized), `gpt-5.4` (alternative)
+- `presets/opencode/agents/tester.md` — added Codex model rows:
+  `gpt-5.3-codex` (best, coding-optimized for test cases), `gpt-5.4` (alternative)
+- `presets/opencode/agents/reviewer.md` — added Codex model rows:
+  `gpt-5.4` (best, reliable diff analysis), `gpt-5.5` (alternative, security reviews)
+- `presets/opencode/agents/task-coach.md` — added Codex model rows:
+  `gpt-5.4-mini` (best, fast cost-efficient intake), `gpt-5.4` (alternative)
+- `presets/opencode/agents/docs.md` — added Codex model rows:
+  `gpt-5.4-mini` (best, fast for changelog/README), `gpt-5.4` (alternative)
+- `presets/opencode/agents/repo-explorer.md` — added Codex model rows:
+  `gpt-5.4-mini` (best, fast for file mapping), `gpt-5.4` (alternative)
+
+**Commands and docs**
+
+- `presets/claude/commands/cc/tdd-cycle.md` and
+  `presets/opencode/commands/cc-tdd-cycle.md` — structured Red-Green-Refactor
+  workflow with phase gates (RED report → GREEN report → REFACTOR report +
+  Reviewer), enforcing strict TDD discipline
 - `presets/claude/commands/cc/` — CodeConductor-namespaced aliases for all
   Claude preset commands (`/cc:feature`, `/cc:fix`, `/cc:refactor`, `/cc:review`,
-  `/cc:test-plan`, `/cc:tdd-cycle`); enabled via Claude Code subdirectory
-  namespacing
-- `SECURITY.md` with supported versions, current security model, and
-  vulnerability reporting guidance
-- `docs/security-model.md` documenting current guarantees, non-guarantees, trust
+  `/cc:test-plan`, `/cc:tdd-cycle`); enabled via Claude Code subdirectory namespacing
+- `docs/complementary-tools.md` — reference for tools that operate in distinct
+  layers alongside CodeConductor (Engram, Gentle AI, and ecosystem utilities)
+- `SECURITY.md` — supported versions, current security model, and vulnerability
+  reporting guidance
+- `docs/security-model.md` — current guarantees, non-guarantees, trust
   boundaries, and planned runtime isolation
-- `docs/current-limitations.md` clarifying that CodeConductor has no runtime,
-  CLI, policy compiler, or automated evaluation yet
-- `docs/cli-contract.md` and `docs/policy-schema.md` defining future CLI and
-  policy contracts before implementation
+- `docs/current-limitations.md` — clarifies that CodeConductor has no runtime,
+  CLI, policy compiler, or automated evaluation in v0.1.0
+- `docs/cli-contract.md` and `docs/policy-schema.md` — future CLI and policy
+  contracts defined before implementation
 - `presets/opencode/skills/python/` — Python clean code patterns (naming, type
   hints, decorators, exceptions, service/repository patterns)
 - `presets/opencode/skills/python-django-stack/` — Django conventions (FBV,
@@ -35,63 +72,73 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `presets/opencode/skills/django-testing/` — Django test constraints
   (SimpleTestCase + mocks for tenant apps, RequestFactory, FakeSession,
   MagicMock traps, queryset chain mocking)
-- Same 4 skills mirrored to `presets/claude/skills/`
+- Same 4 Python/Django skills mirrored to `presets/claude/skills/`
 - `docs/stacks/python-django-postgresql.md` — stack definition and reference
 - `examples/python-django-postgresql/` — end-to-end feature example with Task
   Card and Technical Plan
 
 ### Changed
 
+**Context scope — new Task Card field and Scorecard metric**
+
+- `docs/task-card-template.md` — added `context_scope` field: `isolated`
+  (task-only, no prior context), `continuation` (relevant prior context), `full`
+  (all session context); defaults to `isolated`
+- `docs/agent-scorecard.md` — added `context_discipline` metric (0–3 scale)
+  evaluating whether the agent respected the declared `context_scope`; score 2
+  when no scope is declared
+- `presets/opencode/agents/orchestrator.md` — added Context Scope handling table:
+  maps `isolated` → `/new`, `continuation` → preserve context, `full` → full history
+- `presets/opencode/agents/reviewer.md` — added `context discipline` review axis:
+  checks whether `/new` was executed when `context_scope` was `isolated`
+- `presets/opencode/agents/task-coach.md` — added `context_scope` as the 6th
+  required Task Card field with intake question pattern
+- `presets/opencode/prompts/v0.2.0/orchestrator.md`, `reviewer.md`,
+  `task-coach.md` — same context_scope additions mirrored to versioned prompts
+
+**OpenCode commands — cc: prefix**
+
+- `presets/opencode/commands/` — all command files renamed to `cc-` prefix
+  (`cc-feature.md`, `cc-fix.md`, `cc-refactor.md`, `cc-review.md`,
+  `cc-test-plan.md`, `cc-tdd-cycle.md`) for consistency with Claude's `/cc:`
+  namespace; invoked as `/cc:feature`, `/cc:fix`, etc. in OpenCode
+
+**Python/Django stack support**
+
 - `presets/opencode/opencode.jsonc` — added Python/Django bash patterns:
   `uv run pytest*`, `make tests*`, `make lint*`, `make verifymigrations*`,
-  `uv run djlint --check*` to allow; Django DB operations to ask
-- `presets/opencode/agents/orchestrator.md` (v0.2.0) — added Stack-Aware Skill
-  Routing section with Python/Django detection signals, per-agent skill
-  injection, and TDD gate for medium/high tasks
-- `presets/opencode/agents/tester.md` (v0.2.0) — added Python/Django Testing
-  section: base class selection table, Django runner commands, TDD sequence,
-  module docstring requirement
+  `uv run djlint --check*` to allow list; Django DB operations (`migrate_schemas`,
+  `makemigrations`, `migrate`) added to ask list
+- `presets/opencode/agents/orchestrator.md` — added Stack-Aware Skill Routing
+  section: Python/Django detection signals, per-agent skill injection
+  instructions, and TDD gate for medium/high risk tasks
+- `presets/opencode/agents/tester.md` — added Python/Django Testing section:
+  base class selection table (SimpleTestCase vs TestCase for tenant apps), Django
+  runner commands, TDD sequence, module docstring requirement
 - `presets/opencode/prompts/v0.2.0/` — new versioned prompt directory with
   updated orchestrator and tester contracts
-- `docs/routing-policy.md` (v0.2.0) — added Django high-risk path patterns
+- `docs/routing-policy.md` — added Django high-risk path patterns
   (`apps/*/migrations/**`, `config/settings*.py`, `apps/users/**`) and DRF
   public contract path (`apps/*/serializers.py`)
 - `docs/prompt-versioning.md` — v0.1.0 marked deprecated, v0.2.0 added as active
 - `presets/claude/CLAUDE.md` — added skill activation rules for the 4 new
   Python/Django skills
 
-- `README.md` now states the current pre-CLI scope, what works today, what is
-  planned, and the current security limitations
-- `CLAUDE.md` now reflects the repository's current documentation-first and
-  preset-based state
-- `docs/architecture.md` and `ROADMAP.md` now separate implemented preset
+**Scope corrections**
+
+- `README.md` — states current pre-CLI scope, what works today, what is
+  planned, and current security limitations
+- `CLAUDE.md` — reflects repository's documentation-first and preset-based state
+- `docs/architecture.md` and `ROADMAP.md` — separate implemented preset
   documentation from planned runtime security capabilities
 - Version documentation now treats `package.json` `0.1.0` as the active
   canonical version
-- `presets/opencode/opencode.jsonc` — added Python/Django bash patterns:
-  `uv run pytest*`, `make tests*`, `make lint*`, `make verifymigrations*`,
-  `uv run djlint --check*` to allow; Django DB operations to ask
-- `presets/opencode/agents/orchestrator.md` — added Stack-Aware Skill Routing
-  section with Python/Django detection signals, per-agent skill injection, and
-  TDD gate for medium/high tasks
-- `presets/opencode/agents/tester.md` — added Python/Django Testing section:
-  base class selection table, Django runner commands, TDD sequence, module
-  docstring requirement
-- `presets/opencode/prompts/v0.2.0/` — unreleased draft prompt directory with
-  updated orchestrator and tester contracts
-- `docs/routing-policy.md` — added Django high-risk path patterns
-  (`apps/*/migrations/**`, `config/settings*.py`, `apps/users/**`) and DRF
-  public contract path (`apps/*/serializers.py`)
-- `docs/prompt-versioning.md` — keeps v0.1.0 active while v0.2.0 remains an
-  unreleased draft
-- `presets/claude/CLAUDE.md` — added skill activation rules for the 4 new
-  Python/Django skills
 
 ### Fixed
 
 - `policy.yml` and OpenCode preset permissions now require confirmation for
   `git push`
-- `policy.yml` now labels current execution as target-tool-dependent instead of
+- `policy.yml` — execution model labeled as target-tool-dependent instead of
   a CodeConductor-enforced sandbox
 
 ---

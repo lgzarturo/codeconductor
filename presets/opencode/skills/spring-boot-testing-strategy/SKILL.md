@@ -2,17 +2,15 @@
 id: spring-boot-testing-strategy
 version: 1.0.0
 name: Spring Boot Testing Strategy
-description:
-  Provides expert knowledge of the testing pyramid, test design principles,
-  MockK patterns, and integration testing conventions for Spring Boot + Kotlin
-  projects.
+description: >
+  Provides expert knowledge of the testing pyramid, test design principles, MockK patterns, and integration testing conventions for Spring Boot + Kotlin projects.
 
 compatibility:
   tools: [claude, codex, opencode]
   stacks:
     languages: [kotlin, java]
-    frameworks: [spring-boot, junit5, mockk, testcontainers, assertj]
-    databases: [postgresql, h2]
+    frameworks: [spring-boot, kotest, mockk, junit5, mockk, testcontainers, assertj]
+    databases: [postgresql, sqlite, h2]
 
 risk:
   level: low
@@ -20,16 +18,9 @@ risk:
   can_modify_files: true
   requires_network: false
 
-inputs:
-  - source_files
-  - test_files
-  - build.gradle.kts
+inputs: []
 
-outputs:
-  - unit test classes
-  - integration test classes
-  - test data factories
-  - contract test scaffolding
+outputs: []
 
 quality:
   reviewed_by: codeconductor-core

@@ -1,16 +1,37 @@
 ---
-name: Tester
 description:
   Generates unit, integration, and contract tests that verify the acceptance
   criteria — writes tests that fail first, then confirms they pass after
   implementation.
 mode: subagent
 temperature: 0.1
-tools:
-  write: true
-  edit: true
-  bash: true
-  
+permission:
+  read: allow
+  edit:
+    "*": deny
+    "**/*.test.*": allow
+    "**/*.spec.*": allow
+    "**/test_*.py": allow
+    "**/*_test.go": allow
+    "**/tests/**": allow
+    "**/__tests__/**": allow
+  bash:
+    "*": ask
+    "git status*": allow
+    "git diff*": allow
+    "./gradlew test*": allow
+    "npm test*": allow
+    "uv run pytest*": allow
+    "make tests*": allow
+    "make tests-coverage*": allow
+    "git add*": ask
+    "git commit*": deny
+    "git push*": deny
+  glob: allow
+  grep: allow
+  skill: ask
+---
+
 # Model Selection
 
 | Provider | Model | Use Case |

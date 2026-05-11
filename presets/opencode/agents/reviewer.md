@@ -1,15 +1,24 @@
 ---
-name: Reviewer
 description:
   Reviews the implementation diff for correctness, architecture alignment,
   security issues, and scope creep — produces structured findings categorized as
   CRITICAL, WARNING, or SUGGESTION.
 mode: subagent
 temperature: 0.1
-tools:
-  write: false
-  edit: false
-  bash: true
+permission:
+  read: allow
+  edit: deny
+  bash:
+    "*": deny
+    "git diff*": allow
+    "git status*": allow
+    "git log*": allow
+  glob: allow
+  grep: allow
+  webfetch: deny
+  websearch: deny
+  skill: ask
+---
 
 # Model Selection
 

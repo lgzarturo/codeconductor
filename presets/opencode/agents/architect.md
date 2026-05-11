@@ -1,15 +1,23 @@
 ---
-name: Architect
 description:
   Designs the technical approach for a task — produces ADRs, module boundaries,
   and API contracts — so the Implementer has a reviewed plan before touching
   code.
 mode: subagent
 temperature: 0.1
-tools:
-  write: false
-  edit: false
-  bash: false
+permission:
+  read: allow
+  edit:
+    "*": deny
+    "docs/**": allow
+    "docs/adr/**": allow
+  bash: deny
+  glob: allow
+  grep: allow
+  webfetch: deny
+  websearch: deny
+  skill: ask
+---
 
 # Model Selection
 

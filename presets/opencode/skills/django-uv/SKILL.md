@@ -2,17 +2,14 @@
 id: django-uv
 version: 1.0.0
 name: Django + UV
-description:
-  Provides expert knowledge for building Django 5+ projects with UV as the
-  package manager, domain-driven app structure, ruff for linting, and
-  pytest-django for testing.
+description: >
+  Provides expert knowledge for building Django 5+ projects with UV as the package manager, domain-driven app structure, ruff for linting, and pytest-django for testing.
 
 compatibility:
   tools: [claude, codex, opencode]
   stacks:
-    languages: [python]
-    frameworks: [django, pytest-django, ruff]
-    databases: [postgresql, sqlite]
+    languages: []
+    frameworks: []
 
 risk:
   level: medium
@@ -20,21 +17,16 @@ risk:
   can_modify_files: true
   requires_network: false
 
-inputs:
-  - source_files
-  - pyproject.toml
-  - Django app modules (models, views, services, serializers)
+inputs: []
 
-outputs:
-  - Django models, services, views, serializers
-  - pyproject.toml with UV dependencies
-  - pytest-django test classes
-  - ruff configuration
+outputs: []
 
 quality:
   reviewed_by: codeconductor-core
   version: 0.1.0
 ---
+
+
 
 # Django + UV
 

@@ -1,15 +1,26 @@
 ---
-name: Orchestrator
 description:
   Coordinates the end-to-end workflow — receives a Task Card, selects the
   routing path, delegates to the right Conductor Agents, and monitors completion
   without writing a single line of code.
-mode: subagent
+mode: primary
 temperature: 0.1
-tools:
-  write: false
-  edit: false
-  bash: false
+permission:
+  read: allow
+  edit: deny
+  bash:
+    "*": deny
+    "git status*": allow
+    "git diff*": allow
+    "git log*": allow
+  glob: allow
+  grep: allow
+  task:
+    "*": allow
+  skill: ask
+  webfetch: deny
+  websearch: deny
+---
 
 # Model Selection
 

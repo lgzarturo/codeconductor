@@ -2,17 +2,14 @@
 id: testing-tdd
 version: 1.0.0
 name: Test-Driven Development
-description:
-  Provides expert knowledge for applying the Red-Green-Refactor cycle, designing
-  tests at the right pyramid layer, and implementing TDD across Spring Boot +
-  Kotlin, Python (pytest), and Next.js / Astro (Vitest + Playwright) stacks.
+description: >
+  Provides expert knowledge for applying the Red-Green-Refactor cycle, designing tests at the right pyramid layer, and implementing TDD across Spring Boot + Kotlin, Python (pytest), and Next.js / Astro (Vitest + Playwright) stacks.
 
 compatibility:
   tools: [claude, codex, opencode]
   stacks:
-    languages: [kotlin, java, python, typescript]
-    frameworks: [spring-boot, junit5, mockk, pytest, vitest, react-testing-library, playwright]
-    databases: [postgresql, sqlite, h2]
+    languages: []
+    frameworks: []
 
 risk:
   level: low
@@ -20,22 +17,16 @@ risk:
   can_modify_files: true
   requires_network: false
 
-inputs:
-  - source_files
-  - test_files
-  - acceptance criteria or task description
+inputs: []
 
-outputs:
-  - failing test (Red phase)
-  - minimal implementation (Green phase)
-  - refactored code with passing tests (Refactor phase)
-  - test data factories
-  - integration and E2E test scaffolding
+outputs: []
 
 quality:
   reviewed_by: codeconductor-core
   version: 0.1.0
 ---
+
+
 
 # Test-Driven Development
 

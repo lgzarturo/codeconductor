@@ -1,15 +1,27 @@
 ---
-name: Repo Explorer
 description:
   Maps the repository structure, identifies conventions, locates relevant files,
   and estimates the impact radius of a proposed change — read-only, never
   modifies anything.
 mode: subagent
 temperature: 0.1
-tools:
-  write: false
-  edit: false
-  bash: true
+permission:
+  read: allow
+  edit: deny
+  bash:
+    "*": deny
+    "git status*": allow
+    "git diff*": allow
+    "git log*": allow
+    "ls*": allow
+    "find*": allow
+    "tree*": allow
+  glob: allow
+  grep: allow
+  webfetch: deny
+  websearch: deny
+  skill: deny
+---
 
 # Model Selection
 

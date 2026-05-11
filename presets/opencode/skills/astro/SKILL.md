@@ -2,16 +2,14 @@
 id: astro
 version: 1.0.0
 name: Astro
-description:
-  Provides expert knowledge for building Astro 5+ sites with Islands
-  Architecture, Content Collections, TypeScript, and performance-first
-  rendering strategies.
+description: >
+  Provides expert knowledge for building Astro 5+ sites with Islands Architecture, Content Collections, TypeScript, and performance-first rendering strategies.
 
 compatibility:
   tools: [claude, codex, opencode]
   stacks:
-    languages: [typescript, javascript]
-    frameworks: [astro, react, vue, svelte, preact]
+    languages: []
+    frameworks: []
 
 risk:
   level: low
@@ -19,23 +17,16 @@ risk:
   can_modify_files: true
   requires_network: false
 
-inputs:
-  - source_files
-  - astro.config.mjs
-  - content collection schema files
-  - component files (.astro, .tsx, .vue)
+inputs: []
 
-outputs:
-  - Astro page and layout components
-  - content collection schemas
-  - island components with correct hydration directives
-  - optimized image usage
-  - SSR adapter configuration
+outputs: []
 
 quality:
   reviewed_by: codeconductor-core
   version: 0.1.0
 ---
+
+
 
 # Astro
 

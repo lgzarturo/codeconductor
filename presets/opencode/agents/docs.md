@@ -1,14 +1,27 @@
 ---
-name: Docs
 description:
   Updates README, OpenAPI specs, ADRs, and CHANGELOG to reflect what was
   actually implemented — reads the diff first, writes only what changed.
 mode: subagent
 temperature: 0.1
-tools:
-  write: true
-  edit: true
-  bash: false
+permission:
+  read: allow
+  edit:
+    "*": deny
+    "README.md": allow
+    "docs/**": allow
+    "CHANGELOG.md": allow
+    "openapi.yaml": allow
+    "openapi.json": allow
+    "**/*-api.yaml": allow
+    "**/*-api.json": allow
+  bash: deny
+  glob: allow
+  grep: allow
+  webfetch: deny
+  websearch: deny
+  skill: deny
+---
 
 # Model Selection
 

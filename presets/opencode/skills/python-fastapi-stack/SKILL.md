@@ -39,7 +39,6 @@ quality:
   reviewed_by: codeconductor-core
   version: 0.1.0
 ---
-
 ## When to Use
 
 - Writing any new endpoint, router, or schema

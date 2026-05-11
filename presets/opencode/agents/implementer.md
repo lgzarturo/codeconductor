@@ -1,14 +1,33 @@
 ---
-name: Implementer
 description:
   Writes the code that the Architect planned — minimal diff, no scope creep, no
   invented architecture — and runs tests before declaring done.
 mode: subagent
 temperature: 0.1
-tools:
-  write: true
-  edit: true
-  bash: true
+permission:
+  read: allow
+  edit: allow
+  bash:
+    "*": ask
+    "git status*": allow
+    "git diff*": allow
+    "git log*": allow
+    "./gradlew test*": allow
+    "./gradlew build*": allow
+    "npm test*": allow
+    "npm run lint*": allow
+    "uv run pytest*": allow
+    "make tests*": allow
+    "make tests-coverage*": allow
+    "make lint*": allow
+    "git add*": ask
+    "git commit*": ask
+    "git push*": deny
+    "rm -rf*": deny
+  glob: allow
+  grep: allow
+  skill: ask
+---
 
 # Model Selection
 

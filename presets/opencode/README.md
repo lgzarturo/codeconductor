@@ -44,6 +44,42 @@ providers)** models.
 
 ---
 
+## Agent Modes
+
+| Agent             | Mode      | Description                                          |
+| ----------------- | --------- | ---------------------------------------------------- |
+| **Orchestrator**  | primary   | Main coordinator — Tab to switch to it               |
+| **Architect**     | subagent  | Invoked by Orchestrator for design work              |
+| **Implementer**   | subagent  | Invoked by Orchestrator for code implementation      |
+| **Tester**        | subagent  | Invoked by Orchestrator for test generation          |
+| **Reviewer**      | subagent  | Invoked by Orchestrator for code review              |
+| **Task Coach**    | subagent  | Invoked by Orchestrator for intake clarification     |
+| **Docs**          | subagent  | Invoked by Orchestrator for documentation updates    |
+| **Repo Explorer** | subagent  | Invoked by Orchestrator for codebase exploration     |
+
+---
+
+## Permission System
+
+This preset uses OpenCode's permission system (v1.1.1+) with granular control:
+
+- **Global defaults**: Most operations require approval (`ask`)
+- **Read access**: Allowed by default, with sensitive files denied
+- **Write/Edit**: Requires approval, with protected paths denied
+- **Bash commands**: Read-only git commands allowed, destructive commands denied
+- **Agent-specific**: Each agent has tailored permissions matching its role
+
+### Protected Paths
+
+The following paths are denied by default:
+
+- `.env`, `.env.*` — environment secrets
+- `secrets/**` — secret files
+- `~/.ssh/**`, `~/.aws/**`, `~/.kube/**` — system credentials
+- `.git/**`, `.opencode/**`, `.claude/**` — tool configuration
+
+---
+
 ## Model Selection by Task Complexity
 
 ### Simple Tasks (Q&A, intake, documentation)
@@ -81,7 +117,6 @@ frontmatter:
 
 ```yaml
 ---
-name: Architect
 description: ...
 # Model Selection
 | Provider | Model | Use Case |

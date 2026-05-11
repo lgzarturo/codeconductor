@@ -2,16 +2,14 @@
 id: security
 version: 1.0.0
 name: Security
-description:
-  Provides expert knowledge for implementing and reviewing application security
-  following OWASP Top 10 (2021), with stack-specific patterns for Spring Boot,
-  Django, Next.js, and Astro.
+description: >
+  Provides expert knowledge for implementing and reviewing application security following OWASP Top 10 (2021), with stack-specific patterns for Spring Boot, Django, Next.js, and Astro.
 
 compatibility:
   tools: [claude, codex, opencode]
   stacks:
-    languages: [kotlin, java, python, typescript]
-    frameworks: [spring-boot, django, nextjs, astro, fastapi]
+    languages: []
+    frameworks: []
 
 risk:
   level: high
@@ -19,23 +17,16 @@ risk:
   can_modify_files: true
   requires_network: false
 
-inputs:
-  - source_files
-  - authentication and authorization code
-  - API endpoint definitions
-  - configuration files
+inputs: []
 
-outputs:
-  - secure authentication implementation
-  - input validation patterns
-  - security header configuration
-  - CORS policy
-  - secrets management conventions
+outputs: []
 
 quality:
   reviewed_by: codeconductor-core
   version: 0.1.0
 ---
+
+
 
 # Security
 

@@ -2,36 +2,31 @@
 id: code-review
 version: 1.0.0
 name: Code Review
-description:
-  Provides a structured framework for conducting thorough code reviews covering
-  correctness, security, architecture alignment, performance, and technical debt.
+description: >
+  Provides a structured framework for conducting thorough code reviews covering correctness, security, architecture alignment, performance, and technical debt.
 
 compatibility:
   tools: [claude, codex, opencode]
   stacks:
-    languages: [kotlin, java, typescript, python, go]
-    frameworks: [spring-boot, nextjs, fastapi, django, astro]
+    languages: []
+    frameworks: []
 
 risk:
   level: low
   can_execute_shell: false
-  can_modify_files: false
+  can_modify_files: true
   requires_network: false
 
-inputs:
-  - source_files
-  - diff or pull request content
-  - task card or issue description
+inputs: []
 
-outputs:
-  - structured review report
-  - categorized findings (CRITICAL / WARNING / SUGGESTION)
-  - exact diff recommendations
+outputs: []
 
 quality:
   reviewed_by: codeconductor-core
   version: 0.1.0
 ---
+
+
 
 # Code Review
 

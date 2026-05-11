@@ -26,6 +26,8 @@
       "*.env": "deny",
       "*.env.*": "deny",
     },
+    "glob": "allow",
+    "grep": "allow",
     "external_directory": {
       "*": "deny",
     },

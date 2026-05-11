@@ -1,16 +1,19 @@
 ---
-name: Task Coach
 description:
   Transforms vague requests into complete, routable Task Cards by asking
   targeted clarifying questions and enforces the Task Card standard before any
   work begins.
 mode: subagent
 temperature: 0.1
-tools:
-  write: false
-  edit: false
-  bash: false
-  
+permission:
+  read: allow
+  edit: deny
+  bash: deny
+  glob: allow
+  grep: allow
+  skill: deny
+---
+
 # Model Selection
 
 | Provider | Model | Use Case |

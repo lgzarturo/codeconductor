@@ -2,15 +2,14 @@
 id: nextjs-typescript
 version: 1.0.0
 name: Next.js + TypeScript
-description:
-  Provides expert knowledge for building Next.js 15+ applications with the App
-  Router, TypeScript, Server Components, Server Actions, and TanStack Query.
+description: >
+  Provides expert knowledge for building Next.js 15+ applications with the App Router, TypeScript, Server Components, Server Actions, and TanStack Query.
 
 compatibility:
   tools: [claude, codex, opencode]
   stacks:
-    languages: [typescript]
-    frameworks: [nextjs, react, tanstack-query, zod, prisma]
+    languages: []
+    frameworks: []
 
 risk:
   level: medium
@@ -18,23 +17,16 @@ risk:
   can_modify_files: true
   requires_network: false
 
-inputs:
-  - source_files
-  - app/ directory structure
-  - next.config.ts
-  - TypeScript type definitions
+inputs: []
 
-outputs:
-  - Server and Client Component files
-  - Server Actions
-  - route handlers
-  - data fetching patterns
-  - metadata configuration
+outputs: []
 
 quality:
   reviewed_by: codeconductor-core
   version: 0.1.0
 ---
+
+
 
 # Next.js + TypeScript
 

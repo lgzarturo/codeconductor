@@ -11,6 +11,12 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `docs/guides/agent-user-isolation.md` — developer guide for isolating AI
+  agent execution (Claude Code, OpenCode, Codex) using dedicated OS users on
+  POSIX and Windows 11; covers identity isolation, per-tool guardrail config,
+  environment variable isolation, Git Worktree session isolation, and a
+  verification checklist
+
 - `AUTHORS.md` — project author and maintainer information
 - `CODE_OF_CONDUCT.md` — community code of conduct (Contributor Covenant v2.1)
   and content usage guidelines for presets, templates, and skill files

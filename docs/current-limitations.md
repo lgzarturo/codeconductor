@@ -12,6 +12,10 @@ The CLI is planned but not implemented.
 
 Policies are declarative and target-tool dependent.
 
+Target presets do not expose identical enforcement surfaces. A policy rule may
+be enforced in one target, documented in another, and unsupported in a third
+until the policy compiler and target renderers exist.
+
 ## Agent Orchestration
 
 Agent routing is currently documented and preset-based. It is not yet enforced

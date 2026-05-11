@@ -42,10 +42,33 @@ denyWrite:
   - ".git/**"
   - ".claude/**"
   - ".opencode/**"
+  - ".codeconductor/**"
   - ".code-conductor/policy.yml"
   - "/etc/**"
   - "/var/**"
   - "~/**"
+
+targets:
+  opencode:
+    unsupportedRules: []
+    warnings:
+      - "Enforcement depends on OpenCode permission support."
+      - "Command patterns are string-based until the policy compiler exists."
+  claude:
+    unsupportedRules:
+      - "denyRead"
+      - "denyWrite"
+      - "runtime.network.allowDomains"
+    warnings:
+      - "Claude settings primarily represent shell permissions; filesystem and network boundaries depend on Claude Code capabilities and manual isolation."
+  codex:
+    unsupportedRules:
+      - "denyRead"
+      - "denyWrite"
+      - "runtime.network"
+      - "commands"
+    warnings:
+      - "Codex preset currently represents policy intent through AGENTS.md contracts; runtime enforcement depends on Codex capabilities."
 
 commands:
   allow:

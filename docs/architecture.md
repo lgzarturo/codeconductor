@@ -139,15 +139,19 @@ Validates the installed configuration.
 
 ## Targets
 
-| Target   | Status                | Notes                                     |
-| -------- | --------------------- | ----------------------------------------- |
-| OpenCode | Implemented in v0.1.0 | Manual preset support.                    |
-| Claude   | Implemented in v0.1.0 | Manual Claude Code-compatible preset.     |
-| Codex    | Planned               | No timeline. Depends on target stability. |
+| Target   | Status                | Notes                                 |
+| -------- | --------------------- | ------------------------------------- |
+| OpenCode | Implemented in v0.1.0 | Manual preset support.                |
+| Claude   | Implemented in v0.1.0 | Manual Claude Code-compatible preset. |
+| Codex    | Implemented in v0.1.x | Manual Codex CLI-compatible preset.   |
 
 Target-specific rendering means the same preset content is rendered differently
 per target. Agent contracts that work for OpenCode's `AGENTS.md` format are not
 the same as those for Claude Code's `CLAUDE.md` format.
+
+Target rendering must also preserve the canonical security intent from
+`policy.yml`. When a target cannot enforce a rule directly, the renderer should
+emit an explicit compatibility warning rather than silently dropping the rule.
 
 ---
 
@@ -275,6 +279,11 @@ execute. CodeConductor does not enforce this file at runtime in v0.1.x.
 
 **Policy Compiler.** **Status:** Planned. The policy compiler is not implemented
 yet. Current policies are declarative and depend on target-tool support.
+
+**Target security compatibility.** **Status:** Planned. Future renderers and
+doctor checks must compare `policy.yml` against each target's actual permission
+surface and report unsupported rules, permission drift, and role tool access
+that exceeds the role contract.
 
 **Isolated execution (planned).** In future versions, each agent session runs as
 a dedicated low-privilege OS user (`cc-agent`) with no access to secrets,

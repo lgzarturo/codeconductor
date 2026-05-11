@@ -165,6 +165,7 @@ codeconductor/
 │   ├── philosophy.md
 │   ├── architecture.md
 │   ├── security-model.md
+│   ├── preset-security-analysis.md
 │   ├── current-limitations.md
 │   ├── cli-contract.md
 │   ├── policy-schema.md

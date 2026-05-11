@@ -29,6 +29,10 @@ Planned behavior:
 - Validate managed markers
 - Validate policy schema
 - Warn about risky target-tool permissions
+- Compare target presets against canonical `policy.yml`
+- Warn when a role has broader tool permissions than its contract requires
+- Warn when low-privilege user or worktree isolation is not detected
+- Warn when secret-path denies or network posture are missing
 - Report unsupported or conflicting configuration
 
 ### `codeconductor update`

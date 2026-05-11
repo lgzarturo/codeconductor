@@ -7,8 +7,8 @@ description:
 mode: subagent
 temperature: 0.1
 tools:
-  write: true
-  edit: true
+  write: false
+  edit: false
   bash: true
 
 # Model Selection

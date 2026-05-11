@@ -11,6 +11,19 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `docs/preset-security-analysis.md` — comparative security analysis for Codex,
+  OpenCode, and Claude presets; defines defense-in-depth layers, target
+  compatibility gaps, and framework improvements for policy drift, isolation,
+  command parsing, and secret handling
+- `docs/security-model.md`, `docs/policy-schema.md`, `docs/cli-contract.md`,
+  `SECURITY.md`, `ROADMAP.md`, `README.md`, and `docs/architecture.md` —
+  expanded security model with target compatibility, canonical `policy.yml`
+  guidance, doctor checks for unsafe permissions and isolation gaps, and
+  explicit warnings when target tools cannot enforce a rule
+- `policy.yml` — added target compatibility metadata for OpenCode, Claude, and
+  Codex, including unsupported rules and warnings for target-dependent
+  enforcement
+
 - `docs/guides/agent-user-isolation.md` — developer guide for isolating AI
   agent execution (Claude Code, OpenCode, Codex) using dedicated OS users on
   POSIX and Windows 11; covers identity isolation, per-tool guardrail config,
@@ -105,6 +118,15 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Card and Technical Plan
 
 ### Changed
+
+**OpenCode least-privilege role tools**
+
+- `presets/opencode/agents/orchestrator.md`,
+  `presets/opencode/agents/task-coach.md`,
+  `presets/opencode/agents/architect.md`, and
+  `presets/opencode/agents/reviewer.md` — frontmatter now disables write/edit
+  tools for roles whose contracts are coordination, intake, design, or review
+  only
 
 **Context scope — new Task Card field and Scorecard metric**
 

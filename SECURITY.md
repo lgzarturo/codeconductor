@@ -15,6 +15,15 @@ Policy files, agent contracts, and manual installation guides define intended
 boundaries for reads, writes, commands, network access, and protected branches.
 Actual enforcement depends on the target tool.
 
+Recommended execution uses defense in depth:
+
+- run agents under a low-privilege OS user
+- keep agent work in a dedicated Git Worktree
+- deny secret paths in the target tool configuration
+- avoid inherited secret environment variables
+- require human review for risky commands, protected branches, and high-risk
+  paths
+
 ## Not Yet Implemented
 
 - OS-level sandbox
@@ -24,6 +33,7 @@ Actual enforcement depends on the target tool.
 - Runtime filesystem isolation
 - Symlink escape protection
 - Secret redaction in logs
+- Automatic verification that target presets fully enforce `policy.yml`
 
 ## Reporting a Vulnerability
 

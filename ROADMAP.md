@@ -51,6 +51,9 @@ Manual install. No CLI.
 - Policy schema validation
 - Doctor checks for risky permissions
 - Documentation warnings for unenforced policies
+- Doctor checks for target policy drift, least-privilege role tools, secret
+  denies, network posture, and worktree isolation guidance
+- Target security compatibility matrix for Codex, OpenCode, and Claude
 
 ### v0.3.x+
 
@@ -58,6 +61,7 @@ Manual install. No CLI.
 - Structured command allowlist
 - Filesystem boundary validation
 - Symlink escape checks
+- Renderer warnings when a target cannot enforce a canonical policy rule
 
 ### Future
 
@@ -80,6 +84,7 @@ Manual install. No CLI.
 - [ ] Safe Merger with idempotency markers (`CODECONDUCTOR:BEGIN/END managed`)
 - [ ] `--dry-run` support
 - [ ] `codeconductor doctor` — validate config presence and integrity
+- [ ] `codeconductor doctor` — report target security compatibility gaps
 - [ ] Bug-fix workflow
 - [ ] Refactor workflow
 - [ ] API contract workflow

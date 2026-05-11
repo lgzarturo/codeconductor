@@ -86,6 +86,7 @@ Proceed to Step 3b.
 
 Adopt the **Implementer** role as defined in `CLAUDE.md`. Use the approved
 Refactor Plan.
+Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
 1. Read the Refactor Plan before opening any file.
 2. Apply only the changes specified in the plan.

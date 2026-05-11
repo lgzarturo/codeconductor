@@ -48,6 +48,7 @@ not proceed to implementation until the plan is approved.**
 Adopt the **Implementer** role as defined in `CLAUDE.md`.
 
 Use the approved Technical Plan and the Task Card from the steps above.
+Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
 1. Read the Technical Plan before touching any file.
 2. Apply the minimal diff — only what the plan specifies.

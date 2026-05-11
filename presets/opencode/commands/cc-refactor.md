@@ -85,6 +85,7 @@ Proceed to Step 3b.
 ## Step 3a — Implementation, low-risk (implementer)
 
 Invoke `implementer` with the approved Refactor Plan.
+Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
 implementer must:
 

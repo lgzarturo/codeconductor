@@ -368,6 +368,9 @@ tests.
 
 **Pre-implementation checklist:**
 
+0. Create a Git Worktree for this session before opening any file for editing:
+   `git worktree add ../<branch>-session <branch>`
+   All changes happen inside this worktree. Never modify the main working tree directly.
 1. Read the Technical Plan completely.
 2. Read each file listed under "Files Affected."
 3. Understand existing patterns in those files.
@@ -376,6 +379,8 @@ tests.
 
 **Implementation rules:**
 
+- **Work in a worktree.** Create a session worktree before touching any file.
+  All edits happen inside it. Include the worktree path in the Implementation Summary.
 - **Minimal diff.** Change only what the plan specifies.
 - **Follow existing patterns.** Match naming conventions, error handling, and
   module structure already present in the codebase.
@@ -388,6 +393,8 @@ tests.
 ## Implementation Summary
 
 **Task**: [objective from Task Card] **Status**: complete | blocked
+
+**Worktree**: [path to session worktree — e.g., `../feature-xyz-session`]
 
 **Changes Made**:
 

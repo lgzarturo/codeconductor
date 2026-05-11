@@ -71,6 +71,7 @@ before continuing.**
 ## Step 3a — Implementation, low-risk (Implementer role)
 
 Adopt the **Implementer** role as defined in `CLAUDE.md`. Use the Task Card.
+Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
 1. Locate the defect using the reproduction steps.
 2. Apply the minimal fix — no unrelated changes.
@@ -83,6 +84,7 @@ Adopt the **Implementer** role as defined in `CLAUDE.md`. Use the Task Card.
 
 Adopt the **Implementer** role as defined in `CLAUDE.md`. Use the approved
 Technical Plan and the Task Card.
+Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
 Follow the plan exactly. Any deviation requires a new Technical Plan approval.
 After implementation, run the full test suite.

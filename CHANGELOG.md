@@ -17,6 +17,21 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   environment variable isolation, Git Worktree session isolation, and a
   verification checklist
 
+**Preset: Git Worktree isolation (all three presets)**
+
+- `presets/claude/CLAUDE.md` — Implementer role: added step 0 (create session
+  worktree before any file edit), `Work in a worktree` implementation rule, and
+  `Worktree` field in Implementation Summary
+- `presets/claude/commands/cc/feature.md`, `fix.md`, `refactor.md` — added
+  worktree note to each implementation step
+- `presets/codex/AGENTS.md` — same additions to the `implementer` agent contract
+- `presets/opencode/agents/implementer.md` — same additions
+- `presets/opencode/commands/cc-feature.md`, `cc-fix.md`, `cc-refactor.md` —
+  added worktree note to each implementation step
+- `presets/opencode/prompts/v0.1.0/implementer.md`,
+  `presets/opencode/prompts/v0.2.0/implementer.md` — same additions; checklist
+  updated from "all five steps" to "all six steps"
+
 - `AUTHORS.md` — project author and maintainer information
 - `CODE_OF_CONDUCT.md` — community code of conduct (Contributor Covenant v2.1)
   and content usage guidelines for presets, templates, and skill files

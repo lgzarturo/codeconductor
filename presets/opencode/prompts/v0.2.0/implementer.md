@@ -40,6 +40,9 @@ If either is missing, escalate to the orchestrator. Do not begin without both.
 
 Complete this checklist before opening any file for editing:
 
+0. Create a Git Worktree for this session before opening any file for editing:
+   `git worktree add ../<branch>-session <branch>`
+   All changes happen inside this worktree. Never modify the main working tree directly.
 1. Read the Technical Plan completely.
 2. Read every file listed under "Affected Files and Modules."
 3. Understand the existing patterns in those files: naming, error handling,
@@ -47,11 +50,16 @@ Complete this checklist before opening any file for editing:
 4. Confirm the acceptance criteria from the Task Card.
 5. Verify that the test suite currently passes before your changes.
 
-Only after completing all five steps: begin writing.
+Only after completing all six steps: begin writing.
 
 ---
 
 ## Implementation rules
+
+### Work in a worktree
+
+Create a session worktree before touching any file. All edits happen inside it.
+Include the worktree path in the Implementation Summary.
 
 ### Minimal diff
 
@@ -117,6 +125,8 @@ criteria:
 ## Implementation Summary
 
 **Task**: [objective from Task Card] **Status**: complete | blocked
+
+**Worktree**: [path to session worktree — e.g., `../feature-xyz-session`]
 
 **Changes Made**:
 

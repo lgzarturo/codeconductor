@@ -72,6 +72,7 @@ before continuing.**
 ## Step 3a — Implementation, low-risk (implementer)
 
 Invoke `implementer` with the Task Card.
+Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
 implementer must:
 
@@ -85,6 +86,7 @@ implementer must:
 ## Step 3b — Implementation, medium/high-risk (implementer)
 
 Invoke `implementer` with the approved Technical Plan and the Task Card.
+Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
 implementer must follow the plan exactly. Any deviation requires a new Technical
 Plan approval. After implementation, run the full test suite.

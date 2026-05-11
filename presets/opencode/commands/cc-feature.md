@@ -46,6 +46,7 @@ not invoke implementer until the plan is approved.**
 ## Step 3 — Implementation (implementer)
 
 Invoke `implementer` with the approved Technical Plan and the Task Card.
+Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
 implementer must:
 

@@ -9,7 +9,27 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [0.2.0] - 2026-05-17
+
 ### Added
+
+- CLI: `--global` flag on `install` — writes preset files to `~/.claude/`,
+  `~/.opencode/`, or `~/.codex/` instead of the project-local directories;
+  supports all targets including `--target=all`
+- CLI: `init` now copies `council.yml` and `policy.yml` into
+  `.codeconductor/presets/` as user-customizable sources of truth
+- CLI: `init --global` initializes CodeConductor configuration under
+  `~/.codeconductor/` for system-wide use
+- CLI: preset loader checks `.codeconductor/presets/<name>.yml` before falling
+  back to the bundled `src/presets/` path, allowing user customization without
+  modifying framework files
+
+### Fixed
+
+- CLI: `init` without `--force` now preserves existing
+  `.codeconductor/config.yml` instead of silently overwriting it
 
 - `docs/preset-security-analysis.md` — comparative security analysis for Codex,
   OpenCode, and Claude presets; defines defense-in-depth layers, target
@@ -24,11 +44,11 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Codex, including unsupported rules and warnings for target-dependent
   enforcement
 
-- `docs/guides/agent-user-isolation.md` — developer guide for isolating AI
-  agent execution (Claude Code, OpenCode, Codex) using dedicated OS users on
-  POSIX and Windows 11; covers identity isolation, per-tool guardrail config,
-  environment variable isolation, Git Worktree session isolation, and a
-  verification checklist
+- `docs/guides/agent-user-isolation.md` — developer guide for isolating AI agent
+  execution (Claude Code, OpenCode, Codex) using dedicated OS users on POSIX and
+  Windows 11; covers identity isolation, per-tool guardrail config, environment
+  variable isolation, Git Worktree session isolation, and a verification
+  checklist
 
 **Preset: Git Worktree isolation (all three presets)**
 

@@ -1,0 +1,21 @@
+version: 0.2.0
+project:
+  name: codeconductor
+  profile: node
+defaults:
+  target: opencode
+  overwrite: true
+presets:
+  council:
+    enabled: true
+    version: 0.1.0
+safety:
+  destructiveCommands:
+    - rm -rf
+    - drop table
+    - delete from
+  secretPatterns:
+    - password
+    - secret
+    - api_key
+    - token

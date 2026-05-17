@@ -75,21 +75,32 @@ Manual install. No CLI.
 
 **Goal:** `npx codeconductor init` with deterministic stack detection.
 
-- [ ] `codeconductor init` command
-- [ ] Project Scanner (deterministic: files → deps → scripts → structure)
-- [ ] Stack detectors: Spring Boot Kotlin, Next.js, FastAPI, Python/Django
+- [x] `codeconductor init` command
+- [x] Project Scanner (deterministic: files → deps → scripts → structure)
+- [x] Stack detectors: Node.js, Bun, Spring Boot (Gradle/Maven), Django, Astro
+      (Next.js, FastAPI deferred to v0.3.0)
 - [ ] Detection confidence model (low / medium / high)
 - [ ] Preset resolver (target + stack + architecture)
-- [ ] Config renderer for OpenCode target
-- [ ] Safe Merger with idempotency markers (`CODECONDUCTOR:BEGIN/END managed`)
-- [ ] `--dry-run` support
-- [ ] `codeconductor doctor` — validate config presence and integrity
+- [x] Config renderer for OpenCode target (Claude and Codex renderers also
+      shipped)
+- [x] `--dry-run` support
+- [x] `codeconductor doctor` — validate config presence and integrity
 - [ ] `codeconductor doctor` — report target security compatibility gaps
+- [ ] Safe Merger with idempotency markers (`CODECONDUCTOR:BEGIN/END managed`)
 - [ ] Bug-fix workflow
 - [ ] Refactor workflow
 - [ ] API contract workflow
 - [ ] Database migration workflow
 - [ ] Prompt changelog discipline
+
+**Shipped beyond original scope:**
+
+- `codeconductor install council --target <opencode|claude|codex|all>` — preset
+  installer for all three target tools
+- `--global` flag on `init` and `install` — writes to `~/.codeconductor/`,
+  `~/.claude/`, `~/.opencode/`, `~/.codex/`
+- `.codeconductor/presets/` config directory — user-customizable copy of
+  `council.yml` and `policy.yml`; preset loader reads from here first
 
 ---
 
@@ -104,7 +115,7 @@ Manual install. No CLI.
 - [ ] Generic backend preset
 - [ ] Generic frontend preset
 - [ ] Monorepo detection
-- [ ] `codeconductor update` command
+- [x] `codeconductor update` command
 - [ ] Stricter review checklist
 
 ---

@@ -1,6 +1,6 @@
 {
   "name": "codeconductor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A multi-agent orchestration framework for AI-assisted software engineering workflows.",
   "keywords": [
     "ai",
@@ -17,9 +17,24 @@
     "url": "https://github.com/lgzarturo/codeconductor"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.11"
+  },
+  "type": "module",
+  "bin": {
+    "codeconductor": "./dist/index.js"
   },
   "scripts": {
-    "version:check": "node -e \"console.log(require('./package.json').version)\""
+    "dev": "bun run src/cli/main.ts",
+    "build": "bun build src/cli/main.ts --target=node --outdir=dist",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.23.8",
+    "yaml": "^2.4.5"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.8",
+    "typescript": "^5.5.3"
   }
 }

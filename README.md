@@ -13,11 +13,20 @@ contracts, task cards, and risk-based routing.
 >
 > ## Current Scope
 >
-> CodeConductor is currently in an early pre-CLI stage.
->
 > What works today:
 >
-> - Manual installation of OpenCode and Claude-compatible presets
+> - `codeconductor init` — detects project stack, writes
+>   `.codeconductor/config.yml`, copies `council.yml` and `policy.yml` into
+>   `.codeconductor/presets/`
+> - `codeconductor install council --target <opencode|claude|codex|all>` —
+>   generates and writes preset files; supports `--global` to install to
+>   `~/.opencode/`, `~/.claude/`, `~/.codex/`
+> - `codeconductor detect` — detects project stack and recommends presets
+> - `codeconductor doctor` — validates configuration and installed runner
+>   directories
+> - `codeconductor update` — re-applies the council preset for the configured
+>   target
+> - Manual presets for OpenCode, Claude Code, and Codex
 > - Versioned Agent Contracts
 > - Routing Policy documentation
 > - Task Card, Scorecard, and workflow templates
@@ -25,13 +34,11 @@ contracts, task cards, and risk-based routing.
 >
 > What does not exist yet:
 >
-> - `npx codeconductor init`
-> - Automated project detection
-> - Safe Merger
-> - `codeconductor doctor`
 > - Runtime sandbox enforcement
 > - Policy compiler
 > - Automated agent evaluation
+> - Safe Merger
+> - Multi-target `update` (currently updates only the `defaults.target` runner)
 >
 > Security note:
 >
@@ -91,7 +98,7 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 
 ---
 
-## Current Support (v0.1.0)
+## Current Support (v0.2.0)
 
 - OpenCode preset
 - Claude Code-compatible preset
@@ -106,45 +113,115 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 
 ---
 
-## Installation (planned)
+## CLI Usage
+
+### Install
 
 ```bash
-npx codeconductor init
+# Requires Bun ≥1.0 or Node ≥20.11
+bun run src/cli/main.ts --help
+# or after build:
+# node dist/index.js --help
 ```
 
-Detection output example:
+### Commands
+
+#### `init` — initialize CodeConductor in a project
+
+```bash
+codeconductor init              # detect stack, write .codeconductor/config.yml
+codeconductor init --force      # overwrite existing config
+codeconductor init --global     # write to ~/.codeconductor/
+codeconductor init --dry-run    # preview without writing
+```
+
+On first run, `init` copies `council.yml` and `policy.yml` into
+`.codeconductor/presets/` so you can customize them without touching framework
+files. `install` reads from there first.
+
+#### `detect` — detect project stack
+
+```bash
+codeconductor detect
+codeconductor detect --output json
+```
+
+Output:
 
 ```text
-Detected project:
-  Language:      Kotlin
-  Framework:     Spring Boot
-  Build tool:    Gradle
-  Database:      PostgreSQL
-  Test stack:    JUnit 5 + MockK
-  Architecture:  feature-oriented MVC (confidence 0.72)
-
-Recommended preset: opencode/spring-boot-kotlin
-
-Files to create:
-  AGENTS.md
-  opencode.jsonc
-  .opencode/agents/*
-  .opencode/commands/*
-  .opencode/skills/*
-
-Apply? [y/N]
+Detected:
+  - languages: javascript, typescript
+  - runtimes: node, bun
+  - frameworks: ...
 ```
 
-Additional CLI commands:
+#### `install` — install council preset
 
 ```bash
-npx codeconductor init --target opencode --stack spring-boot-kotlin
-npx codeconductor init --dry-run
-npx codeconductor doctor
-npx codeconductor update
+codeconductor install council --target opencode     # project-level
+codeconductor install council --target claude
+codeconductor install council --target codex
+codeconductor install council --target all          # all three targets
+
+codeconductor install council --target claude --global  # write to ~/.claude/
+codeconductor install council --target opencode --global
+codeconductor install council --target all --global
+
+codeconductor install council --target opencode --dry-run   # preview
+codeconductor install council --target opencode --force     # overwrite
 ```
 
-> CLI is planned for v0.2.0. For v0.1.0, install manually following the docs.
+Files generated per target:
+
+| Target     | Files written                                                    |
+| ---------- | ---------------------------------------------------------------- |
+| `opencode` | `.opencode/commands/council.md`, `.opencode/agents/council-*.md` |
+| `claude`   | `.claude/skills/council/SKILL.md`, `.claude/agents/council-*.md` |
+| `codex`    | `.codex/config.toml`, `.codex/agents/council_*.toml`             |
+
+With `--global`, the same files are written under `~/` instead of `./`.
+
+#### `doctor` — validate configuration
+
+```bash
+codeconductor doctor
+```
+
+Checks config exists and is valid, reports runner directory status.
+
+#### `update` — re-apply preset
+
+```bash
+codeconductor update
+codeconductor update --force
+codeconductor update --dry-run
+```
+
+Re-generates preset files for the `defaults.target` in your config.
+
+### Global options
+
+| Flag            | Description                              |
+| --------------- | ---------------------------------------- |
+| `--force`       | Overwrite existing files                 |
+| `--dry-run`     | Preview actions without writing          |
+| `--global`      | Target home directory instead of project |
+| `--output json` | Machine-readable JSON output             |
+
+### Config directory
+
+`init` creates `.codeconductor/`:
+
+```text
+.codeconductor/
+├── config.yml          # project settings, target, preset versions
+└── presets/
+    ├── council.yml     # customizable copy of the council preset
+    └── policy.yml      # customizable copy of policy rules
+```
+
+Edit `.codeconductor/presets/council.yml` to add, remove, or reconfigure agents
+before running `install`.
 
 ---
 
@@ -157,38 +234,35 @@ codeconductor/
 ├── CHANGELOG.md
 ├── ROADMAP.md
 ├── SECURITY.md
-├── CONTRIBUTING.md
-├── AGENTS.md
-├── CLAUDE.md
+├── policy.yml              ← declarative policy model
+│
+├── src/                    ← CLI source (TypeScript + Bun)
+│   ├── cli/                ← entry point, router, error codes
+│   ├── commands/           ← init, detect, install, doctor, update
+│   ├── core/               ← config, detection, filesystem, presets
+│   ├── adapters/           ← opencode, claude, codex generators
+│   ├── domain/council/     ← council spec, agent, contract
+│   ├── validation/         ← Zod schemas
+│   ├── utils/              ← Result type, logger, invariant
+│   └── presets/council/    ← bundled council.yml preset
+│
+├── test/
+│   ├── cli.test.ts         ← integration tests (32 tests)
+│   └── fixtures/           ← bun, node, django, spring projects
 │
 ├── docs/
-│   ├── philosophy.md
 │   ├── architecture.md
 │   ├── security-model.md
-│   ├── preset-security-analysis.md
-│   ├── current-limitations.md
 │   ├── cli-contract.md
 │   ├── policy-schema.md
 │   ├── routing-policy.md
 │   ├── task-card-template.md
 │   ├── agent-scorecard.md
-│   ├── prompt-versioning.md
-│   ├── guides/
-│   └── examples/
-│       └── spring-boot-kotlin-feature.md
+│   └── guides/
 │
-├── presets/
+├── presets/                ← manual preset files (pre-CLI)
 │   ├── opencode/
-│   │   ├── opencode.jsonc
-│   │   ├── agents/
-│   │   ├── commands/
-│   │   ├── prompts/v0.1.0/
-│   │   └── skills/
 │   └── claude/
-│       ├── CLAUDE.md
-│       ├── settings.json
-│       ├── commands/
-│       └── skills/
 │
 └── examples/
     └── spring-boot-kotlin/
@@ -198,14 +272,13 @@ codeconductor/
 
 ## Roadmap
 
-| Version | Focus                                                       |
-| ------- | ----------------------------------------------------------- |
-| v0.1.0  | OpenCode and Claude presets, stack guidance, manual install |
-| v0.2.0  | `codeconductor init` CLI, deterministic detection, doctor   |
-| v0.3.0  | Next.js, FastAPI, generic presets, monorepo support         |
-| v0.4.0  | Provider compatibility matrix and target sync workflows     |
-| v0.5.0  | Scorecard CLI, task outcome tracking, prompt regression     |
-| v1.0.0  | Stable contracts, stable routing, documented evaluation     |
+| Version    | Focus                                                              |
+| ---------- | ------------------------------------------------------------------ |
+| **v0.2.0** | **CLI: init, detect, install, doctor, update — shipped** ✅        |
+| v0.3.0     | Next.js, FastAPI, generic presets, monorepo support                |
+| v0.4.0     | Provider compatibility matrix and target sync workflows            |
+| v0.5.0     | Scorecard CLI, task outcome tracking, prompt regression            |
+| v1.0.0     | Stable contracts, stable routing, documented evaluation            |
 
 See [ROADMAP.md](ROADMAP.md) for details.
 

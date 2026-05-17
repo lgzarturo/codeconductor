@@ -60,3 +60,6 @@ _*.md
 .opencode/
 .codex/
 .remember/
+
+# Worktrees
+.worktrees/

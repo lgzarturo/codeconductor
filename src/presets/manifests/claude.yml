@@ -17,6 +17,7 @@ entries:
   - src: opencode/agents
     dest: .claude/agents
     strategy: overwrite
+    template: true
   - src: opencode/prompts/v0.2.0
     dest: .claude/prompts/v0.2.0
     strategy: overwrite

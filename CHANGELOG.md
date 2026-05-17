@@ -9,6 +9,15 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- YAML-driven model configuration for agent presets — agent templates in
+  `presets/opencode/agents/` and `presets/codex/AGENTS.md` now use
+  `{{MODEL_CLAUDE}}`, `{{MODEL_OPENCODE}}`, and `{{MODEL_CODEX}}` placeholders
+  that are resolved from YAML files in `src/presets/models/` during `install`;
+  all three targets (opencode, claude, codex) are supported with per-role model
+  definitions
+
 ---
 
 ## [0.2.0] - 2026-05-17

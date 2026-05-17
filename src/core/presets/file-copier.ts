@@ -1,6 +1,6 @@
 import { readFile, writeFile, mkdir, readdir, stat } from 'node:fs/promises'
 import { resolve, join, relative, dirname } from 'node:path'
-import type { InstallManifest, ManifestEntry, InstallStrategy } from '../../validation/schemas'
+import type { InstallManifest, ManifestEntry, InstallStrategy, ModelConfig } from '../../validation/schemas'
 
 export type FileAction = 'written' | 'appended' | 'merged' | 'skipped' | 'error'
 
@@ -69,12 +69,80 @@ function mergeDeep(
   return result
 }
 
+/**
+ * Extract the agent role from a file path (e.g., "architect.md" -> "architect")
+ */
+function extractAgentRole(filePath: string): string | null {
+  const parts = filePath.replace(/\\/g, '/').split('/')
+  const basename = parts[parts.length - 1]
+  const name = basename.replace(/\.md$/, '')
+  // Only match known agent roles
+  const knownRoles = ['architect', 'implementer', 'tester', 'orchestrator', 'reviewer', 'docs', 'task-coach', 'repo-explorer']
+  return knownRoles.includes(name) ? name : null
+}
+
+/**
+ * Render template placeholders in content using model config
+ *
+ * For individual agent files (e.g., architect.md), extracts the role from filename.
+ * For monolithic files (e.g., codex/AGENTS.md), parses sections by ### headings.
+ *
+ * IMPORTANT: The monolithic parser assumes agent sections are delimited by ### <role>
+ * headings and terminated by the next ### or ## heading or end of file. Nested ### headings
+ * within an agent section (e.g., "### Routing Decision" inside "### orchestrator") must
+ * appear AFTER the --- separator and before the next agent section to parse correctly.
+ */
+function renderTemplate(content: string, modelConfig: ModelConfig, filePath: string): string {
+  const agentRole = extractAgentRole(filePath)
+  
+  // Handle single agent file (e.g., architect.md)
+  if (agentRole && modelConfig.agents[agentRole]) {
+    const agentModels = modelConfig.agents[agentRole]
+    return content
+      .replace(/\{\{MODEL_CLAUDE\}\}/g, agentModels.claude)
+      .replace(/\{\{MODEL_OPENCODE\}\}/g, agentModels.opencode)
+      .replace(/\{\{MODEL_CODEX\}\}/g, agentModels.codex)
+  }
+  
+  // Handle monolithic files like codex AGENTS.md (contains all agent roles)
+  // Split by agent sections and replace placeholders in each section
+  const knownRoles = ['orchestrator', 'task-coach', 'architect', 'implementer', 'tester', 'reviewer', 'docs', 'repo-explorer']
+  let result = content
+  
+  for (const role of knownRoles) {
+    if (!modelConfig.agents[role]) continue
+    
+    const agentModels = modelConfig.agents[role]
+    
+    // Find the section for this agent role
+    // Look for patterns like "### orchestrator" or "### task-coach"
+    const sectionRegex = new RegExp(`(### ${role}[\\s\\S]*?)(?=### |## |$)`, 'gi')
+    const sectionMatch = result.match(sectionRegex)
+    
+    if (sectionMatch) {
+      for (const section of sectionMatch) {
+        // Replace placeholders within this section
+        const renderedSection = section
+          .replace(/\{\{MODEL_CLAUDE\}\}/g, agentModels.claude)
+          .replace(/\{\{MODEL_OPENCODE\}\}/g, agentModels.opencode)
+          .replace(/\{\{MODEL_CODEX\}\}/g, agentModels.codex)
+        
+        result = result.replace(section, renderedSection)
+      }
+    }
+  }
+  
+  return result
+}
+
 async function applySingleFile(
   srcPath: string,
   destPath: string,
   strategy: InstallStrategy,
   force: boolean,
-  dryRun: boolean
+  dryRun: boolean,
+  isTemplate: boolean,
+  modelConfig: ModelConfig | null
 ): Promise<FileCopyResult> {
   if (strategy === 'skip') {
     return { src: srcPath, dest: destPath, action: 'skipped', dryRun }
@@ -111,6 +179,11 @@ async function applySingleFile(
     action = 'merged'
   }
 
+  // Render template placeholders if this entry is a template
+  if (isTemplate && modelConfig) {
+    finalContent = renderTemplate(finalContent, modelConfig, srcPath)
+  }
+
   if (dryRun) {
     return { src: srcPath, dest: destPath, action, dryRun: true }
   }
@@ -130,7 +203,8 @@ export async function copyFromManifest(
   baseDir: string,
   isGlobal: boolean,
   dryRun: boolean,
-  force: boolean
+  force: boolean,
+  modelConfig: ModelConfig | null = null
 ): Promise<FileCopyResult[]> {
   const results: FileCopyResult[] = []
 
@@ -138,9 +212,10 @@ export async function copyFromManifest(
     const strategy: InstallStrategy =
       isGlobal && entry.globalStrategy ? entry.globalStrategy : entry.strategy
     const files = await resolveEntryFiles(entry, presetsDir, baseDir)
+    const isTemplate = entry.template === true
 
     for (const { src, dest } of files) {
-      results.push(await applySingleFile(src, dest, strategy, force, dryRun))
+      results.push(await applySingleFile(src, dest, strategy, force, dryRun, isTemplate, modelConfig))
     }
   }
 

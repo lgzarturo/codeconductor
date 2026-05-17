@@ -36,11 +36,9 @@ permission:
 
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | `claude-sonnet-4-6` | Default — test generation |
-| OpenCode Go | `minimax-m2.7` | Best — balanced reasoning for test cases |
-| OpenCode Go | `deepseek-v4-pro` | Complex test scenarios with edge cases |
-| Codex | `gpt-5.3-codex` | Best — coding-optimized, strong at writing precise test cases |
-| Codex | `gpt-5.4` | Alternative for standard test generation |
+| Claude | `{{MODEL_CLAUDE}}` | Default — test generation |
+| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — balanced reasoning for test cases |
+| Codex | `{{MODEL_CODEX}}` | Best — coding-optimized, strong at writing precise test cases |
 
 ---
 

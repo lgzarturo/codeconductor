@@ -24,12 +24,9 @@ permission:
 
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | `claude-sonnet-4-6` | Default — code review |
-| OpenCode Go | `qwen-3.6-plus` | Best — efficient for quick reviews |
-| OpenCode Go | `deepseek-v4-pro` | Comprehensive security reviews |
-| OpenCode Go | `minimax-m2.7` | Detailed architectural reviews |
-| Codex | `gpt-5.4` | Best — strong everyday coding model, reliable diff analysis |
-| Codex | `gpt-5.5` | Alternative for security-focused or complex architectural reviews |
+| Claude | `{{MODEL_CLAUDE}}` | Default — code review |
+| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — efficient for quick reviews |
+| Codex | `{{MODEL_CODEX}}` | Best — strong everyday coding model, reliable diff analysis |
 
 ---
 

@@ -26,11 +26,9 @@ permission:
 
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | `claude-sonnet-4-6` | Default — coordination, routing decisions |
-| OpenCode Go | `deepseek-v4-pro` | Best for complex routing with multi-step delegation |
-| OpenCode Go | `minimax-m2.7` | Alternative when DeepSeek unavailable |
-| Codex | `gpt-5.2` | Best — optimized for long-running agents, professional orchestration |
-| Codex | `gpt-5.5` | Alternative when complex cross-agent reasoning is needed |
+| Claude | `{{MODEL_CLAUDE}}` | Default — coordination, routing decisions |
+| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — complex routing with multi-step delegation |
+| Codex | `{{MODEL_CODEX}}` | Best — optimized for long-running agents, professional orchestration |
 
 ---
 

@@ -19,7 +19,7 @@ export function generateCodexFiles(spec: CouncilSpec): GeneratedFile[] {
     files.push({
       path: `.codex/agents/council_${agent.id}.toml`,
       content: generateCodexAgent(agent),
-      overwrite: false
+      overwrite: true
     })
   }
 
@@ -27,7 +27,7 @@ export function generateCodexFiles(spec: CouncilSpec): GeneratedFile[] {
   files.push({
     path: '.codex/skills/council/SKILL.md',
     content: generateCodexSkill(spec),
-    overwrite: false
+    overwrite: true
   })
 
   return files
@@ -50,26 +50,18 @@ agents = [${spec.agents.map(a => `"${a.id}"`).join(', ')}]
 }
 
 function generateCodexAgent(agent: { id: string; role: string; context: string; modelHint: string; focus: readonly string[] }): string {
-  return `# Council ${agent.role} Agent
-
-name = "council_${agent.id}"
-role = "${agent.role}"
-context = "${agent.context}"
-model_hint = "${agent.modelHint}"
-
-[agent.focus]
-areas = [${agent.focus.map(f => `"${f}"`).join(', ')}]
+  const focusAreas = agent.focus.join(', ')
+  return `description = "${agent.role} council agent. Focus: ${focusAreas}. Context: ${agent.context}. Model hint: ${agent.modelHint}."
+nickname_candidates = ["${agent.role}", "Council ${agent.role}"]
 `
 }
 
 function generateCodexSkill(spec: CouncilSpec): string {
-  return `# Council Skill
-
-## Description
-${spec.description}
-
-## Version
-${spec.version}
+  return `---
+name: council
+description: ${spec.description}
+version: ${spec.version}
+---
 
 ## Agents
 ${spec.agents.map(a => `- **${a.role}** (${a.id}): ${a.focus.join(', ')}`).join('\n')}

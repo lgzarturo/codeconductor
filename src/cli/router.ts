@@ -91,7 +91,7 @@ export function parseArgs(args: string[]): CliArgs {
  * Get help text
  */
 export function getHelp(): string {
-  return `CodeConductor CLI v0.1.0
+  return `CodeConductor CLI v0.2.0
 
 Usage: codeconductor <command> [options]
 

@@ -98,7 +98,7 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 
 ---
 
-## Current Support (v0.1.0)
+## Current Support (v0.2.0)
 
 - OpenCode preset
 - Claude Code-compatible preset
@@ -272,14 +272,13 @@ codeconductor/
 
 ## Roadmap
 
-| Version | Focus                                                       |
-| ------- | ----------------------------------------------------------- |
-| v0.1.0  | OpenCode and Claude presets, stack guidance, manual install |
-| v0.2.0  | `codeconductor init` CLI, deterministic detection, doctor   |
-| v0.3.0  | Next.js, FastAPI, generic presets, monorepo support         |
-| v0.4.0  | Provider compatibility matrix and target sync workflows     |
-| v0.5.0  | Scorecard CLI, task outcome tracking, prompt regression     |
-| v1.0.0  | Stable contracts, stable routing, documented evaluation     |
+| Version    | Focus                                                              |
+| ---------- | ------------------------------------------------------------------ |
+| **v0.2.0** | **CLI: init, detect, install, doctor, update — shipped** ✅        |
+| v0.3.0     | Next.js, FastAPI, generic presets, monorepo support                |
+| v0.4.0     | Provider compatibility matrix and target sync workflows            |
+| v0.5.0     | Scorecard CLI, task outcome tracking, prompt regression            |
+| v1.0.0     | Stable contracts, stable routing, documented evaluation            |
 
 See [ROADMAP.md](ROADMAP.md) for details.
 

@@ -27,7 +27,7 @@ export interface CodeConductorConfig {
  * Default configuration
  */
 export const DEFAULT_CONFIG: CodeConductorConfig = {
-  version: '0.1.0',
+  version: '0.2.0',
   project: {
     name: 'unnamed-project'
   },

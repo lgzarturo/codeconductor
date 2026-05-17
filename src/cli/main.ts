@@ -67,6 +67,11 @@ export async function runCli(args: string[]): Promise<void> {
                 console.log(`Written ${written.length} files`)
               }
             }
+          // wouldCreate (dry-run output)
+          } else if ('wouldCreate' in data) {
+            const items = data.wouldCreate as string[]
+            console.log(`Would create ${items.length} files:`)
+            items.forEach(f => console.log(`  + ${f}`))
           // created (init output)
           } else if ('created' in data) {
             console.log(`Created ${(data.created as string[]).length} files`)

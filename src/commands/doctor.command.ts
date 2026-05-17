@@ -1,3 +1,4 @@
+import { join } from 'node:path'
 import type { OutputMode } from '../utils/logger'
 import { loadConfig, configExists } from '../core/config/config-loader'
 import { validateConfig } from '../validation/schemas'
@@ -69,7 +70,7 @@ export async function doctorCommand(options: DoctorOptions): Promise<{ code: num
     for (const dir of runnerDirs) {
       try {
         const { access } = await import('node:fs/promises')
-        await access(`${projectRoot}/${dir}`)
+        await access(join(projectRoot, dir))
         checks.push({
           name: `dir-${dir}`,
           status: 'pass',

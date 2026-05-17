@@ -1,5 +1,5 @@
 import { readFile, writeFile, mkdir, access } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { resolve, basename } from 'node:path'
 import { homedir } from 'node:os'
 import type { OutputMode } from '../utils/logger'
 import { writeConfig } from '../core/config/config-writer'
@@ -42,7 +42,7 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
     const config = profile
       ? {
           project: {
-            name: projectRoot.split('/').pop() || 'unnamed-project',
+            name: basename(projectRoot) || 'unnamed-project',
             profile: profile.runtimes[0] || 'unknown'
           },
           defaults: {

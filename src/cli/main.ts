@@ -33,7 +33,13 @@ export async function runCli(args: string[]): Promise<void> {
           console.log((result.data as { message: string }).message)
         } else if ('success' in (result.data as object)) {
           const data = result.data as { success: boolean; command: string; [key: string]: unknown }
-          if (data.success) {
+          if ('checks' in data) {
+            const checks = data.checks as { name: string; status: string; message: string }[]
+            checks.forEach(c => {
+              const icon = c.status === 'pass' ? '✓' : c.status === 'warn' ? '⚠' : '✗'
+              console.log(`${icon} ${c.name}: ${c.message}`)
+            })
+          } else if (data.success) {
             if ('written' in data) {
               console.log(`Written ${(data.written as string[]).length} files`)
             } else if ('created' in data) {
@@ -45,12 +51,6 @@ export async function runCli(args: string[]): Promise<void> {
                 if (value.length > 0) {
                   console.log(`  - ${key}: ${value.join(', ')}`)
                 }
-              })
-            } else if ('checks' in data) {
-              const checks = data.checks as { name: string; status: string; message: string }[]
-              checks.forEach(c => {
-                const icon = c.status === 'pass' ? '✓' : c.status === 'warn' ? '⚠' : '✗'
-                console.log(`${icon} ${c.name}: ${c.message}`)
               })
             }
           }

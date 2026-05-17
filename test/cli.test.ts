@@ -189,8 +189,8 @@ describe('CLI', () => {
   test('doctor fails when no config exists', async () => {
     const result = await runCli(['doctor'])
     expect(result.exitCode).toBe(4) // CONFIG_CONFLICT
-    // Note: Output is not displayed due to a bug in main.ts (doesn't handle success:false properly)
-    // The exit code is correct though
+    expect(result.stdout).toContain('config-exists')
+    expect(result.stdout).toContain('✗')
   })
 
   test('update updates installed presets', async () => {

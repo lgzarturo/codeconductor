@@ -25,7 +25,7 @@ export function generateCodexFiles(spec: CouncilSpec): GeneratedFile[] {
 
   // Generate skills
   files.push({
-    path: '.agents/skills/council/SKILL.md',
+    path: '.codex/skills/council/SKILL.md',
     content: generateCodexSkill(spec),
     overwrite: false
   })

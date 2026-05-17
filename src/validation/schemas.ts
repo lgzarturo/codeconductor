@@ -1,0 +1,102 @@
+import { z } from 'zod'
+
+/**
+ * Council agent spec schema
+ */
+export const CouncilAgentSpecSchema = z.object({
+  id: z.string(),
+  role: z.string(),
+  context: z.enum(['repo-readonly', 'prompt-only']),
+  modelHint: z.enum(['strong-reasoning', 'security-reasoning', 'balanced', 'practical-coding', 'analytical', 'adversarial']),
+  focus: z.array(z.string())
+})
+
+/**
+ * Council spec schema
+ */
+export const CouncilSpecSchema = z.object({
+  name: z.string(),
+  version: z.string(),
+  description: z.string(),
+  outputContract: z.string(),
+  agents: z.array(CouncilAgentSpecSchema)
+})
+
+/**
+ * Project profile schema
+ */
+export const ProjectProfileSchema = z.object({
+  rootDir: z.string(),
+  languages: z.array(z.string()),
+  runtimes: z.array(z.string()),
+  packageManagers: z.array(z.string()),
+  frameworks: z.array(z.string()),
+  signals: z.array(z.string())
+})
+
+/**
+ * CodeConductor config schema
+ */
+export const CodeConductorConfigSchema = z.object({
+  version: z.string(),
+  project: z.object({
+    name: z.string(),
+    profile: z.string().optional()
+  }),
+  defaults: z.object({
+    target: z.enum(['opencode', 'claude', 'codex']),
+    overwrite: z.boolean()
+  }),
+  presets: z.object({
+    council: z.object({
+      enabled: z.boolean(),
+      version: z.string()
+    })
+  }),
+  safety: z.object({
+    destructiveCommands: z.array(z.string()),
+    secretPatterns: z.array(z.string())
+  })
+})
+
+/**
+ * Runner target schema
+ */
+export const RunnerTargetSchema = z.enum(['opencode', 'claude', 'codex', 'all'])
+
+/**
+ * Type exports
+ */
+export type CouncilAgentSpecInput = z.infer<typeof CouncilAgentSpecSchema>
+export type CouncilSpecInput = z.infer<typeof CouncilSpecSchema>
+export type ProjectProfileInput = z.infer<typeof ProjectProfileSchema>
+export type CodeConductorConfigInput = z.infer<typeof CodeConductorConfigSchema>
+export type RunnerTargetInput = z.infer<typeof RunnerTargetSchema>
+
+/**
+ * Validate council spec
+ */
+export function validateCouncilSpec(data: unknown): CouncilSpecInput {
+  return CouncilSpecSchema.parse(data)
+}
+
+/**
+ * Validate project profile
+ */
+export function validateProjectProfile(data: unknown): ProjectProfileInput {
+  return ProjectProfileSchema.parse(data)
+}
+
+/**
+ * Validate config
+ */
+export function validateConfig(data: unknown): CodeConductorConfigInput {
+  return CodeConductorConfigSchema.parse(data)
+}
+
+/**
+ * Validate runner target
+ */
+export function validateRunnerTarget(data: unknown): RunnerTargetInput {
+  return RunnerTargetSchema.parse(data)
+}

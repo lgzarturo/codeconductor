@@ -11,6 +11,22 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- CLI: `--global` flag on `install` — writes preset files to `~/.claude/`,
+  `~/.opencode/`, or `~/.codex/` instead of the project-local directories;
+  supports all targets including `--target=all`
+- CLI: `init` now copies `council.yml` and `policy.yml` into
+  `.codeconductor/presets/` as user-customizable sources of truth
+- CLI: `init --global` initializes CodeConductor configuration under
+  `~/.codeconductor/` for system-wide use
+- CLI: preset loader checks `.codeconductor/presets/<name>.yml` before falling
+  back to the bundled `src/presets/` path, allowing user customization without
+  modifying framework files
+
+### Fixed
+
+- CLI: `init` without `--force` now preserves existing `.codeconductor/config.yml`
+  instead of silently overwriting it
+
 - `docs/preset-security-analysis.md` — comparative security analysis for Codex,
   OpenCode, and Claude presets; defines defense-in-depth layers, target
   compatibility gaps, and framework improvements for policy drift, isolation,

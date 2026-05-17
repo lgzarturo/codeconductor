@@ -1,0 +1,17 @@
+target: opencode
+entries:
+  - src: opencode/opencode.jsonc
+    dest: .opencode/opencode.jsonc
+    strategy: overwrite
+  - src: opencode/agents
+    dest: .opencode/agents
+    strategy: overwrite
+  - src: opencode/commands
+    dest: .opencode/commands
+    strategy: overwrite
+  - src: opencode/prompts/v0.2.0
+    dest: .opencode/prompts/v0.2.0
+    strategy: overwrite
+  - src: opencode/skills
+    dest: .opencode/skills
+    strategy: overwrite

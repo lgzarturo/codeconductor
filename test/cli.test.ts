@@ -131,6 +131,8 @@ describe('CLI', () => {
     expect(result.stdout).toContain('install')
     expect(result.stdout).toContain('doctor')
     expect(result.stdout).toContain('update')
+    expect(result.stdout).toContain('install preset')
+    expect(result.stdout).toContain('install council')
   })
 
   test('help command shows help text', async () => {
@@ -388,6 +390,65 @@ describe('CLI', () => {
     expect(content).toContain('custom: preset')
   })
 
+  test('install council --target=all output shows all targets', async () => {
+    const result = await runCli(['install', 'council', '--target=all', '--force'])
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout).toContain('opencode')
+    expect(result.stdout).toContain('claude')
+    expect(result.stdout).toContain('codex')
+  })
+
+  test('install council --target=all partial success shows written files even when some exist', async () => {
+    // Pre-create opencode files so they already exist (will be "skipped" errors)
+    await runCli(['install', 'council', '--target=opencode', '--force'])
+
+    // Run for all targets without force — opencode will error, claude/codex will succeed
+    const result = await runCli(['install', 'council', '--target=all'])
+
+    // Errors for opencode go to stderr
+    expect(result.stderr).toContain('File exists')
+    // Successfully installed claude and codex still reported in stdout
+    expect(result.stdout).toContain('claude')
+    expect(result.stdout).toContain('codex')
+  })
+
+  test('--help shows codex as install target', async () => {
+    const result = await runCli(['--help'])
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout).toContain('codex')
+  })
+
+  test('install codex --force targets codex (not opencode)', async () => {
+    await runCli(['init', '--force'])
+    const result = await runCli(['install', 'codex', '--force'])
+    expect(result.exitCode).toBe(0)
+
+    const { existsSync } = await import('node:fs')
+    expect(existsSync(join(PROJECT_ROOT, '.codex', 'config.toml'))).toBe(true)
+    // Must NOT have installed to opencode only
+    expect(result.stdout).toContain('codex')
+    expect(result.stdout).not.toContain('opencode')
+  })
+
+  test('install all --force installs all three targets', async () => {
+    await runCli(['init', '--force'])
+    const result = await runCli(['install', 'all', '--force'])
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout).toContain('opencode')
+    expect(result.stdout).toContain('claude')
+    expect(result.stdout).toContain('codex')
+  })
+
+  test('install claude --force targets claude (not opencode)', async () => {
+    await runCli(['init', '--force'])
+    const result = await runCli(['install', 'claude', '--force'])
+    expect(result.exitCode).toBe(0)
+
+    const { existsSync } = await import('node:fs')
+    expect(existsSync(join(PROJECT_ROOT, '.claude', 'skills', 'council', 'SKILL.md'))).toBe(true)
+    expect(result.stdout).toContain('claude')
+  })
+
   test('install --global --target=opencode writes to home dir with --dry-run', async () => {
     await runCli(['init', '--force'])
 
@@ -418,5 +479,123 @@ describe('CLI', () => {
 
     const json = JSON.parse(result.stdout)
     expect(json.success).toBe(true)
+  })
+
+  // ========== NEW TESTS: install preset (manifest-based) ==========
+
+  test('install preset --target=opencode copies opencode agents', async () => {
+    await runCli(['init', '--force'])
+
+    const result = await runCli(['install', 'preset', '--target=opencode', '--force'])
+    expect(result.exitCode).toBe(0)
+
+    const { existsSync } = await import('node:fs')
+    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'))).toBe(true)
+    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'cc-feature.md'))).toBe(true)
+  })
+
+  test('install preset --target=opencode copies prompts and skills', async () => {
+    await runCli(['init', '--force'])
+
+    const result = await runCli(['install', 'preset', '--target=opencode', '--force'])
+    expect(result.exitCode).toBe(0)
+
+    const { existsSync } = await import('node:fs')
+    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'prompts', 'v0.2.0', 'orchestrator.md'))).toBe(true)
+    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'skills', 'api-versioning', 'SKILL.md'))).toBe(true)
+  })
+
+  test('install preset --target=claude copies claude skills and agents', async () => {
+    await runCli(['init', '--force'])
+
+    const result = await runCli(['install', 'preset', '--target=claude', '--force'])
+    expect(result.exitCode).toBe(0)
+
+    const { existsSync } = await import('node:fs')
+    expect(existsSync(join(PROJECT_ROOT, '.claude', 'skills', 'api-versioning', 'SKILL.md'))).toBe(true)
+    expect(existsSync(join(PROJECT_ROOT, '.claude', 'agents', 'orchestrator.md'))).toBe(true)
+    expect(existsSync(join(PROJECT_ROOT, '.claude', 'CLAUDE.md'))).toBe(true)
+  })
+
+  test('install preset --target=claude copies settings.json locally', async () => {
+    await runCli(['init', '--force'])
+
+    const result = await runCli(['install', 'preset', '--target=claude', '--force'])
+    expect(result.exitCode).toBe(0)
+
+    const { existsSync } = await import('node:fs')
+    expect(existsSync(join(PROJECT_ROOT, '.claude', 'settings.json'))).toBe(true)
+    const content = await readFile(join(PROJECT_ROOT, '.claude', 'settings.json'), 'utf-8')
+    const json = JSON.parse(content)
+    expect(json.permissions).toBeDefined()
+  })
+
+  test('install preset --target=codex copies AGENTS.md and skills', async () => {
+    await runCli(['init', '--force'])
+
+    const result = await runCli(['install', 'preset', '--target=codex', '--force'])
+    expect(result.exitCode).toBe(0)
+
+    const { existsSync } = await import('node:fs')
+    expect(existsSync(join(PROJECT_ROOT, '.codex', 'AGENTS.md'))).toBe(true)
+    expect(existsSync(join(PROJECT_ROOT, '.codex', 'skills', 'api-versioning', 'SKILL.md'))).toBe(true)
+    expect(existsSync(join(PROJECT_ROOT, '.codex', 'prompts', 'v0.2.0', 'orchestrator.md'))).toBe(true)
+  })
+
+  test('install preset --target=all copies all targets', async () => {
+    await runCli(['init', '--force'])
+
+    const result = await runCli(['install', 'preset', '--target=all', '--force'])
+    expect(result.exitCode).toBe(0)
+
+    const { existsSync } = await import('node:fs')
+    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'))).toBe(true)
+    expect(existsSync(join(PROJECT_ROOT, '.claude', 'agents', 'orchestrator.md'))).toBe(true)
+    expect(existsSync(join(PROJECT_ROOT, '.codex', 'AGENTS.md'))).toBe(true)
+  })
+
+  test('install preset --dry-run does not write files', async () => {
+    await runCli(['init', '--force'])
+
+    const result = await runCli(['install', 'preset', '--target=opencode', '--dry-run'])
+    expect(result.exitCode).toBe(0)
+
+    const { existsSync } = await import('node:fs')
+    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'))).toBe(false)
+  })
+
+  test('install preset --output=json returns fileResults', async () => {
+    await runCli(['init', '--force'])
+
+    const result = await runCli(['install', 'preset', '--target=opencode', '--force', '--output=json'])
+    expect(result.exitCode).toBe(0)
+
+    const json = JSON.parse(result.stdout)
+    expect(json.success).toBe(true)
+    expect(json.subcommand).toBe('preset')
+    expect(Array.isArray(json.fileResults)).toBe(true)
+    expect(json.fileResults.length).toBeGreaterThan(0)
+  })
+
+  test('install preset CLAUDE.md appends when already exists (local)', async () => {
+    await runCli(['init', '--force'])
+    // Pre-create CLAUDE.md
+    await mkdir(join(PROJECT_ROOT, '.claude'), { recursive: true })
+    await writeFile(join(PROJECT_ROOT, '.claude', 'CLAUDE.md'), '# Existing content\n')
+
+    // Local install without force → strategy=overwrite (overwrites)
+    const result = await runCli(['install', 'preset', '--target=claude'])
+    expect(result.exitCode).toBe(0)
+
+    // Local uses overwrite strategy, so old content is replaced
+    const content = await readFile(join(PROJECT_ROOT, '.claude', 'CLAUDE.md'), 'utf-8')
+    expect(content).not.toContain('# Existing content')
+  })
+
+  test('install preset --global --dry-run succeeds', async () => {
+    await runCli(['init', '--force'])
+
+    const result = await runCli(['install', 'preset', '--target=opencode', '--global', '--dry-run'])
+    expect(result.exitCode).toBe(0)
   })
 })

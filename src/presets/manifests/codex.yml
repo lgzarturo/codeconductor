@@ -1,0 +1,11 @@
+target: codex
+entries:
+  - src: codex/AGENTS.md
+    dest: .codex/AGENTS.md
+    strategy: overwrite
+  - src: codex/skills
+    dest: .codex/skills
+    strategy: overwrite
+  - src: opencode/prompts/v0.2.0
+    dest: .codex/prompts/v0.2.0
+    strategy: overwrite

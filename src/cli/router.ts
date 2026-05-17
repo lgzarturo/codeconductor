@@ -1,7 +1,7 @@
 import type { OutputMode } from '../utils/logger'
 import { initCommand, type InitOptions } from '../commands/init.command'
 import { detectCommand, type DetectOptions } from '../commands/detect.command'
-import { installCommand, type InstallOptions } from '../commands/install.command'
+import { installCommand, installPresetCommand, type InstallOptions, type InstallPresetOptions } from '../commands/install.command'
 import { doctorCommand, type DoctorOptions } from '../commands/doctor.command'
 import { updateCommand, type UpdateOptions } from '../commands/update.command'
 
@@ -10,6 +10,7 @@ import { updateCommand, type UpdateOptions } from '../commands/update.command'
  */
 export interface CliArgs {
   command: string
+  subcommand?: string
   options: Record<string, unknown>
   flags: {
     help: boolean
@@ -66,8 +67,9 @@ export function parseArgs(args: string[]): CliArgs {
     }
   }
 
-  // Remaining first arg is command
+  // Remaining first arg is command, second (non-flag) is optional subcommand
   const command = remaining[0] || 'help'
+  const subcommand = remaining[1] && !remaining[1].startsWith('-') ? remaining[1] : undefined
 
   // Parse remaining args for options
   for (let i = 1; i < remaining.length; i++) {
@@ -84,7 +86,7 @@ export function parseArgs(args: string[]): CliArgs {
     }
   }
 
-  return { command, options, flags }
+  return { command, subcommand, options, flags }
 }
 
 /**
@@ -98,7 +100,8 @@ Usage: codeconductor <command> [options]
 Commands:
   init                    Initialize CodeConductor in a project
   detect                 Detect project stack and recommended presets
-  install council        Install council preset to runner targets
+  install council        Install generated council spec files to runner targets
+  install preset         Install full preset (agents, prompts, skills, commands)
   doctor                 Validate configuration and generated files
   update                 Update installed presets
 
@@ -113,9 +116,15 @@ Examples:
   codeconductor init
   codeconductor init --global
   codeconductor detect
+  codeconductor install preset --target opencode
+  codeconductor install preset --target claude
+  codeconductor install preset --target codex
+  codeconductor install preset --target all
+  codeconductor install preset --target claude --global
   codeconductor install council --target opencode
+  codeconductor install council --target claude
+  codeconductor install council --target codex
   codeconductor install council --target all
-  codeconductor install council --target claude --global
   codeconductor doctor
   codeconductor update --dry-run
 `
@@ -125,7 +134,7 @@ Examples:
  * Route command to handler
  */
 export async function routeCommand(args: CliArgs, projectRoot: string): Promise<{ code: number; data?: unknown }> {
-  const { command, options, flags } = args
+  const { command, subcommand, options, flags } = args
 
   switch (command) {
     case 'help':
@@ -147,13 +156,35 @@ export async function routeCommand(args: CliArgs, projectRoot: string): Promise<
       } as DetectOptions)
 
     case 'install': {
-      const target = options.target as string || 'opencode'
+      const isGlobal = options.global === true || options.global === 'true'
+      const VALID_TARGETS = ['opencode', 'claude', 'codex', 'all']
+
+      // If subcommand is a runner name (not a preset name), treat it as --target
+      let resolvedSubcommand = subcommand
+      let target = options.target as string
+      if (!target && subcommand && VALID_TARGETS.includes(subcommand)) {
+        target = subcommand
+        resolvedSubcommand = undefined
+      }
+      target = target || 'opencode'
+
+      if (resolvedSubcommand === 'preset') {
+        return installPresetCommand({
+          projectRoot,
+          target,
+          dryRun: flags.dryRun,
+          force: flags.force,
+          global: isGlobal,
+          output: flags.output
+        } as InstallPresetOptions)
+      }
+
       return installCommand({
         projectRoot,
         target,
         dryRun: flags.dryRun,
         force: flags.force,
-        global: options.global === true || options.global === 'true',
+        global: isGlobal,
         output: flags.output
       } as InstallOptions)
     }

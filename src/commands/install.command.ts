@@ -2,6 +2,8 @@ import { resolve } from 'node:path'
 import { homedir } from 'node:os'
 import type { OutputMode } from '../utils/logger'
 import { loadCouncilPreset } from '../core/presets/preset-loader'
+import { loadManifest, PRESETS_DIR } from '../core/presets/manifest-loader'
+import { copyFromManifest } from '../core/presets/file-copier'
 import { writeGeneratedFiles, type WriteOptions } from '../core/filesystem/file-writer'
 import { parseRunnerTarget, getIndividualTargets } from '../core/runner/runner-target'
 import { createOpenCodeInstaller } from '../adapters/opencode/opencode-installer'
@@ -9,6 +11,15 @@ import { createClaudeInstaller } from '../adapters/claude/claude-installer'
 import { createCodexInstaller } from '../adapters/codex/codex-installer'
 
 export interface InstallOptions {
+  readonly target: string
+  readonly dryRun: boolean
+  readonly force: boolean
+  readonly global: boolean
+  readonly output: OutputMode
+  readonly projectRoot: string
+}
+
+export interface InstallPresetOptions {
   readonly target: string
   readonly dryRun: boolean
   readonly force: boolean
@@ -102,7 +113,7 @@ export async function installCommand(options: InstallOptions): Promise<{ code: n
         data: {
           success: true,
           command: 'install',
-          message: 'Some files could not be written',
+          targets,
           written: successes.map(s => s.path),
           errors
         }
@@ -117,6 +128,54 @@ export async function installCommand(options: InstallOptions): Promise<{ code: n
         targets,
         global: isGlobal,
         written: successes.map(s => s.path)
+      }
+    }
+  } catch (error) {
+    return {
+      code: 1,
+      data: {
+        success: false,
+        command: 'install',
+        errors: [String(error)]
+      }
+    }
+  }
+}
+
+/**
+ * Install full preset files via YAML manifests.
+ * Supports overwrite / append / merge-json / skip strategies per entry.
+ */
+export async function installPresetCommand(options: InstallPresetOptions): Promise<{ code: number; data?: unknown }> {
+  const { target, dryRun, force, global: isGlobal, projectRoot } = options
+  const baseDir = isGlobal ? homedir() : projectRoot
+
+  try {
+    const runnerTarget = parseRunnerTarget(target)
+    const targets = getIndividualTargets(runnerTarget)
+
+    const allFileResults: Array<{ target: string; src: string; dest: string; action: string; dryRun?: boolean; error?: string }> = []
+
+    for (const t of targets) {
+      const manifest = await loadManifest(t as 'opencode' | 'claude' | 'codex')
+      const results = await copyFromManifest(manifest, PRESETS_DIR, baseDir, isGlobal, dryRun, force)
+      for (const r of results) {
+        allFileResults.push({ target: t, ...r })
+      }
+    }
+
+    const errors = allFileResults.filter(r => r.action === 'error')
+
+    return {
+      code: errors.length > 0 ? 2 : 0,
+      data: {
+        success: errors.length === 0,
+        command: 'install',
+        subcommand: 'preset',
+        targets,
+        global: isGlobal,
+        dryRun,
+        fileResults: allFileResults
       }
     }
   } catch (error) {

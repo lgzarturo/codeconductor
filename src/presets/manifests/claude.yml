@@ -1,0 +1,22 @@
+target: claude
+entries:
+  - src: claude/CLAUDE.md
+    dest: .claude/CLAUDE.md
+    strategy: overwrite
+    globalStrategy: append
+  - src: claude/settings.json
+    dest: .claude/settings.json
+    strategy: overwrite
+    globalStrategy: merge-json
+  - src: claude/commands
+    dest: .claude/commands
+    strategy: overwrite
+  - src: claude/skills
+    dest: .claude/skills
+    strategy: overwrite
+  - src: opencode/agents
+    dest: .claude/agents
+    strategy: overwrite
+  - src: opencode/prompts/v0.2.0
+    dest: .claude/prompts/v0.2.0
+    strategy: overwrite

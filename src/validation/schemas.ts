@@ -65,8 +65,28 @@ export const CodeConductorConfigSchema = z.object({
 export const RunnerTargetSchema = z.enum(['opencode', 'claude', 'codex', 'all'])
 
 /**
+ * Install manifest schemas
+ */
+export const InstallStrategySchema = z.enum(['overwrite', 'append', 'merge-json', 'skip'])
+
+export const ManifestEntrySchema = z.object({
+  src: z.string(),
+  dest: z.string(),
+  strategy: InstallStrategySchema,
+  globalStrategy: InstallStrategySchema.optional()
+})
+
+export const InstallManifestSchema = z.object({
+  target: z.enum(['opencode', 'claude', 'codex']),
+  entries: z.array(ManifestEntrySchema)
+})
+
+/**
  * Type exports
  */
+export type InstallStrategy = z.infer<typeof InstallStrategySchema>
+export type ManifestEntry = z.infer<typeof ManifestEntrySchema>
+export type InstallManifest = z.infer<typeof InstallManifestSchema>
 export type CouncilAgentSpecInput = z.infer<typeof CouncilAgentSpecSchema>
 export type CouncilSpecInput = z.infer<typeof CouncilSpecSchema>
 export type ProjectProfileInput = z.infer<typeof ProjectProfileSchema>

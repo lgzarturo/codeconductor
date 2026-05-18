@@ -99,13 +99,7 @@ a complete plan before implementation.
 
 **Does not:** Write code. Execute tests. Push to any branch.
 
-**Model Selection:**
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `{{MODEL_CLAUDE}}` | Default — coordination, routing decisions |
-| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — complex routing with multi-step delegation |
-| Codex | `{{MODEL_CODEX}}` | Best — optimized for long-running agents, professional orchestration |
+**Model:** `{{MODEL_CODEX}}`
 
 **Responsibilities:**
 
@@ -204,13 +198,7 @@ cannot be classified without more context.
 
 **Does not:** Write code. Make architectural decisions. Route Task Cards.
 
-**Model Selection:**
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `{{MODEL_CLAUDE}}` | Fast — intake, clarifying questions |
-| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — fast and efficient for Q&A |
-| Codex | `{{MODEL_CODEX}}` | Best — small, fast, cost-efficient for intake Q&A |
+**Model:** `{{MODEL_CODEX}}`
 
 **A Task Card is complete when it has these workflow fields:**
 
@@ -293,13 +281,7 @@ database model change, or module boundary decision.
 
 **Does not:** Write implementation code. Write tests. Modify source files.
 
-**Model Selection:**
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `{{MODEL_CLAUDE}}` | Complex architecture, ADRs, design tradeoffs |
-| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — excels at reasoning, technical design |
-| Codex | `{{MODEL_CODEX}}` | Best — frontier model, complex coding research and design decisions |
+**Model:** `{{MODEL_CODEX}}`
 
 **Process:**
 
@@ -389,13 +371,7 @@ designed. Minimal diff. No scope creep. No invented architecture.
 
 **Does not:** Design architecture. Force push. Declare done before running tests.
 
-**Model Selection:**
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `{{MODEL_CLAUDE}}` | Default — code implementation |
-| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — strong reasoning for implementation |
-| Codex | `{{MODEL_CODEX}}` | Best — coding-optimized model, purpose-built for implementation |
+**Model:** `{{MODEL_CODEX}}`
 
 **Pre-implementation checklist:**
 
@@ -463,13 +439,7 @@ behavioral risk.
 
 **Does not:** Modify production source files. Write tests that pass trivially.
 
-**Model Selection:**
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `{{MODEL_CLAUDE}}` | Default — test generation |
-| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — balanced reasoning for test cases |
-| Codex | `{{MODEL_CODEX}}` | Best — coding-optimized, strong at writing precise test cases |
+**Model:** `{{MODEL_CODEX}}`
 
 **Testing principles:**
 
@@ -536,13 +506,7 @@ changes.
 
 **Does not:** Edit files. Approve its own output.
 
-**Model Selection:**
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `{{MODEL_CLAUDE}}` | Default — code review |
-| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — efficient for quick reviews |
-| Codex | `{{MODEL_CODEX}}` | Best — strong everyday coding model, reliable diff analysis |
+**Model:** `{{MODEL_CODEX}}`
 
 **Review axes — every finding must reference one:**
 
@@ -624,13 +588,7 @@ incorrectly.
 
 **Does not:** Write implementation code. Document behavior that was not implemented. Omit CHANGELOG entries.
 
-**Model Selection:**
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `{{MODEL_CLAUDE}}` | Fast — documentation updates |
-| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — efficient documentation |
-| Codex | `{{MODEL_CODEX}}` | Best — fast, cost-efficient for changelog and README updates |
+**Model:** `{{MODEL_CODEX}}`
 
 **Files this role may edit:**
 
@@ -688,13 +646,7 @@ module, or identifying the impact radius of a change.
 
 **Does not:** Modify any file. Make design recommendations.
 
-**Model Selection:**
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `{{MODEL_CLAUDE}}` | Fast — codebase exploration |
-| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — quick file mapping |
-| Codex | `{{MODEL_CODEX}}` | Best — fast, cost-efficient for directory mapping and convention extraction |
+**Model:** `{{MODEL_CODEX}}`
 
 **Mapping process:**
 

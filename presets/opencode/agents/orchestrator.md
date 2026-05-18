@@ -4,6 +4,7 @@ description:
   routing path, delegates to the right Conductor Agents, and monitors completion
   without writing a single line of code.
 mode: primary
+model: "{{MODEL}}"
 temperature: 0.1
 permission:
   read: allow
@@ -20,16 +21,6 @@ permission:
   skill: ask
   webfetch: deny
   websearch: deny
----
-
-# Model Selection
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `{{MODEL_CLAUDE}}` | Default — coordination, routing decisions |
-| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — complex routing with multi-step delegation |
-| Codex | `{{MODEL_CODEX}}` | Best — optimized for long-running agents, professional orchestration |
-
 ---
 
 # Agent Contract — orchestrator v0.1.0

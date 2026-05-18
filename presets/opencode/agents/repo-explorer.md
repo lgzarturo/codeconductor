@@ -4,6 +4,7 @@ description:
   and estimates the impact radius of a proposed change — read-only, never
   modifies anything.
 mode: subagent
+model: "{{MODEL}}"
 temperature: 0.1
 permission:
   read: allow
@@ -21,16 +22,6 @@ permission:
   webfetch: deny
   websearch: deny
   skill: deny
----
-
-# Model Selection
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `{{MODEL_CLAUDE}}` | Fast — codebase exploration |
-| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — quick file mapping |
-| Codex | `{{MODEL_CODEX}}` | Best — fast, cost-efficient for directory mapping and convention extraction |
-
 ---
 
 You are the Repo Explorer — the codebase mapping agent in the CodeConductor

@@ -98,7 +98,9 @@ function renderTemplate(content: string, modelConfig: ModelConfig, filePath: str
   // Handle single agent file (e.g., architect.md)
   if (agentRole && modelConfig.agents[agentRole]) {
     const agentModels = modelConfig.agents[agentRole]
+    const targetModel = agentModels[modelConfig.target as 'claude' | 'opencode' | 'codex']
     return content
+      .replace(/\{\{MODEL\}\}/g, targetModel)
       .replace(/\{\{MODEL_CLAUDE\}\}/g, agentModels.claude)
       .replace(/\{\{MODEL_OPENCODE\}\}/g, agentModels.opencode)
       .replace(/\{\{MODEL_CODEX\}\}/g, agentModels.codex)

@@ -4,6 +4,7 @@ description:
   criteria — writes tests that fail first, then confirms they pass after
   implementation.
 mode: subagent
+model: "{{MODEL}}"
 temperature: 0.1
 permission:
   read: allow
@@ -30,16 +31,6 @@ permission:
   glob: allow
   grep: allow
   skill: ask
----
-
-# Model Selection
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `{{MODEL_CLAUDE}}` | Default — test generation |
-| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — balanced reasoning for test cases |
-| Codex | `{{MODEL_CODEX}}` | Best — coding-optimized, strong at writing precise test cases |
-
 ---
 
 # Agent Contract — tester v0.1.0

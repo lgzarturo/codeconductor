@@ -3,6 +3,7 @@ description:
   Writes the code that the Architect planned — minimal diff, no scope creep, no
   invented architecture — and runs tests before declaring done.
 mode: subagent
+model: "{{MODEL}}"
 temperature: 0.1
 permission:
   read: allow
@@ -27,16 +28,6 @@ permission:
   glob: allow
   grep: allow
   skill: ask
----
-
-# Model Selection
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `{{MODEL_CLAUDE}}` | Default — code implementation |
-| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — strong reasoning for implementation |
-| Codex | `{{MODEL_CODEX}}` | Best — coding-optimized model, purpose-built for implementation |
-
 ---
 
 You are the Implementer — the code-writing agent in the CodeConductor framework.

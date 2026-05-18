@@ -4,6 +4,7 @@ description:
   and API contracts — so the Implementer has a reviewed plan before touching
   code.
 mode: subagent
+model: "{{MODEL}}"
 temperature: 0.1
 permission:
   read: allow
@@ -17,16 +18,6 @@ permission:
   webfetch: deny
   websearch: deny
   skill: ask
----
-
-# Model Selection
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `{{MODEL_CLAUDE}}` | Complex architecture, ADRs, design tradeoffs |
-| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — excels at reasoning, technical design |
-| Codex | `{{MODEL_CODEX}}` | Best — frontier model, complex coding research and design decisions |
-
 ---
 
 You are the Architect — the technical design agent in the CodeConductor

@@ -174,6 +174,8 @@ describe('loadModelConfig', () => {
 // ========== 3. copyFromManifest with modelConfig (unit-level) ==========
 
 describe('copyFromManifest with modelConfig', () => {
+  beforeAll(async () => { await cleanup() })
+
   test('dry-run with model config does not write files', async () => {
     const modelConfig = await loadModelConfig('opencode')
     const manifest = await loadManifest('opencode')
@@ -206,9 +208,9 @@ describe('copyFromManifest with modelConfig', () => {
     const results = await copyFromManifest(manifest, PRESETS_DIR, PROJECT_ROOT, false, false, true, modelConfig)
 
     const architectContent = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'), 'utf-8')
-    expect(architectContent).toContain('claude-opus-4-7')
+    // opencode install: only the opencode model appears in frontmatter
     expect(architectContent).toContain('deepseek-v4-pro')
-    expect(architectContent).toContain('gpt-5.5')
+    expect(architectContent).not.toContain('{{MODEL}}')
     expect(architectContent).not.toContain('{{MODEL_CLAUDE}}')
     expect(architectContent).not.toContain('{{MODEL_OPENCODE}}')
     expect(architectContent).not.toContain('{{MODEL_CODEX}}')
@@ -219,9 +221,7 @@ describe('copyFromManifest with modelConfig', () => {
     const results = await copyFromManifest(manifest, PRESETS_DIR, PROJECT_ROOT, false, false, true, null)
 
     const architectContent = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'), 'utf-8')
-    expect(architectContent).toContain('{{MODEL_CLAUDE}}')
-    expect(architectContent).toContain('{{MODEL_OPENCODE}}')
-    expect(architectContent).toContain('{{MODEL_CODEX}}')
+    expect(architectContent).toContain('{{MODEL}}')
   })
 
   test('writing with modelConfig renders all 8 agent files correctly', async () => {
@@ -231,8 +231,10 @@ describe('copyFromManifest with modelConfig', () => {
 
     for (const file of ALL_AGENT_FILES) {
       const content = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', file), 'utf-8')
+      expect(content).not.toContain('{{MODEL}}')
       expect(content).not.toContain('{{MODEL_')
-      expect(content).toMatch(/\bclaude-[\w-]+\b/)
+      // opencode install: frontmatter has model: field resolved to opencode model
+      expect(content).toMatch(/^model: /m)
     }
   })
 })
@@ -240,46 +242,31 @@ describe('copyFromManifest with modelConfig', () => {
 // ========== 4. Agent File Template Placeholders (source files) ==========
 
 describe('Agent file templates (source presets)', () => {
-  test('all opencode agent files contain MODEL_CLAUDE placeholder', async () => {
+  test('all opencode agent files contain {{MODEL}} placeholder in frontmatter', async () => {
     for (const file of ALL_AGENT_FILES) {
       const content = await readFile(join(PRESETS_DIR, 'opencode', 'agents', file), 'utf-8')
-      expect(content).toContain('{{MODEL_CLAUDE}}')
+      expect(content).toContain('{{MODEL}}')
+      expect(content).not.toContain('{{MODEL_CLAUDE}}')
+      expect(content).not.toContain('{{MODEL_OPENCODE}}')
+      expect(content).not.toContain('{{MODEL_CODEX}}')
     }
   })
 
-  test('all opencode agent files contain MODEL_OPENCODE placeholder', async () => {
+  test('each opencode agent file has exactly 1 {{MODEL}} placeholder', async () => {
     for (const file of ALL_AGENT_FILES) {
       const content = await readFile(join(PRESETS_DIR, 'opencode', 'agents', file), 'utf-8')
-      expect(content).toContain('{{MODEL_OPENCODE}}')
+      const modelMatches = (content.match(/\{\{MODEL\}\}/g) || []).length
+      expect(modelMatches).toBe(1)
     }
   })
 
-  test('all opencode agent files contain MODEL_CODEX placeholder', async () => {
-    for (const file of ALL_AGENT_FILES) {
-      const content = await readFile(join(PRESETS_DIR, 'opencode', 'agents', file), 'utf-8')
-      expect(content).toContain('{{MODEL_CODEX}}')
-    }
-  })
-
-  test('each opencode agent file has exactly 3 placeholder occurrences (one per provider)', async () => {
-    for (const file of ALL_AGENT_FILES) {
-      const content = await readFile(join(PRESETS_DIR, 'opencode', 'agents', file), 'utf-8')
-      const claudeMatches = (content.match(/\{\{MODEL_CLAUDE\}\}/g) || []).length
-      const opencodeMatches = (content.match(/\{\{MODEL_OPENCODE\}\}/g) || []).length
-      const codexMatches = (content.match(/\{\{MODEL_CODEX\}\}/g) || []).length
-      expect(claudeMatches).toBe(1)
-      expect(opencodeMatches).toBe(1)
-      expect(codexMatches).toBe(1)
-    }
-  })
-
-  test('codex AGENTS.md contains exactly 8 occurrences of each placeholder', async () => {
+  test('codex AGENTS.md contains exactly 8 occurrences of {{MODEL_CODEX}} and none of the others', async () => {
     const content = await readFile(join(PRESETS_DIR, 'codex', 'AGENTS.md'), 'utf-8')
     const claudeCount = (content.match(/\{\{MODEL_CLAUDE\}\}/g) || []).length
     const opencodeCount = (content.match(/\{\{MODEL_OPENCODE\}\}/g) || []).length
     const codexCount = (content.match(/\{\{MODEL_CODEX\}\}/g) || []).length
-    expect(claudeCount).toBe(8)
-    expect(opencodeCount).toBe(8)
+    expect(claudeCount).toBe(0)
+    expect(opencodeCount).toBe(0)
     expect(codexCount).toBe(8)
   })
 
@@ -377,11 +364,10 @@ describe('End-to-end: CLI install preset renders model names', () => {
     await runCli(['install', 'preset', '--target=opencode', '--force'])
 
     const content = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'), 'utf-8')
-    // Should contain actual model names
-    expect(content).toContain('claude-opus-4-7')
+    // opencode install: frontmatter has the opencode model for architect
     expect(content).toContain('deepseek-v4-pro')
-    expect(content).toContain('gpt-5.5')
     // Should NOT contain placeholders
+    expect(content).not.toContain('{{MODEL}}')
     expect(content).not.toContain('{{MODEL_CLAUDE}}')
     expect(content).not.toContain('{{MODEL_OPENCODE}}')
     expect(content).not.toContain('{{MODEL_CODEX}}')
@@ -393,41 +379,44 @@ describe('End-to-end: CLI install preset renders model names', () => {
 
     for (const file of ALL_AGENT_FILES) {
       const content = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', file), 'utf-8')
+      expect(content).not.toContain('{{MODEL}}')
       expect(content).not.toContain('{{MODEL_')
     }
   })
 
-  test('opencode: tester.md should have correct model names', async () => {
+  test('opencode: tester.md should have correct model name in frontmatter', async () => {
     await runCli(['init', '--force'])
     await runCli(['install', 'preset', '--target=opencode', '--force'])
 
     const content = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', 'tester.md'), 'utf-8')
-    expect(content).toContain('claude-sonnet-4-6')
+    // opencode install: frontmatter has opencode model for tester
     expect(content).toContain('minimax-m2.7')
-    expect(content).toContain('gpt-5.3-codex')
+    expect(content).not.toContain('{{MODEL}}')
   })
 
-  test('codex: AGENTS.md should have rendered model names', async () => {
+  test('codex: AGENTS.md should have rendered codex model names only', async () => {
     await runCli(['init', '--force'])
     await runCli(['install', 'preset', '--target=codex', '--force'])
 
     const content = await readFile(join(PROJECT_ROOT, '.codex', 'AGENTS.md'), 'utf-8')
-    expect(content).toContain('claude-opus-4-7')
-    expect(content).toContain('deepseek-v4-pro')
+    // codex install: only codex model names appear (e.g. gpt-5.5 for architect)
     expect(content).toContain('gpt-5.5')
+    expect(content).not.toContain('{{MODEL_CODEX}}')
     expect(content).not.toContain('{{MODEL_CLAUDE}}')
     expect(content).not.toContain('{{MODEL_OPENCODE}}')
-    expect(content).not.toContain('{{MODEL_CODEX}}')
+    // claude and opencode models should NOT appear in codex AGENTS.md
+    expect(content).not.toContain('claude-opus-4-7')
+    expect(content).not.toContain('deepseek-v4-pro')
   })
 
-  test('claude: architect.md should have rendered model names', async () => {
+  test('claude: architect.md should have claude model in frontmatter', async () => {
     await runCli(['init', '--force'])
     await runCli(['install', 'preset', '--target=claude', '--force'])
 
     const content = await readFile(join(PROJECT_ROOT, '.claude', 'agents', 'architect.md'), 'utf-8')
+    // claude install: frontmatter has claude model for architect
     expect(content).toContain('claude-opus-4-7')
-    expect(content).toContain('deepseek-v4-pro')
-    expect(content).toContain('gpt-5.5')
+    expect(content).not.toContain('{{MODEL}}')
     expect(content).not.toContain('{{MODEL_CLAUDE}}')
   })
 
@@ -436,32 +425,37 @@ describe('End-to-end: CLI install preset renders model names', () => {
     await runCli(['install', 'preset', '--target=all', '--force'])
 
     const opencodeContent = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'), 'utf-8')
+    expect(opencodeContent).not.toContain('{{MODEL}}')
     expect(opencodeContent).not.toContain('{{MODEL_')
+    expect(opencodeContent).toContain('deepseek-v4-pro')
 
     const claudeContent = await readFile(join(PROJECT_ROOT, '.claude', 'agents', 'architect.md'), 'utf-8')
+    expect(claudeContent).not.toContain('{{MODEL}}')
     expect(claudeContent).not.toContain('{{MODEL_')
+    expect(claudeContent).toContain('claude-opus-4-7')
 
     const codexContent = await readFile(join(PROJECT_ROOT, '.codex', 'AGENTS.md'), 'utf-8')
     expect(codexContent).not.toContain('{{MODEL_')
+    expect(codexContent).toContain('gpt-5.5')
   })
 
-  test('orchestrator agent should have correct models for opencode', async () => {
+  test('orchestrator agent should have correct opencode model in frontmatter', async () => {
     await runCli(['init', '--force'])
     await runCli(['install', 'preset', '--target=opencode', '--force'])
 
     const content = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', 'orchestrator.md'), 'utf-8')
-    expect(content).toContain('claude-sonnet-4-6')
+    // opencode install: frontmatter has opencode model for orchestrator
     expect(content).toContain('deepseek-v4-pro')
-    expect(content).toContain('gpt-5.2')
+    expect(content).not.toContain('{{MODEL}}')
   })
 
-  test('docs agent should have correct models for opencode', async () => {
+  test('docs agent should have correct opencode model in frontmatter', async () => {
     await runCli(['init', '--force'])
     await runCli(['install', 'preset', '--target=opencode', '--force'])
 
     const content = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', 'docs.md'), 'utf-8')
-    expect(content).toContain('claude-haiku-4-5-20251001')
+    // opencode install: frontmatter has opencode model for docs
     expect(content).toContain('qwen-3.6-plus')
-    expect(content).toContain('gpt-5.4-mini')
+    expect(content).not.toContain('{{MODEL}}')
   })
 })

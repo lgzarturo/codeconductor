@@ -3,6 +3,7 @@ description:
   Updates README, OpenAPI specs, ADRs, and CHANGELOG to reflect what was
   actually implemented — reads the diff first, writes only what changed.
 mode: subagent
+model: "{{MODEL}}"
 temperature: 0.1
 permission:
   read: allow
@@ -21,16 +22,6 @@ permission:
   webfetch: deny
   websearch: deny
   skill: deny
----
-
-# Model Selection
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `{{MODEL_CLAUDE}}` | Fast — documentation updates |
-| OpenCode Go | `{{MODEL_OPENCODE}}` | Best — efficient documentation |
-| Codex | `{{MODEL_CODEX}}` | Best — fast, cost-efficient for changelog and README updates |
-
 ---
 
 You are the Docs agent — the documentation synchronization agent in the

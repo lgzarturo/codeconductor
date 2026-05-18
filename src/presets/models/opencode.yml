@@ -1,0 +1,37 @@
+# Model configuration for OpenCode preset
+# When this preset is installed, these models are used for each agent role
+# in the generated agent markdown files ({{MODEL_CLAUDE}}, {{MODEL_OPENCODE}}, {{MODEL_CODEX}})
+target: opencode
+agents:
+  architect:
+    claude: claude-opus-4-7
+    opencode: deepseek-v4-pro
+    codex: gpt-5.5
+  implementer:
+    claude: claude-sonnet-4-6
+    opencode: mimo-v2.5-pro
+    codex: gpt-5.3-codex
+  tester:
+    claude: claude-sonnet-4-6
+    opencode: minimax-m2.7
+    codex: gpt-5.3-codex
+  orchestrator:
+    claude: claude-sonnet-4-6
+    opencode: deepseek-v4-pro
+    codex: gpt-5.2
+  reviewer:
+    claude: claude-sonnet-4-6
+    opencode: qwen-3.6-plus
+    codex: gpt-5.4
+  docs:
+    claude: claude-haiku-4-5-20251001
+    opencode: qwen-3.6-plus
+    codex: gpt-5.4-mini
+  task-coach:
+    claude: claude-haiku-4-5-20251001
+    opencode: qwen-3.6-plus
+    codex: gpt-5.4-mini
+  repo-explorer:
+    claude: claude-haiku-4-5-20251001
+    opencode: qwen-3.6-plus
+    codex: gpt-5.4-mini

@@ -3,6 +3,7 @@ description:
   Updates README, OpenAPI specs, ADRs, and CHANGELOG to reflect what was
   actually implemented — reads the diff first, writes only what changed.
 mode: subagent
+model: "{{MODEL}}"
 temperature: 0.1
 permission:
   read: allow
@@ -21,18 +22,6 @@ permission:
   webfetch: deny
   websearch: deny
   skill: deny
----
-
-# Model Selection
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `claude-haiku-4-5-20251001` | Fast — documentation updates |
-| OpenCode Go | `qwen-3.6-plus` | Best — efficient documentation |
-| OpenCode Go | `kimi-k2.6` | Alternative for markdown generation |
-| Codex | `gpt-5.4-mini` | Best — fast, cost-efficient for changelog and README updates |
-| Codex | `gpt-5.4` | Alternative for OpenAPI spec generation or complex doc rewrites |
-
 ---
 
 You are the Docs agent — the documentation synchronization agent in the

@@ -4,6 +4,7 @@ description:
   security issues, and scope creep — produces structured findings categorized as
   CRITICAL, WARNING, or SUGGESTION.
 mode: subagent
+model: "{{MODEL}}"
 temperature: 0.1
 permission:
   read: allow
@@ -18,19 +19,6 @@ permission:
   webfetch: deny
   websearch: deny
   skill: ask
----
-
-# Model Selection
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `claude-sonnet-4-6` | Default — code review |
-| OpenCode Go | `qwen-3.6-plus` | Best — efficient for quick reviews |
-| OpenCode Go | `deepseek-v4-pro` | Comprehensive security reviews |
-| OpenCode Go | `minimax-m2.7` | Detailed architectural reviews |
-| Codex | `gpt-5.4` | Best — strong everyday coding model, reliable diff analysis |
-| Codex | `gpt-5.5` | Alternative for security-focused or complex architectural reviews |
-
 ---
 
 You are the Reviewer — the quality gate agent in the CodeConductor framework.

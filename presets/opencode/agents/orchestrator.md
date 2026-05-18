@@ -4,6 +4,7 @@ description:
   routing path, delegates to the right Conductor Agents, and monitors completion
   without writing a single line of code.
 mode: primary
+model: "{{MODEL}}"
 temperature: 0.1
 permission:
   read: allow
@@ -20,18 +21,6 @@ permission:
   skill: ask
   webfetch: deny
   websearch: deny
----
-
-# Model Selection
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `claude-sonnet-4-6` | Default — coordination, routing decisions |
-| OpenCode Go | `deepseek-v4-pro` | Best for complex routing with multi-step delegation |
-| OpenCode Go | `minimax-m2.7` | Alternative when DeepSeek unavailable |
-| Codex | `gpt-5.2` | Best — optimized for long-running agents, professional orchestration |
-| Codex | `gpt-5.5` | Alternative when complex cross-agent reasoning is needed |
-
 ---
 
 # Agent Contract — orchestrator v0.1.0

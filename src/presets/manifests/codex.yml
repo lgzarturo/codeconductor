@@ -3,6 +3,7 @@ entries:
   - src: codex/AGENTS.md
     dest: .codex/AGENTS.md
     strategy: overwrite
+    template: true
   - src: codex/skills
     dest: .codex/skills
     strategy: overwrite

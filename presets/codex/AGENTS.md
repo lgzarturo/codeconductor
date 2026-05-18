@@ -99,6 +99,8 @@ a complete plan before implementation.
 
 **Does not:** Write code. Execute tests. Push to any branch.
 
+**Model:** `{{MODEL_CODEX}}`
+
 **Responsibilities:**
 
 1. Validate the Task Card before doing anything else.
@@ -196,6 +198,8 @@ cannot be classified without more context.
 
 **Does not:** Write code. Make architectural decisions. Route Task Cards.
 
+**Model:** `{{MODEL_CODEX}}`
+
 **A Task Card is complete when it has these workflow fields:**
 
 1. **Title** — short description, max 80 characters
@@ -276,6 +280,8 @@ database model change, or module boundary decision.
 - network: `deny`
 
 **Does not:** Write implementation code. Write tests. Modify source files.
+
+**Model:** `{{MODEL_CODEX}}`
 
 **Process:**
 
@@ -363,8 +369,9 @@ designed. Minimal diff. No scope creep. No invented architecture.
   `npm run lint`, `uv run pytest`, `make tests`)
 - network: `deny`
 
-**Does not:** Design architecture. Force push. Declare done before running
-tests.
+**Does not:** Design architecture. Force push. Declare done before running tests.
+
+**Model:** `{{MODEL_CODEX}}`
 
 **Pre-implementation checklist:**
 
@@ -432,6 +439,8 @@ behavioral risk.
 
 **Does not:** Modify production source files. Write tests that pass trivially.
 
+**Model:** `{{MODEL_CODEX}}`
+
 **Testing principles:**
 
 - Write tests that fail first — verify they fail before implementation, pass
@@ -496,6 +505,8 @@ changes.
 - network: `deny`
 
 **Does not:** Edit files. Approve its own output.
+
+**Model:** `{{MODEL_CODEX}}`
 
 **Review axes — every finding must reference one:**
 
@@ -575,8 +586,9 @@ incorrectly.
 - bash: `deny`
 - network: `deny`
 
-**Does not:** Write implementation code. Document behavior that was not
-implemented. Omit CHANGELOG entries.
+**Does not:** Write implementation code. Document behavior that was not implemented. Omit CHANGELOG entries.
+
+**Model:** `{{MODEL_CODEX}}`
 
 **Files this role may edit:**
 
@@ -633,6 +645,8 @@ module, or identifying the impact radius of a change.
 - network: `deny`
 
 **Does not:** Modify any file. Make design recommendations.
+
+**Model:** `{{MODEL_CODEX}}`
 
 **Mapping process:**
 

@@ -73,13 +73,28 @@ export const ManifestEntrySchema = z.object({
   src: z.string(),
   dest: z.string(),
   strategy: InstallStrategySchema,
-  globalStrategy: InstallStrategySchema.optional()
+  globalStrategy: InstallStrategySchema.optional(),
+  template: z.boolean().optional()
 })
 
 export const InstallManifestSchema = z.object({
   target: z.enum(['opencode', 'claude', 'codex']),
   entries: z.array(ManifestEntrySchema)
 })
+
+/**
+ * Model config schema — defines model names per provider per agent role
+ */
+export const ModelConfigSchema = z.object({
+  target: z.enum(['opencode', 'claude', 'codex']),
+  agents: z.record(z.string(), z.object({
+    claude: z.string(),
+    opencode: z.string(),
+    codex: z.string()
+  }))
+})
+
+export type ModelConfig = z.infer<typeof ModelConfigSchema>
 
 /**
  * Type exports

@@ -4,6 +4,7 @@ description:
   and API contracts — so the Implementer has a reviewed plan before touching
   code.
 mode: subagent
+model: "{{MODEL}}"
 temperature: 0.1
 permission:
   read: allow
@@ -17,18 +18,6 @@ permission:
   webfetch: deny
   websearch: deny
   skill: ask
----
-
-# Model Selection
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `claude-opus-4-7` | Complex architecture, ADRs, design tradeoffs |
-| OpenCode Go | `deepseek-v4-pro` | Best — excels at reasoning, technical design |
-| OpenCode Go | `mimo-v2.5-pro` | Alternative for mathematical/technical design |
-| Codex | `gpt-5.5` | Best — frontier model, complex coding research and design decisions |
-| Codex | `gpt-5.4` | Alternative for straightforward architecture tasks |
-
 ---
 
 You are the Architect — the technical design agent in the CodeConductor

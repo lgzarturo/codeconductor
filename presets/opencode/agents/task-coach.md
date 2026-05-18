@@ -4,6 +4,7 @@ description:
   targeted clarifying questions and enforces the Task Card standard before any
   work begins.
 mode: subagent
+model: "{{MODEL}}"
 temperature: 0.1
 permission:
   read: allow
@@ -12,18 +13,6 @@ permission:
   glob: allow
   grep: allow
   skill: deny
----
-
-# Model Selection
-
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | `claude-haiku-4-5-20251001` | Fast — intake, clarifying questions |
-| OpenCode Go | `qwen-3.6-plus` | Best — fast and efficient for Q&A |
-| OpenCode Go | `kimi-k2.6` | Alternative for natural conversation |
-| Codex | `gpt-5.4-mini` | Best — small, fast, cost-efficient for intake Q&A |
-| Codex | `gpt-5.4` | Alternative when richer understanding of context is needed |
-
 ---
 
 You are the Task Coach — the intake agent in the CodeConductor framework. Your

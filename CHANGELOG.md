@@ -9,6 +9,26 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Agent preset files now use native model conventions per tool instead of a
+  multi-provider reference table: OpenCode and Claude sub-agent files
+  (`presets/opencode/agents/*.md`) now include `model: "<model>"` in their YAML
+  frontmatter, resolved at install time to the correct model for the target
+  (e.g., `deepseek-v4-pro` for OpenCode architect, `claude-opus-4-7` for Claude
+  architect); Codex `AGENTS.md` sections now show a single `**Model**:` line
+  instead of a three-provider table; the `{{MODEL}}` placeholder in templates
+  is resolved by `modelConfig.target` so the same source files serve all targets
+
+### Added
+
+- YAML-driven model configuration for agent presets — agent templates in
+  `presets/opencode/agents/` and `presets/codex/AGENTS.md` now use
+  `{{MODEL_CLAUDE}}`, `{{MODEL_OPENCODE}}`, and `{{MODEL_CODEX}}` placeholders
+  that are resolved from YAML files in `src/presets/models/` during `install`;
+  all three targets (opencode, claude, codex) are supported with per-role model
+  definitions
+
 ---
 
 ## [0.2.0] - 2026-05-17

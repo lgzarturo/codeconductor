@@ -34,25 +34,29 @@ export function generateCodexFiles(spec: CouncilSpec): GeneratedFile[] {
 }
 
 function generateCodexConfig(spec: CouncilSpec): string {
+  const agentTables = spec.agents.map(agent => {
+    const focusAreas = agent.focus.join(', ')
+    return `
+[agents.${agent.id}]
+description = "${agent.role} council agent. Focus: ${focusAreas}. Context: ${agent.context}. Model hint: ${agent.modelHint}."
+nickname_candidates = ["${agent.role}", "Council ${agent.role}"]`
+  }).join('\n')
+
   return `# Codex Council Configuration
 
 [project]
 name = "council"
 version = "${spec.version}"
-
-[agents]
-enabled = true
-
-[agents.council]
-description = "${spec.description}"
-agents = [${spec.agents.map(a => `"${a.id}"`).join(', ')}]
+${agentTables}
 `
 }
 
 function generateCodexAgent(agent: { id: string; role: string; context: string; modelHint: string; focus: readonly string[] }): string {
   const focusAreas = agent.focus.join(', ')
-  return `description = "${agent.role} council agent. Focus: ${focusAreas}. Context: ${agent.context}. Model hint: ${agent.modelHint}."
+  return `name = "${agent.role}"
+description = "${agent.role} council agent. Focus: ${focusAreas}. Context: ${agent.context}. Model hint: ${agent.modelHint}."
 nickname_candidates = ["${agent.role}", "Council ${agent.role}"]
+developer_instructions = "You are the ${agent.role} council agent. Your focus areas are: ${focusAreas}. Context: ${agent.context}. Apply ${agent.modelHint} reasoning to your analysis."
 `
 }
 

@@ -110,6 +110,7 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 - Task Card template
 - Scorecard template
 - End-to-end example
+- YAML-driven model configuration
 
 ---
 
@@ -222,6 +223,29 @@ Re-generates preset files for the `defaults.target` in your config.
 
 Edit `.codeconductor/presets/council.yml` to add, remove, or reconfigure agents
 before running `install`.
+
+#### Model Configuration
+
+Each preset includes a YAML configuration file in `src/presets/models/` that
+defines which models are used for each agent role:
+
+```text
+src/presets/models/
+├── opencode.yml    # model defaults for OpenCode target
+├── claude.yml      # model defaults for Claude target
+└── codex.yml       # model defaults for Codex target
+```
+
+Agent template files contain placeholders that are replaced during `install`:
+
+| Placeholder        | Description                    |
+| ------------------ | ------------------------------ |
+| `{{MODEL_CLAUDE}}`  | Model for the Claude provider  |
+| `{{MODEL_OPENCODE}}` | Model for the OpenCode provider |
+| `{{MODEL_CODEX}}`    | Model for the Codex provider    |
+
+To customize models, edit the YAML file for your target before running
+`install`. Each file maps agent roles to provider-specific model names.
 
 ---
 

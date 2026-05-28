@@ -130,10 +130,10 @@ bun run src/cli/main.ts --help
 #### `init` — initialize CodeConductor in a project
 
 ```bash
-codeconductor init              # detect stack, write .codeconductor/config.yml
-codeconductor init --force      # overwrite existing config
-codeconductor init --global     # write to ~/.codeconductor/
-codeconductor init --dry-run    # preview without writing
+cc-codeconductor init              # detect stack, write .codeconductor/config.yml
+cc-codeconductor init --force      # overwrite existing config
+cc-codeconductor init --global     # write to ~/.codeconductor/
+cc-codeconductor init --dry-run    # preview without writing
 ```
 
 On first run, `init` copies `council.yml` and `policy.yml` into
@@ -143,8 +143,8 @@ files. `install` reads from there first.
 #### `detect` — detect project stack
 
 ```bash
-codeconductor detect
-codeconductor detect --output json
+cc-codeconductor detect
+cc-codeconductor detect --output json
 ```
 
 Output:
@@ -159,17 +159,17 @@ Detected:
 #### `install` — install council preset
 
 ```bash
-codeconductor install council --target opencode     # project-level
-codeconductor install council --target claude
-codeconductor install council --target codex
-codeconductor install council --target all          # all three targets
+cc-codeconductor install council --target opencode     # project-level
+cc-codeconductor install council --target claude
+cc-codeconductor install council --target codex
+cc-codeconductor install council --target all          # all three targets
 
-codeconductor install council --target claude --global  # write to ~/.claude/
-codeconductor install council --target opencode --global
-codeconductor install council --target all --global
+cc-codeconductor install council --target claude --global  # write to ~/.claude/
+cc-codeconductor install council --target opencode --global
+cc-codeconductor install council --target all --global
 
-codeconductor install council --target opencode --dry-run   # preview
-codeconductor install council --target opencode --force     # overwrite
+cc-codeconductor install council --target opencode --dry-run   # preview
+cc-codeconductor install council --target opencode --force     # overwrite
 ```
 
 Files generated per target:
@@ -185,7 +185,7 @@ With `--global`, the same files are written under `~/` instead of `./`.
 #### `doctor` — validate configuration
 
 ```bash
-codeconductor doctor
+cc-codeconductor doctor
 ```
 
 Checks config exists and is valid, reports runner directory status.
@@ -193,9 +193,9 @@ Checks config exists and is valid, reports runner directory status.
 #### `update` — re-apply preset
 
 ```bash
-codeconductor update
-codeconductor update --force
-codeconductor update --dry-run
+cc-codeconductor update
+cc-codeconductor update --force
+cc-codeconductor update --dry-run
 ```
 
 Re-generates preset files for the `defaults.target` in your config.
@@ -238,9 +238,9 @@ src/presets/models/
 
 Agent template files contain placeholders that are replaced during `install`:
 
-| Placeholder        | Description                    |
-| ------------------ | ------------------------------ |
-| `{{MODEL_CLAUDE}}`  | Model for the Claude provider  |
+| Placeholder          | Description                     |
+| -------------------- | ------------------------------- |
+| `{{MODEL_CLAUDE}}`   | Model for the Claude provider   |
 | `{{MODEL_OPENCODE}}` | Model for the OpenCode provider |
 | `{{MODEL_CODEX}}`    | Model for the Codex provider    |
 
@@ -296,13 +296,13 @@ codeconductor/
 
 ## Roadmap
 
-| Version    | Focus                                                              |
-| ---------- | ------------------------------------------------------------------ |
-| **v0.2.0** | **CLI: init, detect, install, doctor, update — shipped** ✅        |
-| v0.3.0     | Next.js, FastAPI, generic presets, monorepo support                |
-| v0.4.0     | Provider compatibility matrix and target sync workflows            |
-| v0.5.0     | Scorecard CLI, task outcome tracking, prompt regression            |
-| v1.0.0     | Stable contracts, stable routing, documented evaluation            |
+| Version    | Focus                                                       |
+| ---------- | ----------------------------------------------------------- |
+| **v0.2.0** | **CLI: init, detect, install, doctor, update — shipped** ✅ |
+| v0.3.0     | Next.js, FastAPI, generic presets, monorepo support         |
+| v0.4.0     | Provider compatibility matrix and target sync workflows     |
+| v0.5.0     | Scorecard CLI, task outcome tracking, prompt regression     |
+| v1.0.0     | Stable contracts, stable routing, documented evaluation     |
 
 See [ROADMAP.md](ROADMAP.md) for details.
 

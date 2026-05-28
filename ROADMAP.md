@@ -75,7 +75,7 @@ Manual install. No CLI.
 
 **Goal:** `npx cc-codeconductor init` with deterministic stack detection.
 
-- [x] `codeconductor init` command
+- [x] `cc-codeconductor init` command
 - [x] Project Scanner (deterministic: files → deps → scripts → structure)
 - [x] Stack detectors: Node.js, Bun, Spring Boot (Gradle/Maven), Django, Astro
       (Next.js, FastAPI deferred to v0.3.0)
@@ -84,8 +84,8 @@ Manual install. No CLI.
 - [x] Config renderer for OpenCode target (Claude and Codex renderers also
       shipped)
 - [x] `--dry-run` support
-- [x] `codeconductor doctor` — validate config presence and integrity
-- [ ] `codeconductor doctor` — report target security compatibility gaps
+- [x] `cc-codeconductor doctor` — validate config presence and integrity
+- [ ] `cc-codeconductor doctor` — report target security compatibility gaps
 - [ ] Safe Merger with idempotency markers (`CODECONDUCTOR:BEGIN/END managed`)
 - [ ] Bug-fix workflow
 - [ ] Refactor workflow
@@ -95,8 +95,8 @@ Manual install. No CLI.
 
 **Shipped beyond original scope:**
 
-- `codeconductor install council --target <opencode|claude|codex|all>` — preset
-  installer for all three target tools
+- `cc-codeconductor install council --target <opencode|claude|codex|all>` —
+  preset installer for all three target tools
 - `--global` flag on `init` and `install` — writes to `~/.codeconductor/`,
   `~/.claude/`, `~/.opencode/`, `~/.codex/`
 - `.codeconductor/presets/` config directory — user-customizable copy of
@@ -115,7 +115,7 @@ Manual install. No CLI.
 - [ ] Generic backend preset
 - [ ] Generic frontend preset
 - [ ] Monorepo detection
-- [x] `codeconductor update` command
+- [x] `cc-codeconductor update` command
 - [ ] Stricter review checklist
 
 ---
@@ -130,9 +130,9 @@ in v0.1.0.
 - [x] `CLAUDE.md` generation — agent contracts + routing policy embedded
 - [x] `.claude/skills/` generation — 4 skills, tool-agnostic content
 - [x] Manual install guide (`docs/guides/manual-install-claude.md`)
-- [ ] `codeconductor sync claude` command (CLI — deferred to v0.2.0+)
+- [ ] `cc-codeconductor sync claude` command (CLI — deferred to v0.2.0+)
 - [ ] Provider compatibility matrix (OpenCode vs Claude) — formal doc
-- [ ] `codeconductor update --target claude` command
+- [ ] `cc-codeconductor update --target claude` command
 
 ---
 

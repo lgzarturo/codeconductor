@@ -9,8 +9,8 @@ description:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-sonnet-4-6 | Default — test generation |
-| OpenCode Go | minimax-m2.7 | Best — balanced reasoning |
-| OpenCode Go | deepseek-v4-pro | Complex test scenarios |
+| OpenCode Go | opencode-go/minimax-m2.7 | Best — balanced reasoning |
+| OpenCode Go | opencode-go/deepseek-v4-pro | Complex test scenarios |
 ---
 
 # Agent Contract — tester v0.1.0

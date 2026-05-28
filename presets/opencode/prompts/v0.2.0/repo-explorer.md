@@ -9,8 +9,8 @@ description:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-haiku-4-5-20251001 | Fast — exploration |
-| OpenCode Go | qwen-3.6-plus | Best — quick mapping |
-| OpenCode Go | kimi-k2.6 | Alternative |
+| OpenCode Go | opencode-go/qwen-3.6-plus | Best — quick mapping |
+| OpenCode Go | opencode-go/kimi-k2.6 | Alternative |
 ---
 
 You are the Repo Explorer — the codebase mapping agent in the CodeConductor

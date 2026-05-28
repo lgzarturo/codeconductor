@@ -9,8 +9,8 @@ description:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-sonnet-4-6 | Default — coordination, routing |
-| OpenCode Go | deepseek-v4-pro | Complex routing, delegation |
-| OpenCode Go | minimax-m2.7 | Alternative |
+| OpenCode Go | opencode-go/deepseek-v4-pro | Complex routing, delegation |
+| OpenCode Go | opencode-go/minimax-m2.7 | Alternative |
 ---
 
 # Agent Contract — orchestrator v0.1.0

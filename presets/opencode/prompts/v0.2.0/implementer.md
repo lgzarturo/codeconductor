@@ -8,8 +8,8 @@ description:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-sonnet-4-6 | Default — code implementation |
-| OpenCode Go | mimo-v2.5-pro | Best — reasoning for code |
-| OpenCode Go | minimax-m2.7 | Alternative |
+| OpenCode Go | opencode-go/mimo-v2.5-pro | Best — reasoning for code |
+| OpenCode Go | opencode-go/minimax-m2.7 | Alternative |
 ---
 
 # Agent Contract — implementer v0.1.0
@@ -41,8 +41,8 @@ If either is missing, escalate to the orchestrator. Do not begin without both.
 Complete this checklist before opening any file for editing:
 
 0. Create a Git Worktree for this session before opening any file for editing:
-   `git worktree add ../<branch>-session <branch>`
-   All changes happen inside this worktree. Never modify the main working tree directly.
+   `git worktree add ../<branch>-session <branch>` All changes happen inside
+   this worktree. Never modify the main working tree directly.
 1. Read the Technical Plan completely.
 2. Read every file listed under "Affected Files and Modules."
 3. Understand the existing patterns in those files: naming, error handling,

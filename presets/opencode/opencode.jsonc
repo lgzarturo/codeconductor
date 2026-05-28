@@ -2,7 +2,7 @@
   // CodeConductor policies are declarative until the policy compiler exists.
   // Enforcement depends on OpenCode permission support.
   "$schema": "https://opencode.ai/config.json",
-  "model": "anthropic/claude-sonnet-4-6",
+  "model": "opencode-go/qwen3.7-max",
   "permission": {
     "*": "ask",
     "read": {
@@ -15,7 +15,7 @@
       "~/.kube/**": "deny",
       "~/.gnupg/**": "deny",
       "~/.npmrc": "deny",
-      "~/.pypirc": "deny",
+      "~/.pypirc": "deny"
     },
     "edit": {
       "*": "ask",
@@ -24,12 +24,12 @@
       ".opencode/**": "deny",
       ".claude/**": "deny",
       "*.env": "deny",
-      "*.env.*": "deny",
+      "*.env.*": "deny"
     },
     "glob": "allow",
     "grep": "allow",
     "external_directory": {
-      "*": "deny",
+      "*": "deny"
     },
     "bash": {
       "*": "ask",
@@ -75,15 +75,15 @@
       "git push --force*": "deny",
       "git push -f*": "deny",
       "git rebase *": "deny",
-      "git reset --hard *": "deny",
+      "git reset --hard *": "deny"
     },
     "webfetch": "ask",
     "websearch": "ask",
     "task": {
-      "*": "ask",
+      "*": "ask"
     },
     "skill": {
-      "*": "ask",
-    },
-  },
+      "*": "ask"
+    }
+  }
 }

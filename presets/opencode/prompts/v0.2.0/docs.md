@@ -8,8 +8,8 @@ description:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-haiku-4-5-20251001 | Fast — documentation |
-| OpenCode Go | qwen-3.6-plus | Best — efficient docs |
-| OpenCode Go | kimi-k2.6 | Alternative |
+| OpenCode Go | opencode-go/qwen-3.6-plus | Best — efficient docs |
+| OpenCode Go | opencode-go/kimi-k2.6 | Alternative |
 ---
 
 # Agent Contract — docs v0.1.0

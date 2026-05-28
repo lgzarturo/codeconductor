@@ -9,8 +9,8 @@ description:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-opus-4-7 | Complex architecture, design |
-| OpenCode Go | deepseek-v4-pro | Best — reasoning, technical design |
-| OpenCode Go | mimo-v2.5-pro | Alternative |
+| OpenCode Go | opencode-go/deepseek-v4-pro | Best — reasoning, technical design |
+| OpenCode Go | opencode-go/mimo-v2.5-pro | Alternative |
 ---
 
 # Agent Contract — architect v0.1.0

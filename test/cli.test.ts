@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeAll, beforeEach } from 'bun:test'
 import { rm, mkdir, writeFile, readFile } from 'node:fs/promises'
 import { resolve, join } from 'node:path'
+import packageJson from '../package.json'
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..')
 const CLI_CMD = ['bun', 'run', 'src/cli/main.ts']
@@ -124,6 +125,7 @@ describe('CLI', () => {
     const result = await runCli(['--help'])
     expect(result.exitCode).toBe(0)
     expect(result.stdout).toContain('CodeConductor CLI')
+    expect(result.stdout).toContain(`CodeConductor CLI v${packageJson.version}`)
     expect(result.stdout).toContain('Usage:')
     expect(result.stdout).toContain('Commands:')
     expect(result.stdout).toContain('init')
@@ -139,6 +141,19 @@ describe('CLI', () => {
     const result = await runCli(['help'])
     expect(result.exitCode).toBe(0)
     expect(result.stdout).toContain('CodeConductor CLI')
+    expect(result.stdout).toContain(`CodeConductor CLI v${packageJson.version}`)
+  })
+
+  test('--version shows package version', async () => {
+    const result = await runCli(['--version'])
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout.trim()).toBe(`${packageJson.name} v${packageJson.version}`)
+  })
+
+  test('-v shows package version', async () => {
+    const result = await runCli(['-v'])
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout.trim()).toBe(`${packageJson.name} v${packageJson.version}`)
   })
 
   test('--force overwrites existing files', async () => {

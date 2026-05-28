@@ -105,7 +105,7 @@ npm publish --access public --otp=123456
 
 ```bash
 npm view cc-codeconductor
-npx cc-codeconductor --help
+npx cc-codeconductor --version
 ```
 
 ## Manual Release Process

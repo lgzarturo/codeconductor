@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { parseArgs, routeCommand, getHelp } from './router'
+import { parseArgs, routeCommand, getHelp, getVersion } from './router'
 import { getExitCode } from './errors'
 
 /**
@@ -8,6 +8,11 @@ import { getExitCode } from './errors'
  */
 export async function runCli(args: string[]): Promise<void> {
   const parsed = parseArgs(args.slice(2)) // Skip node and script path
+
+  if (parsed.flags.version) {
+    console.log(getVersion())
+    process.exit(0)
+  }
 
   // Show help if requested or no command
   if (parsed.flags.help || !parsed.command || parsed.command === 'help') {

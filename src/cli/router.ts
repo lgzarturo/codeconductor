@@ -4,6 +4,7 @@ import { detectCommand, type DetectOptions } from '../commands/detect.command'
 import { installCommand, installPresetCommand, type InstallOptions, type InstallPresetOptions } from '../commands/install.command'
 import { doctorCommand, type DoctorOptions } from '../commands/doctor.command'
 import { updateCommand, type UpdateOptions } from '../commands/update.command'
+import packageJson from '../../package.json'
 
 /**
  * Parsed CLI arguments
@@ -14,6 +15,7 @@ export interface CliArgs {
   options: Record<string, unknown>
   flags: {
     help: boolean
+    version: boolean
     dryRun: boolean
     force: boolean
     output: OutputMode
@@ -26,6 +28,7 @@ export interface CliArgs {
 export function parseArgs(args: string[]): CliArgs {
   const flags = {
     help: false,
+    version: false,
     dryRun: false,
     force: false,
     output: 'human' as OutputMode
@@ -38,6 +41,8 @@ export function parseArgs(args: string[]): CliArgs {
   for (const arg of args) {
     if (arg === '--help' || arg === '-h') {
       flags.help = true
+    } else if (arg === '--version' || arg === '-v') {
+      flags.version = true
     } else if (arg === '--dry-run') {
       flags.dryRun = true
     } else if (arg === '--force') {
@@ -90,10 +95,17 @@ export function parseArgs(args: string[]): CliArgs {
 }
 
 /**
+ * Get version text
+ */
+export function getVersion(): string {
+  return `${packageJson.name} v${packageJson.version}`
+}
+
+/**
  * Get help text
  */
 export function getHelp(): string {
-  return `CodeConductor CLI v0.2.0
+  return `CodeConductor CLI v${packageJson.version}
 
 Usage: codeconductor <command> [options]
 
@@ -107,6 +119,7 @@ Commands:
 
 Options:
   --help, -h             Show this help message
+  --version, -v          Show package version
   --dry-run              Show what would happen without writing files
   --force                Allow overwriting existing files
   --global               Install to home directory (~/.claude, ~/.opencode, etc.)

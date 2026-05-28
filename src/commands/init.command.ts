@@ -5,6 +5,7 @@ import type { OutputMode } from '../utils/logger'
 import { writeConfig } from '../core/config/config-writer'
 import { detectProject } from '../core/detection/project-detector'
 import { POLICY_PATH, SRC_PRESETS_DIR } from '../core/presets/package-paths'
+import { resolvePreset } from '../core/presets/preset-resolver'
 
 export interface InitOptions {
   readonly dryRun: boolean
@@ -62,6 +63,7 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
           }
         }
 
+    const presetResolution = profile ? resolvePreset('opencode', profile) : null
     const wouldCreate = ['.codeconductor/config.yml']
     const presetsToCopy = await resolvePresetsToCopy()
     for (const p of presetsToCopy) {
@@ -81,8 +83,11 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
                 detected: {
                   languages: profile.languages,
                   runtimes: profile.runtimes,
-                  frameworks: profile.frameworks
-                }
+                  frameworks: profile.frameworks,
+                  signals: profile.signals,
+                  confidence: profile.confidence
+                },
+                presetResolution
               }
             : { global: true })
         }
@@ -114,8 +119,11 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
               detected: {
                 languages: profile.languages,
                 runtimes: profile.runtimes,
-                frameworks: profile.frameworks
-              }
+                frameworks: profile.frameworks,
+                signals: profile.signals,
+                confidence: profile.confidence
+              },
+              presetResolution
             }
           : { global: true })
       }

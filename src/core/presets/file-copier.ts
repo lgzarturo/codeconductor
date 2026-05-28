@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir, readdir, stat } from 'node:fs/promises'
 import { resolve, join, relative, dirname } from 'node:path'
 import type { InstallManifest, ManifestEntry, InstallStrategy, ModelConfig } from '../../validation/schemas'
+import { mergeManagedBlock } from '../filesystem/safe-merger'
 
 export type FileAction = 'written' | 'appended' | 'merged' | 'skipped' | 'error'
 
@@ -157,14 +158,17 @@ async function applySingleFile(
     return { src: srcPath, dest: destPath, action: 'error', error: `Cannot read source: ${e}` }
   }
 
-  let finalContent = content
+  const incomingContent = isTemplate && modelConfig
+    ? renderTemplate(content, modelConfig, srcPath)
+    : content
+  let finalContent = incomingContent
   let action: FileAction = 'written'
 
   if (strategy === 'append' && !force) {
     let existing = ''
     try { existing = await readFile(destPath, 'utf-8') } catch { /* no existing */ }
     if (existing) {
-      finalContent = existing + '\n\n---\n\n' + content
+      finalContent = existing + '\n\n---\n\n' + incomingContent
     }
     action = 'appended'
   } else if (strategy === 'merge-json' && !force) {
@@ -173,17 +177,22 @@ async function applySingleFile(
       existing = JSON.parse(await readFile(destPath, 'utf-8')) as Record<string, unknown>
     } catch { /* no existing or invalid JSON */ }
     try {
-      const incoming = JSON.parse(content) as Record<string, unknown>
+      const incoming = JSON.parse(incomingContent) as Record<string, unknown>
       finalContent = JSON.stringify(mergeDeep(existing, incoming), null, 2)
     } catch (e) {
       return { src: srcPath, dest: destPath, action: 'error', error: `JSON merge failed: ${e}` }
     }
     action = 'merged'
-  }
-
-  // Render template placeholders if this entry is a template
-  if (isTemplate && modelConfig) {
-    finalContent = renderTemplate(finalContent, modelConfig, srcPath)
+  } else if (strategy === 'merge-managed') {
+    let existing: string | null = null
+    try { existing = await readFile(destPath, 'utf-8') } catch { /* no existing */ }
+    try {
+      const merged = mergeManagedBlock(existing, incomingContent)
+      finalContent = merged.content
+      action = merged.action
+    } catch (e) {
+      return { src: srcPath, dest: destPath, action: 'error', error: `Managed merge failed: ${e}` }
+    }
   }
 
   if (dryRun) {

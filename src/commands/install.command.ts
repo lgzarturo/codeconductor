@@ -6,6 +6,8 @@ import { loadManifest, loadModelConfig, PRESETS_DIR } from '../core/presets/mani
 import { copyFromManifest } from '../core/presets/file-copier'
 import { writeGeneratedFiles, type WriteOptions } from '../core/filesystem/file-writer'
 import { parseRunnerTarget, getIndividualTargets } from '../core/runner/runner-target'
+import { detectProject } from '../core/detection/project-detector'
+import { resolvePreset, type PresetResolution } from '../core/presets/preset-resolver'
 import { createOpenCodeInstaller } from '../adapters/opencode/opencode-installer'
 import { createClaudeInstaller } from '../adapters/claude/claude-installer'
 import { createCodexInstaller } from '../adapters/codex/codex-installer'
@@ -153,6 +155,8 @@ export async function installPresetCommand(options: InstallPresetOptions): Promi
   try {
     const runnerTarget = parseRunnerTarget(target)
     const targets = getIndividualTargets(runnerTarget)
+    const profile = await detectProject(projectRoot)
+    const presetResolution: PresetResolution[] = targets.map(t => resolvePreset(t as PresetResolution['target'], profile))
 
     const allFileResults: Array<{ target: string; src: string; dest: string; action: string; dryRun?: boolean; error?: string }> = []
 
@@ -176,6 +180,7 @@ export async function installPresetCommand(options: InstallPresetOptions): Promi
         targets,
         global: isGlobal,
         dryRun,
+        presetResolution,
         fileResults: allFileResults
       }
     }

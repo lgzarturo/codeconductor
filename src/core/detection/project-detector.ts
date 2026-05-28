@@ -1,6 +1,8 @@
 /**
  * Project profile interface
  */
+export type DetectionConfidence = 'low' | 'medium' | 'high'
+
 export interface ProjectProfile {
   readonly rootDir: string
   readonly languages: readonly string[]
@@ -8,6 +10,7 @@ export interface ProjectProfile {
   readonly packageManagers: readonly string[]
   readonly frameworks: readonly string[]
   readonly signals: readonly string[]
+  readonly confidence: DetectionConfidence
 }
 
 /**
@@ -62,14 +65,44 @@ export async function detectProject(rootDir: string): Promise<ProjectProfile> {
     frameworks.push('astro')
   }
 
+  const uniqueSignals = [...new Set(signals)]
+
   return {
     rootDir,
     languages: [...new Set(languages)],
     runtimes: [...new Set(runtimes)],
     packageManagers: [...new Set(packageManagers)],
     frameworks: [...new Set(frameworks)],
-    signals: [...new Set(signals)]
+    signals: uniqueSignals,
+    confidence: calculateConfidence({
+      signals: uniqueSignals,
+      runtimes: [...new Set(runtimes)],
+      frameworks: [...new Set(frameworks)]
+    })
   }
+}
+
+export function calculateConfidence(profile: {
+  readonly signals: readonly string[]
+  readonly runtimes: readonly string[]
+  readonly frameworks: readonly string[]
+}): DetectionConfidence {
+  if (profile.signals.length === 0) {
+    return 'low'
+  }
+
+  const hasFramework = profile.frameworks.length > 0
+  const hasRuntime = profile.runtimes.length > 0
+
+  if ((hasFramework && profile.signals.length >= 2) || (hasRuntime && profile.signals.length >= 3)) {
+    return 'high'
+  }
+
+  if (hasFramework || profile.signals.length >= 2 || hasRuntime) {
+    return 'medium'
+  }
+
+  return 'low'
 }
 
 // Import detectors

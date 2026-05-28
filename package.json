@@ -34,6 +34,7 @@
     "build": "bun build src/cli/main.ts --target=node --outfile=dist/index.js",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
+    "check:prompt-changelog": "bun run scripts/check-prompt-changelog.ts",
     "release:patch": "bash release.sh patch",
     "release:minor": "bash release.sh minor",
     "release:major": "bash release.sh major",

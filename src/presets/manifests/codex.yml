@@ -2,7 +2,7 @@ target: codex
 entries:
   - src: codex/AGENTS.md
     dest: .codex/AGENTS.md
-    strategy: overwrite
+    strategy: merge-managed
     template: true
   - src: codex/skills
     dest: .codex/skills

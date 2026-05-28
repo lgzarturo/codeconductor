@@ -344,6 +344,7 @@ describe('CLI', () => {
     expect(json.detected).toHaveProperty('runtimes')
     expect(json.detected).toHaveProperty('frameworks')
     expect(json.detected).toHaveProperty('signals')
+    expect(json.detected).toHaveProperty('confidence')
     expect(json.recommendedPresets).toBeDefined()
   })
 

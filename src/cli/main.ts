@@ -85,10 +85,12 @@ export async function runCli(args: string[]): Promise<void> {
           // detected (detect output)
           } else if ('detected' in data) {
             console.log('Detected:')
-            const detected = data.detected as Record<string, string[]>
+            const detected = data.detected as Record<string, string[] | string>
             Object.entries(detected).forEach(([key, value]) => {
-              if (value.length > 0) {
+              if (Array.isArray(value) && value.length > 0) {
                 console.log(`  - ${key}: ${value.join(', ')}`)
+              } else if (typeof value === 'string' && value.length > 0) {
+                console.log(`  - ${key}: ${value}`)
               }
             })
           }

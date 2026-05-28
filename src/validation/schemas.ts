@@ -31,7 +31,8 @@ export const ProjectProfileSchema = z.object({
   runtimes: z.array(z.string()),
   packageManagers: z.array(z.string()),
   frameworks: z.array(z.string()),
-  signals: z.array(z.string())
+  signals: z.array(z.string()),
+  confidence: z.enum(['low', 'medium', 'high'])
 })
 
 /**
@@ -67,7 +68,7 @@ export const RunnerTargetSchema = z.enum(['opencode', 'claude', 'codex', 'all'])
 /**
  * Install manifest schemas
  */
-export const InstallStrategySchema = z.enum(['overwrite', 'append', 'merge-json', 'skip'])
+export const InstallStrategySchema = z.enum(['overwrite', 'append', 'merge-json', 'merge-managed', 'skip'])
 
 export const ManifestEntrySchema = z.object({
   src: z.string(),

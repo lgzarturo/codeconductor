@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import type { OutputMode } from '../utils/logger'
 import { loadConfig, configExists } from '../core/config/config-loader'
 import { validateConfig } from '../validation/schemas'
+import { loadTargetSecurityCompatibility } from '../core/security/target-compatibility'
 
 export interface DoctorOptions {
   readonly output: OutputMode
@@ -95,6 +96,18 @@ export async function doctorCommand(options: DoctorOptions): Promise<{ code: num
       })
     }
 
+    // Check 5: Target security compatibility
+    const securityCompatibility = await loadTargetSecurityCompatibility()
+    for (const compatibility of securityCompatibility) {
+      checks.push({
+        name: `security-${compatibility.target}`,
+        status: compatibility.status,
+        message: compatibility.status === 'pass'
+          ? `${compatibility.target} can represent the canonical policy model`
+          : `${compatibility.target} cannot enforce: ${compatibility.unsupportedRules.join(', ') || 'see warnings'}`
+      })
+    }
+
     // All checks passed
     const failedCount = checks.filter(c => c.status === 'fail').length
     if (failedCount > 0) {
@@ -113,7 +126,8 @@ export async function doctorCommand(options: DoctorOptions): Promise<{ code: num
       data: {
         success: true,
         command: 'doctor',
-        checks
+        checks,
+        securityCompatibility
       }
     }
   } catch (error) {

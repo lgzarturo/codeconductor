@@ -37,7 +37,8 @@ export async function detectCommand(options: DetectOptions): Promise<{ code: num
           runtimes: profile.runtimes,
           packageManagers: profile.packageManagers,
           frameworks: profile.frameworks,
-          signals: profile.signals
+          signals: profile.signals,
+          confidence: profile.confidence
         },
         recommendedPresets: getRecommendedPresets(profile)
       }

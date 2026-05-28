@@ -79,19 +79,19 @@ Manual install. No CLI.
 - [x] Project Scanner (deterministic: files → deps → scripts → structure)
 - [x] Stack detectors: Node.js, Bun, Spring Boot (Gradle/Maven), Django, Astro
       (Next.js, FastAPI deferred to v0.3.0)
-- [ ] Detection confidence model (low / medium / high)
-- [ ] Preset resolver (target + stack + architecture)
+- [x] Detection confidence model (low / medium / high)
+- [x] Preset resolver (target + stack + architecture)
 - [x] Config renderer for OpenCode target (Claude and Codex renderers also
       shipped)
 - [x] `--dry-run` support
 - [x] `cc-codeconductor doctor` — validate config presence and integrity
-- [ ] `cc-codeconductor doctor` — report target security compatibility gaps
-- [ ] Safe Merger with idempotency markers (`CODECONDUCTOR:BEGIN/END managed`)
-- [ ] Bug-fix workflow
-- [ ] Refactor workflow
-- [ ] API contract workflow
-- [ ] Database migration workflow
-- [ ] Prompt changelog discipline
+- [x] `cc-codeconductor doctor` — report target security compatibility gaps
+- [x] Safe Merger with idempotency markers (`CODECONDUCTOR:BEGIN/END managed`)
+- [x] Bug-fix workflow
+- [x] Refactor workflow
+- [x] API contract workflow
+- [x] Database migration workflow
+- [x] Prompt changelog discipline
 
 ### Plan to Complete v0.2.0
 

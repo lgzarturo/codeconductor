@@ -1,3 +1,5 @@
+<!-- CODECONDUCTOR:BEGIN managed -->
+
 # CodeConductor — Codex Preset
 
 This file configures CodeConductor for **OpenAI Codex CLI**. Place it at your
@@ -37,6 +39,8 @@ language patterns to activate each workflow:
 | Full feature | "Run the feature workflow for: [description]"     |
 | Bug fix      | "Run the fix workflow for: [description]"         |
 | Refactor     | "Run the refactor workflow for: [scope]"          |
+| API contract | "Run the API contract workflow for: [change]"     |
+| DB migration | "Run the database migration workflow for: [scope]" |
 | Code review  | "Run a structured review of: [target]"            |
 | Test plan    | "Create a test plan for: [scope]"                 |
 | Task intake  | "Help me define a Task Card for: [vague request]" |
@@ -881,3 +885,5 @@ Contract version:** v0.1.0 **Date:** [YYYY-MM-DD] **Evaluator:** [human name or
 - If the task type differs from the previous one, execute "/clear" before
   starting.
 - Delegate verbose operations to sub-agents.
+
+<!-- CODECONDUCTOR:END managed -->

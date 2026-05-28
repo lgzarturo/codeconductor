@@ -28,7 +28,7 @@ trim = true
 conventional_commits = true
 prerelease_selector = "beta"
 tag_pattern = "v*"
-ignore_tags = ["v0.1.0"]
+ignore_tags = "v0.1.0"
 output_template = """
 {% for commit in commits %}
 - {{ commit.message | split(pat="\n") | first }} ({{ commit.id | truncate(length=7, end="") }})

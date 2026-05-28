@@ -27,7 +27,12 @@
     "dev": "bun run src/cli/main.ts",
     "build": "bun build src/cli/main.ts --target=node --outdir=dist",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "release:patch": "bash release.sh patch",
+    "release:minor": "bash release.sh minor",
+    "release:major": "bash release.sh major",
+    "release:notes": "git-cliff --config .cliff.toml --output CHANGELOG.md",
+    "release": "bash release.sh"
   },
   "dependencies": {
     "zod": "^3.23.8",

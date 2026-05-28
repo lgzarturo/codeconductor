@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { parseArgs, routeCommand, getHelp } from './router'
 import { getExitCode } from './errors'
 

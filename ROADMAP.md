@@ -93,6 +93,156 @@ Manual install. No CLI.
 - [ ] Database migration workflow
 - [ ] Prompt changelog discipline
 
+### Plan to Complete v0.2.0
+
+The remaining v0.2.0 work must preserve the CodeConductor workflow contract:
+Task Card first, deterministic routing, minimal diff, explicit verification, and
+human review before merge. Each item below should ship as a small, independently
+reviewable change with tests and documentation updates.
+
+#### Phase 1 — Detection and Preset Selection
+
+**Objective:** make `init` decisions explainable and deterministic before adding
+more workflow automation.
+
+- **Detection confidence model (low / medium / high)**
+  - Add a confidence score to the project detection result based on signal
+    strength, not heuristics hidden in command output.
+  - Suggested rules:
+    - `high`: multiple aligned signals, e.g. framework files plus dependency
+      declarations plus runtime/package-manager signals.
+    - `medium`: one strong framework signal or multiple generic language/runtime
+      signals.
+    - `low`: generic project signals only, conflicting framework signals, or
+      incomplete metadata.
+  - CLI output should show detected stack, confidence, and the signals that
+    justify the classification.
+  - Acceptance criteria:
+    - `detect --output json` includes `confidence` and `signals`.
+    - ambiguous fixtures produce `low` or `medium`, not `high`.
+    - existing stack fixtures keep deterministic results.
+
+- **Preset resolver (target + stack + architecture)**
+  - Introduce a resolver that maps detection output plus requested target to a
+    concrete preset plan.
+  - The resolver should be pure and testable: input is `{ target, stack,
+    architecture?, confidence }`; output is a list of preset assets and warnings.
+  - Do not let install commands infer file paths directly from detector details.
+  - Acceptance criteria:
+    - unsupported stack/target combinations return actionable warnings.
+    - `--dry-run` displays the resolved preset plan without writing files.
+    - JSON output exposes the selected target, stack, architecture, confidence,
+      selected preset version, and warnings.
+
+#### Phase 2 — Safety and Idempotent Writes
+
+**Objective:** make generated files repeatable, auditable, and safe to update in
+real projects.
+
+- **Safe Merger with idempotency markers (`CODECONDUCTOR:BEGIN/END managed`)**
+  - Implement a shared merge utility for files that combine generated content
+    with user-maintained content.
+  - Managed blocks must be replaced in place; unmanaged content must be
+    preserved byte-for-byte.
+  - If only one marker exists, the merger must fail closed and report the file
+    as unsafe to update.
+  - Acceptance criteria:
+    - first install creates a managed block.
+    - rerun updates only the managed block.
+    - content before, after, and outside markers remains unchanged.
+    - malformed markers produce a clear error and no partial write.
+
+- **`cc-codeconductor doctor` — report target security compatibility gaps**
+  - Add doctor checks that compare configured target capabilities against the
+    canonical policy model.
+  - The check should report gaps, not silently downgrade security. Examples:
+    filesystem deny support, command allowlist support, network enforcement,
+    secret path blocking, global install risk, and worktree isolation guidance.
+  - Acceptance criteria:
+    - doctor reports pass/warn/fail per target.
+    - JSON output includes structured `securityCompatibility` results.
+    - warnings are actionable and reference the target that cannot enforce a
+      rule.
+
+#### Phase 3 — Workflow Coverage
+
+**Objective:** ship the missing high-value Conductor workflows using the same
+Task Card, routing, implementation, test, and review discipline as the feature
+workflow.
+
+- **Bug-fix workflow**
+  - Intake must capture reproduction steps, expected behavior, actual behavior,
+    affected scope, regression risk, and verification command.
+  - Route low-risk isolated fixes to `implementer`; route medium/high fixes to
+    `task-coach -> implementer -> tester`.
+  - Acceptance criteria:
+    - generated workflow requires a regression test or explicit test-gap note.
+    - deliverable includes root cause, files changed, tests run, and residual
+      risk.
+
+- **Refactor workflow**
+  - Require explicit behavior-preservation criteria and a scope boundary before
+    any edit.
+  - Route low-risk refactors to `implementer`; route medium/high refactors to
+    `architect -> implementer -> reviewer`.
+  - Acceptance criteria:
+    - workflow states what must not change.
+    - tests prove behavior equivalence where coverage exists.
+    - reviewer checks scope creep and architecture alignment.
+
+- **API contract workflow**
+  - Treat API shape changes as high-risk by default.
+  - Require request/response examples, backward compatibility notes, versioning
+    impact, and contract tests.
+  - Route through `architect -> implementer -> reviewer`.
+  - Acceptance criteria:
+    - Task Card includes API contract and compatibility constraints.
+    - docs/OpenAPI updates are required when public contracts change.
+    - reviewer blocks on missing contract tests or undocumented breaking changes.
+
+- **Database migration workflow**
+  - Treat schema changes as high-risk by default.
+  - Require migration plan, rollback/forward-fix notes, data backfill strategy,
+    and deployment-order constraints.
+  - Route through `architect -> implementer -> tester -> reviewer`.
+  - Acceptance criteria:
+    - migration and model changes are reviewed together.
+    - tests cover migration-sensitive behavior where the stack supports it.
+    - deliverable calls out lock risk, data risk, and operational sequencing.
+
+#### Phase 4 — Prompt and Contract Discipline
+
+**Objective:** keep agent contracts versioned and auditable as workflows evolve.
+
+- **Prompt changelog discipline**
+  - Every prompt, agent contract, routing policy, or skill behavior change must
+    have a changelog entry under `[Unreleased]` before release.
+  - The changelog entry must state the affected target(s), agent(s), behavior
+    change, and migration impact.
+  - Prompt updates should be reviewed like code: diff-first, minimal change,
+    tests or examples updated when behavior changes.
+  - Acceptance criteria:
+    - PR/review checklist includes prompt changelog verification.
+    - release process fails or warns when prompt files changed without a
+      changelog entry.
+    - prompt versioning docs define when to bump contract versions versus
+      updating current draft prompts.
+
+#### Recommended Delivery Order
+
+1. Detection confidence model.
+2. Preset resolver.
+3. Safe Merger.
+4. Doctor security compatibility checks.
+5. Bug-fix workflow.
+6. Refactor workflow.
+7. API contract workflow.
+8. Database migration workflow.
+9. Prompt changelog discipline and release guard.
+
+This order keeps the foundation deterministic before expanding workflow
+surface area, then adds safety checks before introducing higher-risk workflows.
+
 **Shipped beyond original scope:**
 
 - `cc-codeconductor install council --target <opencode|claude|codex|all>` —

@@ -6,33 +6,33 @@ target: codex
 agents:
   architect:
     claude: claude-opus-4-7
-    opencode: deepseek-v4-pro
+    opencode: opencode-go/deepseek-v4-pro
     codex: gpt-5.5
   implementer:
     claude: claude-sonnet-4-6
-    opencode: mimo-v2.5-pro
+    opencode: opencode-go/mimo-v2.5-pro
     codex: gpt-5.3-codex
   tester:
     claude: claude-sonnet-4-6
-    opencode: minimax-m2.7
+    opencode: opencode-go/minimax-m2.7
     codex: gpt-5.3-codex
   orchestrator:
     claude: claude-sonnet-4-6
-    opencode: deepseek-v4-pro
+    opencode: opencode-go/deepseek-v4-pro
     codex: gpt-5.2
   reviewer:
     claude: claude-sonnet-4-6
-    opencode: qwen-3.6-plus
+    opencode: opencode-go/qwen3.6-plus
     codex: gpt-5.4
   docs:
     claude: claude-haiku-4-5-20251001
-    opencode: qwen-3.6-plus
+    opencode: opencode-go/qwen3.6-plus
     codex: gpt-5.4-mini
   task-coach:
     claude: claude-haiku-4-5-20251001
-    opencode: qwen-3.6-plus
+    opencode: opencode-go/kimi-k2.6
     codex: gpt-5.4-mini
   repo-explorer:
     claude: claude-haiku-4-5-20251001
-    opencode: qwen-3.6-plus
+    opencode: opencode-go/qwen3.5-plus
     codex: gpt-5.4-mini

@@ -76,19 +76,6 @@ if [[ "$SKIP_TESTS" == "false" ]]; then
   npm run typecheck
 fi
 
-log "Building..."
-npm run build
-
-if ! command_exists git-cliff; then
-  log "WARN: git-cliff not installed"
-  log "Install: brew install git-cliff (macOS) or cargo install git-cliff"
-  log "Skipping CHANGELOG generation"
-else
-  log "Generating CHANGELOG..."
-  git-cliff --config .cliff.toml --output CHANGELOG.md
-  git add CHANGELOG.md
-fi
-
 NEW_VERSION=$(node -p "
 const v = require('./$PACKAGE_JSON').version.split('.').map(Number);
 const t = '$VERSION_TYPE';
@@ -106,6 +93,19 @@ const pkg = JSON.parse(fs.readFileSync('$PACKAGE_JSON', 'utf8'));
 pkg.version = '$NEW_VERSION';
 fs.writeFileSync('$PACKAGE_JSON', JSON.stringify(pkg, null, 2) + '\n');
 "
+
+log "Building..."
+npm run build
+
+if ! command_exists git-cliff; then
+  log "WARN: git-cliff not installed"
+  log "Install: brew install git-cliff (macOS) or cargo install git-cliff"
+  log "Skipping CHANGELOG generation"
+else
+  log "Generating CHANGELOG..."
+  git-cliff --config .cliff.toml --output CHANGELOG.md
+  git add CHANGELOG.md
+fi
 
 git add "$PACKAGE_JSON"
 git commit -m "chore(release): bump to v$NEW_VERSION"

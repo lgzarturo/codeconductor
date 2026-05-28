@@ -21,11 +21,11 @@ agents:
     codex: gpt-5.2
   reviewer:
     claude: claude-sonnet-4-6
-    opencode: opencode-go/qwen3.6-plus
+    opencode: opencode-go/qwen-3.6-plus
     codex: gpt-5.4
   docs:
     claude: claude-haiku-4-5-20251001
-    opencode: opencode-go/qwen3.6-plus
+    opencode: opencode-go/qwen-3.6-plus
     codex: gpt-5.4-mini
   task-coach:
     claude: claude-haiku-4-5-20251001

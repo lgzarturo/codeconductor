@@ -132,21 +132,21 @@ describe('loadModelConfig', () => {
   test('opencode config has architect models for all providers', async () => {
     const config = await loadModelConfig('opencode')
     expect(config.agents.architect.claude).toBe('claude-opus-4-7')
-    expect(config.agents.architect.opencode).toBe('deepseek-v4-pro')
+    expect(config.agents.architect.opencode).toBe('opencode-go/deepseek-v4-pro')
     expect(config.agents.architect.codex).toBe('gpt-5.5')
   })
 
   test('claude config has implementer models for all providers', async () => {
     const config = await loadModelConfig('claude')
     expect(config.agents.implementer.claude).toBe('claude-sonnet-4-6')
-    expect(config.agents.implementer.opencode).toBe('mimo-v2.5-pro')
+    expect(config.agents.implementer.opencode).toBe('opencode-go/mimo-v2.5-pro')
     expect(config.agents.implementer.codex).toBe('gpt-5.3-codex')
   })
 
   test('codex config has tester models for all providers', async () => {
     const config = await loadModelConfig('codex')
     expect(config.agents.tester.claude).toBe('claude-sonnet-4-6')
-    expect(config.agents.tester.opencode).toBe('minimax-m2.7')
+    expect(config.agents.tester.opencode).toBe('opencode-go/minimax-m2.7')
     expect(config.agents.tester.codex).toBe('gpt-5.3-codex')
   })
 

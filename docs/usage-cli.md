@@ -57,16 +57,16 @@ directory.
 
 ```bash
 # Standard initialization (detects stack, writes config)
-npx codeconductor init
+npx cc-codeconductor init
 
 # Overwrite existing configuration
-npx codeconductor init --force
+npx cc-codeconductor init --force
 
 # Write configuration to home directory (~/.codeconductor/)
-npx codeconductor init --global
+npx cc-codeconductor init --global
 
 # Preview actions without writing files
-npx codeconductor init --dry-run
+npx cc-codeconductor init --dry-run
 ```
 
 **What it does:**
@@ -83,10 +83,10 @@ Analyzes the current directory to identify the technology stack.
 
 ```bash
 # Detect and display results
-npx codeconductor detect
+npx cc-codeconductor detect
 
 # Output in JSON format for scripting
-npx codeconductor detect --output json
+npx cc-codeconductor detect --output json
 ```
 
 **Output example:**
@@ -107,21 +107,21 @@ Claude Code, Codex).
 
 ```bash
 # Install for a specific target
-npx codeconductor install council --target opencode
-npx codeconductor install council --target claude
-npx codeconductor install council --target codex
+npx cc-codeconductor install council --target opencode
+npx cc-codeconductor install council --target claude
+npx cc-codeconductor install council --target codex
 
 # Install for all supported targets
-npx codeconductor install council --target all
+npx cc-codeconductor install council --target all
 
 # Install to home directory instead of project
-npx codeconductor install council --target opencode --global
+npx cc-codeconductor install council --target opencode --global
 
 # Preview without writing files
-npx codeconductor install council --target opencode --dry-run
+npx cc-codeconductor install council --target opencode --dry-run
 
 # Overwrite existing files
-npx codeconductor install council --target opencode --force
+npx cc-codeconductor install council --target opencode --force
 ```
 
 **Files generated per target:**
@@ -139,7 +139,7 @@ npx codeconductor install council --target opencode --force
 Checks that configuration files exist and are valid.
 
 ```bash
-npx codeconductor doctor
+npx cc-codeconductor doctor
 ```
 
 **What it validates:**
@@ -156,13 +156,13 @@ Re-applies the council preset based on current configuration.
 
 ```bash
 # Standard update
-npx codeconductor update
+npx cc-codeconductor update
 
 # Overwrite existing preset files
-npx codeconductor update --force
+npx cc-codeconductor update --force
 
 # Preview actions without writing
-npx codeconductor update --dry-run
+npx cc-codeconductor update --dry-run
 ```
 
 ---
@@ -217,10 +217,10 @@ npm publish --access public
 Once published, anyone can run CodeConductor without installation:
 
 ```bash
-npx codeconductor init --dry-run
-npx codeconductor detect
-npx codeconductor install council --target opencode
-npx codeconductor doctor
+npx cc-codeconductor init --dry-run
+npx cc-codeconductor detect
+npx cc-codeconductor install council --target opencode
+npx cc-codeconductor doctor
 ```
 
 ### Note on Shebang

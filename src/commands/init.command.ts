@@ -4,6 +4,7 @@ import { homedir } from 'node:os'
 import type { OutputMode } from '../utils/logger'
 import { writeConfig } from '../core/config/config-writer'
 import { detectProject } from '../core/detection/project-detector'
+import { POLICY_PATH, SRC_PRESETS_DIR } from '../core/presets/package-paths'
 
 export interface InitOptions {
   readonly dryRun: boolean
@@ -62,7 +63,7 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
         }
 
     const wouldCreate = ['.codeconductor/config.yml']
-    const presetsToCopy = await resolvePresetsToCopy(projectRoot)
+    const presetsToCopy = await resolvePresetsToCopy()
     for (const p of presetsToCopy) {
       wouldCreate.push(`.codeconductor/presets/${p.name}`)
     }
@@ -136,17 +137,17 @@ interface PresetSource {
   sourcePath: string
 }
 
-async function resolvePresetsToCopy(projectRoot: string): Promise<PresetSource[]> {
+async function resolvePresetsToCopy(): Promise<PresetSource[]> {
   const sources: PresetSource[] = []
 
   // Bundled council preset
-  const bundledCouncil = resolve(projectRoot, 'src', 'presets', 'council', 'council.yml')
+  const bundledCouncil = resolve(SRC_PRESETS_DIR, 'council', 'council.yml')
   if (await fileExists(bundledCouncil)) {
     sources.push({ name: 'council.yml', sourcePath: bundledCouncil })
   }
 
-  // policy.yml from project root
-  const policyPath = resolve(projectRoot, 'policy.yml')
+  // policy.yml from package root
+  const policyPath = POLICY_PATH
   if (await fileExists(policyPath)) {
     sources.push({ name: 'policy.yml', sourcePath: policyPath })
   }

@@ -73,7 +73,7 @@ Manual install. No CLI.
 
 ## v0.2.0 — Init CLI
 
-**Goal:** `npx codeconductor init` with deterministic stack detection.
+**Goal:** `npx cc-codeconductor init` with deterministic stack detection.
 
 - [x] `codeconductor init` command
 - [x] Project Scanner (deterministic: files → deps → scripts → structure)

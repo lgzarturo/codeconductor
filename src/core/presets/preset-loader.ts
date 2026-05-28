@@ -5,6 +5,7 @@ import type { CouncilSpec } from '../../domain/council/council-spec'
 import { validateCouncilSpec } from '../../validation/schemas'
 import { err, ok, type Result } from '../../utils/result'
 import { ValidationError } from '../../cli/errors'
+import { SRC_PRESETS_DIR } from './package-paths'
 
 /**
  * Load and validate a preset.
@@ -15,7 +16,7 @@ import { ValidationError } from '../../cli/errors'
 export async function loadPreset(name: string, projectRoot = process.cwd()): Promise<Result<CouncilSpec, ValidationError>> {
   const candidates = [
     resolve(projectRoot, '.codeconductor', 'presets', `${name}.yml`),
-    resolve(projectRoot, 'src', 'presets', name, `${name}.yml`)
+    resolve(SRC_PRESETS_DIR, name, `${name}.yml`)
   ]
 
   for (const presetPath of candidates) {

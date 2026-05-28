@@ -1,5 +1,5 @@
 {
-  "name": "codeconductor",
+  "name": "cc-codeconductor",
   "version": "0.2.1",
   "description": "A multi-agent orchestration framework for AI-assisted software engineering workflows.",
   "keywords": [
@@ -12,6 +12,12 @@
     "codex"
   ],
   "license": "MIT",
+  "files": [
+    "dist/index.js",
+    "policy.yml",
+    "presets/",
+    "src/presets/"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/lgzarturo/codeconductor"
@@ -25,7 +31,7 @@
   },
   "scripts": {
     "dev": "bun run src/cli/main.ts",
-    "build": "bun build src/cli/main.ts --target=node --outdir=dist",
+    "build": "bun build src/cli/main.ts --target=node --outfile=dist/index.js",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "release:patch": "bash release.sh patch",

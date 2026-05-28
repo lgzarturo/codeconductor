@@ -29,7 +29,7 @@ Verify the `bin` entry is correctly configured in `package.json`:
 
 ```json
 {
-  "name": "codeconductor",
+  "name": "cc-codeconductor",
   "version": "0.2.0",
   "bin": {
     "codeconductor": "./dist/index.js"
@@ -37,7 +37,8 @@ Verify the `bin` entry is correctly configured in `package.json`:
 }
 ```
 
-The CLI will be available as `npx codeconductor` after publication.
+The package will be available as `npx cc-codeconductor` after publication. The
+installed CLI command remains `codeconductor`.
 
 ## Release Process
 
@@ -103,8 +104,8 @@ npm publish --access public --otp=123456
 ### 3. Verify Publication
 
 ```bash
-npm view codeconductor
-npx codeconductor --version
+npm view cc-codeconductor
+npx cc-codeconductor --help
 ```
 
 ## Manual Release Process
@@ -147,7 +148,7 @@ npm publish --access public --otp=123456
 2. Click "Draft a new release"
 3. Select the tag (e.g., `v0.2.1`)
 4. Copy CHANGELOG.md contents as release notes
-5. Add the npm package link: `https://www.npmjs.com/package/codeconductor`
+5. Add the npm package link: `https://www.npmjs.com/package/cc-codeconductor`
 6. Click "Publish release"
 
 ## Conventional Commits
@@ -196,7 +197,7 @@ brew install git-cliff
 
 ```bash
 # Verify the package name is available
-npm view codeconductor
+npm view cc-codeconductor
 
 # If scope is needed, check package.json name field
 # Must match what's on npmjs.com
@@ -211,5 +212,5 @@ feature → commit (conventional) → code review → merge to main
                                                  ↓
                                          GitHub release
                                                ↓
-                                    npx codeconductor
+                                    npx cc-codeconductor
 ```

@@ -1,11 +1,12 @@
 import { readFile } from 'node:fs/promises'
-import { resolve, join } from 'node:path'
+import { join } from 'node:path'
 import { parse } from 'yaml'
 import { InstallManifestSchema, ModelConfigSchema, type InstallManifest, type ModelConfig } from '../../validation/schemas'
+import { ROOT_PRESETS_DIR, SRC_PRESETS_DIR } from './package-paths'
 
-const MANIFESTS_DIR = resolve(import.meta.dir, '..', '..', 'presets', 'manifests')
-const MODELS_DIR = resolve(import.meta.dir, '..', '..', 'presets', 'models')
-export const PRESETS_DIR = resolve(import.meta.dir, '..', '..', '..', 'presets')
+const MANIFESTS_DIR = join(SRC_PRESETS_DIR, 'manifests')
+const MODELS_DIR = join(SRC_PRESETS_DIR, 'models')
+export const PRESETS_DIR = ROOT_PRESETS_DIR
 
 export async function loadManifest(target: 'opencode' | 'claude' | 'codex'): Promise<InstallManifest> {
   const manifestPath = join(MANIFESTS_DIR, `${target}.yml`)

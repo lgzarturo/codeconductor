@@ -176,7 +176,7 @@ Files generated per target:
 
 | Target     | Files written                                                    |
 | ---------- | ---------------------------------------------------------------- |
-| `opencode` | `.opencode/commands/council.md`, `.opencode/agents/council-*.md` |
+| `opencode` | `.opencode/commands/cc-council.md`, `.opencode/agents/council-*.md` |
 | `claude`   | `.claude/skills/council/SKILL.md`, `.claude/agents/council-*.md` |
 | `codex`    | `.codex/config.toml`, `.codex/agents/council_*.toml`             |
 

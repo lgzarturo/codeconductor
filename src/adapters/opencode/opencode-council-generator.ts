@@ -10,7 +10,7 @@ export function generateOpenCodeFiles(spec: CouncilSpec): GeneratedFile[] {
 
   // Generate council command
   files.push({
-    path: '.opencode/commands/council.md',
+    path: '.opencode/commands/cc-council.md',
     content: generateCouncilCommand(spec),
     overwrite: false,
   });
@@ -26,7 +26,7 @@ export function generateOpenCodeFiles(spec: CouncilSpec): GeneratedFile[] {
   for (const agent of spec.agents) {
     files.push({
       path: `.opencode/agents/council-${agent.id}.md`,
-      content: generateAgentContent(agent),
+      content: generateOpenCodeAgentContent(agent),
       overwrite: false,
     });
   }
@@ -35,10 +35,13 @@ export function generateOpenCodeFiles(spec: CouncilSpec): GeneratedFile[] {
 }
 
 function generateCouncilCommand(spec: CouncilSpec): string {
-  return `# Council Command
+  return `---
+description: ${yamlString(spec.description)}
+agent: council-lead
+subtask: true
+---
 
-## Description
-${spec.description}
+Run the CodeConductor council for multi-perspective analysis.
 
 ## Version
 ${spec.version}
@@ -46,13 +49,26 @@ ${spec.version}
 ## Agents
 ${spec.agents.map((a) => `- ${a.role} (${a.id})`).join('\n')}
 
-## Usage
-Invoke this command to get multi-perspective analysis from the council.
+## Instructions
+Coordinate with the council agents and synthesize their perspectives into the configured output contract.
 `;
 }
 
 function generateCouncilLead(spec: CouncilSpec): string {
-  return `# Council Lead Agent
+  return `---
+description: ${yamlString(`${spec.description} Council lead. Coordinates council members and synthesizes recommendations.`)}
+mode: subagent
+permission:
+  read: allow
+  edit: deny
+  bash: deny
+  glob: allow
+  grep: allow
+  webfetch: deny
+  websearch: deny
+---
+
+# Council Lead Agent
 
 ## Role
 Coordinates the council and synthesizes perspectives
@@ -69,4 +85,39 @@ ${spec.agents.map((a) => `- ${a.role}: ${a.focus.join(', ')}`).join('\n')}
 - Identify consensus and disagreements
 - Provide final recommendation
 `;
+}
+
+function generateOpenCodeAgentContent(agent: CouncilSpec['agents'][number]): string {
+  return `---
+description: ${yamlString(`${agent.role} council agent. Focus: ${agent.focus.join(', ')}. Context: ${agent.context}. Model hint: ${agent.modelHint}.`)}
+mode: subagent
+permission:
+${generatePermissionBlock(agent.context)}
+---
+
+${generateAgentContent(agent)}`;
+}
+
+function generatePermissionBlock(context: CouncilSpec['agents'][number]['context']): string {
+  if (context === 'repo-readonly') {
+    return `  read: allow
+  edit: deny
+  bash: deny
+  glob: allow
+  grep: allow
+  webfetch: deny
+  websearch: deny`;
+  }
+
+  return `  read: deny
+  edit: deny
+  bash: deny
+  glob: deny
+  grep: deny
+  webfetch: deny
+  websearch: deny`;
+}
+
+function yamlString(value: string): string {
+  return JSON.stringify(value);
 }

@@ -99,7 +99,7 @@ describe('CLI', () => {
 
     // Check files were created
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'council.md'))).toBe(true);
+    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(true);
   });
 
   test('dry-run does not write files', async () => {
@@ -300,7 +300,7 @@ describe('CLI', () => {
 
     const { existsSync } = await import('node:fs');
     // All target creates files for all three runners
-    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'council.md'))).toBe(true);
+    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(true);
     expect(existsSync(join(PROJECT_ROOT, '.claude', 'skills', 'council', 'SKILL.md'))).toBe(true);
     expect(existsSync(join(PROJECT_ROOT, '.codex', 'config.toml'))).toBe(true);
   });
@@ -312,7 +312,7 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'council.md'))).toBe(false);
+    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(false);
   });
 
   test('unknown command returns exit code 1', async () => {
@@ -377,7 +377,7 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     // Check opencode file was generated
-    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'council.md'))).toBe(true);
+    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(true);
   });
 
   test('init --dry-run does not copy preset files', async () => {

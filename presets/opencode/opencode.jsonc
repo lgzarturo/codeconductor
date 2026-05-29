@@ -1,6 +1,4 @@
 {
-  // CodeConductor policies are declarative until the policy compiler exists.
-  // Enforcement depends on OpenCode permission support.
   "$schema": "https://opencode.ai/config.json",
   "model": "opencode-go/qwen3.7-max",
   "permission": {
@@ -28,9 +26,7 @@
     },
     "glob": "allow",
     "grep": "allow",
-    "external_directory": {
-      "*": "deny"
-    },
+    "external_directory": "deny",
     "bash": {
       "*": "ask",
       "git status*": "allow",
@@ -79,11 +75,6 @@
     },
     "webfetch": "ask",
     "websearch": "ask",
-    "task": {
-      "*": "ask"
-    },
-    "skill": {
-      "*": "ask"
-    }
+    "skill": "ask"
   }
 }

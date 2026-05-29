@@ -5,8 +5,14 @@ name: Code Review
 description: >
   Provides a structured framework for conducting thorough code reviews covering correctness, security, architecture alignment, performance, and technical debt.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: review
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: []
     frameworks: []

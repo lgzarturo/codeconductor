@@ -7,8 +7,14 @@ description: >
   views, services, naming, JSON APIs, PDFs, and cart patterns.
   Trigger: When writing any view, service, API endpoint, or model code in apps/.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: django
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: [python]
     frameworks: [django, django-tenants, django-rest-framework, reportlab]

@@ -1,10 +1,10 @@
 ---
+name: architect
 description:
   Designs the technical approach for a task — produces ADRs, module boundaries,
   and API contracts — so the Implementer has a reviewed plan before touching
   code.
 mode: subagent
-name: architect
 model: "{{MODEL}}"
 temperature: 0.1
 maxTurns: 80

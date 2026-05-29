@@ -5,8 +5,14 @@ name: Next.js + TypeScript
 description: >
   Provides expert knowledge for building Next.js 15+ applications with the App Router, TypeScript, Server Components, Server Actions, and TanStack Query.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: frontend
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: []
     frameworks: []

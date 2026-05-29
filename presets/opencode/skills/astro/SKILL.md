@@ -5,8 +5,14 @@ name: Astro
 description: >
   Provides expert knowledge for building Astro 5+ sites with Islands Architecture, Content Collections, TypeScript, and performance-first rendering strategies.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: frontend
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: []
     frameworks: []

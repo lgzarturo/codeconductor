@@ -7,8 +7,14 @@ description: >
   bulk operations, transactions, and multi-schema upload paths.
   Trigger: When writing queryset logic, model saves, or DB-touching service code.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: django
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: [python]
     frameworks: [django, django-tenants]

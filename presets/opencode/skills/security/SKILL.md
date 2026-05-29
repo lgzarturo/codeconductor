@@ -5,8 +5,14 @@ name: Security
 description: >
   Provides expert knowledge for implementing and reviewing application security following OWASP Top 10 (2021), with stack-specific patterns for Spring Boot, Django, Next.js, and Astro.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: security
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: []
     frameworks: []

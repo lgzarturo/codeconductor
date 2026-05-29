@@ -1,10 +1,10 @@
 ---
+name: repo-explorer
 description:
   Maps the repository structure, identifies conventions, locates relevant files,
   and estimates the impact radius of a proposed change — read-only, never
   modifies anything.
 mode: subagent
-name: repo-explorer
 model: "{{MODEL}}"
 temperature: 0.1
 maxTurns: 35

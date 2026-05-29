@@ -1,10 +1,10 @@
 ---
+name: task-coach
 description:
   Transforms vague requests into complete, routable Task Cards by asking
   targeted clarifying questions and enforces the Task Card standard before any
   work begins.
 mode: subagent
-name: task-coach
 model: "{{MODEL}}"
 temperature: 0.1
 maxTurns: 30

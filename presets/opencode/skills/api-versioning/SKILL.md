@@ -2,12 +2,18 @@
 id: api-versioning
 version: 1.0.0
 name: API Versioning
-description:
+description: >
   Provides expert knowledge for designing, implementing, and managing REST API
   versioning strategies with deprecation workflows.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: api
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: [kotlin, java, typescript, python, go]
     frameworks: [spring-boot, spring-mvc, express, fastapi]

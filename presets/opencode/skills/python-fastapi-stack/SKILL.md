@@ -7,8 +7,14 @@ description: >
   injection, error handling, pagination, and project structure.
   Trigger: When writing any router, endpoint, schema, or dependency in a FastAPI project.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: fastapi
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: [python]
     frameworks: [fastapi, pydantic, uvicorn, httpx]

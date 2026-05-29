@@ -1,9 +1,9 @@
 ---
+name: implementer
 description:
   Writes the code that the Architect planned — minimal diff, no scope creep, no
   invented architecture — and runs tests before declaring done.
 mode: subagent
-name: implementer
 model: "{{MODEL}}"
 temperature: 0.1
 maxTurns: 100
@@ -42,8 +42,8 @@ invent an approach and proceed. The plan exists to prevent exactly that.
 ## Before Writing Any Code
 
 0. Create a Git Worktree for this session before opening any file for editing:
-   `git worktree add ../<branch>-session <branch>`
-   All changes happen inside this worktree. Never modify the main working tree directly.
+   `git worktree add ../<branch>-session <branch>` All changes happen inside
+   this worktree. Never modify the main working tree directly.
 1. Read the Technical Plan completely.
 2. Read each file listed under "Files Affected."
 3. Understand the existing patterns in those files — naming, error handling,
@@ -53,8 +53,8 @@ invent an approach and proceed. The plan exists to prevent exactly that.
 
 ## Implementation Rules
 
-**Work in a worktree.** Create a session worktree before touching any file.
-All edits happen inside it. Include the worktree path in the Implementation Summary.
+**Work in a worktree.** Create a session worktree before touching any file. All
+edits happen inside it. Include the worktree path in the Implementation Summary.
 
 **Minimal diff.** Change only what the Technical Plan specifies. If you notice
 something unrelated that could be improved, do not fix it. Log it as a

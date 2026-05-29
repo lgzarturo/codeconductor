@@ -7,8 +7,14 @@ description: >
   bulk operations, transactions, and Alembic migrations.
   Trigger: When writing models, queries, bulk operations, or DB-touching service code.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: database
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: [python]
     frameworks: [sqlalchemy, alembic, asyncpg, fastapi]

@@ -2,13 +2,19 @@
 id: spring-boot-feature
 version: 1.0.0
 name: Spring Boot Feature Creation
-description:
+description: >
   Guides the creation of complete Spring Boot features following a structured,
   layer-by-layer workflow: entity, repository, service, controller, and tests.
   Applies Kotlin idioms, Bean Validation, and MockK test patterns throughout.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: spring
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: [kotlin]
     frameworks: [spring-boot, spring-mvc, spring-data-jpa, mockk, junit5]

@@ -2,13 +2,19 @@
 id: testing-strategy
 version: 1.0.0
 name: Testing Strategy
-description:
+description: >
   Provides expert knowledge of the testing pyramid, test design principles,
   MockK patterns, and integration testing conventions for Spring Boot + Kotlin
   projects.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: testing
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: [kotlin, java]
     frameworks: [spring-boot, junit5, mockk, testcontainers, assertj]

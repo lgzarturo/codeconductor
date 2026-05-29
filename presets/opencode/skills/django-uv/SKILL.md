@@ -5,8 +5,14 @@ name: Django + UV
 description: >
   Provides expert knowledge for building Django 5+ projects with UV as the package manager, domain-driven app structure, ruff for linting, and pytest-django for testing.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: django
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: []
     frameworks: []

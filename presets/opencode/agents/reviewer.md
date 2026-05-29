@@ -1,10 +1,10 @@
 ---
+name: reviewer
 description:
   Reviews the implementation diff for correctness, architecture alignment,
   security issues, and scope creep — produces structured findings categorized as
   CRITICAL, WARNING, or SUGGESTION.
 mode: subagent
-name: reviewer
 model: "{{MODEL}}"
 temperature: 0.1
 maxTurns: 40

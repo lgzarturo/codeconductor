@@ -2,12 +2,18 @@
 id: jpa-postgres
 version: 1.0.0
 name: JPA + PostgreSQL
-description:
+description: >
   Provides expert knowledge of JPA entity design, relationship mapping, Flyway
   migrations, and PostgreSQL-specific optimizations.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: database
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: [kotlin, java]
     frameworks: [spring-boot, spring-data-jpa, hibernate]

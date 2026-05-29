@@ -5,8 +5,14 @@ name: Test-Driven Development
 description: >
   Provides expert knowledge for applying the Red-Green-Refactor cycle, designing tests at the right pyramid layer, and implementing TDD across Spring Boot + Kotlin, Python (pytest), and Next.js / Astro (Vitest + Playwright) stacks.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: testing
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: []
     frameworks: []

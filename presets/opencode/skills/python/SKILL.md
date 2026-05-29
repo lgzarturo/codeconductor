@@ -7,8 +7,14 @@ description: >
   type hints, decorators, context managers, and architecture.
   Trigger: When writing Python code anywhere in the project.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: python
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: [python]
     frameworks: [django, fastapi, flask]

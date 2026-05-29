@@ -7,8 +7,14 @@ description: >
   RequestFactory, and mocks. No factories, no complex conftest.
   Trigger: When writing or reviewing tests in any apps/ directory.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: testing
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: [python]
     frameworks: [django, pytest-django, django-tenants]

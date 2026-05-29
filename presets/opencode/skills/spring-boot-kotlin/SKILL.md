@@ -2,12 +2,18 @@
 id: spring-boot-kotlin
 version: 1.0.0
 name: Spring Boot + Kotlin
-description:
+description: >
   Provides expert knowledge of Spring Boot conventions, Kotlin idioms, and MVC
   patterns for backend API development.
 
+user-invokable: true
+license: MIT
+metadata:
+  author: lgzarturo
+  category: spring
+
 compatibility:
-  tools: [claude, codex, opencode]
+  tools: [claude, codex, gemini, agy, opencode]
   stacks:
     languages: [kotlin]
     frameworks: [spring-boot, spring-mvc, spring-data-jpa, spring-security]

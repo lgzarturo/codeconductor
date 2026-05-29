@@ -15,16 +15,16 @@ contracts, task cards, and risk-based routing.
 >
 > What works today:
 >
-> - `codeconductor init` — detects project stack, writes
+> - `npx cc-codeconductor init` — detects project stack, writes
 >   `.codeconductor/config.yml`, copies `council.yml` and `policy.yml` into
 >   `.codeconductor/presets/`
-> - `codeconductor install council --target <opencode|claude|codex|all>` —
+> - `npx cc-codeconductor install council --target <opencode|claude|codex|all>` —
 >   generates and writes preset files; supports `--global` to install to
 >   `~/.opencode/`, `~/.claude/`, `~/.codex/`
-> - `codeconductor detect` — detects project stack and recommends presets
-> - `codeconductor doctor` — validates configuration and installed runner
+> - `npx cc-codeconductor detect` — detects project stack and recommends presets
+> - `npx cc-codeconductor doctor` — validates configuration and installed runner
 >   directories
-> - `codeconductor update` — re-applies the council preset for the configured
+> - `npx cc-codeconductor update` — re-applies the council preset for the configured
 >   target
 > - Manual presets for OpenCode, Claude Code, and Codex
 > - Versioned Agent Contracts
@@ -130,10 +130,10 @@ bun run src/cli/main.ts --help
 #### `init` — initialize CodeConductor in a project
 
 ```bash
-cc-codeconductor init              # detect stack, write .codeconductor/config.yml
-cc-codeconductor init --force      # overwrite existing config
-cc-codeconductor init --global     # write to ~/.codeconductor/
-cc-codeconductor init --dry-run    # preview without writing
+npx cc-codeconductor init              # detect stack, write .codeconductor/config.yml
+npx cc-codeconductor init --force      # overwrite existing config
+npx cc-codeconductor init --global     # write to ~/.codeconductor/
+npx cc-codeconductor init --dry-run    # preview without writing
 ```
 
 On first run, `init` copies `council.yml` and `policy.yml` into
@@ -143,8 +143,8 @@ files. `install` reads from there first.
 #### `detect` — detect project stack
 
 ```bash
-cc-codeconductor detect
-cc-codeconductor detect --output json
+npx cc-codeconductor detect
+npx cc-codeconductor detect --output json
 ```
 
 Output:
@@ -159,17 +159,17 @@ Detected:
 #### `install` — install council preset
 
 ```bash
-cc-codeconductor install council --target opencode     # project-level
-cc-codeconductor install council --target claude
-cc-codeconductor install council --target codex
-cc-codeconductor install council --target all          # all three targets
+npx cc-codeconductor install council --target opencode     # project-level
+npx cc-codeconductor install council --target claude
+npx cc-codeconductor install council --target codex
+npx cc-codeconductor install council --target all          # all three targets
 
-cc-codeconductor install council --target claude --global  # write to ~/.claude/
-cc-codeconductor install council --target opencode --global
-cc-codeconductor install council --target all --global
+npx cc-codeconductor install council --target claude --global  # write to ~/.claude/
+npx cc-codeconductor install council --target opencode --global
+npx cc-codeconductor install council --target all --global
 
-cc-codeconductor install council --target opencode --dry-run   # preview
-cc-codeconductor install council --target opencode --force     # overwrite
+npx cc-codeconductor install council --target opencode --dry-run   # preview
+npx cc-codeconductor install council --target opencode --force     # overwrite
 ```
 
 Files generated per target:
@@ -185,7 +185,7 @@ With `--global`, the same files are written under `~/` instead of `./`.
 #### `doctor` — validate configuration
 
 ```bash
-cc-codeconductor doctor
+npx cc-codeconductor doctor
 ```
 
 Checks config exists and is valid, reports runner directory status.
@@ -193,9 +193,9 @@ Checks config exists and is valid, reports runner directory status.
 #### `update` — re-apply preset
 
 ```bash
-cc-codeconductor update
-cc-codeconductor update --force
-cc-codeconductor update --dry-run
+npx cc-codeconductor update
+npx cc-codeconductor update --force
+npx cc-codeconductor update --dry-run
 ```
 
 Re-generates preset files for the `defaults.target` in your config.

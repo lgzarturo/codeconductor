@@ -81,7 +81,7 @@ Key concepts illustrated:
 3. Run the route defined in the Task Card through your CodeConductor setup:
 
    ```bash
-   npx codeconductor run task-card.md
+   npx cc-codeconductor run task-card.md
    ```
 
 4. Each agent reads the card and its own Agent Contract, then produces its

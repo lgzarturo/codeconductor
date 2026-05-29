@@ -285,7 +285,7 @@ use `o4-mini` as a general-purpose default.
 
 ### Step 7 — Verify installation (manual doctor check)
 
-`codeconductor doctor` is planned for v0.2.0 and is not available yet. Use this
+`npx cc-codeconductor doctor` is planned for v0.2.0 and is not available yet. Use this
 checklist to confirm the installation is complete and correct.
 
 ```bash

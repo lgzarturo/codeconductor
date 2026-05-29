@@ -75,7 +75,7 @@ Manual install. No CLI.
 
 **Goal:** `npx cc-codeconductor init` with deterministic stack detection.
 
-- [x] `cc-codeconductor init` command
+- [x] `npx cc-codeconductor init` command
 - [x] Project Scanner (deterministic: files → deps → scripts → structure)
 - [x] Stack detectors: Node.js, Bun, Spring Boot (Gradle/Maven), Django, Astro
       (Next.js, FastAPI deferred to v0.3.0)
@@ -84,8 +84,8 @@ Manual install. No CLI.
 - [x] Config renderer for OpenCode target (Claude and Codex renderers also
       shipped)
 - [x] `--dry-run` support
-- [x] `cc-codeconductor doctor` — validate config presence and integrity
-- [x] `cc-codeconductor doctor` — report target security compatibility gaps
+- [x] `npx cc-codeconductor doctor` — validate config presence and integrity
+- [x] `npx cc-codeconductor doctor` — report target security compatibility gaps
 - [x] Safe Merger with idempotency markers (`CODECONDUCTOR:BEGIN/END managed`)
 - [x] Bug-fix workflow
 - [x] Refactor workflow
@@ -152,7 +152,7 @@ real projects.
     - content before, after, and outside markers remains unchanged.
     - malformed markers produce a clear error and no partial write.
 
-- **`cc-codeconductor doctor` — report target security compatibility gaps**
+- **`npx cc-codeconductor doctor` — report target security compatibility gaps**
   - Add doctor checks that compare configured target capabilities against the
     canonical policy model.
   - The check should report gaps, not silently downgrade security. Examples:
@@ -245,7 +245,7 @@ surface area, then adds safety checks before introducing higher-risk workflows.
 
 **Shipped beyond original scope:**
 
-- `cc-codeconductor install council --target <opencode|claude|codex|all>` —
+- `npx cc-codeconductor install council --target <opencode|claude|codex|all>` —
   preset installer for all three target tools
 - `--global` flag on `init` and `install` — writes to `~/.codeconductor/`,
   `~/.claude/`, `~/.opencode/`, `~/.codex/`
@@ -265,7 +265,7 @@ surface area, then adds safety checks before introducing higher-risk workflows.
 - [ ] Generic backend preset
 - [ ] Generic frontend preset
 - [ ] Monorepo detection
-- [x] `cc-codeconductor update` command
+- [x] `npx cc-codeconductor update` command
 - [ ] Stricter review checklist
 
 ---
@@ -280,9 +280,9 @@ in v0.1.0.
 - [x] `CLAUDE.md` generation — agent contracts + routing policy embedded
 - [x] `.claude/skills/` generation — 4 skills, tool-agnostic content
 - [x] Manual install guide (`docs/guides/manual-install-claude.md`)
-- [ ] `cc-codeconductor sync claude` command (CLI — deferred to v0.2.0+)
+- [ ] `npx cc-codeconductor sync claude` command (CLI — deferred to v0.2.0+)
 - [ ] Provider compatibility matrix (OpenCode vs Claude) — formal doc
-- [ ] `cc-codeconductor update --target claude` command
+- [ ] `npx cc-codeconductor update --target claude` command
 
 ---
 

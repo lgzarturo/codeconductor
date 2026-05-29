@@ -119,7 +119,7 @@ command output.
   configs from it when the CLI exists.
 - Add `docs/target-security-compatibility.md` or an equivalent section in
   `docs/security-model.md` covering Codex, OpenCode, and Claude.
-- Extend `codeconductor doctor` to validate least-privilege role capabilities,
+- Extend `npx cc-codeconductor doctor` to validate least-privilege role capabilities,
   target permission drift, protected branches, secret path denies, network
   posture, and worktree guidance.
 - Add a target renderer rule: if a security rule cannot be represented by a

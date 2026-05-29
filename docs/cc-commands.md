@@ -21,7 +21,7 @@ These flags can be used with any command:
 
 ## Commands
 
-### `codeconductor init`
+### `npx cc-codeconductor init`
 
 Initializes CodeConductor in a project by creating the configuration file and
 copying bundled presets.
@@ -58,24 +58,24 @@ copying bundled presets.
 
 ```bash
 # Initialize in current project
-cc-codeconductor init
+npx cc-codeconductor init
 
 # Initialize globally (user home directory)
-cc-codeconductor init --global
+npx cc-codeconductor init --global
 
 # Preview initialization without writing files
-cc-codeconductor init --dry-run
+npx cc-codeconductor init --dry-run
 
 # Overwrite existing configuration
-cc-codeconductor init --force
+npx cc-codeconductor init --force
 
 # JSON output for scripting
-cc-codeconductor init --output json
+npx cc-codeconductor init --output json
 ```
 
 ---
 
-### `codeconductor init --global`
+### `npx cc-codeconductor init --global`
 
 Global initialization variant. Creates configuration in the user's home
 directory (`~/.codeconductor/config.yml` on Unix,
@@ -86,7 +86,7 @@ personal defaults that apply across all projects.
 
 ---
 
-### `codeconductor detect`
+### `npx cc-codeconductor detect`
 
 Analyzes the current project to identify its technology stack and recommends
 suitable presets.
@@ -126,7 +126,7 @@ suitable presets.
 **Example:**
 
 ```bash
-cc-codeconductor detect
+npx cc-codeconductor detect
 # Output:
 # Detected: node, typescript
 # Frameworks: none
@@ -136,7 +136,7 @@ cc-codeconductor detect
 
 ---
 
-### `cc-codeconductor install preset --target <target>`
+### `npx cc-codeconductor install preset --target <target>`
 
 Installs a complete preset package including agents, prompts, skills, and
 commands for the specified runner.
@@ -169,24 +169,24 @@ commands for the specified runner.
 
 ```bash
 # Install preset for OpenCode
-cc-codeconductor install preset --target opencode
+npx cc-codeconductor install preset --target opencode
 
 # Install preset for all runners
-cc-codeconductor install preset --target all
+npx cc-codeconductor install preset --target all
 
 # Install globally for Claude
-cc-codeconductor install preset --target claude --global
+npx cc-codeconductor install preset --target claude --global
 
 # Preview what would be installed
-cc-codeconductor install preset --target all --dry-run
+npx cc-codeconductor install preset --target all --dry-run
 
 # Force overwrite existing files
-cc-codeconductor install preset --target opencode --force
+npx cc-codeconductor install preset --target opencode --force
 ```
 
 ---
 
-### `cc-codeconductor install council --target <target>`
+### `npx cc-codeconductor install council --target <target>`
 
 Installs only the council specification files (agent definitions, policies)
 without full preset contents. This is a lighter-weight installation focused on
@@ -213,21 +213,21 @@ the council structure.
 
 ```bash
 # Install council spec for OpenCode
-cc-codeconductor install council --target opencode
+npx cc-codeconductor install council --target opencode
 
 # Install council for all runners
-cc-codeconductor install council --target all
+npx cc-codeconductor install council --target all
 
 # Global installation for Claude
-cc-codeconductor install council --target claude --global
+npx cc-codeconductor install council --target claude --global
 
 # Preview council installation
-cc-codeconductor install council --target all --dry-run
+npx cc-codeconductor install council --target all --dry-run
 ```
 
 ---
 
-### `codeconductor doctor`
+### `npx cc-codeconductor doctor`
 
 Validates the CodeConductor configuration and installed files, checking for
 common issues.
@@ -254,7 +254,7 @@ common issues.
 **Example:**
 
 ```bash
-cc-codeconductor doctor
+npx cc-codeconductor doctor
 # Output:
 # ✓ config-exists: .codeconductor/config.yml exists
 # ✓ config-valid: Config is valid
@@ -267,7 +267,7 @@ cc-codeconductor doctor
 
 ---
 
-### `codeconductor update`
+### `npx cc-codeconductor update`
 
 Updates installed presets to the latest version from `.codeconductor/presets/`.
 
@@ -295,15 +295,15 @@ Updates installed presets to the latest version from `.codeconductor/presets/`.
 
 ```bash
 # Check for updates
-cc-codeconductor update --dry-run
+npx cc-codeconductor update --dry-run
 # Output: Already up to date (v1.0.0)
 
 # Apply available updates
-cc-codeconductor update
+npx cc-codeconductor update
 # Output: Updated successfully (v1.0.0 → v1.1.0)
 
 # Force overwrite during update
-cc-codeconductor update --force
+npx cc-codeconductor update --force
 ```
 
 ---

@@ -304,7 +304,7 @@ awk '/CODECONDUCTOR:BEGIN managed/,/CODECONDUCTOR:END managed/' /tmp/codeconduct
 
 ### Step 7 — Verify installation (manual doctor check)
 
-`codeconductor doctor` is planned for v0.2.0 and is not available yet. Use this
+`npx cc-codeconductor doctor` is planned for v0.2.0 and is not available yet. Use this
 checklist to confirm the installation is complete and correct.
 
 Run each check from your project root:

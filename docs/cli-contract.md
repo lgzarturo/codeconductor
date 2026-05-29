@@ -7,7 +7,7 @@ implementation. The CLI is not implemented in v0.1.x.
 
 ## Commands
 
-### `codeconductor init`
+### `npx cc-codeconductor init`
 
 Initialize CodeConductor files in a target project.
 
@@ -19,7 +19,7 @@ Planned behavior:
 - Show planned changes
 - Apply changes only after confirmation
 
-### `codeconductor doctor`
+### `npx cc-codeconductor doctor`
 
 Validate an installed CodeConductor configuration.
 
@@ -35,7 +35,7 @@ Planned behavior:
 - Warn when secret-path denies or network posture are missing
 - Report unsupported or conflicting configuration
 
-### `codeconductor update`
+### `npx cc-codeconductor update`
 
 Update installed CodeConductor-managed sections and preset files.
 
@@ -46,11 +46,11 @@ Planned behavior:
 - Show changes before writing
 - Preserve user-owned content outside managed sections
 
-### `codeconductor sync claude`
+### `npx cc-codeconductor sync claude`
 
 Generate or update Claude Code-compatible files from CodeConductor contracts.
 
-### `codeconductor sync opencode`
+### `npx cc-codeconductor sync opencode`
 
 Generate or update OpenCode-compatible files from CodeConductor contracts.
 

@@ -236,7 +236,7 @@ part of v0.1.0 detection.
 **Explicit configuration.** Every installed file is committed to the repository.
 There are no hidden or runtime-generated configurations.
 
-**Idempotent installation.** Running `codeconductor init` on a project that
+**Idempotent installation.** Running `npx cc-codeconductor init` on a project that
 already has CodeConductor installed does not duplicate content. Managed sections
 are updated in place.
 
@@ -261,9 +261,9 @@ Files installed by CodeConductor contain delimited sections:
 <!-- CODECONDUCTOR:END managed -->
 ```
 
-On `codeconductor init` (first run), the full file is created.
+On `npx cc-codeconductor init` (first run), the full file is created.
 
-On `codeconductor update`, only the content between markers is replaced. Any
+On `npx cc-codeconductor update`, only the content between markers is replaced. Any
 content the user added outside the markers is preserved without modification.
 
 This allows teams to extend installed files without losing their additions on

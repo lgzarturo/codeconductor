@@ -32,13 +32,15 @@ Verify the `bin` entry is correctly configured in `package.json`:
   "name": "cc-codeconductor",
   "version": "0.2.0",
   "bin": {
+    "cc-codeconductor": "./dist/index.js",
     "codeconductor": "./dist/index.js"
   }
 }
 ```
 
 The package will be available as `npx cc-codeconductor` after publication. The
-installed CLI command remains `codeconductor`.
+installed CLI commands are `cc-codeconductor` and the legacy `codeconductor`
+alias.
 
 ## Release Process
 

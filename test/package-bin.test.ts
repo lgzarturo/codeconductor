@@ -11,11 +11,12 @@ describe('npm package bin', () => {
     expect(entrypoint.startsWith('#!/usr/bin/env node\n')).toBe(true);
   });
 
-  test('package bin points to the built CLI entrypoint', async () => {
+  test('package bin exposes cc-codeconductor and legacy codeconductor commands', async () => {
     const packageJson = JSON.parse(
       await readFile(resolve(PROJECT_ROOT, 'package.json'), 'utf-8')
     ) as { bin?: Record<string, string> };
 
+    expect(packageJson.bin?.['cc-codeconductor']).toBe('./dist/index.js');
     expect(packageJson.bin?.codeconductor).toBe('./dist/index.js');
   });
 });

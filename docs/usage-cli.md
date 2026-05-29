@@ -195,6 +195,7 @@ This creates the `dist/index.js` entry point defined in `package.json`:
 ```json
 {
   "bin": {
+    "cc-codeconductor": "./dist/index.js",
     "codeconductor": "./dist/index.js"
   }
 }

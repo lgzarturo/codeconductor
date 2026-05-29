@@ -29,6 +29,7 @@
   },
   "type": "module",
   "bin": {
+    "cc-codeconductor": "./dist/index.js",
     "codeconductor": "./dist/index.js"
   },
   "scripts": {

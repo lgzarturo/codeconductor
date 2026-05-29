@@ -18,6 +18,12 @@ export const PRESETS: PresetInfo[] = [
     description: 'Multi-agent council for code review and architecture',
     path: './presets/council/council.yml',
   },
+  {
+    name: 'seo-hotel',
+    version: '0.3.0',
+    description: 'SEO and GEO audit council for hotel and hospitality websites',
+    path: './presets/seo-hotel/seo-hotel.yml',
+  },
 ];
 
 /**

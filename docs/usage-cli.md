@@ -134,6 +134,67 @@ npx cc-codeconductor install council --target opencode --force
 
 ---
 
+### `install lsp` — Install and Configure LSP Servers
+
+Installs LSP (Language Server Protocol) servers and configures AI coding tools to use them.
+
+```bash
+# Install LSPs for a specific target (auto-detects project languages)
+npx cc-codeconductor install lsp --target opencode
+
+# Install LSPs for all supported targets
+npx cc-codeconductor install lsp --target all
+
+# Override language detection with explicit languages
+npx cc-codeconductor install lsp --target claude --lang typescript,python
+
+# Install to home directory (global LSP install + global tool configs)
+npx cc-codeconductor install lsp --target all --global
+
+# Preview without installing or writing files
+npx cc-codeconductor install lsp --target opencode --dry-run
+
+# Overwrite existing LSP config files
+npx cc-codeconductor install lsp --target cursor --force
+```
+
+**What it does:**
+
+1. Detects project languages (or uses `--lang` override)
+2. Resolves LSP servers for detected languages
+3. Checks which LSPs are already installed (idempotent)
+4. Installs missing LSPs via npm, pip, or binary download
+5. Generates LSP configuration files for each target tool
+
+**Supported languages and LSP servers:**
+
+| Language   | LSP Server                | Install Method |
+| ---------- | ------------------------- | -------------- |
+| TypeScript | `typescript-language-server` | npm (`-g`)  |
+| PHP        | `intelephense`            | npm (`-g`)     |
+| Python     | `python-lsp-server`       | pip (`--user`) |
+| Kotlin     | `kotlin-language-server`  | binary download |
+
+**Supported AI tool targets:**
+
+| Target     | Config file written        |
+| ---------- | -------------------------- |
+| `opencode` | `.opencode/opencode.json`  |
+| `claude`   | `.claude/settings.json`    |
+| `codex`    | `.codex/config.toml`       |
+| `gemini`   | `.gemini/settings.json`    |
+| `cursor`   | `.cursor/mcp.json`         |
+| `agy`      | `.agy/tools.yaml` (experimental) |
+
+**Options:**
+
+| Flag       | Description                                                        |
+| ---------- | ------------------------------------------------------------------ |
+| `--target` | Required. One of `opencode`, `claude`, `codex`, `gemini`, `cursor`, `agy`, `all` |
+| `--lang`   | Optional. Comma-separated languages (e.g., `typescript,python`). Overrides auto-detection |
+
+---
+
 ### `doctor` — Validate Configuration
 
 Checks that configuration files exist and are valid.
@@ -176,6 +237,7 @@ npx cc-codeconductor update --dry-run
 | `--force`        | Allow overwriting existing files                   |
 | `--global`       | Target home directory instead of project directory |
 | `--output`, `-o` | Output format: `human` (default) or `json`         |
+| `--lang`         | Comma-separated list of languages (for `install lsp`) |
 
 ---
 

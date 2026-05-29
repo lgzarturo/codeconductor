@@ -21,6 +21,9 @@ contracts, task cards, and risk-based routing.
 > - `npx cc-codeconductor install council --target <opencode|claude|codex|all>` —
 >   generates and writes preset files; supports `--global` to install to
 >   `~/.opencode/`, `~/.claude/`, `~/.codex/`
+> - `npx cc-codeconductor install lsp --target <opencode|claude|codex|gemini|cursor|agy|all>` —
+>   installs LSP servers and configures AI coding tools; auto-detects project
+>   languages or use `--lang` to override
 > - `npx cc-codeconductor detect` — detects project stack and recommends presets
 > - `npx cc-codeconductor doctor` — validates configuration and installed runner
 >   directories
@@ -181,6 +184,20 @@ Files generated per target:
 | `codex`    | `.codex/config.toml`, `.codex/agents/council_*.toml`             |
 
 With `--global`, the same files are written under `~/` instead of `./`.
+
+#### `install lsp` — install and configure LSP servers
+
+```bash
+npx cc-codeconductor install lsp --target opencode          # auto-detect languages
+npx cc-codeconductor install lsp --target all               # all AI tools
+npx cc-codeconductor install lsp --target claude --lang typescript,python  # explicit languages
+npx cc-codeconductor install lsp --target all --global      # global install + global configs
+npx cc-codeconductor install lsp --target cursor --dry-run  # preview
+npx cc-codeconductor install lsp --target all --force       # overwrite existing configs
+```
+
+Supported languages: TypeScript, PHP, Python, Kotlin.
+Supported targets: opencode, claude, codex, gemini, cursor, agy.
 
 #### `doctor` — validate configuration
 

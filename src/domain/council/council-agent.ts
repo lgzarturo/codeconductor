@@ -31,6 +31,26 @@ function getResponsibilities(agentId: string): string {
 - Find edge cases
 - Identify failure modes
 - Stress test solutions`,
+    'seo-auditor': `- Audit technical SEO
+- Check meta tags and headings
+- Validate crawl directives
+- Assess page speed signals`,
+    'schema-validator': `- Validate Schema.org markup
+- Check JSON-LD syntax
+- Verify required properties
+- Suggest structured data fixes`,
+    'geo-specialist': `- Assess AI-search readiness
+- Validate llms.txt
+- Check citable content
+- Review GEO optimization`,
+    'content-strategist': `- Plan content marketing
+- Guide off-page SEO
+- Suggest backlink strategy
+- Review hotel copywriting`,
+    'astro-specialist': `- Validate Astro SEO patterns
+- Check static generation
+- Review Islands Architecture
+- Optimize image handling`,
   };
   return responsibilities[agentId] || '- Provide critical review';
 }

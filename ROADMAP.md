@@ -264,8 +264,8 @@ area, then adds safety checks before introducing higher-risk workflows.
       django-orm, django-testing)
 - [ ] Next.js preset
 - [ ] FastAPI preset
-- [ ] Astro web page preset
-- [ ] SEO Off page preset
+- [x] Astro web page preset (skills: astro-seo)
+- [x] SEO Off page preset (skills: schema-validator, seo-audit, geo-readiness, off-page)
 - [ ] Generic backend preset
 - [ ] Generic frontend preset
 - [ ] Monorepo detection

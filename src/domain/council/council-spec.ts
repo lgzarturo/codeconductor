@@ -73,3 +73,44 @@ export const DEFAULT_COUNCIL_AGENTS: CouncilAgentSpec[] = [
     focus: ['review', 'edge-cases', 'failure-modes'],
   },
 ];
+
+/**
+ * SEO Hotel council agents
+ */
+export const SEO_HOTEL_COUNCIL_AGENTS: CouncilAgentSpec[] = [
+  {
+    id: 'seo-auditor',
+    role: 'SEO Auditor',
+    context: 'repo-readonly',
+    modelHint: 'analytical',
+    focus: ['technical-seo', 'meta-tags', 'crawlability', 'page-speed'],
+  },
+  {
+    id: 'schema-validator',
+    role: 'Schema Validator',
+    context: 'repo-readonly',
+    modelHint: 'strong-reasoning',
+    focus: ['schema-org', 'json-ld', 'structured-data', 'rich-results'],
+  },
+  {
+    id: 'geo-specialist',
+    role: 'GEO Specialist',
+    context: 'repo-readonly',
+    modelHint: 'balanced',
+    focus: ['ai-search', 'citable-content', 'llms-txt', 'generative-engine-optimization'],
+  },
+  {
+    id: 'content-strategist',
+    role: 'Content Strategist',
+    context: 'prompt-only',
+    modelHint: 'balanced',
+    focus: ['content-marketing', 'off-page-seo', 'backlinks', 'hotel-copywriting'],
+  },
+  {
+    id: 'astro-specialist',
+    role: 'Astro Specialist',
+    context: 'repo-readonly',
+    modelHint: 'practical-coding',
+    focus: ['astro-framework', 'static-generation', 'islands-architecture', 'performance'],
+  },
+];

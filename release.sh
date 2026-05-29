@@ -44,6 +44,7 @@ if [[ -z "$VERSION_TYPE" ]]; then
 fi
 
 PACKAGE_JSON="package.json"
+VERSION_FILE="VERSION"
 CURRENT_VERSION=$(node -p "require('./$PACKAGE_JSON').version")
 REPO_URL=$(node -p "require('./$PACKAGE_JSON').repository.url" 2>/dev/null || echo "")
 
@@ -56,6 +57,7 @@ function command_exists() {
 
 if [[ "$DRY_RUN" == "true" ]]; then
   dry_log "Package version: $CURRENT_VERSION"
+  dry_log "Version file: $VERSION_FILE"
   dry_log "Version bump: $VERSION_TYPE"
   dry_log "Would run: npm test && npm run typecheck"
   dry_log "Would generate CHANGELOG via git-cliff"
@@ -93,6 +95,7 @@ const pkg = JSON.parse(fs.readFileSync('$PACKAGE_JSON', 'utf8'));
 pkg.version = '$NEW_VERSION';
 fs.writeFileSync('$PACKAGE_JSON', JSON.stringify(pkg, null, 2) + '\n');
 "
+printf '%s\n' "$NEW_VERSION" > "$VERSION_FILE"
 
 log "Building..."
 npm run build
@@ -107,7 +110,7 @@ else
   git add CHANGELOG.md
 fi
 
-git add "$PACKAGE_JSON"
+git add "$PACKAGE_JSON" "$VERSION_FILE"
 git commit -m "chore(release): bump to v$NEW_VERSION"
 git tag "v$NEW_VERSION"
 

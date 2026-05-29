@@ -118,7 +118,7 @@ function renderTemplate(content: string, modelConfig: ModelConfig, filePath: str
   if (agentRole && modelConfig.agents[agentRole]) {
     const agentModels = modelConfig.agents[agentRole];
     const targetModel =
-      agentModels[modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor'];
+      agentModels[modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor' | 'agy'];
     let result = content
       .replace(/\{\{MODEL\}\}/g, targetModel ?? '')
       .replace(/\{\{MODEL_CLAUDE\}\}/g, agentModels.claude ?? '')
@@ -189,7 +189,7 @@ function renderTemplate(content: string, modelConfig: ModelConfig, filePath: str
 function substituteToolNames(content: string, modelConfig: ModelConfig): string {
   if (!modelConfig.tools && !modelConfig.permissions) return content;
 
-  const target = modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor';
+  const target = modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor' | 'agy';
 
   const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
   if (!fmMatch) return content;

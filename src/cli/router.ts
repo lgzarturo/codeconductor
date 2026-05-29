@@ -8,6 +8,7 @@ import {
   type InstallOptions,
   type InstallPresetOptions,
 } from '../commands/install.command';
+import { installLspCommand, type InstallLspOptions } from '../commands/install-lsp.command';
 import { updateCommand, type UpdateOptions } from '../commands/update.command';
 import type { OutputMode } from '../utils/logger';
 
@@ -86,7 +87,13 @@ export function parseArgs(args: string[]): CliArgs {
     const arg = remaining[i];
     if (arg.startsWith('--')) {
       const [key, value] = arg.slice(2).split('=');
-      if (value !== undefined) {
+      if (key === 'lang') {
+        // Parse comma-separated values for --lang
+        const langValue = value !== undefined ? value : remaining[++i];
+        if (langValue && typeof langValue === 'string') {
+          options[key] = langValue.split(',').map((s) => s.trim());
+        }
+      } else if (value !== undefined) {
         options[key] = value;
       } else if (remaining[i + 1] && !remaining[i + 1].startsWith('-')) {
         options[key] = remaining[++i];
@@ -119,6 +126,7 @@ Commands:
   detect                 Detect project stack and recommended presets
   install council        Install generated council spec files to runner targets
   install preset         Install full preset (agents, prompts, skills, commands)
+  install lsp            Install and configure LSP servers for AI coding tools
   doctor                 Validate configuration and generated files
   update                 Update installed presets
 
@@ -129,6 +137,7 @@ Options:
   --force                Allow overwriting existing files
   --global               Install to home directory (~/.claude, ~/.opencode, etc.)
   --output, -o           Output mode: human or json
+  --lang                 Comma-separated list of languages (e.g., typescript,php,python)
 
 Examples:
   npx cc-codeconductor init
@@ -143,6 +152,9 @@ Examples:
   npx cc-codeconductor install council --target claude
   npx cc-codeconductor install council --target codex
   npx cc-codeconductor install council --target all
+  npx cc-codeconductor install lsp --target opencode
+  npx cc-codeconductor install lsp --target all --lang typescript,python
+  npx cc-codeconductor install lsp --target claude --dry-run
   npx cc-codeconductor doctor
   npx cc-codeconductor update --dry-run
 `;
@@ -178,7 +190,7 @@ export async function routeCommand(
 
     case 'install': {
       const isGlobal = options.global === true || options.global === 'true';
-      const VALID_TARGETS = ['opencode', 'claude', 'codex', 'all'];
+      const VALID_TARGETS = ['opencode', 'claude', 'codex', 'gemini', 'cursor', 'agy', 'all'];
 
       // If subcommand is a runner name (not a preset name), treat it as --target
       let resolvedSubcommand = subcommand;
@@ -188,6 +200,18 @@ export async function routeCommand(
         resolvedSubcommand = undefined;
       }
       target = target || 'opencode';
+
+      if (resolvedSubcommand === 'lsp') {
+        return installLspCommand({
+          projectRoot,
+          target,
+          lang: options.lang as string[] | undefined,
+          dryRun: flags.dryRun,
+          force: flags.force,
+          global: isGlobal,
+          output: flags.output,
+        } as InstallLspOptions);
+      }
 
       if (resolvedSubcommand === 'preset') {
         return installPresetCommand({

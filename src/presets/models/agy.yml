@@ -1,0 +1,59 @@
+# Model configuration for Agy preset (experimental)
+target: agy
+agents:
+  architect:
+    claude: claude-opus-4-7
+    opencode: opencode-go/deepseek-v4-pro
+    codex: gpt-5.5
+    gemini: gemini-2.5-pro
+    cursor: gpt-5.5
+    agy: gemini-2.5-pro
+  implementer:
+    claude: claude-sonnet-4-6
+    opencode: opencode-go/mimo-v2.5-pro
+    codex: gpt-5.3-codex
+    gemini: gemini-2.5-flash
+    cursor: gpt-5.3
+    agy: gemini-2.5-flash
+  tester:
+    claude: claude-sonnet-4-6
+    opencode: opencode-go/minimax-m2.7
+    codex: gpt-5.3-codex
+    gemini: gemini-2.5-flash
+    cursor: gpt-5.3
+    agy: gemini-2.5-flash
+  orchestrator:
+    claude: claude-sonnet-4-6
+    opencode: opencode-go/deepseek-v4-pro
+    codex: gpt-5.2
+    gemini: gemini-2.5-pro
+    cursor: gpt-5.2
+    agy: gemini-2.5-pro
+  reviewer:
+    claude: claude-sonnet-4-6
+    opencode: opencode-go/qwen-3.6-plus
+    codex: gpt-5.4
+    gemini: gemini-2.5-pro
+    cursor: gpt-5.4
+    agy: gemini-2.5-pro
+  docs:
+    claude: claude-haiku-4-5-20251001
+    opencode: opencode-go/qwen-3.6-plus
+    codex: gpt-5.4-mini
+    gemini: gemini-2.5-flash
+    cursor: gpt-5.4-mini
+    agy: gemini-2.5-flash
+  task-coach:
+    claude: claude-haiku-4-5-20251001
+    opencode: opencode-go/kimi-k2.6
+    codex: gpt-5.4-mini
+    gemini: gemini-2.5-flash
+    cursor: gpt-5.4-mini
+    agy: gemini-2.5-flash
+  repo-explorer:
+    claude: claude-haiku-4-5-20251001
+    opencode: opencode-go/qwen3.5-plus
+    codex: gpt-5.4-mini
+    gemini: gemini-2.5-flash
+    cursor: gpt-5.4-mini
+    agy: gemini-2.5-flash

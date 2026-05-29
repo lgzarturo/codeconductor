@@ -58,6 +58,15 @@ export async function detectProject(rootDir: string): Promise<ProjectProfile> {
     frameworks.push('django');
   }
 
+  // Check for PHP
+  const phpSignals = await detectPhp(rootDir);
+  if (phpSignals.length > 0) {
+    signals.push(...phpSignals);
+    languages.push('php');
+    runtimes.push('php');
+    packageManagers.push('composer');
+  }
+
   // Check for Astro
   const astroSignals = await detectAstro(rootDir);
   if (astroSignals.length > 0) {
@@ -178,6 +187,29 @@ async function detectAstro(rootDir: string): Promise<string[]> {
     (await fileExists(rootDir, 'astro.config.ts'))
   ) {
     signals.push('astro.config');
+  }
+
+  return signals;
+}
+
+async function detectPhp(rootDir: string): Promise<string[]> {
+  const { fileExists } = await import('../filesystem/safety');
+  const signals: string[] = [];
+
+  if (await fileExists(rootDir, 'composer.json')) {
+    signals.push('composer.json');
+  }
+
+  // Check for PHP files using readdir
+  try {
+    const { readdir } = await import('node:fs/promises');
+    const entries = await readdir(rootDir, { withFileTypes: true });
+    const hasPhpFiles = entries.some((entry) => entry.isFile() && entry.name.endsWith('.php'));
+    if (hasPhpFiles) {
+      signals.push('*.php');
+    }
+  } catch {
+    // readdir failed
   }
 
   return signals;

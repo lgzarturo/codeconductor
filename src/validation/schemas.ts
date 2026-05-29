@@ -52,7 +52,7 @@ export const CodeConductorConfigSchema = z.object({
     profile: z.string().optional(),
   }),
   defaults: z.object({
-    target: z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor']),
+    target: z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor', 'agy']),
     overwrite: z.boolean(),
   }),
   presets: z.object({
@@ -76,6 +76,7 @@ export const RunnerTargetSchema = z.enum([
   'codex',
   'gemini',
   'cursor',
+  'agy',
   'all',
 ]);
 
@@ -99,7 +100,7 @@ export const ManifestEntrySchema = z.object({
 });
 
 export const InstallManifestSchema = z.object({
-  target: z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor']),
+  target: z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor', 'agy']),
   entries: z.array(ManifestEntrySchema),
 });
 
@@ -113,7 +114,7 @@ export const PermissionProviderNamesSchema = z.record(z.string(), z.string());
  * Model config schema — defines model names per provider per agent role
  */
 export const ModelConfigSchema = z.object({
-  target: z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor']),
+  target: z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor', 'agy']),
   agents: z.record(
     z.string(),
     z.object({
@@ -122,6 +123,7 @@ export const ModelConfigSchema = z.object({
       codex: z.string().optional(),
       gemini: z.string().optional(),
       cursor: z.string().optional(),
+      agy: z.string().optional(),
     })
   ),
   tools: z.record(z.string(), ToolProviderNamesSchema).optional(),

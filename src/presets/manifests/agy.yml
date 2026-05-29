@@ -1,0 +1,9 @@
+target: agy
+entries:
+  - src: opencode/agents
+    dest: .agy/agents
+    strategy: overwrite
+    template: true
+  - src: opencode/prompts/v0.2.0
+    dest: .agy/prompts/v0.2.0
+    strategy: overwrite

@@ -14,7 +14,7 @@ const MODELS_DIR = join(SRC_PRESETS_DIR, 'models');
 export const PRESETS_DIR = ROOT_PRESETS_DIR;
 
 export async function loadManifest(
-  target: 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor'
+  target: 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'
 ): Promise<InstallManifest> {
   const manifestPath = join(MANIFESTS_DIR, `${target}.yml`);
   const content = await readFile(manifestPath, 'utf-8');
@@ -23,7 +23,7 @@ export async function loadManifest(
 }
 
 export async function loadModelConfig(
-  target: 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor'
+  target: 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'
 ): Promise<ModelConfig> {
   const modelPath = join(MODELS_DIR, `${target}.yml`);
   const content = await readFile(modelPath, 'utf-8');

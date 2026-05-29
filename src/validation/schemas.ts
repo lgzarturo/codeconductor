@@ -107,6 +107,7 @@ export const InstallManifestSchema = z.object({
  * Tool provider names schema — maps base tool names to provider-specific names
  */
 export const ToolProviderNamesSchema = z.record(z.string(), z.string());
+export const PermissionProviderNamesSchema = z.record(z.string(), z.string());
 
 /**
  * Model config schema — defines model names per provider per agent role
@@ -124,6 +125,7 @@ export const ModelConfigSchema = z.object({
     })
   ),
   tools: z.record(z.string(), ToolProviderNamesSchema).optional(),
+  permissions: PermissionProviderNamesSchema.optional(),
 });
 
 export type ModelConfig = z.infer<typeof ModelConfigSchema>;

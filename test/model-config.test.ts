@@ -129,7 +129,7 @@ describe('ModelConfigSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  test('config with tools mapping passes validation', () => {
+  test('config with tools and permissions mapping passes validation', () => {
     const result = ModelConfigSchema.safeParse({
       target: 'opencode',
       agents: {
@@ -137,6 +137,10 @@ describe('ModelConfigSchema', () => {
       },
       tools: {
         Read: { claude: 'ViewCodeItem', opencode: 'file_read' },
+      },
+      permissions: {
+        Read: 'read',
+        Glob: 'glob',
       },
     });
     expect(result.success).toBe(true);
@@ -241,8 +245,8 @@ describe('loadModelConfig', () => {
     }
   });
 
-  test('all configs have tools mapping', async () => {
-    for (const target of ['opencode', 'claude', 'codex', 'gemini', 'cursor'] as const) {
+  test('non-opencode configs have tools mapping', async () => {
+    for (const target of ['claude', 'codex', 'gemini', 'cursor'] as const) {
       const config = await loadModelConfig(target);
       expect(config.tools).toBeDefined();
       expect(config.tools?.Read).toBeDefined();
@@ -252,6 +256,20 @@ describe('loadModelConfig', () => {
       expect(config.tools?.Glob).toBeDefined();
       expect(config.tools?.Grep).toBeDefined();
     }
+  });
+
+  test('opencode config has permissions mapping and no deprecated tools mapping', async () => {
+    const config = await loadModelConfig('opencode');
+    expect(config.tools).toBeUndefined();
+    expect(config.permissions).toEqual({
+      Read: 'read',
+      Write: 'edit',
+      Edit: 'edit',
+      Bash: 'bash',
+      Glob: 'glob',
+      Grep: 'grep',
+      WebFetch: 'webfetch',
+    });
   });
 });
 
@@ -373,6 +391,14 @@ describe('Agent file templates (source presets)', () => {
       const content = await readFile(join(PRESETS_DIR, 'opencode', 'agents', file), 'utf-8');
       const modelMatches = (content.match(/\{\{MODEL\}\}/g) || []).length;
       expect(modelMatches).toBe(1);
+    }
+  });
+
+  test('opencode shared agent source files keep base tools for cross-target rendering', async () => {
+    for (const file of ALL_AGENT_FILES) {
+      const content = await readFile(join(PRESETS_DIR, 'opencode', 'agents', file), 'utf-8');
+      expect(content).toContain('tools:');
+      expect(content).toContain('permission:');
     }
   });
 
@@ -665,7 +691,7 @@ describe('Tool name substitution', () => {
     await cleanup();
   });
 
-  test('opencode: architect.md should have opencode tool names', async () => {
+  test('opencode: architect.md should use permissions and omit deprecated tools', async () => {
     await runCli(['init', '--force']);
     await runCli(['install', 'preset', '--target=opencode', '--force']);
 
@@ -673,9 +699,14 @@ describe('Tool name substitution', () => {
       join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'),
       'utf-8'
     );
-    expect(content).toContain(
-      'tools: file_read / view_file, dir_list / glob, grep_search / search'
-    );
+    expect(content).not.toContain('tools:');
+    expect(content).not.toContain('file_read / view_file');
+    expect(content).not.toContain('dir_list / glob');
+    expect(content).not.toContain('grep_search / search');
+    expect(content).toContain('permission:');
+    expect(content).toContain('  read: allow');
+    expect(content).toContain('  glob: allow');
+    expect(content).toContain('  grep: allow');
   });
 
   test('claude: architect.md should have claude tool names', async () => {
@@ -720,7 +751,7 @@ describe('Tool name substitution', () => {
     expect(content).toContain('tools: read, find, grep');
   });
 
-  test('opencode: implementer.md should have all 6 tool names', async () => {
+  test('opencode: implementer.md should use permissions and omit deprecated tools', async () => {
     await runCli(['init', '--force']);
     await runCli(['install', 'preset', '--target=opencode', '--force']);
 
@@ -728,9 +759,19 @@ describe('Tool name substitution', () => {
       join(PROJECT_ROOT, '.opencode', 'agents', 'implementer.md'),
       'utf-8'
     );
-    expect(content).toContain(
-      'tools: file_read / view_file, file_write, file_patch / edit, bash / run_command, dir_list / glob, grep_search / search'
-    );
+    expect(content).not.toContain('tools:');
+    expect(content).not.toContain('file_read / view_file');
+    expect(content).not.toContain('file_write');
+    expect(content).not.toContain('file_patch / edit');
+    expect(content).not.toContain('bash / run_command');
+    expect(content).not.toContain('dir_list / glob');
+    expect(content).not.toContain('grep_search / search');
+    expect(content).toContain('permission:');
+    expect(content).toContain('  read: allow');
+    expect(content).toContain('  edit: allow');
+    expect(content).toContain('  bash:');
+    expect(content).toContain('  glob: allow');
+    expect(content).toContain('  grep: allow');
   });
 
   test('gemini: implementer.md should have all 6 tool names', async () => {

@@ -51,46 +51,11 @@ agents:
     codex: gpt-5.4-mini
     gemini: gemini-2.5-flash
     cursor: gpt-5.4-mini
-tools:
-  Read:
-    claude: ViewCodeItem / ReadFile
-    codex: read_file
-    gemini: view_file
-    cursor: read
-    opencode: file_read / view_file
-  Write:
-    claude: WriteNewFile
-    codex: write_file
-    gemini: write_file
-    cursor: write
-    opencode: file_write
-  Edit:
-    claude: StrReplaceEditor
-    codex: apply_diff
-    gemini: patch_file
-    cursor: edit
-    opencode: file_patch / edit
-  Bash:
-    claude: Bash
-    codex: bash
-    gemini: execute_command
-    cursor: shell
-    opencode: bash / run_command
-  Glob:
-    claude: Glob
-    codex: glob
-    gemini: list_dir
-    cursor: find
-    opencode: dir_list / glob
-  Grep:
-    claude: Grep
-    codex: grep
-    gemini: search_grep
-    cursor: grep
-    opencode: grep_search / search
-  WebFetch:
-    claude: WebFetch
-    codex: fetch / browse
-    gemini: fetch_url
-    cursor: fetch
-    opencode: web_fetch / browser
+permissions:
+  Read: read
+  Write: edit
+  Edit: edit
+  Bash: bash
+  Glob: glob
+  Grep: grep
+  WebFetch: webfetch

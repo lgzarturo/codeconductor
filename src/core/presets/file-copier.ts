@@ -127,8 +127,8 @@ function renderTemplate(content: string, modelConfig: ModelConfig, filePath: str
       .replace(/\{\{MODEL_GEMINI\}\}/g, agentModels.gemini ?? '')
       .replace(/\{\{MODEL_CURSOR\}\}/g, agentModels.cursor ?? '');
 
-    // Apply tool name substitution if tools mapping exists
-    if (modelConfig.tools) {
+    // Render tool/permission frontmatter for targets that define it.
+    if (modelConfig.tools || modelConfig.permissions) {
       result = substituteToolNames(result, modelConfig);
     }
 
@@ -174,8 +174,8 @@ function renderTemplate(content: string, modelConfig: ModelConfig, filePath: str
     }
   }
 
-  // Apply tool name substitution if tools mapping exists
-  if (modelConfig.tools) {
+  // Render tool/permission frontmatter for targets that define it.
+  if (modelConfig.tools || modelConfig.permissions) {
     result = substituteToolNames(result, modelConfig);
   }
 
@@ -183,12 +183,11 @@ function renderTemplate(content: string, modelConfig: ModelConfig, filePath: str
 }
 
 /**
- * Substitute tool names in content based on model config tools mapping.
- * Finds lines matching "tools: Tool1, Tool2, ..." and replaces base names
- * with provider-specific names from the mapping.
+ * Substitute legacy tool names in frontmatter for targets that still use tools.
+ * OpenCode now uses permission blocks, so deprecated tools lines are removed.
  */
 function substituteToolNames(content: string, modelConfig: ModelConfig): string {
-  if (!modelConfig.tools) return content;
+  if (!modelConfig.tools && !modelConfig.permissions) return content;
 
   const target = modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor';
 
@@ -196,6 +195,13 @@ function substituteToolNames(content: string, modelConfig: ModelConfig): string 
   if (!fmMatch) return content;
 
   const frontmatter = fmMatch[1];
+  if (target === 'opencode' && modelConfig.permissions) {
+    const updatedFrontmatter = frontmatter.replace(/^tools:\s*(.+)\n?/m, '');
+    return content.replace(fmMatch[0], `---\n${updatedFrontmatter}\n---`);
+  }
+
+  if (!modelConfig.tools) return content;
+
   const updatedFrontmatter = frontmatter.replace(
     /^tools:\s*(.+)$/m,
     (_match, toolsLine: string) => {

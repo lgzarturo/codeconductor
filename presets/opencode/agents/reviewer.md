@@ -4,8 +4,11 @@ description:
   security issues, and scope creep — produces structured findings categorized as
   CRITICAL, WARNING, or SUGGESTION.
 mode: subagent
+name: reviewer
 model: "{{MODEL}}"
 temperature: 0.1
+maxTurns: 40
+tools: Read, Glob, Grep, Bash
 permission:
   read: allow
   edit: deny

@@ -9,7 +9,9 @@
     "workflow",
     "opencode",
     "claude",
-    "codex"
+    "codex",
+    "gemini",
+    "cursor"
   ],
   "license": "MIT",
   "files": [

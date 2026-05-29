@@ -4,8 +4,11 @@ description:
   and API contracts — so the Implementer has a reviewed plan before touching
   code.
 mode: subagent
+name: architect
 model: "{{MODEL}}"
 temperature: 0.1
+maxTurns: 80
+tools: Read, Glob, Grep
 permission:
   read: allow
   edit:

@@ -45,7 +45,7 @@ export const CodeConductorConfigSchema = z.object({
     profile: z.string().optional()
   }),
   defaults: z.object({
-    target: z.enum(['opencode', 'claude', 'codex']),
+    target: z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor']),
     overwrite: z.boolean()
   }),
   presets: z.object({
@@ -63,7 +63,7 @@ export const CodeConductorConfigSchema = z.object({
 /**
  * Runner target schema
  */
-export const RunnerTargetSchema = z.enum(['opencode', 'claude', 'codex', 'all'])
+export const RunnerTargetSchema = z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor', 'all'])
 
 /**
  * Install manifest schemas
@@ -79,20 +79,28 @@ export const ManifestEntrySchema = z.object({
 })
 
 export const InstallManifestSchema = z.object({
-  target: z.enum(['opencode', 'claude', 'codex']),
+  target: z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor']),
   entries: z.array(ManifestEntrySchema)
 })
+
+/**
+ * Tool provider names schema — maps base tool names to provider-specific names
+ */
+export const ToolProviderNamesSchema = z.record(z.string(), z.string())
 
 /**
  * Model config schema — defines model names per provider per agent role
  */
 export const ModelConfigSchema = z.object({
-  target: z.enum(['opencode', 'claude', 'codex']),
+  target: z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor']),
   agents: z.record(z.string(), z.object({
-    claude: z.string(),
-    opencode: z.string(),
-    codex: z.string()
-  }))
+    claude: z.string().optional(),
+    opencode: z.string().optional(),
+    codex: z.string().optional(),
+    gemini: z.string().optional(),
+    cursor: z.string().optional()
+  })),
+  tools: z.record(z.string(), ToolProviderNamesSchema).optional()
 })
 
 export type ModelConfig = z.infer<typeof ModelConfigSchema>

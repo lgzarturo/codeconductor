@@ -161,8 +161,8 @@ export async function installPresetCommand(options: InstallPresetOptions): Promi
     const allFileResults: Array<{ target: string; src: string; dest: string; action: string; dryRun?: boolean; error?: string }> = []
 
     for (const t of targets) {
-      const manifest = await loadManifest(t as 'opencode' | 'claude' | 'codex')
-      const modelConfig = await loadModelConfig(t as 'opencode' | 'claude' | 'codex')
+      const manifest = await loadManifest(t as 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor')
+      const modelConfig = await loadModelConfig(t as 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor')
       const results = await copyFromManifest(manifest, PRESETS_DIR, baseDir, isGlobal, dryRun, force, modelConfig)
       for (const r of results) {
         allFileResults.push({ target: t, ...r })

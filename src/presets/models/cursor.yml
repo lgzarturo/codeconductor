@@ -1,7 +1,7 @@
-# Model configuration for OpenCode preset
+# Model configuration for Cursor preset
 # When this preset is installed, these models are used for each agent role
 # in the generated agent markdown files
-target: opencode
+target: cursor
 agents:
   architect:
     claude: claude-opus-4-7

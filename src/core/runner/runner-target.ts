@@ -1,17 +1,17 @@
 /**
  * Runner target type
  */
-export type RunnerTarget = 'opencode' | 'claude' | 'codex' | 'all'
+export type RunnerTarget = 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'all'
 
 /**
  * Valid runner targets
  */
-export const RUNNER_TARGETS = ['opencode', 'claude', 'codex', 'all'] as const
+export const RUNNER_TARGETS = ['opencode', 'claude', 'codex', 'gemini', 'cursor', 'all'] as const
 
 /**
  * Individual runner targets (excluding 'all')
  */
-export const INDIVIDUAL_TARGETS = ['opencode', 'claude', 'codex'] as const
+export const INDIVIDUAL_TARGETS = ['opencode', 'claude', 'codex', 'gemini', 'cursor'] as const
 
 /**
  * Check if a string is a valid runner target

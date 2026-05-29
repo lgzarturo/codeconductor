@@ -99,12 +99,21 @@ function renderTemplate(content: string, modelConfig: ModelConfig, filePath: str
   // Handle single agent file (e.g., architect.md)
   if (agentRole && modelConfig.agents[agentRole]) {
     const agentModels = modelConfig.agents[agentRole]
-    const targetModel = agentModels[modelConfig.target as 'claude' | 'opencode' | 'codex']
-    return content
-      .replace(/\{\{MODEL\}\}/g, targetModel)
-      .replace(/\{\{MODEL_CLAUDE\}\}/g, agentModels.claude)
-      .replace(/\{\{MODEL_OPENCODE\}\}/g, agentModels.opencode)
-      .replace(/\{\{MODEL_CODEX\}\}/g, agentModels.codex)
+    const targetModel = agentModels[modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor']
+    let result = content
+      .replace(/\{\{MODEL\}\}/g, targetModel ?? '')
+      .replace(/\{\{MODEL_CLAUDE\}\}/g, agentModels.claude ?? '')
+      .replace(/\{\{MODEL_OPENCODE\}\}/g, agentModels.opencode ?? '')
+      .replace(/\{\{MODEL_CODEX\}\}/g, agentModels.codex ?? '')
+      .replace(/\{\{MODEL_GEMINI\}\}/g, agentModels.gemini ?? '')
+      .replace(/\{\{MODEL_CURSOR\}\}/g, agentModels.cursor ?? '')
+    
+    // Apply tool name substitution if tools mapping exists
+    if (modelConfig.tools) {
+      result = substituteToolNames(result, modelConfig)
+    }
+    
+    return result
   }
   
   // Handle monolithic files like codex AGENTS.md (contains all agent roles)
@@ -126,16 +135,52 @@ function renderTemplate(content: string, modelConfig: ModelConfig, filePath: str
       for (const section of sectionMatch) {
         // Replace placeholders within this section
         const renderedSection = section
-          .replace(/\{\{MODEL_CLAUDE\}\}/g, agentModels.claude)
-          .replace(/\{\{MODEL_OPENCODE\}\}/g, agentModels.opencode)
-          .replace(/\{\{MODEL_CODEX\}\}/g, agentModels.codex)
+          .replace(/\{\{MODEL_CLAUDE\}\}/g, agentModels.claude ?? '')
+          .replace(/\{\{MODEL_OPENCODE\}\}/g, agentModels.opencode ?? '')
+          .replace(/\{\{MODEL_CODEX\}\}/g, agentModels.codex ?? '')
+          .replace(/\{\{MODEL_GEMINI\}\}/g, agentModels.gemini ?? '')
+          .replace(/\{\{MODEL_CURSOR\}\}/g, agentModels.cursor ?? '')
         
         result = result.replace(section, renderedSection)
       }
     }
   }
   
+  // Apply tool name substitution if tools mapping exists
+  if (modelConfig.tools) {
+    result = substituteToolNames(result, modelConfig)
+  }
+  
   return result
+}
+
+/**
+ * Substitute tool names in content based on model config tools mapping.
+ * Finds lines matching "tools: Tool1, Tool2, ..." and replaces base names
+ * with provider-specific names from the mapping.
+ */
+function substituteToolNames(content: string, modelConfig: ModelConfig): string {
+  if (!modelConfig.tools) return content
+  
+  const target = modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor'
+  
+  const fmMatch = content.match(/^---\n([\s\S]*?)\n---/)
+  if (!fmMatch) return content
+
+  const frontmatter = fmMatch[1]
+  const updatedFrontmatter = frontmatter.replace(/^tools:\s*(.+)$/m, (_match, toolsLine: string) => {
+    const baseNames = toolsLine.split(',').map((t: string) => t.trim())
+    const mappedNames = baseNames.map((baseName: string) => {
+      const toolMapping = modelConfig.tools?.[baseName]
+      if (toolMapping && toolMapping[target]) {
+        return toolMapping[target]
+      }
+      return baseName
+    })
+    return `tools: ${mappedNames.join(', ')}`
+  })
+
+  return content.replace(fmMatch[0], `---\n${updatedFrontmatter}\n---`)
 }
 
 async function applySingleFile(

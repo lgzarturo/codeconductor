@@ -21,7 +21,7 @@ interface PolicyModel {
 
 export async function loadTargetSecurityCompatibility(): Promise<TargetSecurityCompatibility[]> {
   const policy = parse(await readFile(POLICY_PATH, 'utf-8')) as PolicyModel
-  const targets: Array<Exclude<RunnerTargetInput, 'all'>> = ['opencode', 'claude', 'codex']
+  const targets: Array<Exclude<RunnerTargetInput, 'all'>> = ['opencode', 'claude', 'codex', 'gemini', 'cursor']
 
   return targets.map(target => {
     const policyTarget = policy.targets?.[target]

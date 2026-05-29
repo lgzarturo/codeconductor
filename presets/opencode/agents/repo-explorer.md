@@ -4,8 +4,11 @@ description:
   and estimates the impact radius of a proposed change — read-only, never
   modifies anything.
 mode: subagent
+name: repo-explorer
 model: "{{MODEL}}"
 temperature: 0.1
+maxTurns: 35
+tools: Read, Glob, Grep, Bash
 permission:
   read: allow
   edit: deny

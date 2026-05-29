@@ -8,7 +8,7 @@ export interface CodeConductorConfig {
     profile?: string
   }
   defaults: {
-    target: 'opencode' | 'claude' | 'codex'
+    target: 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor'
     overwrite: boolean
   }
   presets: {

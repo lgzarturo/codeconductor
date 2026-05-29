@@ -4,8 +4,11 @@ description:
   criteria — writes tests that fail first, then confirms they pass after
   implementation.
 mode: subagent
+name: tester
 model: "{{MODEL}}"
 temperature: 0.1
+maxTurns: 60
+tools: Read, Write, Edit, Bash, Glob, Grep
 permission:
   read: allow
   edit:

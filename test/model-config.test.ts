@@ -28,7 +28,7 @@ async function runCli(args: string[]): Promise<{ exitCode: number; stdout: strin
 }
 
 async function cleanup() {
-  for (const dir of ['.opencode', '.claude', '.codex', '.codeconductor']) {
+  for (const dir of ['.opencode', '.claude', '.codex', '.gemini', '.cursor', '.codeconductor']) {
     try { await rm(join(PROJECT_ROOT, dir), { recursive: true, force: true }) } catch {}
   }
 }
@@ -68,12 +68,12 @@ describe('ModelConfigSchema', () => {
     expect(result.success).toBe(false)
   })
 
-  test('missing provider in agent model fails validation', () => {
+  test('missing provider in agent model is valid (providers are optional)', () => {
     const result = ModelConfigSchema.safeParse({
       target: 'opencode',
       agents: { architect: { claude: 'a', opencode: 'b' } }
     })
-    expect(result.success).toBe(false)
+    expect(result.success).toBe(true)
   })
 
   test('empty agents object is valid', () => {
@@ -92,8 +92,8 @@ describe('ModelConfigSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  test('all three targets are valid enum values', () => {
-    for (const target of ['opencode', 'claude', 'codex']) {
+  test('all five targets are valid enum values', () => {
+    for (const target of ['opencode', 'claude', 'codex', 'gemini', 'cursor']) {
       const result = ModelConfigSchema.safeParse({
         target,
         agents: { role: { claude: 'a', opencode: 'b', codex: 'c' } }
@@ -108,6 +108,29 @@ describe('ModelConfigSchema', () => {
       agents: { architect: { claude: 123, opencode: true, codex: null } }
     })
     expect(result.success).toBe(false)
+  })
+
+  test('config with tools mapping passes validation', () => {
+    const result = ModelConfigSchema.safeParse({
+      target: 'opencode',
+      agents: {
+        architect: { claude: 'a', opencode: 'b', codex: 'c' }
+      },
+      tools: {
+        Read: { claude: 'ViewCodeItem', opencode: 'file_read' }
+      }
+    })
+    expect(result.success).toBe(true)
+  })
+
+  test('config with gemini and cursor providers passes validation', () => {
+    const result = ModelConfigSchema.safeParse({
+      target: 'gemini',
+      agents: {
+        architect: { claude: 'a', opencode: 'b', codex: 'c', gemini: 'd', cursor: 'e' }
+      }
+    })
+    expect(result.success).toBe(true)
   })
 })
 
@@ -129,11 +152,23 @@ describe('loadModelConfig', () => {
     expect(config.target).toBe('codex')
   })
 
+  test('loads gemini model config with correct target', async () => {
+    const config = await loadModelConfig('gemini')
+    expect(config.target).toBe('gemini')
+  })
+
+  test('loads cursor model config with correct target', async () => {
+    const config = await loadModelConfig('cursor')
+    expect(config.target).toBe('cursor')
+  })
+
   test('opencode config has architect models for all providers', async () => {
     const config = await loadModelConfig('opencode')
     expect(config.agents.architect.claude).toBe('claude-opus-4-7')
     expect(config.agents.architect.opencode).toBe('opencode-go/deepseek-v4-pro')
     expect(config.agents.architect.codex).toBe('gpt-5.5')
+    expect(config.agents.architect.gemini).toBe('gemini-2.5-pro')
+    expect(config.agents.architect.cursor).toBe('gpt-5.5')
   })
 
   test('claude config has implementer models for all providers', async () => {
@@ -141,6 +176,8 @@ describe('loadModelConfig', () => {
     expect(config.agents.implementer.claude).toBe('claude-sonnet-4-6')
     expect(config.agents.implementer.opencode).toBe('opencode-go/mimo-v2.5-pro')
     expect(config.agents.implementer.codex).toBe('gpt-5.3-codex')
+    expect(config.agents.implementer.gemini).toBe('gemini-2.5-flash')
+    expect(config.agents.implementer.cursor).toBe('gpt-5.3')
   })
 
   test('codex config has tester models for all providers', async () => {
@@ -148,25 +185,53 @@ describe('loadModelConfig', () => {
     expect(config.agents.tester.claude).toBe('claude-sonnet-4-6')
     expect(config.agents.tester.opencode).toBe('opencode-go/minimax-m2.7')
     expect(config.agents.tester.codex).toBe('gpt-5.3-codex')
+    expect(config.agents.tester.gemini).toBe('gemini-2.5-flash')
+    expect(config.agents.tester.cursor).toBe('gpt-5.3')
+  })
+
+  test('gemini config has all 8 agent roles', async () => {
+    const config = await loadModelConfig('gemini')
+    for (const role of EXPECTED_ROLES) {
+      expect(config.agents[role]).toBeDefined()
+      expect(typeof config.agents[role].gemini).toBe('string')
+    }
+  })
+
+  test('cursor config has all 8 agent roles', async () => {
+    const config = await loadModelConfig('cursor')
+    for (const role of EXPECTED_ROLES) {
+      expect(config.agents[role]).toBeDefined()
+      expect(typeof config.agents[role].cursor).toBe('string')
+    }
   })
 
   test('all 8 agent roles are present in each config file', async () => {
-    for (const target of ['opencode', 'claude', 'codex'] as const) {
+    for (const target of ['opencode', 'claude', 'codex', 'gemini', 'cursor'] as const) {
       const config = await loadModelConfig(target)
       for (const role of EXPECTED_ROLES) {
         expect(config.agents[role]).toBeDefined()
-        expect(typeof config.agents[role].claude).toBe('string')
-        expect(typeof config.agents[role].opencode).toBe('string')
-        expect(typeof config.agents[role].codex).toBe('string')
       }
     }
   })
 
   test('each config has exactly 8 agent roles', async () => {
-    for (const target of ['opencode', 'claude', 'codex'] as const) {
+    for (const target of ['opencode', 'claude', 'codex', 'gemini', 'cursor'] as const) {
       const config = await loadModelConfig(target)
       const roleKeys = Object.keys(config.agents)
       expect(roleKeys.length).toBe(8)
+    }
+  })
+
+  test('all configs have tools mapping', async () => {
+    for (const target of ['opencode', 'claude', 'codex', 'gemini', 'cursor'] as const) {
+      const config = await loadModelConfig(target)
+      expect(config.tools).toBeDefined()
+      expect(config.tools?.Read).toBeDefined()
+      expect(config.tools?.Write).toBeDefined()
+      expect(config.tools?.Edit).toBeDefined()
+      expect(config.tools?.Bash).toBeDefined()
+      expect(config.tools?.Glob).toBeDefined()
+      expect(config.tools?.Grep).toBeDefined()
     }
   })
 })
@@ -394,7 +459,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     expect(content).not.toContain('{{MODEL}}')
   })
 
-  test('codex: AGENTS.md should have rendered codex model names only', async () => {
+  test('codex AGENTS.md should have rendered codex model names only', async () => {
     await runCli(['init', '--force'])
     await runCli(['install', 'preset', '--target=codex', '--force'])
 
@@ -420,7 +485,45 @@ describe('End-to-end: CLI install preset renders model names', () => {
     expect(content).not.toContain('{{MODEL_CLAUDE}}')
   })
 
-  test('target=all should render for all three presets', async () => {
+  test('gemini: install preset creates agent files (files exist)', async () => {
+    await runCli(['init', '--force'])
+    const result = await runCli(['install', 'preset', '--target=gemini', '--force'])
+    expect(result.exitCode).toBe(0)
+
+    for (const file of ALL_AGENT_FILES) {
+      expect(existsSync(join(PROJECT_ROOT, '.gemini', 'agents', file))).toBe(true)
+    }
+  })
+
+  test('cursor: install preset creates agent files (files exist)', async () => {
+    await runCli(['init', '--force'])
+    const result = await runCli(['install', 'preset', '--target=cursor', '--force'])
+    expect(result.exitCode).toBe(0)
+
+    for (const file of ALL_AGENT_FILES) {
+      expect(existsSync(join(PROJECT_ROOT, '.cursor', 'agents', file))).toBe(true)
+    }
+  })
+
+  test('gemini: architect.md should have gemini model in frontmatter', async () => {
+    await runCli(['init', '--force'])
+    await runCli(['install', 'preset', '--target=gemini', '--force'])
+
+    const content = await readFile(join(PROJECT_ROOT, '.gemini', 'agents', 'architect.md'), 'utf-8')
+    expect(content).toContain('gemini-2.5-pro')
+    expect(content).not.toContain('{{MODEL}}')
+  })
+
+  test('cursor: architect.md should have cursor model in frontmatter', async () => {
+    await runCli(['init', '--force'])
+    await runCli(['install', 'preset', '--target=cursor', '--force'])
+
+    const content = await readFile(join(PROJECT_ROOT, '.cursor', 'agents', 'architect.md'), 'utf-8')
+    expect(content).toContain('gpt-5.5')
+    expect(content).not.toContain('{{MODEL}}')
+  })
+
+  test('target=all should render for all five presets', async () => {
     await runCli(['init', '--force'])
     await runCli(['install', 'preset', '--target=all', '--force'])
 
@@ -437,6 +540,16 @@ describe('End-to-end: CLI install preset renders model names', () => {
     const codexContent = await readFile(join(PROJECT_ROOT, '.codex', 'AGENTS.md'), 'utf-8')
     expect(codexContent).not.toContain('{{MODEL_')
     expect(codexContent).toContain('gpt-5.5')
+
+    const geminiContent = await readFile(join(PROJECT_ROOT, '.gemini', 'agents', 'architect.md'), 'utf-8')
+    expect(geminiContent).not.toContain('{{MODEL}}')
+    expect(geminiContent).not.toContain('{{MODEL_')
+    expect(geminiContent).toContain('gemini-2.5-pro')
+
+    const cursorContent = await readFile(join(PROJECT_ROOT, '.cursor', 'agents', 'architect.md'), 'utf-8')
+    expect(cursorContent).not.toContain('{{MODEL}}')
+    expect(cursorContent).not.toContain('{{MODEL_')
+    expect(cursorContent).toContain('gpt-5.5')
   })
 
   test('orchestrator agent should have correct opencode model in frontmatter', async () => {
@@ -457,5 +570,69 @@ describe('End-to-end: CLI install preset renders model names', () => {
     // opencode install: frontmatter has opencode model for docs
     expect(content).toContain('qwen-3.6-plus')
     expect(content).not.toContain('{{MODEL}}')
+  })
+})
+
+// ========== 7. Tool Name Substitution Tests ==========
+
+describe('Tool name substitution', () => {
+  beforeAll(async () => { await cleanup() })
+  beforeEach(async () => { await cleanup() })
+
+  test('opencode: architect.md should have opencode tool names', async () => {
+    await runCli(['init', '--force'])
+    await runCli(['install', 'preset', '--target=opencode', '--force'])
+
+    const content = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'), 'utf-8')
+    expect(content).toContain('tools: file_read / view_file, dir_list / glob, grep_search / search')
+  })
+
+  test('claude: architect.md should have claude tool names', async () => {
+    await runCli(['init', '--force'])
+    await runCli(['install', 'preset', '--target=claude', '--force'])
+
+    const content = await readFile(join(PROJECT_ROOT, '.claude', 'agents', 'architect.md'), 'utf-8')
+    expect(content).toContain('tools: ViewCodeItem / ReadFile, Glob, Grep')
+  })
+
+  test('codex: AGENTS.md does not have tools line (monolithic format)', async () => {
+    await runCli(['init', '--force'])
+    await runCli(['install', 'preset', '--target=codex', '--force'])
+
+    const content = await readFile(join(PROJECT_ROOT, '.codex', 'AGENTS.md'), 'utf-8')
+    // codex AGENTS.md is monolithic and does not have a "tools:" frontmatter line
+    expect(content).not.toContain('tools:')
+  })
+
+  test('gemini: architect.md should have gemini tool names', async () => {
+    await runCli(['init', '--force'])
+    await runCli(['install', 'preset', '--target=gemini', '--force'])
+
+    const content = await readFile(join(PROJECT_ROOT, '.gemini', 'agents', 'architect.md'), 'utf-8')
+    expect(content).toContain('tools: view_file, list_dir, search_grep')
+  })
+
+  test('cursor: architect.md should have cursor tool names', async () => {
+    await runCli(['init', '--force'])
+    await runCli(['install', 'preset', '--target=cursor', '--force'])
+
+    const content = await readFile(join(PROJECT_ROOT, '.cursor', 'agents', 'architect.md'), 'utf-8')
+    expect(content).toContain('tools: read, find, grep')
+  })
+
+  test('opencode: implementer.md should have all 6 tool names', async () => {
+    await runCli(['init', '--force'])
+    await runCli(['install', 'preset', '--target=opencode', '--force'])
+
+    const content = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', 'implementer.md'), 'utf-8')
+    expect(content).toContain('tools: file_read / view_file, file_write, file_patch / edit, bash / run_command, dir_list / glob, grep_search / search')
+  })
+
+  test('gemini: implementer.md should have all 6 tool names', async () => {
+    await runCli(['init', '--force'])
+    await runCli(['install', 'preset', '--target=gemini', '--force'])
+
+    const content = await readFile(join(PROJECT_ROOT, '.gemini', 'agents', 'implementer.md'), 'utf-8')
+    expect(content).toContain('tools: view_file, write_file, patch_file, execute_command, list_dir, search_grep')
   })
 })

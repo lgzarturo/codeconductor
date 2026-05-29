@@ -4,8 +4,11 @@ description:
   targeted clarifying questions and enforces the Task Card standard before any
   work begins.
 mode: subagent
+name: task-coach
 model: "{{MODEL}}"
 temperature: 0.1
+maxTurns: 30
+tools: Read, Glob, Grep
 permission:
   read: allow
   edit: deny

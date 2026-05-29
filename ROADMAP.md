@@ -125,8 +125,9 @@ more workflow automation.
 - **Preset resolver (target + stack + architecture)**
   - Introduce a resolver that maps detection output plus requested target to a
     concrete preset plan.
-  - The resolver should be pure and testable: input is `{ target, stack,
-    architecture?, confidence }`; output is a list of preset assets and warnings.
+  - The resolver should be pure and testable: input is
+    `{ target, stack, architecture?, confidence }`; output is a list of preset
+    assets and warnings.
   - Do not let install commands infer file paths directly from detector details.
   - Acceptance criteria:
     - unsupported stack/target combinations return actionable warnings.
@@ -198,7 +199,8 @@ workflow.
   - Acceptance criteria:
     - Task Card includes API contract and compatibility constraints.
     - docs/OpenAPI updates are required when public contracts change.
-    - reviewer blocks on missing contract tests or undocumented breaking changes.
+    - reviewer blocks on missing contract tests or undocumented breaking
+      changes.
 
 - **Database migration workflow**
   - Treat schema changes as high-risk by default.
@@ -240,8 +242,8 @@ workflow.
 8. Database migration workflow.
 9. Prompt changelog discipline and release guard.
 
-This order keeps the foundation deterministic before expanding workflow
-surface area, then adds safety checks before introducing higher-risk workflows.
+This order keeps the foundation deterministic before expanding workflow surface
+area, then adds safety checks before introducing higher-risk workflows.
 
 **Shipped beyond original scope:**
 
@@ -262,6 +264,8 @@ surface area, then adds safety checks before introducing higher-risk workflows.
       django-orm, django-testing)
 - [ ] Next.js preset
 - [ ] FastAPI preset
+- [ ] Astro web page preset
+- [ ] SEO Off page preset
 - [ ] Generic backend preset
 - [ ] Generic frontend preset
 - [ ] Monorepo detection

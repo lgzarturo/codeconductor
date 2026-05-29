@@ -4,8 +4,11 @@ description:
   routing path, delegates to the right Conductor Agents, and monitors completion
   without writing a single line of code.
 mode: primary
+name: orchestrator
 model: "{{MODEL}}"
 temperature: 0.1
+maxTurns: 60
+tools: Read, Glob, Grep, Bash
 permission:
   read: allow
   edit: deny

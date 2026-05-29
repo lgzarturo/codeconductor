@@ -1,6 +1,6 @@
 # Model configuration for Codex preset
 # When this preset is installed, these models are used for each agent role
-# in the generated agent markdown files ({{MODEL_CLAUDE}}, {{MODEL_OPENCODE}}, {{MODEL_CODEX}})
+# in the generated agent markdown files
 # Note: Codex uses AGENTS.md (monolithic) instead of individual agent files
 target: codex
 agents:
@@ -8,31 +8,90 @@ agents:
     claude: claude-opus-4-7
     opencode: opencode-go/deepseek-v4-pro
     codex: gpt-5.5
+    gemini: gemini-2.5-pro
+    cursor: gpt-5.5
   implementer:
     claude: claude-sonnet-4-6
     opencode: opencode-go/mimo-v2.5-pro
     codex: gpt-5.3-codex
+    gemini: gemini-2.5-flash
+    cursor: gpt-5.3
   tester:
     claude: claude-sonnet-4-6
     opencode: opencode-go/minimax-m2.7
     codex: gpt-5.3-codex
+    gemini: gemini-2.5-flash
+    cursor: gpt-5.3
   orchestrator:
     claude: claude-sonnet-4-6
     opencode: opencode-go/deepseek-v4-pro
     codex: gpt-5.2
+    gemini: gemini-2.5-pro
+    cursor: gpt-5.2
   reviewer:
     claude: claude-sonnet-4-6
     opencode: opencode-go/qwen-3.6-plus
     codex: gpt-5.4
+    gemini: gemini-2.5-pro
+    cursor: gpt-5.4
   docs:
     claude: claude-haiku-4-5-20251001
     opencode: opencode-go/qwen-3.6-plus
     codex: gpt-5.4-mini
+    gemini: gemini-2.5-flash
+    cursor: gpt-5.4-mini
   task-coach:
     claude: claude-haiku-4-5-20251001
     opencode: opencode-go/kimi-k2.6
     codex: gpt-5.4-mini
+    gemini: gemini-2.5-flash
+    cursor: gpt-5.4-mini
   repo-explorer:
     claude: claude-haiku-4-5-20251001
     opencode: opencode-go/qwen3.5-plus
     codex: gpt-5.4-mini
+    gemini: gemini-2.5-flash
+    cursor: gpt-5.4-mini
+tools:
+  Read:
+    claude: ViewCodeItem / ReadFile
+    codex: read_file
+    gemini: view_file
+    cursor: read
+    opencode: file_read / view_file
+  Write:
+    claude: WriteNewFile
+    codex: write_file
+    gemini: write_file
+    cursor: write
+    opencode: file_write
+  Edit:
+    claude: StrReplaceEditor
+    codex: apply_diff
+    gemini: patch_file
+    cursor: edit
+    opencode: file_patch / edit
+  Bash:
+    claude: Bash
+    codex: bash
+    gemini: execute_command
+    cursor: shell
+    opencode: bash / run_command
+  Glob:
+    claude: Glob
+    codex: glob
+    gemini: list_dir
+    cursor: find
+    opencode: dir_list / glob
+  Grep:
+    claude: Grep
+    codex: grep
+    gemini: search_grep
+    cursor: grep
+    opencode: grep_search / search
+  WebFetch:
+    claude: WebFetch
+    codex: fetch / browse
+    gemini: fetch_url
+    cursor: fetch
+    opencode: web_fetch / browser

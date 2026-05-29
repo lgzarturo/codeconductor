@@ -1,0 +1,9 @@
+target: cursor
+entries:
+  - src: opencode/agents
+    dest: .cursor/agents
+    strategy: overwrite
+    template: true
+  - src: opencode/prompts/v0.2.0
+    dest: .cursor/prompts/v0.2.0
+    strategy: overwrite

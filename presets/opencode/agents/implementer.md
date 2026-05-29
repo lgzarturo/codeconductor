@@ -3,8 +3,11 @@ description:
   Writes the code that the Architect planned — minimal diff, no scope creep, no
   invented architecture — and runs tests before declaring done.
 mode: subagent
+name: implementer
 model: "{{MODEL}}"
 temperature: 0.1
+maxTurns: 100
+tools: Read, Write, Edit, Bash, Glob, Grep
 permission:
   read: allow
   edit: allow

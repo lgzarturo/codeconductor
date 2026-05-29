@@ -69,6 +69,22 @@ targets:
       - "commands"
     warnings:
       - "Codex preset currently represents policy intent through AGENTS.md contracts; runtime enforcement depends on Codex capabilities."
+  gemini:
+    unsupportedRules:
+      - "denyRead"
+      - "denyWrite"
+      - "runtime.network"
+      - "commands"
+    warnings:
+      - "Gemini CLI preset currently represents policy intent through agent files; runtime enforcement depends on Gemini CLI capabilities."
+  cursor:
+    unsupportedRules:
+      - "denyRead"
+      - "denyWrite"
+      - "runtime.network"
+      - "commands"
+    warnings:
+      - "Cursor preset currently represents policy intent through agent files; runtime enforcement depends on Cursor capabilities."
 
 commands:
   allow:

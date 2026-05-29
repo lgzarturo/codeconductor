@@ -66,5 +66,9 @@ function resolveAssets(target: Exclude<RunnerTargetInput, 'all'>): string[] {
       return ['CLAUDE.md', 'settings.json', 'commands', 'skills', 'agents', 'prompts/v0.2.0']
     case 'codex':
       return ['AGENTS.md', 'skills', 'prompts/v0.2.0']
+    case 'gemini':
+      return ['agents', 'prompts/v0.2.0']
+    case 'cursor':
+      return ['agents', 'prompts/v0.2.0']
   }
 }

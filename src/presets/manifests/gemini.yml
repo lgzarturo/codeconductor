@@ -1,0 +1,9 @@
+target: gemini
+entries:
+  - src: opencode/agents
+    dest: .gemini/agents
+    strategy: overwrite
+    template: true
+  - src: opencode/prompts/v0.2.0
+    dest: .gemini/prompts/v0.2.0
+    strategy: overwrite

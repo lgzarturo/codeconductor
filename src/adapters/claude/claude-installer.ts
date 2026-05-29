@@ -1,31 +1,31 @@
-import type { RunnerInstaller } from '../../core/runner/runner-installer'
-import type { GeneratedFile } from '../../core/generation/generated-file'
-import type { CouncilSpec } from '../../domain/council/council-spec'
-import { generateClaudeFiles } from './claude-council-generator'
+import type { GeneratedFile } from '../../core/generation/generated-file';
+import type { RunnerInstaller } from '../../core/runner/runner-installer';
+import type { CouncilSpec } from '../../domain/council/council-spec';
+import { generateClaudeFiles } from './claude-council-generator';
 
 /**
  * Claude installer
  */
 export class ClaudeInstaller implements RunnerInstaller {
-  readonly name = 'claude'
-  readonly target = 'claude'
+  readonly name = 'claude';
+  readonly target = 'claude';
 
-  private spec: CouncilSpec | null = null
+  private spec: CouncilSpec | null = null;
 
   setSpec(spec: CouncilSpec): void {
-    this.spec = spec
+    this.spec = spec;
   }
 
   async generate(): Promise<GeneratedFile[]> {
     if (!this.spec) {
-      throw new Error('Council spec not set')
+      throw new Error('Council spec not set');
     }
-    return generateClaudeFiles(this.spec)
+    return generateClaudeFiles(this.spec);
   }
 
   async isAvailable(): Promise<boolean> {
     // Claude is always "available" as we generate files for it
-    return true
+    return true;
   }
 }
 
@@ -33,7 +33,7 @@ export class ClaudeInstaller implements RunnerInstaller {
  * Create Claude installer
  */
 export function createClaudeInstaller(spec: CouncilSpec): RunnerInstaller {
-  const installer = new ClaudeInstaller()
-  installer.setSpec(spec)
-  return installer
+  const installer = new ClaudeInstaller();
+  installer.setSpec(spec);
+  return installer;
 }

@@ -2,18 +2,18 @@
  * Generated file representation
  */
 export interface GeneratedFile {
-  readonly path: string
-  readonly content: string
-  readonly overwrite: boolean
+  readonly path: string;
+  readonly content: string;
+  readonly overwrite: boolean;
 }
 
 /**
  * File write result
  */
 export interface FileWriteResult {
-  readonly path: string
-  readonly success: boolean
-  readonly error?: string
+  readonly path: string;
+  readonly success: boolean;
+  readonly error?: string;
 }
 
 /**
@@ -24,5 +24,5 @@ export function createGeneratedFile(
   content: string,
   overwrite = false
 ): GeneratedFile {
-  return { path, content, overwrite }
+  return { path, content, overwrite };
 }

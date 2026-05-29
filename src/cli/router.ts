@@ -1,25 +1,30 @@
-import type { OutputMode } from '../utils/logger'
-import { initCommand, type InitOptions } from '../commands/init.command'
-import { detectCommand, type DetectOptions } from '../commands/detect.command'
-import { installCommand, installPresetCommand, type InstallOptions, type InstallPresetOptions } from '../commands/install.command'
-import { doctorCommand, type DoctorOptions } from '../commands/doctor.command'
-import { updateCommand, type UpdateOptions } from '../commands/update.command'
-import packageJson from '../../package.json'
+import packageJson from '../../package.json';
+import { detectCommand, type DetectOptions } from '../commands/detect.command';
+import { doctorCommand, type DoctorOptions } from '../commands/doctor.command';
+import { initCommand, type InitOptions } from '../commands/init.command';
+import {
+  installCommand,
+  installPresetCommand,
+  type InstallOptions,
+  type InstallPresetOptions,
+} from '../commands/install.command';
+import { updateCommand, type UpdateOptions } from '../commands/update.command';
+import type { OutputMode } from '../utils/logger';
 
 /**
  * Parsed CLI arguments
  */
 export interface CliArgs {
-  command: string
-  subcommand?: string
-  options: Record<string, unknown>
+  command: string;
+  subcommand?: string;
+  options: Record<string, unknown>;
   flags: {
-    help: boolean
-    version: boolean
-    dryRun: boolean
-    force: boolean
-    output: OutputMode
-  }
+    help: boolean;
+    version: boolean;
+    dryRun: boolean;
+    force: boolean;
+    output: OutputMode;
+  };
 }
 
 /**
@@ -31,74 +36,74 @@ export function parseArgs(args: string[]): CliArgs {
     version: false,
     dryRun: false,
     force: false,
-    output: 'human' as OutputMode
-  }
+    output: 'human' as OutputMode,
+  };
 
-  const options: Record<string, unknown> = {}
+  const options: Record<string, unknown> = {};
 
   // First pass: collect flags
-  const remaining: string[] = []
+  const remaining: string[] = [];
   for (const arg of args) {
     if (arg === '--help' || arg === '-h') {
-      flags.help = true
+      flags.help = true;
     } else if (arg === '--version' || arg === '-v') {
-      flags.version = true
+      flags.version = true;
     } else if (arg === '--dry-run') {
-      flags.dryRun = true
+      flags.dryRun = true;
     } else if (arg === '--force') {
-      flags.force = true
+      flags.force = true;
     } else if (arg === '--output' || arg === '-o') {
       // Will be handled in next iteration
-      remaining.push(arg)
+      remaining.push(arg);
     } else if (arg.startsWith('--output=') || arg.startsWith('-o=')) {
-      const value = arg.split('=')[1]
+      const value = arg.split('=')[1];
       if (value === 'json' || value === 'human') {
-        flags.output = value
+        flags.output = value;
       }
     } else {
-      remaining.push(arg)
+      remaining.push(arg);
     }
   }
 
   // Handle --output -o value
   for (let i = 0; i < remaining.length; i++) {
     if ((remaining[i] === '--output' || remaining[i] === '-o') && remaining[i + 1]) {
-      const value = remaining[i + 1]
+      const value = remaining[i + 1];
       if (value === 'json' || value === 'human') {
-        flags.output = value
-        remaining.splice(i, 2)
-        i--
+        flags.output = value;
+        remaining.splice(i, 2);
+        i--;
       }
     }
   }
 
   // Remaining first arg is command, second (non-flag) is optional subcommand
-  const command = remaining[0] || 'help'
-  const subcommand = remaining[1] && !remaining[1].startsWith('-') ? remaining[1] : undefined
+  const command = remaining[0] || 'help';
+  const subcommand = remaining[1] && !remaining[1].startsWith('-') ? remaining[1] : undefined;
 
   // Parse remaining args for options
   for (let i = 1; i < remaining.length; i++) {
-    const arg = remaining[i]
+    const arg = remaining[i];
     if (arg.startsWith('--')) {
-      const [key, value] = arg.slice(2).split('=')
+      const [key, value] = arg.slice(2).split('=');
       if (value !== undefined) {
-        options[key] = value
+        options[key] = value;
       } else if (remaining[i + 1] && !remaining[i + 1].startsWith('-')) {
-        options[key] = remaining[++i]
+        options[key] = remaining[++i];
       } else {
-        options[key] = true
+        options[key] = true;
       }
     }
   }
 
-  return { command, subcommand, options, flags }
+  return { command, subcommand, options, flags };
 }
 
 /**
  * Get version text
  */
 export function getVersion(): string {
-  return `${packageJson.name} v${packageJson.version}`
+  return `${packageJson.name} v${packageJson.version}`;
 }
 
 /**
@@ -107,7 +112,7 @@ export function getVersion(): string {
 export function getHelp(): string {
   return `CodeConductor CLI v${packageJson.version}
 
-Usage: codeconductor <command> [options]
+Usage: npx cc-codeconductor <command> [options]
 
 Commands:
   init                    Initialize CodeConductor in a project
@@ -126,32 +131,35 @@ Options:
   --output, -o           Output mode: human or json
 
 Examples:
-  codeconductor init
-  codeconductor init --global
-  codeconductor detect
-  codeconductor install preset --target opencode
-  codeconductor install preset --target claude
-  codeconductor install preset --target codex
-  codeconductor install preset --target all
-  codeconductor install preset --target claude --global
-  codeconductor install council --target opencode
-  codeconductor install council --target claude
-  codeconductor install council --target codex
-  codeconductor install council --target all
-  codeconductor doctor
-  codeconductor update --dry-run
-`
+  npx cc-codeconductor init
+  npx cc-codeconductor init --global
+  npx cc-codeconductor detect
+  npx cc-codeconductor install preset --target opencode
+  npx cc-codeconductor install preset --target claude
+  npx cc-codeconductor install preset --target codex
+  npx cc-codeconductor install preset --target all
+  npx cc-codeconductor install preset --target claude --global
+  npx cc-codeconductor install council --target opencode
+  npx cc-codeconductor install council --target claude
+  npx cc-codeconductor install council --target codex
+  npx cc-codeconductor install council --target all
+  npx cc-codeconductor doctor
+  npx cc-codeconductor update --dry-run
+`;
 }
 
 /**
  * Route command to handler
  */
-export async function routeCommand(args: CliArgs, projectRoot: string): Promise<{ code: number; data?: unknown }> {
-  const { command, subcommand, options, flags } = args
+export async function routeCommand(
+  args: CliArgs,
+  projectRoot: string
+): Promise<{ code: number; data?: unknown }> {
+  const { command, subcommand, options, flags } = args;
 
   switch (command) {
     case 'help':
-      return { code: 0, data: { help: getHelp() } }
+      return { code: 0, data: { help: getHelp() } };
 
     case 'init':
       return initCommand({
@@ -159,27 +167,27 @@ export async function routeCommand(args: CliArgs, projectRoot: string): Promise<
         dryRun: flags.dryRun,
         force: flags.force,
         global: options.global === true || options.global === 'true',
-        output: flags.output
-      } as InitOptions)
+        output: flags.output,
+      } as InitOptions);
 
     case 'detect':
       return detectCommand({
         projectRoot,
-        output: flags.output
-      } as DetectOptions)
+        output: flags.output,
+      } as DetectOptions);
 
     case 'install': {
-      const isGlobal = options.global === true || options.global === 'true'
-      const VALID_TARGETS = ['opencode', 'claude', 'codex', 'all']
+      const isGlobal = options.global === true || options.global === 'true';
+      const VALID_TARGETS = ['opencode', 'claude', 'codex', 'all'];
 
       // If subcommand is a runner name (not a preset name), treat it as --target
-      let resolvedSubcommand = subcommand
-      let target = options.target as string
+      let resolvedSubcommand = subcommand;
+      let target = options.target as string;
       if (!target && subcommand && VALID_TARGETS.includes(subcommand)) {
-        target = subcommand
-        resolvedSubcommand = undefined
+        target = subcommand;
+        resolvedSubcommand = undefined;
       }
-      target = target || 'opencode'
+      target = target || 'opencode';
 
       if (resolvedSubcommand === 'preset') {
         return installPresetCommand({
@@ -188,8 +196,8 @@ export async function routeCommand(args: CliArgs, projectRoot: string): Promise<
           dryRun: flags.dryRun,
           force: flags.force,
           global: isGlobal,
-          output: flags.output
-        } as InstallPresetOptions)
+          output: flags.output,
+        } as InstallPresetOptions);
       }
 
       return installCommand({
@@ -198,23 +206,23 @@ export async function routeCommand(args: CliArgs, projectRoot: string): Promise<
         dryRun: flags.dryRun,
         force: flags.force,
         global: isGlobal,
-        output: flags.output
-      } as InstallOptions)
+        output: flags.output,
+      } as InstallOptions);
     }
 
     case 'doctor':
       return doctorCommand({
         projectRoot,
-        output: flags.output
-      } as DoctorOptions)
+        output: flags.output,
+      } as DoctorOptions);
 
     case 'update':
       return updateCommand({
         projectRoot,
         dryRun: flags.dryRun,
         force: flags.force,
-        output: flags.output
-      } as UpdateOptions)
+        output: flags.output,
+      } as UpdateOptions);
 
     default:
       return {
@@ -222,8 +230,8 @@ export async function routeCommand(args: CliArgs, projectRoot: string): Promise<
         data: {
           success: false,
           command: 'unknown',
-          errors: [`Unknown command: ${command}`]
-        }
-      }
+          errors: [`Unknown command: ${command}`],
+        },
+      };
   }
 }

@@ -60,7 +60,8 @@ targets:
       - "denyWrite"
       - "runtime.network.allowDomains"
     warnings:
-      - "Claude settings primarily represent shell permissions; filesystem and network boundaries depend on Claude Code capabilities and manual isolation."
+      - "Claude settings primarily represent shell permissions; filesystem and network boundaries depend on Claude Code
+        capabilities and manual isolation."
   codex:
     unsupportedRules:
       - "denyRead"
@@ -68,7 +69,8 @@ targets:
       - "runtime.network"
       - "commands"
     warnings:
-      - "Codex preset currently represents policy intent through AGENTS.md contracts; runtime enforcement depends on Codex capabilities."
+      - "Codex preset currently represents policy intent through AGENTS.md contracts; runtime enforcement depends on
+        Codex capabilities."
   gemini:
     unsupportedRules:
       - "denyRead"
@@ -76,7 +78,8 @@ targets:
       - "runtime.network"
       - "commands"
     warnings:
-      - "Gemini CLI preset currently represents policy intent through agent files; runtime enforcement depends on Gemini CLI capabilities."
+      - "Gemini CLI preset currently represents policy intent through agent files; runtime enforcement depends on Gemini
+        CLI capabilities."
   cursor:
     unsupportedRules:
       - "denyRead"
@@ -84,7 +87,8 @@ targets:
       - "runtime.network"
       - "commands"
     warnings:
-      - "Cursor preset currently represents policy intent through agent files; runtime enforcement depends on Cursor capabilities."
+      - "Cursor preset currently represents policy intent through agent files; runtime enforcement depends on Cursor
+        capabilities."
 
 commands:
   allow:

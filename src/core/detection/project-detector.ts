@@ -1,71 +1,71 @@
 /**
  * Project profile interface
  */
-export type DetectionConfidence = 'low' | 'medium' | 'high'
+export type DetectionConfidence = 'low' | 'medium' | 'high';
 
 export interface ProjectProfile {
-  readonly rootDir: string
-  readonly languages: readonly string[]
-  readonly runtimes: readonly string[]
-  readonly packageManagers: readonly string[]
-  readonly frameworks: readonly string[]
-  readonly signals: readonly string[]
-  readonly confidence: DetectionConfidence
+  readonly rootDir: string;
+  readonly languages: readonly string[];
+  readonly runtimes: readonly string[];
+  readonly packageManagers: readonly string[];
+  readonly frameworks: readonly string[];
+  readonly signals: readonly string[];
+  readonly confidence: DetectionConfidence;
 }
 
 /**
  * Detect project stack
  */
 export async function detectProject(rootDir: string): Promise<ProjectProfile> {
-  const signals: string[] = []
-  const languages: string[] = []
-  const runtimes: string[] = []
-  const packageManagers: string[] = []
-  const frameworks: string[] = []
+  const signals: string[] = [];
+  const languages: string[] = [];
+  const runtimes: string[] = [];
+  const packageManagers: string[] = [];
+  const frameworks: string[] = [];
 
   // Check for Node.js
-  const nodeSignals = await detectNode(rootDir)
+  const nodeSignals = await detectNode(rootDir);
   if (nodeSignals.length > 0) {
-    signals.push(...nodeSignals)
-    languages.push('javascript', 'typescript')
-    runtimes.push('node')
-    packageManagers.push('npm')
+    signals.push(...nodeSignals);
+    languages.push('javascript', 'typescript');
+    runtimes.push('node');
+    packageManagers.push('npm');
   }
 
   // Check for Bun
-  const bunSignals = await detectBun(rootDir)
+  const bunSignals = await detectBun(rootDir);
   if (bunSignals.length > 0) {
-    signals.push(...bunSignals)
-    runtimes.push('bun')
-    packageManagers.push('bun')
+    signals.push(...bunSignals);
+    runtimes.push('bun');
+    packageManagers.push('bun');
   }
 
   // Check for Spring
-  const springSignals = await detectSpring(rootDir)
+  const springSignals = await detectSpring(rootDir);
   if (springSignals.length > 0) {
-    signals.push(...springSignals)
-    languages.push('java', 'kotlin')
-    runtimes.push('jvm')
-    frameworks.push('spring')
+    signals.push(...springSignals);
+    languages.push('java', 'kotlin');
+    runtimes.push('jvm');
+    frameworks.push('spring');
   }
 
   // Check for Django
-  const djangoSignals = await detectDjango(rootDir)
+  const djangoSignals = await detectDjango(rootDir);
   if (djangoSignals.length > 0) {
-    signals.push(...djangoSignals)
-    languages.push('python')
-    runtimes.push('python')
-    frameworks.push('django')
+    signals.push(...djangoSignals);
+    languages.push('python');
+    runtimes.push('python');
+    frameworks.push('django');
   }
 
   // Check for Astro
-  const astroSignals = await detectAstro(rootDir)
+  const astroSignals = await detectAstro(rootDir);
   if (astroSignals.length > 0) {
-    signals.push(...astroSignals)
-    frameworks.push('astro')
+    signals.push(...astroSignals);
+    frameworks.push('astro');
   }
 
-  const uniqueSignals = [...new Set(signals)]
+  const uniqueSignals = [...new Set(signals)];
 
   return {
     rootDir,
@@ -77,99 +77,108 @@ export async function detectProject(rootDir: string): Promise<ProjectProfile> {
     confidence: calculateConfidence({
       signals: uniqueSignals,
       runtimes: [...new Set(runtimes)],
-      frameworks: [...new Set(frameworks)]
-    })
-  }
+      frameworks: [...new Set(frameworks)],
+    }),
+  };
 }
 
 export function calculateConfidence(profile: {
-  readonly signals: readonly string[]
-  readonly runtimes: readonly string[]
-  readonly frameworks: readonly string[]
+  readonly signals: readonly string[];
+  readonly runtimes: readonly string[];
+  readonly frameworks: readonly string[];
 }): DetectionConfidence {
   if (profile.signals.length === 0) {
-    return 'low'
+    return 'low';
   }
 
-  const hasFramework = profile.frameworks.length > 0
-  const hasRuntime = profile.runtimes.length > 0
+  const hasFramework = profile.frameworks.length > 0;
+  const hasRuntime = profile.runtimes.length > 0;
 
-  if ((hasFramework && profile.signals.length >= 2) || (hasRuntime && profile.signals.length >= 3)) {
-    return 'high'
+  if (
+    (hasFramework && profile.signals.length >= 2) ||
+    (hasRuntime && profile.signals.length >= 3)
+  ) {
+    return 'high';
   }
 
   if (hasFramework || profile.signals.length >= 2 || hasRuntime) {
-    return 'medium'
+    return 'medium';
   }
 
-  return 'low'
+  return 'low';
 }
 
 // Import detectors
 async function detectNode(rootDir: string): Promise<string[]> {
-  const { fileExists } = await import('../filesystem/safety')
-  const signals: string[] = []
+  const { fileExists } = await import('../filesystem/safety');
+  const signals: string[] = [];
 
   if (await fileExists(rootDir, 'package.json')) {
-    signals.push('package.json')
+    signals.push('package.json');
   }
   if (await fileExists(rootDir, 'node_modules')) {
-    signals.push('node_modules/')
+    signals.push('node_modules/');
   }
 
-  return signals
+  return signals;
 }
 
 async function detectBun(rootDir: string): Promise<string[]> {
-  const { fileExists } = await import('../filesystem/safety')
-  const signals: string[] = []
+  const { fileExists } = await import('../filesystem/safety');
+  const signals: string[] = [];
 
   if (await fileExists(rootDir, 'bun.lockb')) {
-    signals.push('bun.lockb')
+    signals.push('bun.lockb');
   }
 
   if (await fileExists(rootDir, 'bun.lock')) {
-    signals.push('bun.lock')
+    signals.push('bun.lock');
   }
 
-  return signals
+  return signals;
 }
 
 async function detectSpring(rootDir: string): Promise<string[]> {
-  const { fileExists } = await import('../filesystem/safety')
-  const signals: string[] = []
+  const { fileExists } = await import('../filesystem/safety');
+  const signals: string[] = [];
 
-  if (await fileExists(rootDir, 'build.gradle') || await fileExists(rootDir, 'build.gradle.kts')) {
-    signals.push('build.gradle')
+  if (
+    (await fileExists(rootDir, 'build.gradle')) ||
+    (await fileExists(rootDir, 'build.gradle.kts'))
+  ) {
+    signals.push('build.gradle');
   }
   if (await fileExists(rootDir, 'pom.xml')) {
-    signals.push('pom.xml')
+    signals.push('pom.xml');
   }
 
-  return signals
+  return signals;
 }
 
 async function detectDjango(rootDir: string): Promise<string[]> {
-  const { fileExists } = await import('../filesystem/safety')
-  const signals: string[] = []
+  const { fileExists } = await import('../filesystem/safety');
+  const signals: string[] = [];
 
   if (await fileExists(rootDir, 'manage.py')) {
-    signals.push('manage.py')
+    signals.push('manage.py');
   }
   if (await fileExists(rootDir, 'requirements.txt')) {
-    signals.push('requirements.txt')
+    signals.push('requirements.txt');
   }
 
-  return signals
+  return signals;
 }
 
 async function detectAstro(rootDir: string): Promise<string[]> {
-  const { fileExists } = await import('../filesystem/safety')
-  const signals: string[] = []
+  const { fileExists } = await import('../filesystem/safety');
+  const signals: string[] = [];
 
-  if (await fileExists(rootDir, 'astro.config.mjs') || await fileExists(rootDir, 'astro.config.ts')) {
-    signals.push('astro.config')
+  if (
+    (await fileExists(rootDir, 'astro.config.mjs')) ||
+    (await fileExists(rootDir, 'astro.config.ts'))
+  ) {
+    signals.push('astro.config');
   }
 
-  return signals
+  return signals;
 }

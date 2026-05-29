@@ -7,9 +7,9 @@ export const ExitCode = {
   UNSAFE_OPERATION: 2,
   UNSUPPORTED_PROJECT: 3,
   CONFIG_CONFLICT: 4,
-} as const
+} as const;
 
-export type ExitCodeType = typeof ExitCode[keyof typeof ExitCode]
+export type ExitCodeType = (typeof ExitCode)[keyof typeof ExitCode];
 
 /**
  * Base error class for CLI errors
@@ -20,8 +20,8 @@ export class CliError extends Error {
     public readonly code: ExitCodeType,
     public readonly details?: unknown
   ) {
-    super(message)
-    this.name = 'CliError'
+    super(message);
+    this.name = 'CliError';
   }
 }
 
@@ -30,8 +30,8 @@ export class CliError extends Error {
  */
 export class ValidationError extends CliError {
   constructor(message: string, details?: unknown) {
-    super(message, ExitCode.VALIDATION_ERROR, details)
-    this.name = 'ValidationError'
+    super(message, ExitCode.VALIDATION_ERROR, details);
+    this.name = 'ValidationError';
   }
 }
 
@@ -40,8 +40,8 @@ export class ValidationError extends CliError {
  */
 export class UnsafeOperationError extends CliError {
   constructor(message: string, details?: unknown) {
-    super(message, ExitCode.UNSAFE_OPERATION, details)
-    this.name = 'UnsafeOperationError'
+    super(message, ExitCode.UNSAFE_OPERATION, details);
+    this.name = 'UnsafeOperationError';
   }
 }
 
@@ -50,8 +50,8 @@ export class UnsafeOperationError extends CliError {
  */
 export class UnsupportedProjectError extends CliError {
   constructor(message: string, details?: unknown) {
-    super(message, ExitCode.UNSUPPORTED_PROJECT, details)
-    this.name = 'UnsupportedProjectError'
+    super(message, ExitCode.UNSUPPORTED_PROJECT, details);
+    this.name = 'UnsupportedProjectError';
   }
 }
 
@@ -60,8 +60,8 @@ export class UnsupportedProjectError extends CliError {
  */
 export class ConfigConflictError extends CliError {
   constructor(message: string, details?: unknown) {
-    super(message, ExitCode.CONFIG_CONFLICT, details)
-    this.name = 'ConfigConflictError'
+    super(message, ExitCode.CONFIG_CONFLICT, details);
+    this.name = 'ConfigConflictError';
   }
 }
 
@@ -70,7 +70,7 @@ export class ConfigConflictError extends CliError {
  */
 export function getExitCode(error: unknown): ExitCodeType {
   if (error instanceof CliError) {
-    return error.code
+    return error.code;
   }
-  return ExitCode.VALIDATION_ERROR
+  return ExitCode.VALIDATION_ERROR;
 }

@@ -1,33 +1,33 @@
-import { readFile, writeFile, mkdir, access } from 'node:fs/promises'
-import { resolve, basename } from 'node:path'
-import { homedir } from 'node:os'
-import type { OutputMode } from '../utils/logger'
-import { writeConfig } from '../core/config/config-writer'
-import { detectProject } from '../core/detection/project-detector'
-import { POLICY_PATH, SRC_PRESETS_DIR } from '../core/presets/package-paths'
-import { resolvePreset } from '../core/presets/preset-resolver'
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
+import { basename, resolve } from 'node:path';
+import { writeConfig } from '../core/config/config-writer';
+import { detectProject } from '../core/detection/project-detector';
+import { POLICY_PATH, SRC_PRESETS_DIR } from '../core/presets/package-paths';
+import { resolvePreset } from '../core/presets/preset-resolver';
+import type { OutputMode } from '../utils/logger';
 
 export interface InitOptions {
-  readonly dryRun: boolean
-  readonly force: boolean
-  readonly global: boolean
-  readonly output: OutputMode
-  readonly projectRoot: string
+  readonly dryRun: boolean;
+  readonly force: boolean;
+  readonly global: boolean;
+  readonly output: OutputMode;
+  readonly projectRoot: string;
 }
 
 /**
  * Initialize CodeConductor in a project or globally
  */
 export async function initCommand(options: InitOptions): Promise<{ code: number; data?: unknown }> {
-  const { projectRoot, dryRun, force, global: isGlobal, output } = options
+  const { projectRoot, dryRun, force, global: isGlobal, output } = options;
 
-  const baseDir = isGlobal ? homedir() : projectRoot
+  const baseDir = isGlobal ? homedir() : projectRoot;
 
   try {
     // Detect project (skip for global init)
-    let profile: Awaited<ReturnType<typeof detectProject>> | null = null
+    let profile: Awaited<ReturnType<typeof detectProject>> | null = null;
     if (!isGlobal) {
-      profile = await detectProject(projectRoot)
+      profile = await detectProject(projectRoot);
 
       if (profile.signals.length === 0) {
         return {
@@ -35,9 +35,9 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
           data: {
             success: false,
             command: 'init',
-            errors: ['No project signals detected. Project may be empty or unsupported.']
-          }
-        }
+            errors: ['No project signals detected. Project may be empty or unsupported.'],
+          },
+        };
       }
     }
 
@@ -45,29 +45,29 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
       ? {
           project: {
             name: basename(projectRoot) || 'unnamed-project',
-            profile: profile.runtimes[0] || 'unknown'
+            profile: profile.runtimes[0] || 'unknown',
           },
           defaults: {
             target: 'opencode' as const,
-            overwrite: force
-          }
+            overwrite: force,
+          },
         }
       : {
           project: {
             name: 'global',
-            profile: 'global'
+            profile: 'global',
           },
           defaults: {
             target: 'opencode' as const,
-            overwrite: force
-          }
-        }
+            overwrite: force,
+          },
+        };
 
-    const presetResolution = profile ? resolvePreset('opencode', profile) : null
-    const wouldCreate = ['.codeconductor/config.yml']
-    const presetsToCopy = await resolvePresetsToCopy()
+    const presetResolution = profile ? resolvePreset('opencode', profile) : null;
+    const wouldCreate = ['.codeconductor/config.yml'];
+    const presetsToCopy = await resolvePresetsToCopy();
     for (const p of presetsToCopy) {
-      wouldCreate.push(`.codeconductor/presets/${p.name}`)
+      wouldCreate.push(`.codeconductor/presets/${p.name}`);
     }
 
     if (dryRun) {
@@ -85,28 +85,28 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
                   runtimes: profile.runtimes,
                   frameworks: profile.frameworks,
                   signals: profile.signals,
-                  confidence: profile.confidence
+                  confidence: profile.confidence,
                 },
-                presetResolution
+                presetResolution,
               }
-            : { global: true })
-        }
-      }
+            : { global: true }),
+        },
+      };
     }
 
-    const result = await writeConfig(baseDir, config, force)
+    const result = await writeConfig(baseDir, config, force);
     if (!result.success) {
       return {
         code: 1,
         data: {
           success: false,
           command: 'init',
-          errors: [result.error.message]
-        }
-      }
+          errors: [result.error.message],
+        },
+      };
     }
 
-    const copiedPresets = await copyPresets(baseDir, presetsToCopy, force)
+    const copiedPresets = await copyPresets(baseDir, presetsToCopy, force);
 
     return {
       code: 0,
@@ -121,80 +121,84 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
                 runtimes: profile.runtimes,
                 frameworks: profile.frameworks,
                 signals: profile.signals,
-                confidence: profile.confidence
+                confidence: profile.confidence,
               },
-              presetResolution
+              presetResolution,
             }
-          : { global: true })
-      }
-    }
+          : { global: true }),
+      },
+    };
   } catch (error) {
     return {
       code: 1,
       data: {
         success: false,
         command: 'init',
-        errors: [String(error)]
-      }
-    }
+        errors: [String(error)],
+      },
+    };
   }
 }
 
 interface PresetSource {
-  name: string
-  sourcePath: string
+  name: string;
+  sourcePath: string;
 }
 
 async function resolvePresetsToCopy(): Promise<PresetSource[]> {
-  const sources: PresetSource[] = []
+  const sources: PresetSource[] = [];
 
   // Bundled council preset
-  const bundledCouncil = resolve(SRC_PRESETS_DIR, 'council', 'council.yml')
+  const bundledCouncil = resolve(SRC_PRESETS_DIR, 'council', 'council.yml');
   if (await fileExists(bundledCouncil)) {
-    sources.push({ name: 'council.yml', sourcePath: bundledCouncil })
+    sources.push({ name: 'council.yml', sourcePath: bundledCouncil });
   }
 
   // policy.yml from package root
-  const policyPath = POLICY_PATH
+  const policyPath = POLICY_PATH;
   if (await fileExists(policyPath)) {
-    sources.push({ name: 'policy.yml', sourcePath: policyPath })
+    sources.push({ name: 'policy.yml', sourcePath: policyPath });
   }
 
-  return sources
+  return sources;
 }
 
-async function copyPresets(baseDir: string, presets: PresetSource[], force: boolean): Promise<string[]> {
-  const presetsDir = resolve(baseDir, '.codeconductor', 'presets')
-  await mkdir(presetsDir, { recursive: true })
+async function copyPresets(
+  baseDir: string,
+  presets: PresetSource[],
+  force: boolean
+): Promise<string[]> {
+  const presetsDir = resolve(baseDir, '.codeconductor', 'presets');
+  await mkdir(presetsDir, { recursive: true });
 
-  const copied: string[] = []
+  const copied: string[] = [];
   for (const preset of presets) {
-    const destPath = resolve(presetsDir, preset.name)
+    const destPath = resolve(presetsDir, preset.name);
 
-    if (!force && await fileExists(destPath)) {
-      continue
+    if (!force && (await fileExists(destPath))) {
+      continue;
     }
 
     try {
-      const content = await readFile(preset.sourcePath, 'utf-8')
-      await writeFile(destPath, content, 'utf-8')
-      copied.push(`.codeconductor/presets/${preset.name}`)
+      const content = await readFile(preset.sourcePath, 'utf-8');
+      await writeFile(destPath, content, 'utf-8');
+      copied.push(`.codeconductor/presets/${preset.name}`);
     } catch (err) {
       // Non-fatal: bundled preset may not exist in installed binary
-      const code = (err as NodeJS.ErrnoException).code
+      const code = (err as NodeJS.ErrnoException).code;
       if (code !== 'ENOENT') {
-        process.stderr.write(`warn: could not copy ${preset.name}: ${String(err)}\n`)
+        process.stderr.write(`warn: could not copy ${preset.name}: ${String(err)}\n`);
       }
     }
   }
-  return copied
+  return copied;
 }
 
 async function fileExists(path: string): Promise<boolean> {
   try {
-    await access(path)
-    return true
+    await access(path);
+    return true;
   } catch {
-    return false
+    return false;
   }
 }

@@ -6,26 +6,28 @@ const PROMPT_CONTRACT_PATTERNS = [
   /^presets\/codex\/AGENTS\.md$/,
   /^presets\/claude\/CLAUDE\.md$/,
   /^src\/presets\/models\//,
-  /^src\/presets\/manifests\//
-]
+  /^src\/presets\/manifests\//,
+];
 
 export interface PromptChangelogValidation {
-  readonly required: boolean
-  readonly present: boolean
-  readonly valid: boolean
-  readonly promptFiles: readonly string[]
-  readonly message: string
+  readonly required: boolean;
+  readonly present: boolean;
+  readonly valid: boolean;
+  readonly promptFiles: readonly string[];
+  readonly message: string;
 }
 
 export function isPromptContractFile(path: string): boolean {
-  const normalized = path.replace(/\\/g, '/')
-  return PROMPT_CONTRACT_PATTERNS.some(pattern => pattern.test(normalized))
+  const normalized = path.replace(/\\/g, '/');
+  return PROMPT_CONTRACT_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
-export function validatePromptChangelog(changedFiles: readonly string[]): PromptChangelogValidation {
-  const promptFiles = changedFiles.filter(isPromptContractFile)
-  const required = promptFiles.length > 0
-  const present = changedFiles.some(file => file.replace(/\\/g, '/') === 'CHANGELOG.md')
+export function validatePromptChangelog(
+  changedFiles: readonly string[]
+): PromptChangelogValidation {
+  const promptFiles = changedFiles.filter(isPromptContractFile);
+  const required = promptFiles.length > 0;
+  const present = changedFiles.some((file) => file.replace(/\\/g, '/') === 'CHANGELOG.md');
 
   if (!required) {
     return {
@@ -33,8 +35,8 @@ export function validatePromptChangelog(changedFiles: readonly string[]): Prompt
       present,
       valid: true,
       promptFiles,
-      message: 'No prompt or agent contract files changed.'
-    }
+      message: 'No prompt or agent contract files changed.',
+    };
   }
 
   if (!present) {
@@ -43,8 +45,9 @@ export function validatePromptChangelog(changedFiles: readonly string[]): Prompt
       present,
       valid: false,
       promptFiles,
-      message: 'Prompt or agent contract files changed without a CHANGELOG.md update under [Unreleased].'
-    }
+      message:
+        'Prompt or agent contract files changed without a CHANGELOG.md update under [Unreleased].',
+    };
   }
 
   return {
@@ -52,6 +55,6 @@ export function validatePromptChangelog(changedFiles: readonly string[]): Prompt
     present,
     valid: true,
     promptFiles,
-    message: 'Prompt changelog discipline satisfied.'
-  }
+    message: 'Prompt changelog discipline satisfied.',
+  };
 }

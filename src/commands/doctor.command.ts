@@ -1,124 +1,126 @@
-import { join } from 'node:path'
-import type { OutputMode } from '../utils/logger'
-import { loadConfig, configExists } from '../core/config/config-loader'
-import { validateConfig } from '../validation/schemas'
-import { loadTargetSecurityCompatibility } from '../core/security/target-compatibility'
+import { join } from 'node:path';
+import { configExists, loadConfig } from '../core/config/config-loader';
+import { loadTargetSecurityCompatibility } from '../core/security/target-compatibility';
+import type { OutputMode } from '../utils/logger';
 
 export interface DoctorOptions {
-  readonly output: OutputMode
-  readonly projectRoot: string
+  readonly output: OutputMode;
+  readonly projectRoot: string;
 }
 
 /**
  * Validate configuration and generated files
  */
-export async function doctorCommand(options: DoctorOptions): Promise<{ code: number; data?: unknown }> {
-  const { projectRoot, output } = options
+export async function doctorCommand(
+  options: DoctorOptions
+): Promise<{ code: number; data?: unknown }> {
+  const { projectRoot, output } = options;
 
-  const checks: { name: string; status: 'pass' | 'fail' | 'warn'; message: string }[] = []
+  const checks: { name: string; status: 'pass' | 'fail' | 'warn'; message: string }[] = [];
 
   try {
     // Check 1: Config exists
-    const hasConfig = await configExists(projectRoot)
+    const hasConfig = await configExists(projectRoot);
     if (hasConfig) {
       checks.push({
         name: 'config-exists',
         status: 'pass',
-        message: '.codeconductor/config.yml exists'
-      })
+        message: '.codeconductor/config.yml exists',
+      });
     } else {
       checks.push({
         name: 'config-exists',
         status: 'fail',
-        message: '.codeconductor/config.yml not found. Run `codeconductor init` first.'
-      })
+        message: '.codeconductor/config.yml not found. Run `codeconductor init` first.',
+      });
       return {
         code: 4,
         data: {
           success: false,
           command: 'doctor',
-          checks
-        }
-      }
+          checks,
+        },
+      };
     }
 
     // Check 2: Config is valid
-    const configResult = await loadConfig(projectRoot)
+    const configResult = await loadConfig(projectRoot);
     if (configResult.success) {
       checks.push({
         name: 'config-valid',
         status: 'pass',
-        message: 'Config is valid'
-      })
+        message: 'Config is valid',
+      });
     } else {
       checks.push({
         name: 'config-valid',
         status: 'fail',
-        message: `Config validation failed: ${configResult.error.message}`
-      })
+        message: `Config validation failed: ${configResult.error.message}`,
+      });
       return {
         code: 1,
         data: {
           success: false,
           command: 'doctor',
-          checks
-        }
-      }
+          checks,
+        },
+      };
     }
 
     // Check 3: Runner directories
-    const runnerDirs = ['.opencode', '.claude', '.codex']
+    const runnerDirs = ['.opencode', '.claude', '.codex'];
     for (const dir of runnerDirs) {
       try {
-        const { access } = await import('node:fs/promises')
-        await access(join(projectRoot, dir))
+        const { access } = await import('node:fs/promises');
+        await access(join(projectRoot, dir));
         checks.push({
           name: `dir-${dir}`,
           status: 'pass',
-          message: `${dir}/ exists`
-        })
+          message: `${dir}/ exists`,
+        });
       } catch {
         checks.push({
           name: `dir-${dir}`,
           status: 'warn',
-          message: `${dir}/ not found (optional)`
-        })
+          message: `${dir}/ not found (optional)`,
+        });
       }
     }
 
     // Check 4: Preset version
-    const config = configResult.data
+    const config = configResult.data;
     if (config.presets.council.enabled) {
       checks.push({
         name: 'council-enabled',
         status: 'pass',
-        message: `Council preset enabled (v${config.presets.council.version})`
-      })
+        message: `Council preset enabled (v${config.presets.council.version})`,
+      });
     }
 
     // Check 5: Target security compatibility
-    const securityCompatibility = await loadTargetSecurityCompatibility()
+    const securityCompatibility = await loadTargetSecurityCompatibility();
     for (const compatibility of securityCompatibility) {
       checks.push({
         name: `security-${compatibility.target}`,
         status: compatibility.status,
-        message: compatibility.status === 'pass'
-          ? `${compatibility.target} can represent the canonical policy model`
-          : `${compatibility.target} cannot enforce: ${compatibility.unsupportedRules.join(', ') || 'see warnings'}`
-      })
+        message:
+          compatibility.status === 'pass'
+            ? `${compatibility.target} can represent the canonical policy model`
+            : `${compatibility.target} cannot enforce: ${compatibility.unsupportedRules.join(', ') || 'see warnings'}`,
+      });
     }
 
     // All checks passed
-    const failedCount = checks.filter(c => c.status === 'fail').length
+    const failedCount = checks.filter((c) => c.status === 'fail').length;
     if (failedCount > 0) {
       return {
         code: 4,
         data: {
           success: false,
           command: 'doctor',
-          checks
-        }
-      }
+          checks,
+        },
+      };
     }
 
     return {
@@ -127,17 +129,17 @@ export async function doctorCommand(options: DoctorOptions): Promise<{ code: num
         success: true,
         command: 'doctor',
         checks,
-        securityCompatibility
-      }
-    }
+        securityCompatibility,
+      },
+    };
   } catch (error) {
     return {
       code: 1,
       data: {
         success: false,
         command: 'doctor',
-        errors: [String(error)]
-      }
-    }
+        errors: [String(error)],
+      },
+    };
   }
 }

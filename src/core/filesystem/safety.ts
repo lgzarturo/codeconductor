@@ -1,28 +1,21 @@
-import { access } from 'node:fs/promises'
-import { constants } from 'node:fs'
+import { constants } from 'node:fs';
+import { access } from 'node:fs/promises';
 
 /**
  * Protected paths that should not be modified
  */
-const PROTECTED_PATHS = [
-  '.git',
-  '.env',
-  '.env.local',
-  '.env.production',
-  'secrets',
-  'credentials'
-]
+const PROTECTED_PATHS = ['.git', '.env', '.env.local', '.env.production', 'secrets', 'credentials'];
 
 /**
  * Check if a file exists
  */
 export async function fileExists(dir: string, filename: string): Promise<boolean> {
   try {
-    const path = filename.startsWith('/') ? filename : `${dir}/${filename}`
-    await access(path, constants.F_OK)
-    return true
+    const path = filename.startsWith('/') ? filename : `${dir}/${filename}`;
+    await access(path, constants.F_OK);
+    return true;
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -30,15 +23,15 @@ export async function fileExists(dir: string, filename: string): Promise<boolean
  * Check if path is protected
  */
 export function isProtectedPath(path: string): boolean {
-  const normalized = path.toLowerCase()
-  return PROTECTED_PATHS.some(p => normalized.includes(p.toLowerCase()))
+  const normalized = path.toLowerCase();
+  return PROTECTED_PATHS.some((p) => normalized.includes(p.toLowerCase()));
 }
 
 /**
  * Validate safe write path
  */
 export function validateWritePath(path: string): boolean {
-  return !isProtectedPath(path)
+  return !isProtectedPath(path);
 }
 
 /**
@@ -46,9 +39,9 @@ export function validateWritePath(path: string): boolean {
  */
 export async function isWritable(dir: string): Promise<boolean> {
   try {
-    await access(dir, constants.W_OK)
-    return true
+    await access(dir, constants.W_OK);
+    return true;
   } catch {
-    return false
+    return false;
   }
 }

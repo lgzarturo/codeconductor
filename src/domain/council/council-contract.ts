@@ -2,8 +2,8 @@
  * Output contract definitions for council generation
  */
 export interface CouncilContract {
-  readonly version: string
-  readonly targets: readonly string[]
+  readonly version: string;
+  readonly targets: readonly string[];
 }
 
 /**
@@ -11,26 +11,26 @@ export interface CouncilContract {
  */
 export const OPENCODECONTRACT: CouncilContract = {
   version: '1.0',
-  targets: ['opencode']
-}
+  targets: ['opencode'],
+};
 
 /**
  * Contract for Claude output
  */
 export const CLAUDE_CONTRACT: CouncilContract = {
   version: '1.0',
-  targets: ['claude']
-}
+  targets: ['claude'],
+};
 
 /**
  * Contract for Codex output
  */
 export const CODEX_CONTRACT: CouncilContract = {
   version: '1.0',
-  targets: ['codex']
-}
+  targets: ['codex'],
+};
 
 /**
  * All contracts
  */
-export const ALL_CONTRACTS = [OPENCODECONTRACT, CLAUDE_CONTRACT, CODEX_CONTRACT]
+export const ALL_CONTRACTS = [OPENCODECONTRACT, CLAUDE_CONTRACT, CODEX_CONTRACT];

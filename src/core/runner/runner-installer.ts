@@ -1,28 +1,28 @@
-import type { GeneratedFile } from '../generation/generated-file'
+import type { GeneratedFile } from '../generation/generated-file';
 
 /**
  * Runner installer interface
  */
 export interface RunnerInstaller {
-  readonly name: string
-  readonly target: string
+  readonly name: string;
+  readonly target: string;
 
   /**
    * Generate files for this runner
    */
-  generate(): Promise<GeneratedFile[]>
+  generate(): Promise<GeneratedFile[]>;
 
   /**
    * Check if runner is available
    */
-  isAvailable(): Promise<boolean>
+  isAvailable(): Promise<boolean>;
 }
 
 /**
  * Installation result
  */
 export interface InstallResult {
-  readonly success: boolean
-  readonly files: GeneratedFile[]
-  readonly errors: string[]
+  readonly success: boolean;
+  readonly files: GeneratedFile[];
+  readonly errors: string[];
 }

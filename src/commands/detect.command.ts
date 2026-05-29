@@ -1,19 +1,21 @@
-import type { OutputMode } from '../utils/logger'
-import { detectProject } from '../core/detection/project-detector'
+import { detectProject } from '../core/detection/project-detector';
+import type { OutputMode } from '../utils/logger';
 
 export interface DetectOptions {
-  readonly output: OutputMode
-  readonly projectRoot: string
+  readonly output: OutputMode;
+  readonly projectRoot: string;
 }
 
 /**
  * Detect project stack
  */
-export async function detectCommand(options: DetectOptions): Promise<{ code: number; data?: unknown }> {
-  const { projectRoot, output } = options
+export async function detectCommand(
+  options: DetectOptions
+): Promise<{ code: number; data?: unknown }> {
+  const { projectRoot, output } = options;
 
   try {
-    const profile = await detectProject(projectRoot)
+    const profile = await detectProject(projectRoot);
 
     // Check if project has any signals
     if (profile.signals.length === 0) {
@@ -22,9 +24,9 @@ export async function detectCommand(options: DetectOptions): Promise<{ code: num
         data: {
           success: false,
           command: 'detect',
-          errors: ['No project signals detected. Project may be empty or unsupported.']
-        }
-      }
+          errors: ['No project signals detected. Project may be empty or unsupported.'],
+        },
+      };
     }
 
     return {
@@ -38,37 +40,40 @@ export async function detectCommand(options: DetectOptions): Promise<{ code: num
           packageManagers: profile.packageManagers,
           frameworks: profile.frameworks,
           signals: profile.signals,
-          confidence: profile.confidence
+          confidence: profile.confidence,
         },
-        recommendedPresets: getRecommendedPresets(profile)
-      }
-    }
+        recommendedPresets: getRecommendedPresets(profile),
+      },
+    };
   } catch (error) {
     return {
       code: 1,
       data: {
         success: false,
         command: 'detect',
-        errors: [String(error)]
-      }
-    }
+        errors: [String(error)],
+      },
+    };
   }
 }
 
-function getRecommendedPresets(profile: { runtimes: readonly string[]; frameworks: readonly string[] }): string[] {
-  const presets: string[] = ['council']
+function getRecommendedPresets(profile: {
+  runtimes: readonly string[];
+  frameworks: readonly string[];
+}): string[] {
+  const presets: string[] = ['council'];
 
   if (profile.runtimes.includes('node') || profile.runtimes.includes('bun')) {
-    presets.push('node-best-practices')
+    presets.push('node-best-practices');
   }
 
   if (profile.frameworks.includes('spring')) {
-    presets.push('spring-best-practices')
+    presets.push('spring-best-practices');
   }
 
   if (profile.frameworks.includes('django')) {
-    presets.push('django-best-practices')
+    presets.push('django-best-practices');
   }
 
-  return presets
+  return presets;
 }

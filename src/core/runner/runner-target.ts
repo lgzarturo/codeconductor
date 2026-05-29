@@ -1,23 +1,23 @@
 /**
  * Runner target type
  */
-export type RunnerTarget = 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'all'
+export type RunnerTarget = 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'all';
 
 /**
  * Valid runner targets
  */
-export const RUNNER_TARGETS = ['opencode', 'claude', 'codex', 'gemini', 'cursor', 'all'] as const
+export const RUNNER_TARGETS = ['opencode', 'claude', 'codex', 'gemini', 'cursor', 'all'] as const;
 
 /**
  * Individual runner targets (excluding 'all')
  */
-export const INDIVIDUAL_TARGETS = ['opencode', 'claude', 'codex', 'gemini', 'cursor'] as const
+export const INDIVIDUAL_TARGETS = ['opencode', 'claude', 'codex', 'gemini', 'cursor'] as const;
 
 /**
  * Check if a string is a valid runner target
  */
 export function isRunnerTarget(value: string): value is RunnerTarget {
-  return RUNNER_TARGETS.includes(value as RunnerTarget)
+  return RUNNER_TARGETS.includes(value as RunnerTarget);
 }
 
 /**
@@ -25,9 +25,9 @@ export function isRunnerTarget(value: string): value is RunnerTarget {
  */
 export function parseRunnerTarget(value: string): RunnerTarget {
   if (!isRunnerTarget(value)) {
-    throw new Error(`Invalid runner target: ${value}. Valid targets: ${RUNNER_TARGETS.join(', ')}`)
+    throw new Error(`Invalid runner target: ${value}. Valid targets: ${RUNNER_TARGETS.join(', ')}`);
   }
-  return value
+  return value;
 }
 
 /**
@@ -35,7 +35,7 @@ export function parseRunnerTarget(value: string): RunnerTarget {
  */
 export function getIndividualTargets(target: RunnerTarget): RunnerTarget[] {
   if (target === 'all') {
-    return [...INDIVIDUAL_TARGETS]
+    return [...INDIVIDUAL_TARGETS];
   }
-  return [target]
+  return [target];
 }

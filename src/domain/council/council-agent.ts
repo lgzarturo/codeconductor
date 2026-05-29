@@ -1,8 +1,8 @@
-import type { CouncilAgentSpec } from './council-spec'
+import type { CouncilAgentSpec } from './council-spec';
 
 export interface CouncilAgentConfig {
-  readonly agent: CouncilAgentSpec
-  readonly content: string
+  readonly agent: CouncilAgentSpec;
+  readonly content: string;
 }
 
 function getResponsibilities(agentId: string): string {
@@ -30,9 +30,9 @@ function getResponsibilities(agentId: string): string {
     devil: `- Challenge assumptions
 - Find edge cases
 - Identify failure modes
-- Stress test solutions`
-  }
-  return responsibilities[agentId] || '- Provide critical review'
+- Stress test solutions`,
+  };
+  return responsibilities[agentId] || '- Provide critical review';
 }
 
 export function generateAgentContent(agent: CouncilAgentSpec): string {
@@ -48,9 +48,9 @@ ${agent.context === 'repo-readonly' ? 'Can read repository but cannot modify fil
 ${agent.modelHint}
 
 ## Focus Areas
-${agent.focus.map(f => `- ${f}`).join('\n')}
+${agent.focus.map((f) => `- ${f}`).join('\n')}
 
 ## Responsibilities
 ${getResponsibilities(agent.id)}
-`
+`;
 }

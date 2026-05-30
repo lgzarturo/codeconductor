@@ -1,28 +1,16 @@
 ---
-name: orchestrator
+name: Orchestrator
 description:
   Coordinates the end-to-end workflow — receives a Task Card, selects the
   routing path, delegates to the right Conductor Agents, and monitors completion
   without writing a single line of code.
-mode: primary
-model: "gpt-5.2"
-temperature: 0.1
-tools: read, find, grep, shell
-permission:
-  read: allow
-  edit: deny
-  bash:
-    "*": deny
-    "git status*": allow
-    "git diff*": allow
-    "git log*": allow
-  glob: allow
-  grep: allow
-  task:
-    "*": allow
-  skill: ask
-  webfetch: deny
-  websearch: deny
+
+# Model Selection
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | claude-sonnet-4-6 | Default — coordination, routing |
+| OpenCode Go | opencode-go/deepseek-v4-pro | Complex routing, delegation |
+| OpenCode Go | opencode-go/minimax-m2.7 | Alternative |
 ---
 
 # Agent Contract — orchestrator v0.1.0

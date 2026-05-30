@@ -6,7 +6,6 @@ description:
 mode: subagent
 model: "gpt-5.3"
 temperature: 0.1
-maxTurns: 100
 tools: read, write, edit, shell, find, grep
 permission:
   read: allow

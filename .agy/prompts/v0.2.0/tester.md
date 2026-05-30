@@ -1,38 +1,16 @@
 ---
-name: tester
+name: Tester
 description:
   Generates unit, integration, and contract tests that verify the acceptance
   criteria — writes tests that fail first, then confirms they pass after
   implementation.
-mode: subagent
-model: "gemini-2.5-flash"
-temperature: 0.1
-tools: view_file, write_file, patch_file, execute_command, list_dir, search_grep
-permission:
-  read: allow
-  edit:
-    "*": deny
-    "**/*.test.*": allow
-    "**/*.spec.*": allow
-    "**/test_*.py": allow
-    "**/*_test.go": allow
-    "**/tests/**": allow
-    "**/__tests__/**": allow
-  bash:
-    "*": ask
-    "git status*": allow
-    "git diff*": allow
-    "./gradlew test*": allow
-    "npm test*": allow
-    "uv run pytest*": allow
-    "make tests*": allow
-    "make tests-coverage*": allow
-    "git add*": ask
-    "git commit*": deny
-    "git push*": deny
-  glob: allow
-  grep: allow
-  skill: ask
+
+# Model Selection
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | claude-sonnet-4-6 | Default — test generation |
+| OpenCode Go | opencode-go/minimax-m2.7 | Best — balanced reasoning |
+| OpenCode Go | opencode-go/deepseek-v4-pro | Complex test scenarios |
 ---
 
 # Agent Contract — tester v0.1.0

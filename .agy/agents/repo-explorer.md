@@ -5,9 +5,9 @@ description:
   and estimates the impact radius of a proposed change — read-only, never
   modifies anything.
 mode: subagent
-model: "gpt-5.4-mini"
+model: "gemini-2.5-flash"
 temperature: 0.1
-tools: read, find, grep, shell
+tools: Read, Glob, Grep, Bash
 permission:
   read: allow
   edit: deny

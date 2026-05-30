@@ -7,7 +7,7 @@ description:
 mode: subagent
 model: "gemini-2.5-flash"
 temperature: 0.1
-tools: view_file, write_file, patch_file, execute_command, list_dir, search_grep
+tools: Read, Write, Edit, Bash, Glob, Grep
 permission:
   read: allow
   edit:

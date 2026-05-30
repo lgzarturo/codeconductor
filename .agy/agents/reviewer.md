@@ -7,7 +7,7 @@ description:
 mode: subagent
 model: "gemini-2.5-pro"
 temperature: 0.1
-tools: view_file, list_dir, search_grep, execute_command
+tools: Read, Glob, Grep, Bash
 permission:
   read: allow
   edit: deny

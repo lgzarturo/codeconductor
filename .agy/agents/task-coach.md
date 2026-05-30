@@ -5,9 +5,9 @@ description:
   targeted clarifying questions and enforces the Task Card standard before any
   work begins.
 mode: subagent
-model: "gpt-5.4-mini"
+model: "gemini-2.5-flash"
 temperature: 0.1
-tools: read, find, grep
+tools: Read, Glob, Grep
 permission:
   read: allow
   edit: deny

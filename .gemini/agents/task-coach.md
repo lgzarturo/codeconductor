@@ -7,7 +7,6 @@ description:
 mode: subagent
 model: "gemini-2.5-flash"
 temperature: 0.1
-maxTurns: 30
 tools: view_file, list_dir, search_grep
 permission:
   read: allow

@@ -7,7 +7,6 @@ description:
 mode: primary
 model: "gemini-2.5-pro"
 temperature: 0.1
-maxTurns: 60
 tools: view_file, list_dir, search_grep, execute_command
 permission:
   read: allow

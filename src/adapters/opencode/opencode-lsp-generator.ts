@@ -4,6 +4,18 @@ import { getLanguageServerConfig } from '../../core/lsp/lsp-config-utils';
 import type { RunnerTarget } from '../../core/runner/runner-target';
 import type { LspInstallResult } from '../../domain/lsp/lsp-definition';
 
+type OpenCodeLanguageServerConfig = Record<
+  string,
+  { readonly command: readonly string[]; readonly extensions: readonly string[] }
+>;
+
+const OPENCODE_LSP_EXTENSIONS: Record<string, readonly string[]> = {
+  typescript: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.mts', '.cts'],
+  php: ['.php'],
+  python: ['.py', '.pyi'],
+  kotlin: ['.kt', '.kts'],
+};
+
 /**
  * OpenCode LSP config generator
  */
@@ -18,11 +30,12 @@ export class OpenCodeLspGenerator implements LspConfigGenerator {
     }
 
     const languageServers = getLanguageServerConfig(successfulLsps.map((lsp) => lsp.lspId));
+    const lsp = this.toOpenCodeLspConfig(languageServers);
 
     const content = JSON.stringify(
       {
         $schema: 'https://opencode.ai/config.json',
-        languageServers,
+        lsp,
       },
       null,
       2
@@ -31,10 +44,24 @@ export class OpenCodeLspGenerator implements LspConfigGenerator {
     return [
       {
         path: '.opencode/opencode.json',
-        content,
+        content: `${content}\n`,
         overwrite: false,
       },
     ];
+  }
+
+  private toOpenCodeLspConfig(
+    languageServers: ReturnType<typeof getLanguageServerConfig>
+  ): OpenCodeLanguageServerConfig {
+    return Object.fromEntries(
+      Object.entries(languageServers).map(([name, config]) => [
+        name,
+        {
+          command: [config.command, ...config.args],
+          extensions: OPENCODE_LSP_EXTENSIONS[name] ?? [],
+        },
+      ])
+    );
   }
 
   async isAvailable(): Promise<boolean> {

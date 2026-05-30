@@ -44,13 +44,17 @@ describe('LSP Config Generators', () => {
 
       const config = JSON.parse(files[0].content);
       expect(config.$schema).toBe('https://opencode.ai/config.json');
-      expect(config.languageServers).toBeDefined();
+      expect(config.lsp).toBeDefined();
+      expect(config.languageServers).toBeUndefined();
       expect(config.mcp).toBeUndefined();
       expect(config.mcpServers).toBeUndefined();
-      expect(config.languageServers.typescript).toEqual({ command: 'typescript-language-server', args: ['--stdio'] });
-      expect(config.languageServers.php).toEqual({ command: 'intelephense', args: ['--stdio'] });
-      expect(config.languageServers.python).toEqual({ command: 'pyright-langserver', args: ['--stdio'] });
-      expect(config.languageServers.kotlin).toEqual({ command: 'kotlin-language-server', args: [] });
+      expect(config.lsp.typescript).toEqual({
+        command: ['typescript-language-server', '--stdio'],
+        extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.mts', '.cts'],
+      });
+      expect(config.lsp.php).toEqual({ command: ['intelephense', '--stdio'], extensions: ['.php'] });
+      expect(config.lsp.python).toEqual({ command: ['pyright-langserver', '--stdio'], extensions: ['.py', '.pyi'] });
+      expect(config.lsp.kotlin).toEqual({ command: ['kotlin-language-server'], extensions: ['.kt', '.kts'] });
     });
 
     test('excludes failed LSPs from config', () => {
@@ -58,9 +62,9 @@ describe('LSP Config Generators', () => {
       const files = generator.generate(partialResults);
 
       const config = JSON.parse(files[0].content);
-      expect(config.languageServers.typescript).toBeDefined();
-      expect(config.languageServers.php).toBeDefined();
-      expect(config.languageServers.python).toBeUndefined(); // failed
+      expect(config.lsp.typescript).toBeDefined();
+      expect(config.lsp.php).toBeDefined();
+      expect(config.lsp.python).toBeUndefined(); // failed
     });
 
     test('returns empty array when no successful LSPs', () => {

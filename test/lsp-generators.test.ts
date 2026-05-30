@@ -38,16 +38,38 @@ describe('LSP Config Generators', () => {
       expect(files[0].overwrite).toBe(false);
     });
 
-    test('generates valid JSON with mcpServers', () => {
+    test('generates valid opencode MCP config', () => {
       const generator = createOpenCodeLspGenerator();
       const files = generator.generate(installedResults);
 
       const config = JSON.parse(files[0].content);
-      expect(config.mcpServers).toBeDefined();
-      expect(config.mcpServers.typescript).toEqual({ command: 'typescript-language-server', args: ['--stdio'] });
-      expect(config.mcpServers.php).toEqual({ command: 'intelephense', args: ['--stdio'] });
-      expect(config.mcpServers.python).toEqual({ command: 'pylsp', args: [] });
-      expect(config.mcpServers.kotlin).toEqual({ command: 'kotlin-language-server', args: [] });
+      expect(config.$schema).toBe('https://opencode.ai/config.json');
+      expect(config.mcp).toBeDefined();
+      expect(config.mcpServers).toBeUndefined();
+      expect(config.mcp.typescript).toEqual({
+        type: 'local',
+        command: ['typescript-language-server', '--stdio'],
+        enabled: true,
+        timeout: 120000,
+      });
+      expect(config.mcp.php).toEqual({
+        type: 'local',
+        command: ['intelephense', '--stdio'],
+        enabled: true,
+        timeout: 120000,
+      });
+      expect(config.mcp.python).toEqual({
+        type: 'local',
+        command: ['pylsp'],
+        enabled: true,
+        timeout: 120000,
+      });
+      expect(config.mcp.kotlin).toEqual({
+        type: 'local',
+        command: ['kotlin-language-server'],
+        enabled: true,
+        timeout: 120000,
+      });
     });
 
     test('excludes failed LSPs from config', () => {
@@ -55,9 +77,9 @@ describe('LSP Config Generators', () => {
       const files = generator.generate(partialResults);
 
       const config = JSON.parse(files[0].content);
-      expect(config.mcpServers.typescript).toBeDefined();
-      expect(config.mcpServers.php).toBeDefined();
-      expect(config.mcpServers.python).toBeUndefined(); // failed
+      expect(config.mcp.typescript).toBeDefined();
+      expect(config.mcp.php).toBeDefined();
+      expect(config.mcp.python).toBeUndefined(); // failed
     });
 
     test('returns empty array when no successful LSPs', () => {
@@ -127,7 +149,7 @@ describe('LSP Config Generators', () => {
       expect(content).toContain('[mcp_servers.typescript]');
       expect(content).toContain('command = "typescript-language-server"');
       expect(content).toContain('args = ["--stdio"]');
-      expect(content).toContain('startup_timeout_sec = 60');
+      expect(content).toContain('startup_timeout_sec = 120');
     });
 
     test('omits args line for LSPs without args', () => {
@@ -256,7 +278,6 @@ describe('LSP Config Generators', () => {
     };
 
     for (const generatorFn of [
-      createOpenCodeLspGenerator,
       createClaudeLspGenerator,
       createGeminiLspGenerator,
       createCursorLspGenerator,

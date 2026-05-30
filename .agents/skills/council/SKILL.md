@@ -1,3 +1,9 @@
+---
+name: council
+description: Multi-agent council for code review and architecture decisions
+version: 0.1.0
+---
+
 # Council Skill
 
 ## Description

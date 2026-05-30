@@ -17,18 +17,27 @@ export class OpenCodeLspGenerator implements LspConfigGenerator {
       return [];
     }
 
-    const mcpServers: Record<string, { command: string; args: string[] }> = {};
+    const mcp: Record<
+      string,
+      { type: 'local'; command: string[]; enabled: boolean; timeout: number }
+    > = {};
 
     for (const lsp of successfulLsps) {
       const config = getLspCommand(lsp.lspId);
       if (config) {
-        mcpServers[lsp.lspId] = { command: config.command, args: [...config.args] };
+        mcp[lsp.lspId] = {
+          type: 'local',
+          command: [config.command, ...config.args],
+          enabled: true,
+          timeout: 120000,
+        };
       }
     }
 
     const content = JSON.stringify(
       {
-        mcpServers,
+        $schema: 'https://opencode.ai/config.json',
+        mcp,
       },
       null,
       2

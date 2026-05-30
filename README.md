@@ -29,6 +29,13 @@ contracts, task cards, and risk-based routing.
 >   directories
 > - `npx cc-codeconductor update` — re-applies the council preset for the configured
 >   target
+> - `npx cc-codeconductor seo audit --url <url>` — runs a comprehensive SEO audit
+>   on a single page (meta tags, schema.org, GEO readiness) and generates a
+>   markdown report
+> - `npx cc-codeconductor seo audit --sitemap <url>` — batch audits all URLs from
+>   a sitemap.xml with rate limiting and SSRF prevention
+> - `npx cc-codeconductor seo llms --sitemap <url>` — generates a `llms.txt` file
+>   for AI-search readiness from sitemap content
 > - Manual presets for OpenCode, Claude Code, and Codex
 > - Versioned Agent Contracts
 > - Routing Policy documentation

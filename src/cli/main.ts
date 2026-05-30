@@ -116,6 +116,9 @@ export async function runCli(args: string[]): Promise<void> {
                 console.log(`  - ${key}: ${value}`);
               }
             });
+            // output (seo audit/llms output)
+          } else if ('output' in data && typeof data.output === 'string') {
+            console.log(data.output);
           }
         }
       }

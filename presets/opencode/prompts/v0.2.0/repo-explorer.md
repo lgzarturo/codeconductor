@@ -9,7 +9,7 @@ description:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-haiku-4-5-20251001 | Fast — exploration |
-| OpenCode Go | opencode-go/qwen-3.6-plus | Best — quick mapping |
+| OpenCode Go | opencode-go/qwen3.6-plus | Best — quick mapping |
 | OpenCode Go | opencode-go/kimi-k2.6 | Alternative |
 ---
 

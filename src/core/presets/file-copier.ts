@@ -245,7 +245,7 @@ async function applySingleFile(
   let finalContent = incomingContent;
   let action: FileAction = 'written';
 
-  if (strategy === 'append' && !force) {
+  if (strategy === 'append') {
     let existing = '';
     try {
       existing = await readFile(destPath, 'utf-8');
@@ -256,7 +256,7 @@ async function applySingleFile(
       finalContent = existing + '\n\n---\n\n' + incomingContent;
     }
     action = 'appended';
-  } else if (strategy === 'merge-json' && !force) {
+  } else if (strategy === 'merge-json') {
     let existing: Record<string, unknown> = {};
     try {
       existing = JSON.parse(await readFile(destPath, 'utf-8')) as Record<string, unknown>;

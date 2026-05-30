@@ -30,13 +30,13 @@ agents:
     cursor: gpt-5.2
   reviewer:
     claude: claude-sonnet-4-6
-    opencode: opencode-go/qwen-3.6-plus
+    opencode: opencode-go/qwen3.6-plus
     codex: gpt-5.4
     gemini: gemini-2.5-pro
     cursor: gpt-5.4
   docs:
     claude: claude-haiku-4-5-20251001
-    opencode: opencode-go/qwen-3.6-plus
+    opencode: opencode-go/qwen3.6-plus
     codex: gpt-5.4-mini
     gemini: gemini-2.5-flash
     cursor: gpt-5.4-mini
@@ -48,7 +48,7 @@ agents:
     cursor: gpt-5.4-mini
   repo-explorer:
     claude: claude-haiku-4-5-20251001
-    opencode: opencode-go/qwen3.5-plus
+    opencode: opencode-go/qwen3.6-plus
     codex: gpt-5.4-mini
     gemini: gemini-2.5-flash
     cursor: gpt-5.4-mini

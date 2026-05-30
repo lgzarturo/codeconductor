@@ -22,12 +22,12 @@ export class CodexLspGenerator implements LspConfigGenerator {
     for (const lsp of successfulLsps) {
       const config = getLspCommand(lsp.lspId);
       if (config) {
-        sections.push(`[[mcp_servers]]`);
-        sections.push(`name = "${lsp.lspId}"`);
+        sections.push(`[mcp_servers.${lsp.lspId}]`);
         sections.push(`command = "${config.command}"`);
         if (config.args.length > 0) {
           sections.push(`args = [${config.args.map((a) => `"${a}"`).join(', ')}]`);
         }
+        sections.push('startup_timeout_sec = 60');
         sections.push('');
       }
     }

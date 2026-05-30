@@ -24,7 +24,7 @@ providers)** models.
 | `deepseek-v4-pro` | DeepSeek        | Reasoning complejo, arquitectura | Architect, orchestrator    |
 | `mimo-v2.5-pro`   | MiniMax         | Razonamiento matemático, código  | Implementer                |
 | `minimax-m2.7`    | MiniMax         | Tareas equilibradas              | Tester, orchestrator       |
-| `qwen-3.6-plus`   | Qwen            | Rápido, eficiente                | Reviewer, Task Coach, Docs |
+| `qwen3.6-plus`    | Qwen            | Rápido, eficiente                | Reviewer, Task Coach, Docs |
 | `kimi-k2-6`       | Kimi (Moonshot) | Conversación natural             | Task Coach, Docs           |
 
 ---
@@ -37,10 +37,10 @@ providers)** models.
 | **Architect**     | `claude-opus-4-7`           | `deepseek-v4-pro`         | `mimo-v2.5-pro`   |
 | **Implementer**   | `claude-sonnet-4-6`         | `mimo-v2.5-pro`           | `minimax-m2.7`    |
 | **Tester**        | `claude-sonnet-4-6`         | `minimax-m2.7`            | `deepseek-v4-pro` |
-| **Reviewer**      | `claude-sonnet-4-6`         | `qwen-3.6-plus`           | `minimax-m2.7`    |
-| **Task Coach**    | `claude-haiku-4-5-20251001` | `qwen-3.6-plus`           | `kimi-k2.6`       |
-| **Docs**          | `claude-haiku-4-5-20251001` | `qwen-3.6-plus`           | `kimi-k2.6`       |
-| **Repo Explorer** | `claude-haiku-4-5-20251001` | `qwen-3.6-plus`           | `kimi-k2.6`       |
+| **Reviewer**      | `claude-sonnet-4-6`         | `qwen3.6-plus`            | `minimax-m2.7`    |
+| **Task Coach**    | `claude-haiku-4-5-20251001` | `qwen3.6-plus`            | `kimi-k2.6`       |
+| **Docs**          | `claude-haiku-4-5-20251001` | `qwen3.6-plus`            | `kimi-k2.6`       |
+| **Repo Explorer** | `claude-haiku-4-5-20251001` | `qwen3.6-plus`            | `kimi-k2.6`       |
 
 ---
 
@@ -84,7 +84,7 @@ The following paths are denied by default:
 
 ### Simple Tasks (Q&A, intake, documentation)
 
-**Recommended:** `qwen-3.6-plus` (OpenCode Go) or `claude-haiku-4-5-20251001`
+**Recommended:** `qwen3.6-plus` (OpenCode Go) or `claude-haiku-4-5-20251001`
 (Claude)
 
 - Task Coach intake
@@ -164,7 +164,7 @@ export KIMI_API_KEY="your-key"
 | Scenario                        | Recommended                                        |
 | ------------------------------- | -------------------------------------------------- |
 | Complex reasoning, architecture | OpenCode Go (`deepseek-v4-pro`) or Claude (`opus`) |
-| Fast iteration, simple tasks    | OpenCode Go (`qwen-3.6-plus`) or Claude (`haiku`)  |
+| Fast iteration, simple tasks    | OpenCode Go (`qwen3.6-plus`) or Claude (`haiku`)   |
 | Code implementation             | OpenCode Go (`mimo-v2.5-pro`) or Claude (`sonnet`) |
 | Budget constraints              | OpenCode Go (generally lower cost)                 |
 | Availability issues             | Switch to alternative from the matrix              |

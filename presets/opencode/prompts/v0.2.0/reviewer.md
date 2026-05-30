@@ -9,7 +9,7 @@ description:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-sonnet-4-6 | Default — code review |
-| OpenCode Go | opencode-go/qwen-3.6-plus | Best — efficient reviews |
+| OpenCode Go | opencode-go/qwen3.6-plus | Best — efficient reviews |
 | OpenCode Go | opencode-go/minimax-m2.7 | Detailed reviews |
 ---
 

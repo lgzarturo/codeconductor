@@ -9,7 +9,7 @@ description:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-haiku-4-5-20251001 | Fast — intake, Q&A |
-| OpenCode Go | opencode-go/qwen-3.6-plus | Best — efficient Q&A |
+| OpenCode Go | opencode-go/qwen3.6-plus | Best — efficient Q&A |
 | OpenCode Go | opencode-go/kimi-k2.6 | Alternative |
 ---
 

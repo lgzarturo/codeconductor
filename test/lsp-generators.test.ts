@@ -118,16 +118,16 @@ describe('LSP Config Generators', () => {
       expect(files[0].overwrite).toBe(false);
     });
 
-    test('generates TOML-formatted content with [[mcp_servers]] sections', () => {
+    test('generates TOML-formatted content with named mcp_servers sections', () => {
       const generator = createCodexLspGenerator();
       const files = generator.generate(installedResults);
 
       const content = files[0].content;
       expect(content).toContain('# Codex LSP Configuration');
-      expect(content).toContain('[[mcp_servers]]');
-      expect(content).toContain('name = "typescript"');
+      expect(content).toContain('[mcp_servers.typescript]');
       expect(content).toContain('command = "typescript-language-server"');
       expect(content).toContain('args = ["--stdio"]');
+      expect(content).toContain('startup_timeout_sec = 60');
     });
 
     test('omits args line for LSPs without args', () => {
@@ -139,8 +139,8 @@ describe('LSP Config Generators', () => {
       // TypeScript and PHP have args, so they have the line
       expect(content).toContain('args = ["--stdio"]');
       // python and kotlin should NOT have args line at all
-      expect(content).not.toMatch(/name = "python"\nargs/);
-      expect(content).not.toMatch(/name = "kotlin"\nargs/);
+      expect(content).not.toMatch(/\[mcp_servers\.python\]\nargs/);
+      expect(content).not.toMatch(/\[mcp_servers\.kotlin\]\nargs/);
     });
 
     test('has correct target property', () => {

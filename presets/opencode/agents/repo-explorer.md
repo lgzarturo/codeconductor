@@ -7,7 +7,6 @@ description:
 mode: subagent
 model: "{{MODEL}}"
 temperature: 0.1
-maxTurns: 35
 tools: Read, Glob, Grep, Bash
 permission:
   read: allow

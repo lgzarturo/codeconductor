@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
-import { readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { copyFromManifest } from '../src/core/presets/file-copier';
@@ -298,6 +299,41 @@ describe('copyFromManifest with modelConfig', () => {
     expect(existsSync(join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'))).toBe(false);
   });
 
+  test('global opencode config merge preserves existing keys even with force', async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), 'codeconductor-opencode-global-'));
+    try {
+      const existingPath = join(tempDir, '.opencode', 'opencode.jsonc');
+      await mkdir(join(tempDir, '.opencode'), { recursive: true });
+      await writeFile(
+        existingPath,
+        JSON.stringify({ custom: true, permission: { bash: { 'custom *': 'allow' } } }, null, 2),
+        'utf-8'
+      );
+
+      const modelConfig = await loadModelConfig('opencode');
+      const manifest = await loadManifest('opencode');
+      const results = await copyFromManifest(
+        manifest,
+        PRESETS_DIR,
+        tempDir,
+        true,
+        false,
+        true,
+        modelConfig
+      );
+
+      const configResult = results.find((r) => r.dest === existingPath);
+      const content = JSON.parse(await readFile(existingPath, 'utf-8'));
+
+      expect(configResult?.action).toBe('merged');
+      expect(content.custom).toBe(true);
+      expect(content.permission.bash['custom *']).toBe('allow');
+      expect(content.model).toBe('opencode-go/qwen3.7-max');
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
   test('template entries are detected from opencode manifest', async () => {
     const manifest = await loadManifest('opencode');
     const templateEntries = manifest.entries.filter((e) => e.template === true);
@@ -399,6 +435,7 @@ describe('Agent file templates (source presets)', () => {
       const content = await readFile(join(PRESETS_DIR, 'opencode', 'agents', file), 'utf-8');
       expect(content).toContain('tools:');
       expect(content).toContain('permission:');
+      expect(content).not.toContain('maxTurns:');
     }
   });
 
@@ -676,7 +713,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
 
     const content = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', 'docs.md'), 'utf-8');
     // opencode install: frontmatter has opencode model for docs
-    expect(content).toContain('qwen-3.6-plus');
+    expect(content).toContain('qwen3.6-plus');
     expect(content).not.toContain('{{MODEL}}');
   });
 });
@@ -703,6 +740,7 @@ describe('Tool name substitution', () => {
     expect(content).not.toContain('file_read / view_file');
     expect(content).not.toContain('dir_list / glob');
     expect(content).not.toContain('grep_search / search');
+    expect(content).not.toContain('maxTurns:');
     expect(content).toContain('permission:');
     expect(content).toContain('  read: allow');
     expect(content).toContain('  glob: allow');

@@ -3,6 +3,7 @@ entries:
   - src: opencode/opencode.jsonc
     dest: .opencode/opencode.jsonc
     strategy: overwrite
+    globalStrategy: merge-json
   - src: opencode/agents
     dest: .opencode/agents
     strategy: overwrite

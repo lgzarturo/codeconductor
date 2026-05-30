@@ -34,8 +34,8 @@ describe('LSP Registry', () => {
       const python = lsps.find((l) => l.id === 'python');
       expect(python).toBeDefined();
       expect(python!.language).toBe('python');
-      expect(python!.packageManager).toBe('pip');
-      expect(python!.binaryName).toBe('pylsp');
+      expect(python!.packageManager).toBe('npm');
+      expect(python!.binaryName).toBe('pyright-langserver');
     });
 
     test('contains kotlin LSP (binary)', () => {

@@ -172,7 +172,7 @@ npx cc-codeconductor install lsp --target cursor --force
 | ---------- | ------------------------- | -------------- |
 | TypeScript | `typescript-language-server` | npm (`-g`)  |
 | PHP        | `intelephense`            | npm (`-g`)     |
-| Python     | `python-lsp-server`       | pip (`--user`) |
+| Python     | `pyright`                 | npm (`-g`)     |
 | Kotlin     | `kotlin-language-server`  | binary download |
 
 **Supported AI tool targets:**
@@ -180,10 +180,10 @@ npx cc-codeconductor install lsp --target cursor --force
 | Target     | Config file written        |
 | ---------- | -------------------------- |
 | `opencode` | `.opencode/opencode.json`  |
-| `claude`   | `.claude/settings.json`    |
+| `claude`   | `.claude/plugins/codeconductor-lsp/.lsp.json` |
 | `codex`    | `.codex/config.toml`       |
 | `gemini`   | `.gemini/settings.json`    |
-| `cursor`   | `.cursor/mcp.json`         |
+| `cursor`   | `.cursor/settings.json`    |
 | `agy`      | `.agy/tools.yaml` (experimental) |
 
 **Options:**

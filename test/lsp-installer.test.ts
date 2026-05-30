@@ -126,18 +126,18 @@ describe('LspInstaller Domain Types', () => {
       const def: LspDefinition = {
         id: 'python',
         language: 'python',
-        serverName: 'Python LSP Server',
-        packageManager: 'pip',
-        package: 'python-lsp-server',
-        binaryName: 'pylsp',
-        installCmd: 'pip install --user python-lsp-server',
+        serverName: 'Pyright',
+        packageManager: 'npm',
+        package: 'pyright',
+        binaryName: 'pyright-langserver',
+        installCmd: 'npm install -g pyright',
         versionFlag: '--version',
-        pipDetect: 'python-lsp-server',
+        npmDetect: 'pyright',
       };
 
       expect(def.id).toBe('python');
       expect(def.language).toBe('python');
-      expect(def.packageManager).toBe('pip');
+      expect(def.packageManager).toBe('npm');
     });
 
     test('kotlin definition has correct structure with binary platforms', () => {

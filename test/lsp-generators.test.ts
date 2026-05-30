@@ -38,38 +38,19 @@ describe('LSP Config Generators', () => {
       expect(files[0].overwrite).toBe(false);
     });
 
-    test('generates valid opencode MCP config', () => {
+    test('generates valid opencode LSP config', () => {
       const generator = createOpenCodeLspGenerator();
       const files = generator.generate(installedResults);
 
       const config = JSON.parse(files[0].content);
       expect(config.$schema).toBe('https://opencode.ai/config.json');
-      expect(config.mcp).toBeDefined();
+      expect(config.languageServers).toBeDefined();
+      expect(config.mcp).toBeUndefined();
       expect(config.mcpServers).toBeUndefined();
-      expect(config.mcp.typescript).toEqual({
-        type: 'local',
-        command: ['typescript-language-server', '--stdio'],
-        enabled: true,
-        timeout: 120000,
-      });
-      expect(config.mcp.php).toEqual({
-        type: 'local',
-        command: ['intelephense', '--stdio'],
-        enabled: true,
-        timeout: 120000,
-      });
-      expect(config.mcp.python).toEqual({
-        type: 'local',
-        command: ['pylsp'],
-        enabled: true,
-        timeout: 120000,
-      });
-      expect(config.mcp.kotlin).toEqual({
-        type: 'local',
-        command: ['kotlin-language-server'],
-        enabled: true,
-        timeout: 120000,
-      });
+      expect(config.languageServers.typescript).toEqual({ command: 'typescript-language-server', args: ['--stdio'] });
+      expect(config.languageServers.php).toEqual({ command: 'intelephense', args: ['--stdio'] });
+      expect(config.languageServers.python).toEqual({ command: 'pyright-langserver', args: ['--stdio'] });
+      expect(config.languageServers.kotlin).toEqual({ command: 'kotlin-language-server', args: [] });
     });
 
     test('excludes failed LSPs from config', () => {
@@ -77,9 +58,9 @@ describe('LSP Config Generators', () => {
       const files = generator.generate(partialResults);
 
       const config = JSON.parse(files[0].content);
-      expect(config.mcp.typescript).toBeDefined();
-      expect(config.mcp.php).toBeDefined();
-      expect(config.mcp.python).toBeUndefined(); // failed
+      expect(config.languageServers.typescript).toBeDefined();
+      expect(config.languageServers.php).toBeDefined();
+      expect(config.languageServers.python).toBeUndefined(); // failed
     });
 
     test('returns empty array when no successful LSPs', () => {
@@ -102,25 +83,26 @@ describe('LSP Config Generators', () => {
   });
 
   describe('ClaudeLspGenerator', () => {
-    test('generates .claude/settings.json config', () => {
+    test('generates Claude LSP plugin config', () => {
       const generator = createClaudeLspGenerator();
       const files = generator.generate(installedResults);
 
       expect(files).toHaveLength(1);
-      expect(files[0].path).toBe('.claude/settings.json');
+      expect(files[0].path).toBe('.claude/plugins/codeconductor-lsp/.lsp.json');
       expect(files[0].overwrite).toBe(false);
     });
 
-    test('generates valid JSON with mcpServers', () => {
+    test('generates valid JSON without MCP server config', () => {
       const generator = createClaudeLspGenerator();
       const files = generator.generate(installedResults);
 
       const config = JSON.parse(files[0].content);
-      expect(config.mcpServers).toBeDefined();
-      expect(config.mcpServers.typescript).toEqual({ command: 'typescript-language-server', args: ['--stdio'] });
-      expect(config.mcpServers.php).toEqual({ command: 'intelephense', args: ['--stdio'] });
-      expect(config.mcpServers.python).toEqual({ command: 'pylsp', args: [] });
-      expect(config.mcpServers.kotlin).toEqual({ command: 'kotlin-language-server', args: [] });
+      expect(config.mcp).toBeUndefined();
+      expect(config.mcpServers).toBeUndefined();
+      expect(config.typescript).toEqual({ command: 'typescript-language-server', args: ['--stdio'] });
+      expect(config.php).toEqual({ command: 'intelephense', args: ['--stdio'] });
+      expect(config.python).toEqual({ command: 'pyright-langserver', args: ['--stdio'] });
+      expect(config.kotlin).toEqual({ command: 'kotlin-language-server', args: [] });
     });
 
     test('has correct target property', () => {
@@ -140,16 +122,17 @@ describe('LSP Config Generators', () => {
       expect(files[0].overwrite).toBe(false);
     });
 
-    test('generates TOML-formatted content with named mcp_servers sections', () => {
+    test('generates TOML-formatted content with named language_servers sections', () => {
       const generator = createCodexLspGenerator();
       const files = generator.generate(installedResults);
 
       const content = files[0].content;
       expect(content).toContain('# Codex LSP Configuration');
-      expect(content).toContain('[mcp_servers.typescript]');
+      expect(content).toContain('[language_servers.typescript]');
+      expect(content).not.toContain('[mcp_servers.');
+      expect(content).not.toContain('startup_timeout_sec');
       expect(content).toContain('command = "typescript-language-server"');
       expect(content).toContain('args = ["--stdio"]');
-      expect(content).toContain('startup_timeout_sec = 120');
     });
 
     test('omits args line for LSPs without args', () => {
@@ -157,12 +140,10 @@ describe('LSP Config Generators', () => {
       const files = generator.generate(installedResults);
 
       const content = files[0].content;
-      // python and kotlin have empty args - args line should be omitted
-      // TypeScript and PHP have args, so they have the line
+      // Kotlin has empty args - args line should be omitted.
+      // TypeScript, PHP, and Python have args, so they have the line.
       expect(content).toContain('args = ["--stdio"]');
-      // python and kotlin should NOT have args line at all
-      expect(content).not.toMatch(/\[mcp_servers\.python\]\nargs/);
-      expect(content).not.toMatch(/\[mcp_servers\.kotlin\]\nargs/);
+      expect(content).not.toMatch(/\[language_servers\.kotlin\]\nargs/);
     });
 
     test('has correct target property', () => {
@@ -182,16 +163,17 @@ describe('LSP Config Generators', () => {
       expect(files[0].overwrite).toBe(false);
     });
 
-    test('generates valid JSON with mcpServers', () => {
+    test('generates valid JSON with languageServers', () => {
       const generator = createGeminiLspGenerator();
       const files = generator.generate(installedResults);
 
       const config = JSON.parse(files[0].content);
-      expect(config.mcpServers).toBeDefined();
-      expect(config.mcpServers.typescript).toEqual({ command: 'typescript-language-server', args: ['--stdio'] });
-      expect(config.mcpServers.php).toEqual({ command: 'intelephense', args: ['--stdio'] });
-      expect(config.mcpServers.python).toEqual({ command: 'pylsp', args: [] });
-      expect(config.mcpServers.kotlin).toEqual({ command: 'kotlin-language-server', args: [] });
+      expect(config.languageServers).toBeDefined();
+      expect(config.mcpServers).toBeUndefined();
+      expect(config.languageServers.typescript).toEqual({ command: 'typescript-language-server', args: ['--stdio'] });
+      expect(config.languageServers.php).toEqual({ command: 'intelephense', args: ['--stdio'] });
+      expect(config.languageServers.python).toEqual({ command: 'pyright-langserver', args: ['--stdio'] });
+      expect(config.languageServers.kotlin).toEqual({ command: 'kotlin-language-server', args: [] });
     });
 
     test('has correct target property', () => {
@@ -202,25 +184,26 @@ describe('LSP Config Generators', () => {
   });
 
   describe('CursorLspGenerator (NEW)', () => {
-    test('generates .cursor/mcp.json config', () => {
+    test('generates .cursor/settings.json config', () => {
       const generator = createCursorLspGenerator();
       const files = generator.generate(installedResults);
 
       expect(files).toHaveLength(1);
-      expect(files[0].path).toBe('.cursor/mcp.json');
+      expect(files[0].path).toBe('.cursor/settings.json');
       expect(files[0].overwrite).toBe(false);
     });
 
-    test('generates valid JSON with mcpServers', () => {
+    test('generates valid JSON with languageServers', () => {
       const generator = createCursorLspGenerator();
       const files = generator.generate(installedResults);
 
       const config = JSON.parse(files[0].content);
-      expect(config.mcpServers).toBeDefined();
-      expect(config.mcpServers.typescript).toEqual({ command: 'typescript-language-server', args: ['--stdio'] });
-      expect(config.mcpServers.php).toEqual({ command: 'intelephense', args: ['--stdio'] });
-      expect(config.mcpServers.python).toEqual({ command: 'pylsp', args: [] });
-      expect(config.mcpServers.kotlin).toEqual({ command: 'kotlin-language-server', args: [] });
+      expect(config.languageServers).toBeDefined();
+      expect(config.mcpServers).toBeUndefined();
+      expect(config.languageServers.typescript).toEqual({ command: 'typescript-language-server', args: ['--stdio'] });
+      expect(config.languageServers.php).toEqual({ command: 'intelephense', args: ['--stdio'] });
+      expect(config.languageServers.python).toEqual({ command: 'pyright-langserver', args: ['--stdio'] });
+      expect(config.languageServers.kotlin).toEqual({ command: 'kotlin-language-server', args: [] });
     });
 
     test('has correct target property', () => {
@@ -256,9 +239,10 @@ describe('LSP Config Generators', () => {
       const files = generator.generate(installedResults);
 
       const content = files[0].content;
-      // python and kotlin have empty args - should not have args line
+      // Kotlin has empty args - should not have args line.
       expect(content).toContain('python:');
-      expect(content).toContain('command: pylsp');
+      expect(content).toContain('command: pyright-langserver');
+      expect(content).toContain('args: [--stdio]');
     });
 
     test('has correct target property', () => {
@@ -273,7 +257,7 @@ describe('LSP Config Generators', () => {
     const expectedCommands: Record<string, { command: string; args: string[] }> = {
       typescript: { command: 'typescript-language-server', args: ['--stdio'] },
       php: { command: 'intelephense', args: ['--stdio'] },
-      python: { command: 'pylsp', args: [] },
+      python: { command: 'pyright-langserver', args: ['--stdio'] },
       kotlin: { command: 'kotlin-language-server', args: [] },
     };
 
@@ -286,9 +270,10 @@ describe('LSP Config Generators', () => {
         const generator = generatorFn();
         const files = generator.generate(installedResults);
         const config = JSON.parse(files[0].content);
+        const languageServers = generator.name === 'claude-lsp' ? config : config.languageServers;
 
         for (const lsp of lsps) {
-          expect(config.mcpServers[lsp]).toEqual(expectedCommands[lsp]);
+          expect(languageServers[lsp]).toEqual(expectedCommands[lsp]);
         }
       });
     }

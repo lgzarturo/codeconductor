@@ -196,7 +196,7 @@ npx cc-codeconductor install lsp --target cursor --dry-run  # preview
 npx cc-codeconductor install lsp --target all --force       # overwrite existing configs
 ```
 
-Supported languages: TypeScript, PHP, Python, Kotlin.
+Supported languages: TypeScript, PHP, Python via Pyright, Kotlin.
 Supported targets: opencode, claude, codex, gemini, cursor, agy.
 
 #### `doctor` — validate configuration

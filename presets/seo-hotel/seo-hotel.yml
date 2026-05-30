@@ -1,0 +1,55 @@
+name: seo-hotel
+version: 0.3.0
+description: SEO/GEO audit suite for hotel and hospitality websites
+outputContract: v1
+
+agents:
+  - id: seo-auditor
+    role: SEO Auditor
+    context: repo-readonly
+    modelHint: analytical
+    focus:
+      - technical-seo
+      - meta-tags
+      - crawlability
+      - page-speed
+
+  - id: schema-validator
+    role: Schema Validator
+    context: repo-readonly
+    modelHint: strong-reasoning
+    focus:
+      - schema-org
+      - json-ld
+      - structured-data
+      - rich-results
+
+  - id: geo-specialist
+    role: GEO Specialist
+    context: repo-readonly
+    modelHint: balanced
+    focus:
+      - ai-search
+      - citable-content
+      - llms-txt
+      - generative-engine-optimization
+
+  - id: content-strategist
+    role: Content Strategist
+    context: prompt-only
+    modelHint: balanced
+    focus:
+      - content-marketing
+      - off-page-seo
+      - backlinks
+      - hotel-copywriting
+
+  - id: astro-specialist
+    role: Astro Specialist
+    context: repo-readonly
+    modelHint: practical-coding
+    focus:
+      - astro-framework
+      - static-generation
+      - islands-architecture
+      - performance

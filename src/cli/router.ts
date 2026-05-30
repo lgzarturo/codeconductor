@@ -9,6 +9,9 @@ import {
   type InstallPresetOptions,
 } from '../commands/install.command';
 import { installLspCommand, type InstallLspOptions } from '../commands/install-lsp.command';
+import { seoAuditCommand } from '../commands/seo-audit.command';
+import { seoLlmsCommand } from '../commands/seo-llms.command';
+import type { SeoAuditOptions, SeoLlmsOptions } from '../domain/seo/seo-types';
 import { updateCommand, type UpdateOptions } from '../commands/update.command';
 import type { OutputMode } from '../utils/logger';
 
@@ -127,6 +130,8 @@ Commands:
   install council        Install generated council spec files to runner targets
   install preset         Install full preset (agents, prompts, skills, commands)
   install lsp            Install and configure LSP servers for AI coding tools
+  seo audit              Run SEO audit on a URL or sitemap
+  seo llms               Generate llms.txt from a URL or sitemap
   doctor                 Validate configuration and generated files
   update                 Update installed presets
 
@@ -157,6 +162,11 @@ Examples:
   npx cc-codeconductor install lsp --target claude --dry-run
   npx cc-codeconductor doctor
   npx cc-codeconductor update --dry-run
+  npx cc-codeconductor seo audit --url https://example.com
+  npx cc-codeconductor seo audit --sitemap https://example.com/sitemap.xml
+  npx cc-codeconductor seo audit --sitemap https://example.com/sitemap.xml --format markdown
+  npx cc-codeconductor seo llms --sitemap https://example.com/sitemap.xml
+  npx cc-codeconductor seo llms --url https://example.com --output llms.txt
 `;
 }
 
@@ -247,6 +257,38 @@ export async function routeCommand(
         force: flags.force,
         output: flags.output,
       } as UpdateOptions);
+
+    case 'seo': {
+      if (subcommand === 'audit') {
+        return seoAuditCommand({
+          url: options.url as string | undefined,
+          sitemap: options.sitemap as string | undefined,
+          format: (options.format as SeoAuditOptions['format']) ?? (flags.output === 'json' ? 'json' : 'cli'),
+          failOn: (options['fail-on'] as SeoAuditOptions['failOn']) ?? 'error',
+          delay: options.delay ? parseInt(String(options.delay), 10) : 500,
+          output: options.output as string | undefined,
+          followRedirects: options['follow-redirects'] === true,
+          projectRoot,
+        } as SeoAuditOptions);
+      }
+      if (subcommand === 'llms') {
+        return seoLlmsCommand({
+          url: options.url as string | undefined,
+          sitemap: options.sitemap as string | undefined,
+          output: options.output as string | undefined,
+          delay: options.delay ? parseInt(String(options.delay), 10) : 500,
+          projectRoot,
+        } as SeoLlmsOptions);
+      }
+      return {
+        code: 1,
+        data: {
+          success: false,
+          command: 'seo',
+          errors: ['Usage: seo audit|llms. Run `codeconductor seo audit --help` for details.'],
+        },
+      };
+    }
 
     default:
       return {

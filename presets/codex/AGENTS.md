@@ -44,6 +44,7 @@ language patterns to activate each workflow:
 | Code review  | "Run a structured review of: [target]"            |
 | Test plan    | "Create a test plan for: [scope]"                 |
 | Task intake  | "Help me define a Task Card for: [vague request]" |
+| PageSpeed    | "Run a PageSpeed audit for: [url]"                |
 
 ---
 

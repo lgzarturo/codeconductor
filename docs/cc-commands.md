@@ -308,6 +308,80 @@ npx cc-codeconductor update --force
 
 ---
 
+---
+
+## Agent Commands (Claude / OpenCode)
+
+Agent commands are slash commands available inside Claude Code and OpenCode. They
+are installed as part of the preset (see `install preset`). Unlike CLI commands,
+they do not require `npx cc-codeconductor` — they are invoked directly in the
+conversation.
+
+---
+
+### `/cc-pagespeed --url <url>`
+
+Audits web performance using the PageSpeed Insights API (PSI v5). Applies the
+80/20 principle to produce a prioritized markdown report of Core Web Vitals with
+framework-specific code fixes.
+
+**Available in**: Claude Code (`/cc-pagespeed`), OpenCode (`cc-pagespeed`),
+Codex (trigger: `"Run a PageSpeed audit for: [url]"`).
+
+**Parameters:**
+
+| Parameter    | Required | Description                                         |
+| ------------ | -------- | --------------------------------------------------- |
+| `--url`      | Yes      | Full URL to audit (must include `https://`)         |
+| `--strategy` | No       | `mobile`, `desktop`, or `both` (default: `both`)   |
+
+**Requires: `PAGESPEED_API_KEY`** — optional but strongly recommended.
+
+| Mode         | Lab data | CrUX field data  | Daily quota      |
+| ------------ | -------- | ---------------- | ---------------- |
+| With key     | ✅        | ✅ (real users)  | 25,000 req/day   |
+| Without key  | ✅        | ❌               | Shared limit     |
+
+Set the key in your environment:
+
+```powershell
+# Windows PowerShell
+$env:PAGESPEED_API_KEY = "your-api-key"
+
+# macOS / Linux
+export PAGESPEED_API_KEY="your-api-key"
+```
+
+Get a free key: <https://developers.google.com/speed/docs/insights/v5/get-started>
+
+**Output:** Report saved as `{YYYY-MM-DD}_pagespeed-{hostname}-claude.md` in
+the current working directory.
+
+**Metrics analyzed:**
+
+- Core Web Vitals: LCP, INP, CLS, FCP, TBT, TTFB
+- LCP element identification
+- Third-party scripts by blocking time
+- Render-blocking resources
+- Unused JavaScript and CSS (bytes saved)
+- Resource hints: `preload`, `preconnect`, `prefetch`
+- Image optimization: WebP, lazy loading, `fetchpriority`
+- Font loading: `font-display`, preloaded subsets
+
+**Examples:**
+
+```bash
+# Full audit — mobile + desktop
+/cc-pagespeed --url https://www.example.com
+
+# Mobile only
+/cc-pagespeed --url https://www.example.com --strategy mobile
+```
+
+See `docs/pagespeed-usage.md` for the complete usage guide.
+
+---
+
 ## Target Resolution
 
 The `--target` option accepts these values:

@@ -36,6 +36,11 @@ contracts, task cards, and risk-based routing.
 >   a sitemap.xml with rate limiting and SSRF prevention
 > - `npx cc-codeconductor seo llms --sitemap <url>` — generates a `llms.txt` file
 >   for AI-search readiness from sitemap content
+> - `/cc-pagespeed --url <url>` — audits web performance using the PageSpeed
+>   Insights API; applies the 80/20 principle to produce a prioritized report of
+>   Core Web Vitals (LCP, TBT, CLS, FCP, TTFB) with framework-specific fixes;
+>   requires `PAGESPEED_API_KEY` env var for full CrUX field data (optional but
+>   recommended)
 > - Manual presets for OpenCode, Claude Code, and Codex
 > - Versioned Agent Contracts
 > - Routing Policy documentation

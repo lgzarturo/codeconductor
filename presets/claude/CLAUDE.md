@@ -566,6 +566,10 @@ operations, or Alembic migrations, apply `.claude/skills/sqlalchemy/SKILL.md`.
 When the user asks to create a Spring Boot feature (entity, service, controller,
 or tests), apply `.claude/skills/spring-boot-feature/SKILL.md`.
 
+When the active task requires web performance analysis, Core Web Vitals auditing,
+PageSpeed Insights data, or optimization of LCP, TBT, CLS, FCP, or TTFB, apply
+`.claude/skills/pagespeed-perf/SKILL.md`.
+
 ---
 
 ## What Never Changes

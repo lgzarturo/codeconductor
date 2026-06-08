@@ -191,12 +191,12 @@ function substituteToolNames(content: string, modelConfig: ModelConfig): string 
 
   const target = modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor' | 'agy';
 
-  const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!fmMatch) return content;
 
   const frontmatter = fmMatch[1];
   if (target === 'opencode' && modelConfig.permissions) {
-    const updatedFrontmatter = frontmatter.replace(/^tools:\s*(.+)\n?/m, '');
+    const updatedFrontmatter = frontmatter.replace(/^tools:\s*(.+)\r?\n?/m, '');
     return content.replace(fmMatch[0], `---\n${updatedFrontmatter}\n---`);
   }
 

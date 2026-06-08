@@ -8,7 +8,7 @@ describe('npm package bin', () => {
   test('CLI entrypoint declares a Node shebang', async () => {
     const entrypoint = await readFile(resolve(PROJECT_ROOT, 'src', 'cli', 'main.ts'), 'utf-8');
 
-    expect(entrypoint.startsWith('#!/usr/bin/env node\n')).toBe(true);
+    expect(entrypoint.startsWith('#!/usr/bin/env node')).toBe(true);
   });
 
   test('package bin exposes cc-codeconductor and legacy codeconductor commands', async () => {

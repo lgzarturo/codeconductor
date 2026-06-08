@@ -85,3 +85,6 @@ Run a comprehensive SEO and GEO audit on hotel and hospitality websites.
 - `geo-readiness` — AI-search readiness (GEO)
 - `astro-seo` — Astro framework SEO validation
 - `off-page` — Off-page SEO strategy guidance
+- `pagespeed-insights` — Audit web pages for performance optimization following PageSpeed Insights guidelines
+- `find-skills` — Discover and install agent skills
+

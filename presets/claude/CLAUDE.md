@@ -568,7 +568,9 @@ or tests), apply `.claude/skills/spring-boot-feature/SKILL.md`.
 
 When the active task requires web performance analysis, Core Web Vitals auditing,
 PageSpeed Insights data, or optimization of LCP, TBT, CLS, FCP, or TTFB, apply
-`.claude/skills/pagespeed-perf/SKILL.md`.
+`.claude/skills/pagespeed-perf/SKILL.md` and `.claude/skills/pagespeed-insights/SKILL.md`.
+
+When the user asks about discovering, searching, or installing agent skills or extending capabilities, apply `.claude/skills/find-skills/SKILL.md`.
 
 ---
 

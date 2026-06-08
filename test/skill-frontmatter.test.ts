@@ -11,9 +11,10 @@ describe('tracked skills', () => {
     expect(existsSync(skillPath)).toBe(true);
 
     const content = readFileSync(skillPath, 'utf-8');
-    expect(content.startsWith('---\n')).toBe(true);
-    expect(content).toContain('\nname: council\n');
-    expect(content).toContain('\ndescription: Multi-agent council for code review and architecture decisions\n');
-    expect(content.indexOf('\n---\n')).toBeGreaterThan(0);
+    expect(content.startsWith('---\n') || content.startsWith('---\r\n')).toBe(true);
+    const normalized = content.replace(/\r/g, '');
+    expect(normalized).toContain('\nname: council\n');
+    expect(normalized).toContain('\ndescription: Multi-agent council for code review and architecture decisions\n');
+    expect(normalized.indexOf('\n---\n')).toBeGreaterThan(0);
   });
 });

@@ -7,9 +7,11 @@ entries:
   - src: agy/rules
     dest: .agents/rules
     strategy: overwrite
+    template: true
   - src: agy/workflows
     dest: .agents/workflows
     strategy: overwrite
+    template: true
   - src: opencode/skills
     dest: .agents/skills
     strategy: overwrite

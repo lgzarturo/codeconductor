@@ -1,7 +1,13 @@
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
-import { getLanguageInstruction, LOCALE_PLACEHOLDER } from '../i18n/language-instructions';
+import {
+  getLanguageInstruction,
+  LOCALE_PLACEHOLDER,
+  COMMIT_STYLE,
+  COMMIT_WORKFLOW,
+  type SupportedLocale,
+} from '../i18n/language-instructions';
 import type {
   InstallManifest,
   InstallStrategy,
@@ -114,6 +120,11 @@ function extractAgentRole(filePath: string): string | null {
  * appear AFTER the --- separator and before the next agent section to parse correctly.
  */
 function renderTemplate(content: string, modelConfig: ModelConfig, filePath: string, locale = 'en'): string {
+  const cleanLocale = (locale === 'es' || locale === 'en') ? locale : 'en';
+  const templatedContent = content
+    .replace(/\{\{COMMIT_STYLE\}\}/g, COMMIT_STYLE[cleanLocale])
+    .replace(/\{\{COMMIT_WORKFLOW\}\}/g, COMMIT_WORKFLOW[cleanLocale]);
+
   const agentRole = extractAgentRole(filePath);
 
   // Handle single agent file (e.g., architect.md)
@@ -121,7 +132,7 @@ function renderTemplate(content: string, modelConfig: ModelConfig, filePath: str
     const agentModels = modelConfig.agents[agentRole];
     const targetModel =
       agentModels[modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor' | 'agy'];
-    let result = content
+    let result = templatedContent
       .replace(/\{\{MODEL\}\}/g, targetModel ?? '')
       .replace(/\{\{MODEL_CLAUDE\}\}/g, agentModels.claude ?? '')
       .replace(/\{\{MODEL_OPENCODE\}\}/g, agentModels.opencode ?? '')
@@ -150,7 +161,7 @@ function renderTemplate(content: string, modelConfig: ModelConfig, filePath: str
     'docs',
     'repo-explorer',
   ];
-  let result = content;
+  let result = templatedContent;
 
   for (const role of knownRoles) {
     if (!modelConfig.agents[role]) continue;

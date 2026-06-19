@@ -187,10 +187,10 @@ export async function installPresetCommand(
 
     for (const t of targets) {
       const manifest = await loadManifest(
-        t as 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor'
+        t as 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'
       );
       const modelConfig = await loadModelConfig(
-        t as 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor'
+        t as 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'
       );
       const results = await copyFromManifest(
         manifest,

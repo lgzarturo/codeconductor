@@ -57,3 +57,19 @@ agents:
     gemini: gemini-2.5-flash
     cursor: gpt-5.4-mini
     agy: gemini-2.5-flash
+tools:
+  Read:
+    agy: view_file
+  Write:
+    agy: write_to_file
+  Edit:
+    agy: replace_file_content / multi_replace_file_content
+  Bash:
+    agy: run_command
+  Glob:
+    agy: list_dir
+  Grep:
+    agy: grep_search
+  WebFetch:
+    agy: read_url_content / read_browser_page
+

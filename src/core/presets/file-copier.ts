@@ -1,4 +1,5 @@
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { getLanguageInstruction, LOCALE_PLACEHOLDER } from '../i18n/language-instructions';
 import type {
@@ -321,7 +322,18 @@ export async function copyFromManifest(
   for (const entry of manifest.entries) {
     const strategy: InstallStrategy =
       isGlobal && entry.globalStrategy ? entry.globalStrategy : entry.strategy;
-    const files = await resolveEntryFiles(entry, presetsDir, baseDir);
+
+    let resolvedBaseDir = baseDir;
+    let resolvedEntry = entry;
+    if (manifest.target === 'agy' && isGlobal) {
+      resolvedBaseDir = join(homedir(), '.gemini', 'config');
+      resolvedEntry = {
+        ...entry,
+        dest: entry.dest.replace(/^\.agents\/?/, ''),
+      };
+    }
+
+    const files = await resolveEntryFiles(resolvedEntry, presetsDir, resolvedBaseDir);
     const isTemplate = entry.template === true;
 
     for (const { src, dest } of files) {

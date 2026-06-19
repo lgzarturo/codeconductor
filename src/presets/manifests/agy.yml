@@ -1,9 +1,23 @@
 target: agy
 entries:
+  - src: agy/AGENTS.md
+    dest: .agents/AGENTS.md
+    strategy: merge-managed
+    template: true
+  - src: agy/rules
+    dest: .agents/rules
+    strategy: overwrite
+  - src: agy/workflows
+    dest: .agents/workflows
+    strategy: overwrite
+  - src: opencode/skills
+    dest: .agents/skills
+    strategy: overwrite
   - src: opencode/agents
-    dest: .agy/agents
+    dest: .agents/agents
     strategy: overwrite
     template: true
   - src: opencode/prompts/v0.2.0
-    dest: .agy/prompts/v0.2.0
+    dest: .agents/prompts/v0.2.0
     strategy: overwrite
+

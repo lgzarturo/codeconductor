@@ -2,6 +2,10 @@
 
 Run a comprehensive SEO and GEO audit on hotel and hospitality websites.
 
+> Spanish prose/docs/reports/Markdown: preserve natural Spanish orthography,
+> including accents, `ñ`, `¿`, `¡`, and normal Unicode. The ASCII-only editing
+> preference does not apply to these artifacts.
+
 ## Usage
 
 ```
@@ -12,15 +16,15 @@ Run a comprehensive SEO and GEO audit on hotel and hospitality websites.
 
 ## Parameters
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `--url` | One of `--url` or `--sitemap` | Single URL to audit |
+| Parameter   | Required                      | Description                                                    |
+| ----------- | ----------------------------- | -------------------------------------------------------------- |
+| `--url`     | One of `--url` or `--sitemap` | Single URL to audit                                            |
 | `--sitemap` | One of `--url` or `--sitemap` | Remote sitemap XML URL. Only URLs listed here will be audited. |
-| `--format` | No | Output format: `cli` (default) or `json` |
-| `--fail-on` | No | Exit code trigger: `error` (default) or `warning` |
-| `--astro` | No | Run Astro-specific SEO validation on source code |
-| `--path` | With `--astro` | Path to Astro source directory |
-| `--delay` | No | Delay between requests in ms (default: 500) |
+| `--format`  | No                            | Output format: `cli` (default) or `json`                       |
+| `--fail-on` | No                            | Exit code trigger: `error` (default) or `warning`              |
+| `--astro`   | No                            | Run Astro-specific SEO validation on source code               |
+| `--path`    | With `--astro`                | Path to Astro source directory                                 |
+| `--delay`   | No                            | Delay between requests in ms (default: 500)                    |
 
 ## Workflow
 
@@ -55,7 +59,8 @@ Run a comprehensive SEO and GEO audit on hotel and hospitality websites.
 
 ## Hard Rules
 
-- **Sitemap-scoped only.** When `--sitemap` is provided, only audit URLs from the sitemap.
+- **Sitemap-scoped only.** When `--sitemap` is provided, only audit URLs from
+  the sitemap.
 - **No external crawling.** Never follow hyperlinks found on pages.
 - **GET only.** No POST, PUT, DELETE requests.
 - **No auth.** Never send cookies, tokens, or API keys.
@@ -85,6 +90,6 @@ Run a comprehensive SEO and GEO audit on hotel and hospitality websites.
 - `geo-readiness` — AI-search readiness (GEO)
 - `astro-seo` — Astro framework SEO validation
 - `off-page` — Off-page SEO strategy guidance
-- `pagespeed-insights` — Audit web pages for performance optimization following PageSpeed Insights guidelines
+- `pagespeed-insights` — Audit web pages for performance optimization following
+  PageSpeed Insights guidelines
 - `find-skills` — Discover and install agent skills
-

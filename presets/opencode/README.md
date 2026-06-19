@@ -46,16 +46,16 @@ providers)** models.
 
 ## Agent Modes
 
-| Agent             | Mode      | Description                                          |
-| ----------------- | --------- | ---------------------------------------------------- |
-| **Orchestrator**  | primary   | Main coordinator — Tab to switch to it               |
-| **Architect**     | subagent  | Invoked by Orchestrator for design work              |
-| **Implementer**   | subagent  | Invoked by Orchestrator for code implementation      |
-| **Tester**        | subagent  | Invoked by Orchestrator for test generation          |
-| **Reviewer**      | subagent  | Invoked by Orchestrator for code review              |
-| **Task Coach**    | subagent  | Invoked by Orchestrator for intake clarification     |
-| **Docs**          | subagent  | Invoked by Orchestrator for documentation updates    |
-| **Repo Explorer** | subagent  | Invoked by Orchestrator for codebase exploration     |
+| Agent             | Mode     | Description                                       |
+| ----------------- | -------- | ------------------------------------------------- |
+| **Orchestrator**  | primary  | Main coordinator — Tab to switch to it            |
+| **Architect**     | subagent | Invoked by Orchestrator for design work           |
+| **Implementer**   | subagent | Invoked by Orchestrator for code implementation   |
+| **Tester**        | subagent | Invoked by Orchestrator for test generation       |
+| **Reviewer**      | subagent | Invoked by Orchestrator for code review           |
+| **Task Coach**    | subagent | Invoked by Orchestrator for intake clarification  |
+| **Docs**          | subagent | Invoked by Orchestrator for documentation updates |
+| **Repo Explorer** | subagent | Invoked by Orchestrator for codebase exploration  |
 
 ---
 
@@ -183,6 +183,9 @@ export KIMI_API_KEY="your-key"
 - Keep solutions simple and direct.
 - User instructions always override this file.
 - When using tools, be precise and minimal with context.
+- Spanish prose/docs/reports/Markdown: preserve natural Spanish orthography,
+  including accents, `ñ`, `¿`, `¡`, and normal Unicode. The ASCII-only editing
+  preference does not apply to these artifacts.
 
 ## Context Budget
 

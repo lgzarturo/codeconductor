@@ -34,17 +34,17 @@ Skipping any step is not an optimization. It is a defect.
 Codex does not load custom slash commands from this preset. Use these natural
 language patterns to activate each workflow:
 
-| Workflow     | Trigger phrase                                    |
-| ------------ | ------------------------------------------------- |
-| Full feature | "Run the feature workflow for: [description]"     |
-| Bug fix      | "Run the fix workflow for: [description]"         |
-| Refactor     | "Run the refactor workflow for: [scope]"          |
-| API contract | "Run the API contract workflow for: [change]"     |
+| Workflow     | Trigger phrase                                     |
+| ------------ | -------------------------------------------------- |
+| Full feature | "Run the feature workflow for: [description]"      |
+| Bug fix      | "Run the fix workflow for: [description]"          |
+| Refactor     | "Run the refactor workflow for: [scope]"           |
+| API contract | "Run the API contract workflow for: [change]"      |
 | DB migration | "Run the database migration workflow for: [scope]" |
-| Code review  | "Run a structured review of: [target]"            |
-| Test plan    | "Create a test plan for: [scope]"                 |
-| Task intake  | "Help me define a Task Card for: [vague request]" |
-| PageSpeed    | "Run a PageSpeed audit for: [url]"                |
+| Code review  | "Run a structured review of: [target]"             |
+| Test plan    | "Create a test plan for: [scope]"                  |
+| Task intake  | "Help me define a Task Card for: [vague request]"  |
+| PageSpeed    | "Run a PageSpeed audit for: [url]"                 |
 
 ---
 
@@ -374,15 +374,16 @@ designed. Minimal diff. No scope creep. No invented architecture.
   `npm run lint`, `uv run pytest`, `make tests`)
 - network: `deny`
 
-**Does not:** Design architecture. Force push. Declare done before running tests.
+**Does not:** Design architecture. Force push. Declare done before running
+tests.
 
 **Model:** `{{MODEL_CODEX}}`
 
 **Pre-implementation checklist:**
 
 0. Create a Git Worktree for this session before opening any file for editing:
-   `git worktree add ../<branch>-session <branch>`
-   All changes happen inside this worktree. Never modify the main working tree directly.
+   `git worktree add ../<branch>-session <branch>` All changes happen inside
+   this worktree. Never modify the main working tree directly.
 1. Read the Technical Plan completely.
 2. Read each file listed under "Files Affected."
 3. Understand existing patterns in those files.
@@ -392,7 +393,8 @@ designed. Minimal diff. No scope creep. No invented architecture.
 **Implementation rules:**
 
 - **Work in a worktree.** Create a session worktree before touching any file.
-  All edits happen inside it. Include the worktree path in the Implementation Summary.
+  All edits happen inside it. Include the worktree path in the Implementation
+  Summary.
 - **Minimal diff.** Change only what the plan specifies.
 - **Follow existing patterns.** Match naming conventions, error handling, and
   module structure already present in the codebase.
@@ -591,7 +593,8 @@ incorrectly.
 - bash: `deny`
 - network: `deny`
 
-**Does not:** Write implementation code. Document behavior that was not implemented. Omit CHANGELOG entries.
+**Does not:** Write implementation code. Document behavior that was not
+implemented. Omit CHANGELOG entries.
 
 **Model:** `{{MODEL_CODEX}}`
 
@@ -880,6 +883,9 @@ Contract version:** v0.1.0 **Date:** [YYYY-MM-DD] **Evaluator:** [human name or
 - Keep solutions simple and direct.
 - User instructions always override this file.
 - When using tools, be precise and minimal with context.
+- Spanish prose/docs/reports/Markdown: preserve natural Spanish orthography,
+  including accents, `ñ`, `¿`, `¡`, and normal Unicode. The ASCII-only editing
+  preference does not apply to these artifacts.
 
 ## Context Budget
 

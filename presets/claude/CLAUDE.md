@@ -283,8 +283,8 @@ branch, declare done before running tests.
 **Pre-implementation checklist:**
 
 0. Create a Git Worktree for this session before opening any file for editing:
-   `git worktree add ../<branch>-session <branch>`
-   All changes happen inside this worktree. Never modify the main working tree directly.
+   `git worktree add ../<branch>-session <branch>` All changes happen inside
+   this worktree. Never modify the main working tree directly.
 1. Read the Technical Plan completely.
 2. Read each file listed under "Files Affected."
 3. Understand existing patterns in those files.
@@ -294,7 +294,8 @@ branch, declare done before running tests.
 **Implementation rules:**
 
 - **Work in a worktree.** Create a session worktree before touching any file.
-  All edits happen inside it. Include the worktree path in the Implementation Summary.
+  All edits happen inside it. Include the worktree path in the Implementation
+  Summary.
 - **Minimal diff.** Change only what the plan specifies.
 - **Follow existing patterns.** Match naming conventions, error handling, and
   module structure already present in the codebase.
@@ -566,11 +567,13 @@ operations, or Alembic migrations, apply `.claude/skills/sqlalchemy/SKILL.md`.
 When the user asks to create a Spring Boot feature (entity, service, controller,
 or tests), apply `.claude/skills/spring-boot-feature/SKILL.md`.
 
-When the active task requires web performance analysis, Core Web Vitals auditing,
-PageSpeed Insights data, or optimization of LCP, TBT, CLS, FCP, or TTFB, apply
-`.claude/skills/pagespeed-perf/SKILL.md` and `.claude/skills/pagespeed-insights/SKILL.md`.
+When the active task requires web performance analysis, Core Web Vitals
+auditing, PageSpeed Insights data, or optimization of LCP, TBT, CLS, FCP, or
+TTFB, apply `.claude/skills/pagespeed-perf/SKILL.md` and
+`.claude/skills/pagespeed-insights/SKILL.md`.
 
-When the user asks about discovering, searching, or installing agent skills or extending capabilities, apply `.claude/skills/find-skills/SKILL.md`.
+When the user asks about discovering, searching, or installing agent skills or
+extending capabilities, apply `.claude/skills/find-skills/SKILL.md`.
 
 ---
 
@@ -596,6 +599,9 @@ When the user asks about discovering, searching, or installing agent skills or e
 - Keep solutions simple and direct.
 - User instructions always override this file.
 - When using tools, be precise and minimal with context.
+- Spanish prose/docs/reports/Markdown: preserve natural Spanish orthography,
+  including accents, `ñ`, `¿`, `¡`, and normal Unicode. The ASCII-only editing
+  preference does not apply to these artifacts.
 
 ## Context Budget
 

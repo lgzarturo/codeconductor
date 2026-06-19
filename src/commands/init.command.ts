@@ -13,13 +13,14 @@ export interface InitOptions {
   readonly global: boolean;
   readonly output: OutputMode;
   readonly projectRoot: string;
+  readonly locale: 'en' | 'es';
 }
 
 /**
  * Initialize CodeConductor in a project or globally
  */
 export async function initCommand(options: InitOptions): Promise<{ code: number; data?: unknown }> {
-  const { projectRoot, dryRun, force, global: isGlobal, output } = options;
+  const { projectRoot, dryRun, force, global: isGlobal, output, locale } = options;
 
   const baseDir = isGlobal ? homedir() : projectRoot;
 
@@ -50,6 +51,7 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
           defaults: {
             target: 'opencode' as const,
             overwrite: force,
+            locale,
           },
         }
       : {
@@ -60,6 +62,7 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
           defaults: {
             target: 'opencode' as const,
             overwrite: force,
+            locale,
           },
         };
 

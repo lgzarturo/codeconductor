@@ -1,5 +1,6 @@
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
+import { getLanguageInstruction, LOCALE_PLACEHOLDER } from '../i18n/language-instructions';
 import type {
   InstallManifest,
   InstallStrategy,
@@ -111,7 +112,7 @@ function extractAgentRole(filePath: string): string | null {
  * within an agent section (e.g., "### Routing Decision" inside "### orchestrator") must
  * appear AFTER the --- separator and before the next agent section to parse correctly.
  */
-function renderTemplate(content: string, modelConfig: ModelConfig, filePath: string): string {
+function renderTemplate(content: string, modelConfig: ModelConfig, filePath: string, locale = 'en'): string {
   const agentRole = extractAgentRole(filePath);
 
   // Handle single agent file (e.g., architect.md)
@@ -125,7 +126,8 @@ function renderTemplate(content: string, modelConfig: ModelConfig, filePath: str
       .replace(/\{\{MODEL_OPENCODE\}\}/g, agentModels.opencode ?? '')
       .replace(/\{\{MODEL_CODEX\}\}/g, agentModels.codex ?? '')
       .replace(/\{\{MODEL_GEMINI\}\}/g, agentModels.gemini ?? '')
-      .replace(/\{\{MODEL_CURSOR\}\}/g, agentModels.cursor ?? '');
+      .replace(/\{\{MODEL_CURSOR\}\}/g, agentModels.cursor ?? '')
+      .replace(new RegExp(LOCALE_PLACEHOLDER.replace(/[{}]/g, '\\$&'), 'g'), getLanguageInstruction(locale));
 
     // Render tool/permission frontmatter for targets that define it.
     if (modelConfig.tools || modelConfig.permissions) {
@@ -155,13 +157,11 @@ function renderTemplate(content: string, modelConfig: ModelConfig, filePath: str
     const agentModels = modelConfig.agents[role];
 
     // Find the section for this agent role
-    // Look for patterns like "### orchestrator" or "### task-coach"
     const sectionRegex = new RegExp(`(### ${role}[\\s\\S]*?)(?=### |## |$)`, 'gi');
     const sectionMatch = result.match(sectionRegex);
 
     if (sectionMatch) {
       for (const section of sectionMatch) {
-        // Replace placeholders within this section
         const renderedSection = section
           .replace(/\{\{MODEL_CLAUDE\}\}/g, agentModels.claude ?? '')
           .replace(/\{\{MODEL_OPENCODE\}\}/g, agentModels.opencode ?? '')
@@ -173,6 +173,12 @@ function renderTemplate(content: string, modelConfig: ModelConfig, filePath: str
       }
     }
   }
+
+  // Replace locale placeholder for monolithic files
+  result = result.replace(
+    new RegExp(LOCALE_PLACEHOLDER.replace(/[{}]/g, '\\$&'), 'g'),
+    getLanguageInstruction(locale)
+  );
 
   // Render tool/permission frontmatter for targets that define it.
   if (modelConfig.tools || modelConfig.permissions) {
@@ -227,7 +233,8 @@ async function applySingleFile(
   force: boolean,
   dryRun: boolean,
   isTemplate: boolean,
-  modelConfig: ModelConfig | null
+  modelConfig: ModelConfig | null,
+  locale: string
 ): Promise<FileCopyResult> {
   if (strategy === 'skip') {
     return { src: srcPath, dest: destPath, action: 'skipped', dryRun };
@@ -241,7 +248,7 @@ async function applySingleFile(
   }
 
   const incomingContent =
-    isTemplate && modelConfig ? renderTemplate(content, modelConfig, srcPath) : content;
+    isTemplate && modelConfig ? renderTemplate(content, modelConfig, srcPath, locale) : content;
   let finalContent = incomingContent;
   let action: FileAction = 'written';
 
@@ -306,7 +313,8 @@ export async function copyFromManifest(
   isGlobal: boolean,
   dryRun: boolean,
   force: boolean,
-  modelConfig: ModelConfig | null = null
+  modelConfig: ModelConfig | null = null,
+  locale = 'en'
 ): Promise<FileCopyResult[]> {
   const results: FileCopyResult[] = [];
 
@@ -318,7 +326,7 @@ export async function copyFromManifest(
 
     for (const { src, dest } of files) {
       results.push(
-        await applySingleFile(src, dest, strategy, force, dryRun, isTemplate, modelConfig)
+        await applySingleFile(src, dest, strategy, force, dryRun, isTemplate, modelConfig, locale)
       );
     }
   }

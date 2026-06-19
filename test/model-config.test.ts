@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, test } from 'bun:test';
+import { afterEach, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -337,8 +337,10 @@ describe('copyFromManifest with modelConfig', () => {
   test('template entries are detected from opencode manifest', async () => {
     const manifest = await loadManifest('opencode');
     const templateEntries = manifest.entries.filter((e) => e.template === true);
-    expect(templateEntries.length).toBe(1);
-    expect(templateEntries[0].src).toContain('agents');
+    // agents + README.md (locale placeholder injection)
+    expect(templateEntries.length).toBe(2);
+    expect(templateEntries.some((e) => e.src.includes('agents'))).toBe(true);
+    expect(templateEntries.some((e) => e.src.includes('README.md'))).toBe(true);
   });
 
   test('non-template entries exist in manifest', async () => {
@@ -483,11 +485,14 @@ describe('Manifest template flag', () => {
     expect(agentsEntry!.template).toBe(true);
   });
 
-  test('non-agent entries do not have template flag set', async () => {
+  test('non-template non-locale entries do not have template flag set', async () => {
     const manifest = await loadManifest('opencode');
-    const nonAgentEntries = manifest.entries.filter((e) => !e.src.includes('agents'));
-    for (const entry of nonAgentEntries) {
-      expect(entry.template).toBeUndefined();
+    // Entries that legitimately have template: true are 'agents' and 'README.md'
+    const nonTemplateEntries = manifest.entries.filter(
+      (e) => !e.src.includes('agents') && !e.src.includes('README.md')
+    );
+    for (const entry of nonTemplateEntries) {
+      expect(entry.template).toBeFalsy();
     }
   });
 
@@ -503,7 +508,86 @@ describe('Manifest template flag', () => {
   });
 });
 
-// ========== 6. End-to-End CLI Tests ==========
+// ========== 5b. Locale instruction injection ==========
+
+describe('Locale instruction injection ({{LANGUAGE_INSTRUCTIONS}})', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), 'cc-locale-'));
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  test('CLAUDE.md preset contains {{LANGUAGE_INSTRUCTIONS}} placeholder', async () => {
+    const content = await readFile(
+      join(PRESETS_DIR, 'claude', 'CLAUDE.md'),
+      'utf-8'
+    );
+    expect(content).toContain('{{LANGUAGE_INSTRUCTIONS}}');
+  });
+
+  test('codex AGENTS.md preset contains {{LANGUAGE_INSTRUCTIONS}} placeholder', async () => {
+    const content = await readFile(
+      join(PRESETS_DIR, 'codex', 'AGENTS.md'),
+      'utf-8'
+    );
+    expect(content).toContain('{{LANGUAGE_INSTRUCTIONS}}');
+  });
+
+  test('opencode README.md preset contains {{LANGUAGE_INSTRUCTIONS}} placeholder', async () => {
+    const content = await readFile(
+      join(PRESETS_DIR, 'opencode', 'README.md'),
+      'utf-8'
+    );
+    expect(content).toContain('{{LANGUAGE_INSTRUCTIONS}}');
+  });
+
+  test('install with locale=es injects Spanish instruction into CLAUDE.md', async () => {
+    const modelConfig = await loadModelConfig('claude');
+    const manifest = await loadManifest('claude');
+    await copyFromManifest(manifest, PRESETS_DIR, tmpDir, false, false, true, modelConfig, 'es');
+
+    const content = await readFile(join(tmpDir, '.claude', 'CLAUDE.md'), 'utf-8');
+    expect(content).toContain('Spanish prose/docs/reports/Markdown');
+    expect(content).toContain('ñ');
+    expect(content).not.toContain('{{LANGUAGE_INSTRUCTIONS}}');
+  });
+
+  test('install with locale=en injects English instruction into CLAUDE.md', async () => {
+    const modelConfig = await loadModelConfig('claude');
+    const manifest = await loadManifest('claude');
+    await copyFromManifest(manifest, PRESETS_DIR, tmpDir, false, false, true, modelConfig, 'en');
+
+    const content = await readFile(join(tmpDir, '.claude', 'CLAUDE.md'), 'utf-8');
+    expect(content).toContain('Prose/docs/code comments: be terse and direct');
+    expect(content).not.toContain('{{LANGUAGE_INSTRUCTIONS}}');
+    expect(content).not.toContain('Spanish prose');
+  });
+
+  test('install with locale=es injects Spanish instruction into codex AGENTS.md', async () => {
+    const modelConfig = await loadModelConfig('codex');
+    const manifest = await loadManifest('codex');
+    await copyFromManifest(manifest, PRESETS_DIR, tmpDir, false, false, true, modelConfig, 'es');
+
+    const content = await readFile(join(tmpDir, '.codex', 'AGENTS.md'), 'utf-8');
+    expect(content).toContain('Spanish prose/docs/reports/Markdown');
+    expect(content).not.toContain('{{LANGUAGE_INSTRUCTIONS}}');
+  });
+
+  test('default locale (en) is used when no locale passed to copyFromManifest', async () => {
+    const modelConfig = await loadModelConfig('claude');
+    const manifest = await loadManifest('claude');
+    await copyFromManifest(manifest, PRESETS_DIR, tmpDir, false, false, true, modelConfig);
+
+    const content = await readFile(join(tmpDir, '.claude', 'CLAUDE.md'), 'utf-8');
+    expect(content).toContain('Prose/docs/code comments: be terse and direct');
+    expect(content).not.toContain('{{LANGUAGE_INSTRUCTIONS}}');
+  });
+});
+
 
 describe('End-to-end: CLI install preset renders model names', () => {
   beforeAll(async () => {

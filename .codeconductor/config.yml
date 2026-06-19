@@ -5,6 +5,7 @@ project:
 defaults:
   target: opencode
   overwrite: true
+  locale: en
 presets:
   council:
     enabled: true

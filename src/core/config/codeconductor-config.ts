@@ -10,6 +10,7 @@ export interface CodeConductorConfig {
   defaults: {
     target: 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy';
     overwrite: boolean;
+    locale: 'en' | 'es';
   };
   presets: {
     council: {
@@ -34,6 +35,7 @@ export const DEFAULT_CONFIG: CodeConductorConfig = {
   defaults: {
     target: 'opencode',
     overwrite: false,
+    locale: 'en',
   },
   presets: {
     council: {

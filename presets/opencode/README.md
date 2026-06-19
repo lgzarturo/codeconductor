@@ -183,9 +183,7 @@ export KIMI_API_KEY="your-key"
 - Keep solutions simple and direct.
 - User instructions always override this file.
 - When using tools, be precise and minimal with context.
-- Spanish prose/docs/reports/Markdown: preserve natural Spanish orthography,
-  including accents, `ñ`, `¿`, `¡`, and normal Unicode. The ASCII-only editing
-  preference does not apply to these artifacts.
+{{LANGUAGE_INSTRUCTIONS}}
 
 ## Context Budget
 

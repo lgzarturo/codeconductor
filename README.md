@@ -41,6 +41,10 @@ contracts, task cards, and risk-based routing.
 >   Core Web Vitals (LCP, TBT, CLS, FCP, TTFB) with framework-specific fixes;
 >   requires `PAGESPEED_API_KEY` env var for full CrUX field data (optional but
 >   recommended)
+> - `npx cc-codeconductor install preset --target <opencode|claude|codex|all>` —
+>   installs the full preset (agents, prompts, skills, commands, settings) for the
+>   chosen runner; use `--locale=es` to inject Spanish-aware instructions into
+>   agent files, or rely on the locale saved during `init`
 > - Manual presets for OpenCode, Claude Code, and Codex
 > - Versioned Agent Contracts
 > - Routing Policy documentation
@@ -149,11 +153,20 @@ npx cc-codeconductor init              # detect stack, write .codeconductor/conf
 npx cc-codeconductor init --force      # overwrite existing config
 npx cc-codeconductor init --global     # write to ~/.codeconductor/
 npx cc-codeconductor init --dry-run    # preview without writing
+npx cc-codeconductor init --locale=es  # set Spanish as the instruction language
+npx cc-codeconductor init --locale=en  # set English (default)
 ```
 
 On first run, `init` copies `council.yml` and `policy.yml` into
 `.codeconductor/presets/` so you can customize them without touching framework
 files. `install` reads from there first.
+
+> [!IMPORTANT]
+>
+> **`--locale` is remembered.** Once you run `init --locale=es`, the value is
+> saved to `.codeconductor/config.yml`. Every subsequent `install preset` will
+> automatically use that locale — no need to repeat the flag. To change it,
+> run `init --locale=en --force` or edit `defaults.locale` in your config.
 
 #### `detect` — detect project stack
 
@@ -171,7 +184,39 @@ Detected:
   - frameworks: ...
 ```
 
-#### `install` — install council preset
+#### `install preset` — install full agent preset
+
+```bash
+npx cc-codeconductor install preset --target opencode     # project-level
+npx cc-codeconductor install preset --target claude
+npx cc-codeconductor install preset --target codex
+npx cc-codeconductor install preset --target all          # all targets
+
+npx cc-codeconductor install preset --target claude --global   # write to ~/.claude/
+npx cc-codeconductor install preset --target all --global
+
+npx cc-codeconductor install preset --target claude --locale=es   # override locale once
+npx cc-codeconductor install preset --target all --dry-run        # preview
+npx cc-codeconductor install preset --target claude --force       # overwrite
+```
+
+Locale resolution order (first match wins):
+
+1. `--locale` flag on the command line
+2. `defaults.locale` in `.codeconductor/config.yml` (set by `init --locale`)
+3. `en` (built-in default)
+
+Files installed per target:
+
+| Target     | Notable files                                                    |
+| ---------- | ---------------------------------------------------------------- |
+| `claude`   | `.claude/CLAUDE.md`, `.claude/settings.json`, `.claude/agents/` |
+| `opencode` | `.opencode/agents/`, `.opencode/commands/`, `.opencode/skills/`  |
+| `codex`    | `.codex/AGENTS.md`, `.codex/skills/`, `.codex/prompts/`          |
+
+With `--global`, files are written under `~/` instead of `./`.
+
+#### `install council` — install council spec
 
 ```bash
 npx cc-codeconductor install council --target opencode     # project-level
@@ -186,16 +231,6 @@ npx cc-codeconductor install council --target all --global
 npx cc-codeconductor install council --target opencode --dry-run   # preview
 npx cc-codeconductor install council --target opencode --force     # overwrite
 ```
-
-Files generated per target:
-
-| Target     | Files written                                                    |
-| ---------- | ---------------------------------------------------------------- |
-| `opencode` | `.opencode/commands/cc-council.md`, `.opencode/agents/council-*.md` |
-| `claude`   | `.claude/skills/council/SKILL.md`, `.claude/agents/council-*.md` |
-| `codex`    | `.codex/config.toml`, `.codex/agents/council_*.toml`             |
-
-With `--global`, the same files are written under `~/` instead of `./`.
 
 #### `install lsp` — install and configure LSP servers
 
@@ -231,12 +266,13 @@ Re-generates preset files for the `defaults.target` in your config.
 
 ### Global options
 
-| Flag            | Description                              |
-| --------------- | ---------------------------------------- |
-| `--force`       | Overwrite existing files                 |
-| `--dry-run`     | Preview actions without writing          |
-| `--global`      | Target home directory instead of project |
-| `--output json` | Machine-readable JSON output             |
+| Flag             | Description                                              |
+| ---------------- | -------------------------------------------------------- |
+| `--force`        | Overwrite existing files                                 |
+| `--dry-run`      | Preview actions without writing                          |
+| `--global`       | Target home directory instead of project                 |
+| `--output json`  | Machine-readable JSON output                             |
+| `--locale=en`    | Agent instruction language: `en` (default) or `es`      |
 
 ### Config directory
 
@@ -244,10 +280,18 @@ Re-generates preset files for the `defaults.target` in your config.
 
 ```text
 .codeconductor/
-├── config.yml          # project settings, target, preset versions
+├── config.yml          # project settings, target, locale, preset versions
 └── presets/
     ├── council.yml     # customizable copy of the council preset
     └── policy.yml      # customizable copy of policy rules
+```
+
+Key fields in `config.yml`:
+
+```yaml
+defaults:
+  target: opencode     # default runner for install/update
+  locale: es           # instruction language injected into agent files
 ```
 
 Edit `.codeconductor/presets/council.yml` to add, remove, or reconfigure agents
@@ -265,16 +309,47 @@ src/presets/models/
 └── codex.yml       # model defaults for Codex target
 ```
 
-Agent template files contain placeholders that are replaced during `install`:
+Agent template files contain placeholders replaced during `install`:
 
-| Placeholder          | Description                     |
-| -------------------- | ------------------------------- |
-| `{{MODEL_CLAUDE}}`   | Model for the Claude provider   |
-| `{{MODEL_OPENCODE}}` | Model for the OpenCode provider |
-| `{{MODEL_CODEX}}`    | Model for the Codex provider    |
+| Placeholder                    | Description                                   |
+| ------------------------------ | --------------------------------------------- |
+| `{{MODEL_CLAUDE}}`             | Model for the Claude provider                 |
+| `{{MODEL_OPENCODE}}`           | Model for the OpenCode provider               |
+| `{{MODEL_CODEX}}`              | Model for the Codex provider                  |
+| `{{LANGUAGE_INSTRUCTIONS}}`    | Locale-aware instruction injected by `locale` |
 
 To customize models, edit the YAML file for your target before running
 `install`. Each file maps agent roles to provider-specific model names.
+
+#### Instruction Language (`--locale`)
+
+Agent markdown files (`CLAUDE.md`, `AGENTS.md`, `README.md`) include a
+`{{LANGUAGE_INSTRUCTIONS}}` placeholder that is replaced at install time based
+on the active locale:
+
+| Locale | Injected instruction |
+| ------ | -------------------- |
+| `en`   | *Prose/docs/code comments: be terse and direct. Prefer concrete nouns over abstract ones. Omit filler phrases. One idea per sentence.* |
+| `es`   | *Spanish prose/docs/reports/Markdown: preserve natural Spanish orthography, including accents, `ñ`, `¿`, `¡`, and normal Unicode. The ASCII-only editing preference does not apply to these artifacts.* |
+
+The locale is **sticky**: set it once with `init --locale=es` and every
+subsequent `install preset` will use it automatically. Override per-run with
+`install preset --locale=en`.
+
+```bash
+# One-time setup
+npx cc-codeconductor init --locale=es
+
+# All future installs use Spanish automatically
+npx cc-codeconductor install preset --target=claude
+npx cc-codeconductor install preset --target=all --global
+
+# Override just this run
+npx cc-codeconductor install preset --target=claude --locale=en
+
+# Change the saved locale
+npx cc-codeconductor init --locale=en --force
+```
 
 ---
 

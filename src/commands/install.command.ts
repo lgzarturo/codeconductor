@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { createClaudeInstaller } from '../adapters/claude/claude-installer';
 import { createCodexInstaller } from '../adapters/codex/codex-installer';
 import { createOpenCodeInstaller } from '../adapters/opencode/opencode-installer';
+import { loadConfig } from '../core/config/config-loader';
 import { detectProject } from '../core/detection/project-detector';
 import { writeGeneratedFiles, type WriteOptions } from '../core/filesystem/file-writer';
 import { copyFromManifest } from '../core/presets/file-copier';
@@ -28,6 +29,8 @@ export interface InstallPresetOptions {
   readonly global: boolean;
   readonly output: OutputMode;
   readonly projectRoot: string;
+  /** Locale override. If omitted, read from .codeconductor/config.yml (default 'en'). */
+  readonly locale?: 'en' | 'es';
 }
 
 /**
@@ -164,6 +167,15 @@ export async function installPresetCommand(
       resolvePreset(t as PresetResolution['target'], profile)
     );
 
+    // Resolve locale: CLI override → config.yml → default 'en'
+    let locale: 'en' | 'es' = options.locale ?? 'en';
+    if (!options.locale) {
+      const configResult = await loadConfig(projectRoot);
+      if (configResult.success) {
+        locale = (configResult.data.defaults.locale ?? 'en') as 'en' | 'es';
+      }
+    }
+
     const allFileResults: Array<{
       target: string;
       src: string;
@@ -187,7 +199,8 @@ export async function installPresetCommand(
         isGlobal,
         dryRun,
         force,
-        modelConfig
+        modelConfig,
+        locale
       );
       for (const r of results) {
         allFileResults.push({ target: t, ...r });
@@ -205,6 +218,7 @@ export async function installPresetCommand(
         targets,
         global: isGlobal,
         dryRun,
+        locale,
         presetResolution,
         fileResults: allFileResults,
       },

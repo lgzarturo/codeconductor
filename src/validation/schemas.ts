@@ -54,6 +54,7 @@ export const CodeConductorConfigSchema = z.object({
   defaults: z.object({
     target: z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor', 'agy']),
     overwrite: z.boolean(),
+    locale: z.enum(['en', 'es']).optional().default('en'),
   }),
   presets: z.object({
     council: z.object({

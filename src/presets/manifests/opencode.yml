@@ -4,6 +4,10 @@ entries:
     dest: .opencode/opencode.jsonc
     strategy: overwrite
     globalStrategy: merge-json
+  - src: opencode/README.md
+    dest: .opencode/README.md
+    strategy: overwrite
+    template: true
   - src: opencode/agents
     dest: .opencode/agents
     strategy: overwrite

@@ -4,6 +4,7 @@ entries:
     dest: .claude/CLAUDE.md
     strategy: overwrite
     globalStrategy: append
+    template: true
   - src: claude/settings.json
     dest: .claude/settings.json
     strategy: overwrite

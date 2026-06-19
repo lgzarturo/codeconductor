@@ -143,16 +143,19 @@ Options:
   --global               Install to home directory (~/.claude, ~/.opencode, etc.)
   --output, -o           Output mode: human or json
   --lang                 Comma-separated list of languages (e.g., typescript,php,python)
+  --locale               Instruction language for agent files: en (default) | es
 
 Examples:
   npx cc-codeconductor init
   npx cc-codeconductor init --global
+  npx cc-codeconductor init --locale=es
   npx cc-codeconductor detect
   npx cc-codeconductor install preset --target opencode
   npx cc-codeconductor install preset --target claude
   npx cc-codeconductor install preset --target codex
   npx cc-codeconductor install preset --target all
   npx cc-codeconductor install preset --target claude --global
+  npx cc-codeconductor install preset --target claude --locale=es
   npx cc-codeconductor install council --target opencode
   npx cc-codeconductor install council --target claude
   npx cc-codeconductor install council --target codex
@@ -190,6 +193,7 @@ export async function routeCommand(
         force: flags.force,
         global: options.global === true || options.global === 'true',
         output: flags.output,
+        locale: (options.locale === 'es' ? 'es' : 'en') as 'en' | 'es',
       } as InitOptions);
 
     case 'detect':
@@ -231,6 +235,7 @@ export async function routeCommand(
           force: flags.force,
           global: isGlobal,
           output: flags.output,
+          locale: options.locale === 'es' ? 'es' : options.locale === 'en' ? 'en' : undefined,
         } as InstallPresetOptions);
       }
 

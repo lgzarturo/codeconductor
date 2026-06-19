@@ -1,0 +1,9 @@
+.cursor/
+.gemini/
+.worktrees/
+.cliff.toml
+.editorconfig
+.gitignore
+.prettierrc
+.bun.lock
+package.json

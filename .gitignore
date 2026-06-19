@@ -63,3 +63,6 @@ _*.md
 
 # Worktrees
 .worktrees/
+
+# Graphify
+graphify-out/

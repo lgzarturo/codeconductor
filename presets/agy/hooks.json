@@ -1,0 +1,30 @@
+{
+  "code-formatter": {
+    "enabled": true,
+    "PostToolUse": [
+      {
+        "matcher": "write_to_file|replace_file_content|multi_replace_file_content",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f \"./.agents/scripts/post-tool.sh\" ]; then bash ./.agents/scripts/post-tool.sh; else bash \"$HOME/.gemini/config/scripts/post-tool.sh\"; fi"
+          }
+        ]
+      }
+    ]
+  },
+  "safety-gate": {
+    "enabled": true,
+    "PreToolUse": [
+      {
+        "matcher": "run_command|write_to_file|replace_file_content|multi_replace_file_content|view_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f \"./.agents/scripts/pre-tool.sh\" ]; then bash ./.agents/scripts/pre-tool.sh; else bash \"$HOME/.gemini/config/scripts/pre-tool.sh\"; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

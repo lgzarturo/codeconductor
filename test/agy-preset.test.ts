@@ -28,6 +28,21 @@ describe('Antigravity CLI (agy) Preset — file existence', () => {
     'presets/agy/workflows/cc-api-contract.md',
     'presets/agy/workflows/cc-db-migration.md',
     'presets/agy/workflows/cc-pagespeed.md',
+    'presets/agy/settings.json',
+    'presets/agy/hooks.json',
+    'presets/agy/mcp_config.json',
+    'presets/agy/scripts/pre-tool.sh',
+    'presets/agy/scripts/post-tool.sh',
+    'presets/agy/skills/cc-feature/SKILL.md',
+    'presets/agy/skills/cc-fix/SKILL.md',
+    'presets/agy/skills/cc-refactor/SKILL.md',
+    'presets/agy/skills/cc-review/SKILL.md',
+    'presets/agy/skills/cc-test-plan/SKILL.md',
+    'presets/agy/skills/cc-tdd-cycle/SKILL.md',
+    'presets/agy/skills/cc-api-contract/SKILL.md',
+    'presets/agy/skills/cc-db-migration/SKILL.md',
+    'presets/agy/skills/cc-pagespeed/SKILL.md',
+    'presets/agy/skills/commit/SKILL.md',
   ];
 
   for (const p of expectedPaths) {
@@ -71,7 +86,12 @@ describe('Antigravity CLI (agy) Manifest and Model Config', () => {
     expect(srcDirs).toContain('agy/AGENTS.md');
     expect(srcDirs).toContain('agy/rules');
     expect(srcDirs).toContain('agy/workflows');
+    expect(srcDirs).toContain('agy/settings.json');
+    expect(srcDirs).toContain('agy/hooks.json');
+    expect(srcDirs).toContain('agy/mcp_config.json');
+    expect(srcDirs).toContain('agy/scripts');
     expect(srcDirs).toContain('opencode/skills');
+    expect(srcDirs).toContain('agy/skills');
     expect(srcDirs).toContain('opencode/agents');
     expect(srcDirs).toContain('opencode/prompts/v0.2.0');
 
@@ -79,6 +99,10 @@ describe('Antigravity CLI (agy) Manifest and Model Config', () => {
     expect(destDirs).toContain('.agents/AGENTS.md');
     expect(destDirs).toContain('.agents/rules');
     expect(destDirs).toContain('.agents/workflows');
+    expect(destDirs).toContain('.agents/../antigravity-cli/settings.json');
+    expect(destDirs).toContain('.agents/hooks.json');
+    expect(destDirs).toContain('.agents/mcp_config.json');
+    expect(destDirs).toContain('.agents/scripts');
     expect(destDirs).toContain('.agents/skills');
     expect(destDirs).toContain('.agents/agents');
     expect(destDirs).toContain('.agents/prompts/v0.2.0');

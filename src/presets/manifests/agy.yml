@@ -12,9 +12,27 @@ entries:
     dest: .agents/workflows
     strategy: overwrite
     template: true
+  - src: agy/settings.json
+    dest: .agents/../antigravity-cli/settings.json
+    strategy: skip
+    globalStrategy: merge-json
+  - src: agy/hooks.json
+    dest: .agents/hooks.json
+    strategy: overwrite
+  - src: agy/mcp_config.json
+    dest: .agents/mcp_config.json
+    strategy: overwrite
+  - src: agy/scripts
+    dest: .agents/scripts
+    strategy: overwrite
   - src: opencode/skills
     dest: .agents/skills
     strategy: overwrite
+  - src: agy/skills
+    dest: .agents/skills
+    strategy: overwrite
+    template: true
+
   - src: opencode/agents
     dest: .agents/agents
     strategy: overwrite

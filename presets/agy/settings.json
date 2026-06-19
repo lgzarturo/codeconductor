@@ -1,0 +1,8 @@
+{
+  "model": "gemini-3.5-pro",
+  "toolPermission": "request-review",
+  "enableTerminalSandbox": true,
+  "allowNonWorkspaceAccess": false,
+  "verbosity": "low",
+  "alwaysThinkingEnabled": true
+}

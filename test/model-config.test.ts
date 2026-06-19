@@ -491,10 +491,11 @@ describe('Manifest template flag', () => {
     }
   });
 
-  test('claude manifest has exactly 6 entries', async () => {
+  test('claude manifest has exactly 7 entries', async () => {
     const manifest = await loadManifest('claude');
-    expect(manifest.entries.length).toBe(6);
+    expect(manifest.entries.length).toBe(7);
   });
+
 
   test('codex manifest has exactly 3 entries', async () => {
     const manifest = await loadManifest('codex');

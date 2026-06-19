@@ -7,10 +7,21 @@
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
     "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1",
     "DISABLE_EXTRA_USAGE_COMMAND": "1",
+    "DISABLE_TELEMETRY": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "DISABLE_FEEDBACK_COMMAND": "1",
     "CLAUDE_CODE_SIMPLE_SYSTEM_PROMPT": "1",
     "ENABLE_TOOL_SEARCH": "auto",
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "80",
+    "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "1",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "MAX_THINKING_TOKENS": "24000",
     "DISABLE_BUG_COMMAND": "1"
+  },
+  "attribution": {
+    "commit": "",
+    "pr": ""
   },
   "includeCoAuthoredBy": false,
   "includeGitInstructions": false,
@@ -92,6 +103,7 @@
       "WebFetch(*)"
     ],
     "deny": [
+      "Agent(bypass-runner)",
       "Bash(rm -rf *)",
       "Bash(sudo *)",
       "Bash(su *)",
@@ -159,7 +171,8 @@
       "Bash(vercel*)",
       "Bash(npx vercel*)"
     ],
-    "defaultMode": "acceptEdits"
+    "defaultMode": "acceptEdits",
+    "disableBypassPermissionsMode": "disable"
   },
   "hooks": {
     "PostToolUse": [
@@ -191,6 +204,52 @@
           }
         ]
       }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[subagent fin] $(date -Iseconds)\" >> ~/.claude/subagent.log"
+          }
+        ]
+      }
+    ]
+  },
+  "sandbox": {
+    "enabled": false,
+    "failIfUnavailable": false,
+    "autoAllowBashIfSandboxed": true,
+    "network": {
+      "allowedDomains": [
+        "github.com",
+        "*.githubusercontent.com",
+        "registry.npmjs.org",
+        "*.npmjs.org",
+        "registry.yarnpkg.com",
+        "pypi.org",
+        "*.pythonhosted.org",
+        "repo.maven.apache.org",
+        "repo1.maven.org",
+        "services.gradle.org",
+        "plugins.gradle.org",
+        "*.gradle.org",
+        "*.googleapis.com",
+        "api.anthropic.com"
+      ],
+      "allowLocalBinding": true
+    },
+    "filesystem": {
+      "denyRead": [
+        "~/.ssh",
+        "~/.aws",
+        "~/.gnupg",
+        "./.env",
+        "./.env.*"
+      ]
+    },
+    "excludedCommands": [
+      "docker *"
     ]
   },
   "extraKnownMarketplaces": {

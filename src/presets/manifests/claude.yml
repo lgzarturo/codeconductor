@@ -8,6 +8,10 @@ entries:
     dest: .claude/settings.json
     strategy: overwrite
     globalStrategy: merge-json
+  - src: claude/claude.json
+    dest: .claude.json
+    strategy: merge-json
+    globalStrategy: merge-json
   - src: claude/commands
     dest: .claude/commands
     strategy: overwrite

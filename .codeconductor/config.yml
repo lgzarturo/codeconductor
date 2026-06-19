@@ -4,7 +4,7 @@ project:
   profile: node
 defaults:
   target: opencode
-  overwrite: false
+  overwrite: true
 presets:
   council:
     enabled: true

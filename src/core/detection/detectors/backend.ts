@@ -75,6 +75,10 @@ export async function detectPhp(rootDir: string): Promise<string[]> {
     signals.push('composer.json');
   }
 
+  if (await fileExists(rootDir, 'artisan')) {
+    signals.push('artisan');
+  }
+
   try {
     const { readdir } = await import('node:fs/promises');
     const entries = await readdir(rootDir, { withFileTypes: true });

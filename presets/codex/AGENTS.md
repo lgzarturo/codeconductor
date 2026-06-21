@@ -821,6 +821,9 @@ Available skills:
 | `sqlalchemy`           | SQLAlchemy models, sessions, Alembic migrations     |
 | `nextjs-typescript`    | Next.js components, Server Actions, App Router      |
 | `astro`                | Astro pages, islands, content collections           |
+| `android`              | Android Kotlin, Jetpack Compose, Media3 components  |
+| `laravel-specialist`   | Laravel models, routes, API resources, Livewire     |
+| `php-pro`              | PHPStan static analysis, modern PHP 8.3+ features   |
 | `security`             | Backend security, authorization, data validation    |
 | `a11y-debugging`       | Debugging frontend accessibility and web standards  |
 

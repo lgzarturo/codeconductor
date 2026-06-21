@@ -10,6 +10,7 @@ import {
   detectMonorepo,
   detectGenericBackend,
   detectGenericFrontend,
+  detectAndroid,
 } from './detectors';
 
 /**
@@ -79,6 +80,9 @@ export async function detectProject(rootDir: string): Promise<ProjectProfile> {
     languages.push('php');
     runtimes.push('php');
     packageManagers.push('composer');
+    if (phpSignals.includes('artisan')) {
+      frameworks.push('laravel');
+    }
   }
 
   // Check for Astro
@@ -110,6 +114,15 @@ export async function detectProject(rootDir: string): Promise<ProjectProfile> {
   const monorepoSignals = await detectMonorepo(rootDir);
   if (monorepoSignals.length > 0) {
     signals.push(...monorepoSignals);
+  }
+
+  // Check for Android
+  const androidSignals = await detectAndroid(rootDir);
+  if (androidSignals.includes('AndroidManifest.xml')) {
+    signals.push(...androidSignals);
+    languages.push('kotlin', 'java');
+    runtimes.push('android');
+    frameworks.push('android');
   }
 
   // Check for Generic Backend

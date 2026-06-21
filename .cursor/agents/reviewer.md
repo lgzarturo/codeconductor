@@ -145,6 +145,12 @@ Apply these detailed checks based on the detected stack:
 - [ ] ARIA & alt text: All images have descriptive `alt` attributes. Form fields have corresponding `<label>` or `aria-label` tags.
 - [ ] Semantic HTML: Page structures use semantic landmarks (`<main>`, `<header>`, `<footer>`, `<nav>`, `<article>`, `<section>`).
 
+### Android
+- [ ] Jetpack Compose Stability: Ensure all custom state model classes passed to Composables are immutable (annotated with `@Immutable` or `@Stable`) to prevent unnecessary recompositions.
+- [ ] ExoPlayer / Media3 Resource Management: Verify that ExoPlayer or Media3 player instances are properly cleaned up and released (e.g. in `onDestroy` or when the service is stopped) to prevent resource/memory leaks.
+- [ ] Coroutine Dispatchers: Ensure Coroutines are launched using injected dispatchers rather than hardcoding `Dispatchers.IO` or `Dispatchers.Default` directly in ViewModels or domain/data service classes.
+- [ ] Battery & Wake Locks: Verify that Wake Locks are managed carefully and released when playback is paused or stopped to prevent draining the user's battery.
+
 ### Monorepo Workspaces
 - [ ] Workspace boundary: No relative imports escape a workspace package root to reference another package's files directly. Inter-package imports must resolve through configured workspace dependencies.
 

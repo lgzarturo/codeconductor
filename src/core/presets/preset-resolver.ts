@@ -11,6 +11,9 @@ export type PresetStack =
   | 'fastapi'
   | 'backend'
   | 'frontend'
+  | 'android'
+  | 'laravel'
+  | 'php'
   | 'unknown';
 export type ProjectArchitecture = 'single-project' | 'monorepo' | 'unknown';
 
@@ -84,6 +87,9 @@ function resolveStack(profile: Pick<ProjectProfile, 'frameworks' | 'runtimes'>):
   if (profile.frameworks.includes('fastapi')) return 'fastapi';
   if (profile.frameworks.includes('backend')) return 'backend';
   if (profile.frameworks.includes('frontend')) return 'frontend';
+  if (profile.frameworks.includes('android')) return 'android';
+  if (profile.frameworks.includes('laravel')) return 'laravel';
+  if (profile.runtimes.includes('php')) return 'php';
   if (profile.runtimes.includes('bun')) return 'bun';
   if (profile.runtimes.includes('node')) return 'node';
   return 'unknown';

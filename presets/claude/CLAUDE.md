@@ -570,6 +570,15 @@ apply `.claude/skills/nextjs-typescript/SKILL.md`.
 When the active task touches Astro pages or configuration,
 apply `.claude/skills/astro/SKILL.md`.
 
+When the active task touches Android project files (Kotlin, Compose, Media3, Gradle),
+apply `.claude/skills/android/SKILL.md`.
+
+When the active task touches Laravel project files (Eloquent, blade, livewire, controllers, routes),
+apply `.claude/skills/laravel-specialist/SKILL.md`.
+
+When the active task touches PHP project files (PHPUnit, Composer, syntax, types),
+apply `.claude/skills/php-pro/SKILL.md`.
+
 When the active task touches backend security, authorization, or data verification,
 apply `.claude/skills/security/SKILL.md`.
 

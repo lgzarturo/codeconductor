@@ -137,6 +137,9 @@ signals in order of priority:
 | `pnpm-workspace.yaml` / `go.work`               | Monorepo Workspace   |
 | `go.mod` / `Cargo.toml` without django/fastapi   | Generic Backend      |
 | `index.html` / react/vue dependencies           | Generic Frontend     |
+| `AndroidManifest.xml` present                  | Android              |
+| `artisan` present                              | Laravel              |
+| `composer.json` or `*.php` present             | PHP                  |
 
 ### Next.js
 
@@ -172,6 +175,39 @@ instruction in the delegation message for each agent:
 | `architect`     | "Invoke the `security` skill to review backend boundaries, authentication schemes, and data validation rules."           |
 | `implementer`   | "Invoke `security` to ensure inputs are validated, parameterized queries are used, and secrets are not exposed."         |
 | `reviewer`      | "Invoke `security` to check for injection vulnerabilities, resource leaks, and lack of authorization checks."            |
+
+### Android
+
+When an Android project is detected, include the following skill invocation instruction in the delegation message for each agent:
+
+| Delegated agent | Instruction to include in delegation                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `architect`     | "Invoke the `android` skill before designing."                                                                           |
+| `implementer`   | "Invoke `android` before writing any code."                                                                              |
+| `tester`        | "Invoke the `android` skill to write unit or instrumentation tests (JUnit 5, MockK, Espresso, Compose UI Testing)."      |
+| `reviewer`      | "Invoke the `android` skill to verify Jetpack Compose components stability, ExoPlayer resource cleanup, and Kotlin Coroutines/Flows dispatchers." |
+
+### Laravel
+
+When a Laravel project is detected, include the following skill invocation instruction in the delegation message for each agent:
+
+| Delegated agent | Instruction to include in delegation                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `architect`     | "Invoke the `laravel-specialist` and `php-pro` skills before designing."                                                 |
+| `implementer`   | "Invoke `laravel-specialist` and `php-pro` before writing any code."                                                     |
+| `tester`        | "Invoke the `laravel-specialist` skill to write Pest/PHPUnit tests for Laravel features."                                |
+| `reviewer`      | "Invoke the `laravel-specialist` skill to verify Eloquent queries, Sanctum authentication, and Livewire components."     |
+
+### PHP
+
+When a PHP project is detected, include the following skill invocation instruction in the delegation message for each agent:
+
+| Delegated agent | Instruction to include in delegation                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `architect`     | "Invoke the `php-pro` skill before designing."                                                                           |
+| `implementer`   | "Invoke `php-pro` before writing any code."                                                                              |
+| `tester`        | "Invoke PHP testing and quality assurance guidelines in the `php-pro` skill."                                            |
+| `reviewer`      | "Invoke the `php-pro` skill to analyze strict typing, PHPStan level 9 violations, and PSR standards."                    |
 
 ### Generic Frontend
 

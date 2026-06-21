@@ -351,4 +351,15 @@ High-risk checkpoint: [yes | no — if yes, describe what triggers a stop]
 
 **Model:** `gemini-2.5-flash`
 
+---
+
+## Loop Agent & Monorepos
+
+### Loop Agent Mode (Intense Workflows)
+- If tests fail, run the cycle: Implementer (applies fix) -> Tester (verifies suite) up to 3 times.
+- If still failing, stop and report back with findings.
+
+### Monorepo Workspaces
+- Focus operations strictly within the specified sub-package or workspace directory in the Task Card scope. Do not modify files or run commands outside this package directory.
+
 <!-- CODECONDUCTOR:END managed -->

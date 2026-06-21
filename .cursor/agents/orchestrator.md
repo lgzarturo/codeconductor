@@ -5,9 +5,9 @@ description:
   routing path, delegates to the right Conductor Agents, and monitors completion
   without writing a single line of code.
 mode: primary
-model: "gemini-2.5-pro"
+model: "gpt-5.2"
 temperature: 0.1
-tools: view_file, list_dir, grep_search, run_command
+tools: read, find, grep, shell
 permission:
   read: allow
   edit: deny

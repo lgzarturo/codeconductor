@@ -74,6 +74,71 @@ export async function detectProject(rootDir: string): Promise<ProjectProfile> {
     frameworks.push('astro');
   }
 
+  // Check for Next.js
+  const nextSignals = await detectNext(rootDir);
+  if (nextSignals.length > 0) {
+    signals.push(...nextSignals);
+    languages.push('javascript', 'typescript');
+    runtimes.push('node');
+    frameworks.push('nextjs');
+  }
+
+  // Check for FastAPI
+  const fastapiSignals = await detectFastApi(rootDir);
+  if (fastapiSignals.length > 0) {
+    signals.push(...fastapiSignals);
+    languages.push('python');
+    runtimes.push('python');
+    frameworks.push('fastapi');
+  }
+
+  // Check for Monorepo
+  const monorepoSignals = await detectMonorepo(rootDir);
+  if (monorepoSignals.length > 0) {
+    signals.push(...monorepoSignals);
+  }
+
+  // Check for Generic Backend
+  const genericBackendSignals = await detectGenericBackend(rootDir);
+  if (
+    genericBackendSignals.length > 0 &&
+    !frameworks.includes('django') &&
+    !frameworks.includes('fastapi') &&
+    !frameworks.includes('spring')
+  ) {
+    signals.push(...genericBackendSignals);
+    frameworks.push('backend');
+    if (genericBackendSignals.includes('go.mod')) {
+      languages.push('go');
+      runtimes.push('go');
+    }
+    if (genericBackendSignals.includes('Cargo.toml')) {
+      languages.push('rust');
+      runtimes.push('rust');
+    }
+    if (genericBackendSignals.includes('Gemfile')) {
+      languages.push('ruby');
+      runtimes.push('ruby');
+    }
+    if (genericBackendSignals.includes('*.csproj')) {
+      languages.push('csharp');
+      runtimes.push('dotnet');
+    }
+  }
+
+  // Check for Generic Frontend
+  const genericFrontendSignals = await detectGenericFrontend(rootDir);
+  if (
+    genericFrontendSignals.length > 0 &&
+    !frameworks.includes('astro') &&
+    !frameworks.includes('nextjs')
+  ) {
+    signals.push(...genericFrontendSignals);
+    frameworks.push('frontend');
+    languages.push('javascript', 'typescript');
+    runtimes.push('node');
+  }
+
   const uniqueSignals = [...new Set(signals)];
 
   return {
@@ -210,6 +275,177 @@ async function detectPhp(rootDir: string): Promise<string[]> {
     }
   } catch {
     // readdir failed
+  }
+
+  return signals;
+}
+
+async function detectNext(rootDir: string): Promise<string[]> {
+  const { fileExists } = await import('../filesystem/safety');
+  const { join } = await import('node:path');
+  const { readFile } = await import('node:fs/promises');
+  const signals: string[] = [];
+
+  if (
+    (await fileExists(rootDir, 'next.config.js')) ||
+    (await fileExists(rootDir, 'next.config.mjs')) ||
+    (await fileExists(rootDir, 'next.config.ts'))
+  ) {
+    signals.push('next.config');
+  }
+
+  if (await fileExists(rootDir, 'package.json')) {
+    try {
+      const content = await readFile(join(rootDir, 'package.json'), 'utf-8');
+      const pkg = JSON.parse(content);
+      if (pkg.dependencies?.next || pkg.devDependencies?.next) {
+        signals.push('package.json-next');
+      }
+    } catch {}
+  }
+
+  return signals;
+}
+
+async function detectFastApi(rootDir: string): Promise<string[]> {
+  const { fileExists } = await import('../filesystem/safety');
+  const { join } = await import('node:path');
+  const { readFile } = await import('node:fs/promises');
+  const signals: string[] = [];
+
+  if (await fileExists(rootDir, 'requirements.txt')) {
+    try {
+      const content = await readFile(join(rootDir, 'requirements.txt'), 'utf-8');
+      if (content.includes('fastapi')) {
+        signals.push('fastapi-requirements');
+      }
+    } catch {}
+  }
+
+  if (await fileExists(rootDir, 'pyproject.toml')) {
+    try {
+      const content = await readFile(join(rootDir, 'pyproject.toml'), 'utf-8');
+      if (content.includes('fastapi')) {
+        signals.push('fastapi-pyproject');
+      }
+    } catch {}
+  }
+
+  for (const filename of ['main.py', 'app.py', 'app/main.py', 'app/app.py']) {
+    if (await fileExists(rootDir, filename)) {
+      try {
+        const content = await readFile(join(rootDir, filename), 'utf-8');
+        if (content.includes('FastAPI') && content.includes('fastapi')) {
+          signals.push(`${filename}-fastapi`);
+        }
+      } catch {}
+    }
+  }
+
+  return signals;
+}
+
+async function detectMonorepo(rootDir: string): Promise<string[]> {
+  const { fileExists } = await import('../filesystem/safety');
+  const { join } = await import('node:path');
+  const { readFile } = await import('node:fs/promises');
+  const signals: string[] = [];
+
+  if (await fileExists(rootDir, 'pnpm-workspace.yaml')) {
+    signals.push('pnpm-workspace.yaml');
+  }
+
+  if (await fileExists(rootDir, 'lerna.json')) {
+    signals.push('lerna.json');
+  }
+
+  if (await fileExists(rootDir, 'go.work')) {
+    signals.push('go.work');
+  }
+
+  if (await fileExists(rootDir, 'package.json')) {
+    try {
+      const content = await readFile(join(rootDir, 'package.json'), 'utf-8');
+      const pkg = JSON.parse(content);
+      if (pkg.workspaces) {
+        signals.push('package.json-workspaces');
+      }
+    } catch {}
+  }
+
+  if (await fileExists(rootDir, 'Cargo.toml')) {
+    try {
+      const content = await readFile(join(rootDir, 'Cargo.toml'), 'utf-8');
+      if (content.includes('[workspace]')) {
+        signals.push('Cargo.toml-workspace');
+      }
+    } catch {}
+  }
+
+  return signals;
+}
+
+async function detectGenericBackend(rootDir: string): Promise<string[]> {
+  const { fileExists } = await import('../filesystem/safety');
+  const { readdir } = await import('node:fs/promises');
+  const signals: string[] = [];
+
+  if (await fileExists(rootDir, 'go.mod')) {
+    signals.push('go.mod');
+  }
+
+  if (await fileExists(rootDir, 'Cargo.toml')) {
+    signals.push('Cargo.toml');
+  }
+
+  if (await fileExists(rootDir, 'Gemfile')) {
+    signals.push('Gemfile');
+  }
+
+  try {
+    const entries = await readdir(rootDir, { withFileTypes: true });
+    const hasCsProj = entries.some((entry) => entry.isFile() && entry.name.endsWith('.csproj'));
+    if (hasCsProj) {
+      signals.push('*.csproj');
+    }
+  } catch {}
+
+  return signals;
+}
+
+async function detectGenericFrontend(rootDir: string): Promise<string[]> {
+  const { fileExists } = await import('../filesystem/safety');
+  const { join } = await import('node:path');
+  const { readFile } = await import('node:fs/promises');
+  const signals: string[] = [];
+
+  if (await fileExists(rootDir, 'index.html')) {
+    signals.push('index.html');
+  }
+
+  if (
+    (await fileExists(rootDir, 'vite.config.js')) ||
+    (await fileExists(rootDir, 'vite.config.ts'))
+  ) {
+    signals.push('vite.config');
+  }
+
+  if (await fileExists(rootDir, 'webpack.config.js')) {
+    signals.push('webpack.config.js');
+  }
+
+  if (await fileExists(rootDir, 'package.json')) {
+    try {
+      const content = await readFile(join(rootDir, 'package.json'), 'utf-8');
+      const pkg = JSON.parse(content);
+      const frontendDeps = ['react', 'vue', 'svelte', 'solid-js', 'angular', '@angular/core'];
+      const hasFrontendDep = frontendDeps.some(
+        (dep) => pkg.dependencies?.[dep] || pkg.devDependencies?.[dep]
+      );
+      if (hasFrontendDep) {
+        signals.push('package.json-frontend');
+      }
+    } catch {}
   }
 
   return signals;

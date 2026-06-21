@@ -819,6 +819,10 @@ Available skills:
 | `django-testing`       | Django test patterns, tenant-aware testing          |
 | `python-fastapi-stack` | FastAPI routers, endpoints, schemas                 |
 | `sqlalchemy`           | SQLAlchemy models, sessions, Alembic migrations     |
+| `nextjs-typescript`    | Next.js components, Server Actions, App Router      |
+| `astro`                | Astro pages, islands, content collections           |
+| `security`             | Backend security, authorization, data validation    |
+| `a11y-debugging`       | Debugging frontend accessibility and web standards  |
 
 To activate a skill, include in your request:
 
@@ -828,6 +832,18 @@ or, in a combined setup:
 
 > "Apply the `[skill-name]` skill from
 > `.opencode/skills/[skill-name]/SKILL.md`."
+
+---
+
+## Loop Agent & Monorepo Workspaces
+
+### Loop Agent Mode (Intense Workflows)
+- If tests fail during verification, route the logs back to the Implementer.
+- Run the cycle: Implementer (applies fix) -> Tester (verifies suite) up to 3 times.
+- If still failing, stop and report back with findings.
+
+### Monorepo Workspaces
+- Note that this is a monorepo. Focus operations strictly within the specified sub-package or workspace directory in the Task Card scope. Avoid modifying files or running commands outside this package directory.
 
 ---
 

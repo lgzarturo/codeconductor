@@ -8,11 +8,11 @@ description:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Default — code review |
-| OpenCode Go | {{MODEL_OPENCODE}} | Best — efficient reviews |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Alternative |
+| Claude | claude-sonnet-4-6 | Default — code review |
+| OpenCode Go | opencode-go/qwen3.6-plus | Best — efficient reviews |
+| Gemini | gemini-2.5-pro | Alternative |
+| Codex | gpt-5.4 | Alternative |
+| Cursor | gpt-5.4 | Alternative |
 ---
 
 # Agent Contract — reviewer v0.1.0

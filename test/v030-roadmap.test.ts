@@ -60,6 +60,27 @@ describe('v0.3.0 roadmap completion', () => {
     ).toBe('high');
   });
 
+  test('detectProject identifies Next.js, FastAPI, Monorepo, Generic Backend, and Generic Frontend', async () => {
+    const nextProfile = await detectProject(join(PROJECT_ROOT, 'test', 'fixtures', 'nextjs-project'));
+    expect(nextProfile.frameworks).toContain('nextjs');
+    expect(nextProfile.runtimes).toContain('node');
+
+    const fastapiProfile = await detectProject(join(PROJECT_ROOT, 'test', 'fixtures', 'fastapi-project'));
+    expect(fastapiProfile.frameworks).toContain('fastapi');
+    expect(fastapiProfile.runtimes).toContain('python');
+
+    const monorepoProfile = await detectProject(join(PROJECT_ROOT, 'test', 'fixtures', 'monorepo-project'));
+    expect(monorepoProfile.signals).toContain('pnpm-workspace.yaml');
+
+    const backendProfile = await detectProject(join(PROJECT_ROOT, 'test', 'fixtures', 'backend-project'));
+    expect(backendProfile.frameworks).toContain('backend');
+    expect(backendProfile.languages).toContain('go');
+
+    const frontendProfile = await detectProject(join(PROJECT_ROOT, 'test', 'fixtures', 'frontend-project'));
+    expect(frontendProfile.frameworks).toContain('frontend');
+    expect(frontendProfile.runtimes).toContain('node');
+  });
+
   test('preset resolver returns target, stack, architecture, version, assets, and warnings', () => {
     const resolution = resolvePreset('opencode', {
       runtimes: ['node'],
@@ -74,6 +95,26 @@ describe('v0.3.0 roadmap completion', () => {
     expect(resolution.presetVersion).toBe('v0.3.0');
     expect(resolution.assets).toContain('commands');
     expect(resolution.warnings.length).toBeGreaterThan(0);
+  });
+
+  test('preset resolver resolves new stacks and monorepo architecture correctly', () => {
+    const nextResolution = resolvePreset('opencode', {
+      runtimes: ['node'],
+      frameworks: ['nextjs'],
+      signals: ['next.config', 'package.json'],
+      confidence: 'high',
+    });
+    expect(nextResolution.stack).toBe('nextjs');
+    expect(nextResolution.architecture).toBe('single-project');
+
+    const monorepoResolution = resolvePreset('opencode', {
+      runtimes: ['node'],
+      frameworks: ['nextjs'],
+      signals: ['pnpm-workspace.yaml', 'next.config', 'package.json'],
+      confidence: 'high',
+    });
+    expect(monorepoResolution.architecture).toBe('monorepo');
+    expect(monorepoResolution.stack).toBe('nextjs');
   });
 
   test('safe merger replaces only the managed block and preserves user content', () => {

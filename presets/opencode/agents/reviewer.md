@@ -123,6 +123,31 @@ _(none)_ — if no suggestions
 - **approved with warnings** — no CRITICAL, at least one WARNING
 - **approved** — no CRITICAL, no WARNING (suggestions do not block)
 
+## Stricter Stack-Specific Checklist
+
+Apply these detailed checks based on the detected stack:
+
+### Next.js
+- [ ] RSC vs RCC boundary: Client directives (`"use client"`) are only placed on interactive leaf node files, not on static layouts/pages.
+- [ ] Server Actions input: Every Server Action validates `FormData` or arguments using a schema library (like Zod) before performing mutations. No raw data is trusted.
+- [ ] Browser APIs: Window, document, and localStorage access are guarded (e.g. `typeof window !== 'undefined'`) or only run inside `useEffect`.
+
+### FastAPI
+- [ ] Request Typing: All endpoints use typed Pydantic models (v2) for request bodies and path/query parameters.
+- [ ] Dependency Injection: Middleware, databases, and services are injected cleanly using FastAPI `Depends`.
+
+### Generic Backend
+- [ ] No SQL Injection: Database queries use parameterized placeholders or proper ORM queries; string concatenation or template literals for SQL are block-worthy.
+- [ ] Resource management: Connections, files, sockets, and sessions are closed explicitly or via context managers (e.g. `with` block).
+
+### Generic Frontend
+- [ ] Keyboard accessibility: All interactive elements are focusable (using `button`, `a`, or explicit `tabindex="0"`) and react to both click and keydown (Enter/Space) events.
+- [ ] ARIA & alt text: All images have descriptive `alt` attributes. Form fields have corresponding `<label>` or `aria-label` tags.
+- [ ] Semantic HTML: Page structures use semantic landmarks (`<main>`, `<header>`, `<footer>`, `<nav>`, `<article>`, `<section>`).
+
+### Monorepo Workspaces
+- [ ] Workspace boundary: No relative imports escape a workspace package root to reference another package's files directly. Inter-package imports must resolve through configured workspace dependencies.
+
 ## What You Never Do
 
 - Edit any file — source, test, documentation, or configuration

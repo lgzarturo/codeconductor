@@ -142,6 +142,66 @@ signals in order of priority:
 | `[tool.pytest.ini_options]` in `pyproject.toml` | pytest configured    |
 | `django-tenants` in deps                        | Multi-tenant Django  |
 | `build.gradle.kts` + `org.springframework.boot` | Spring Boot + Kotlin |
+| `next.config.js` / `next.config.mjs` / `next.config.ts` | Next.js              |
+| `requirements.txt` / `pyproject.toml` with `fastapi` | FastAPI              |
+| `pnpm-workspace.yaml` / `go.work`               | Monorepo Workspace   |
+| `go.mod` / `Cargo.toml` without django/fastapi   | Generic Backend      |
+| `index.html` / react/vue dependencies           | Generic Frontend     |
+
+### Next.js
+
+When a Next.js project is detected, include the following skill invocation
+instruction in the delegation message for each agent:
+
+| Delegated agent | Instruction to include in delegation                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `architect`     | "Invoke the `nextjs-typescript` skill before designing."                                                                 |
+| `implementer`   | "Invoke `nextjs-typescript` before writing any code."                                                                    |
+| `tester`        | "Invoke `testing-tdd` and write Next.js unit and integration tests (using Vitest or Playwright)."                        |
+| `reviewer`      | "Invoke the `nextjs-typescript` skill to check component boundaries (RSC vs RCC) and validation rules."                  |
+
+### FastAPI
+
+When a FastAPI project is detected, include the following skill invocation
+instruction in the delegation message for each agent:
+
+| Delegated agent | Instruction to include in delegation                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `architect`     | "Invoke the `python-fastapi-stack` and `sqlalchemy` skills before designing."                                            |
+| `implementer`   | "Invoke `python-fastapi-stack` and `sqlalchemy` before writing any code."                                                |
+| `tester`        | "Invoke Python testing guidelines to write FastAPI endpoint contract tests."                                             |
+| `reviewer`      | "Invoke `python` to verify FastAPI routers and SQLAlchemy async patterns."                                               |
+
+### Generic Backend
+
+When a generic backend project is detected, include the following skill invocation
+instruction in the delegation message for each agent:
+
+| Delegated agent | Instruction to include in delegation                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `architect`     | "Invoke the `security` skill to review backend boundaries, authentication schemes, and data validation rules."           |
+| `implementer`   | "Invoke `security` to ensure inputs are validated, parameterized queries are used, and secrets are not exposed."         |
+| `reviewer`      | "Invoke `security` to check for injection vulnerabilities, resource leaks, and lack of authorization checks."            |
+
+### Generic Frontend
+
+When a generic frontend project is detected, include the following skill invocation
+instruction in the delegation message for each agent:
+
+| Delegated agent | Instruction to include in delegation                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `architect`     | "Invoke the `security` skill and accessibility guidelines to plan keyboard navigation and semantic HTML structures."     |
+| `implementer`   | "Invoke `modern-web-guidance` and accessibility rules to implement semantically clean and keyboard-accessible UI."       |
+| `tester`        | "Invoke `a11y-debugging` to verify focus handling, tab order, and screen reader labels."                                 |
+| `reviewer`      | "Verify compliance with frontend security standards and web accessibility guidelines."                                    |
+
+### Monorepo Workspaces
+
+When a monorepo workspace signal is present, include this instruction for ALL agents:
+
+> "This is a monorepo. Focus all file reads, edits, and commands strictly within
+> the sub-package or workspace directory specified in the Task Card scope. Avoid
+> modifying files or running commands outside this package's directory."
 
 ### Python / Django / PostgreSQL
 
@@ -155,7 +215,7 @@ instruction in the delegation message for each agent:
 | `tester`        | "Invoke `django-testing` before writing any test. The project uses multi-tenant PostgreSQL — do not use `TestCase` for tenant app models."              |
 | `reviewer`      | "Invoke `python` to check clean code conventions before reviewing."                                                                                     |
 
-**TDD gate for medium and high risk Python tasks:**
+**TDD gate for medium and high risk Python/Backend tasks:**
 
 For tasks classified medium or high, modify the agent sequence to enforce
 test-first development:
@@ -173,6 +233,30 @@ Include this instruction in the `implementer` delegation:
 
 > "The tester has already written failing tests at [path]. Run them first to
 > confirm they fail. Then implement the minimal code to make them pass."
+
+---
+
+## Intense Workflow — Loop Agent Mode
+
+For high-complexity tasks, or when verification tests fail, the orchestrator
+routes the agents through an iterative feedback loop:
+
+1. **Cycle**: Implementer -> Tester -> Orchestrator validation.
+2. If the `tester` reports failing tests:
+   - Route back to `implementer` with the specific test failures.
+   - Instruct the implementer to make target adjustments to resolve the failures.
+3. This cycle repeats up to 3 times. If tests are still failing after the 3rd iteration, escalate to the human with a full diagnostics summary.
+
+---
+
+## Multi-Team / Teammate Delegation
+
+When the preset target supports multi-team execution (e.g. Claude Code with
+`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` enabled):
+1. Spawn parallel teammates (`tester`, `reviewer`, etc.) to run verification and checks concurrently when possible.
+2. Assign the most cost-efficient models for secondary roles:
+   - Primary Orchestrator / Architect: `sonnet` / `pro` (maximum context / reasoning).
+   - Task Coach, Docs, Repo Explorer, Reviewer: `haiku` / `flash` (fast, cost-effective).
 
 ---
 

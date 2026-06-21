@@ -1,8 +1,18 @@
 import type { RunnerTargetInput } from '../../validation/schemas';
 import type { DetectionConfidence, ProjectProfile } from '../detection/project-detector';
 
-export type PresetStack = 'node' | 'bun' | 'spring' | 'django' | 'astro' | 'unknown';
-export type ProjectArchitecture = 'single-project' | 'unknown';
+export type PresetStack =
+  | 'node'
+  | 'bun'
+  | 'spring'
+  | 'django'
+  | 'astro'
+  | 'nextjs'
+  | 'fastapi'
+  | 'backend'
+  | 'frontend'
+  | 'unknown';
+export type ProjectArchitecture = 'single-project' | 'monorepo' | 'unknown';
 
 export interface PresetResolution {
   readonly target: Exclude<RunnerTargetInput, 'all'>;
@@ -21,8 +31,20 @@ export function resolvePreset(
   profile: Pick<ProjectProfile, 'frameworks' | 'runtimes' | 'signals' | 'confidence'>
 ): PresetResolution {
   const stack = resolveStack(profile);
-  const architecture: ProjectArchitecture =
-    profile.signals.length > 0 ? 'single-project' : 'unknown';
+  const isMonorepo = profile.signals.some((s) =>
+    [
+      'pnpm-workspace.yaml',
+      'lerna.json',
+      'go.work',
+      'package.json-workspaces',
+      'Cargo.toml-workspace',
+    ].includes(s)
+  );
+  const architecture: ProjectArchitecture = isMonorepo
+    ? 'monorepo'
+    : profile.signals.length > 0
+      ? 'single-project'
+      : 'unknown';
   const warnings: string[] = [];
 
   if (profile.confidence === 'low') {
@@ -58,6 +80,10 @@ function resolveStack(profile: Pick<ProjectProfile, 'frameworks' | 'runtimes'>):
   if (profile.frameworks.includes('spring')) return 'spring';
   if (profile.frameworks.includes('django')) return 'django';
   if (profile.frameworks.includes('astro')) return 'astro';
+  if (profile.frameworks.includes('nextjs')) return 'nextjs';
+  if (profile.frameworks.includes('fastapi')) return 'fastapi';
+  if (profile.frameworks.includes('backend')) return 'backend';
+  if (profile.frameworks.includes('frontend')) return 'frontend';
   if (profile.runtimes.includes('bun')) return 'bun';
   if (profile.runtimes.includes('node')) return 'node';
   return 'unknown';

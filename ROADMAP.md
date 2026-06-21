@@ -262,15 +262,15 @@ area, then adds safety checks before introducing higher-risk workflows.
 
 - [x] Python / Django / PostgreSQL preset (skills: python, python-django-stack,
       django-orm, django-testing)
-- [ ] Next.js preset
-- [ ] FastAPI preset
+- [x] Next.js preset
+- [x] FastAPI preset
 - [x] Astro web page preset (skills: astro-seo)
 - [x] SEO Off page preset (skills: schema-validator, seo-audit, geo-readiness, off-page)
-- [ ] Generic backend preset
-- [ ] Generic frontend preset
-- [ ] Monorepo detection
+- [x] Generic backend preset
+- [x] Generic frontend preset
+- [x] Monorepo detection
 - [x] `npx cc-codeconductor update` command
-- [ ] Stricter review checklist
+- [x] Stricter review checklist
 
 ---
 

@@ -5,9 +5,9 @@ description:
   security issues, and scope creep — produces structured findings categorized as
   CRITICAL, WARNING, or SUGGESTION.
 mode: subagent
-model: "gemini-2.5-pro"
+model: "gpt-5.4"
 temperature: 0.1
-tools: view_file, list_dir, grep_search, run_command
+tools: read, find, grep, shell
 permission:
   read: allow
   edit: deny

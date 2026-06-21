@@ -564,6 +564,18 @@ dependencies, apply `.claude/skills/python-fastapi-stack/SKILL.md`.
 When the active task touches SQLAlchemy models, queries, sessions, bulk
 operations, or Alembic migrations, apply `.claude/skills/sqlalchemy/SKILL.md`.
 
+When the active task touches Next.js components, Server Actions, or App Router layouts,
+apply `.claude/skills/nextjs-typescript/SKILL.md`.
+
+When the active task touches Astro pages or configuration,
+apply `.claude/skills/astro/SKILL.md`.
+
+When the active task touches backend security, authorization, or data verification,
+apply `.claude/skills/security/SKILL.md`.
+
+When the active task requires debugging frontend interactions or accessibility (a11y) checks,
+apply `.claude/skills/a11y-debugging/SKILL.md` and `.claude/skills/modern-web-guidance/SKILL.md`.
+
 When the user asks to create a Spring Boot feature (entity, service, controller,
 or tests), apply `.claude/skills/spring-boot-feature/SKILL.md`.
 
@@ -574,6 +586,19 @@ TTFB, apply `.claude/skills/pagespeed-perf/SKILL.md` and
 
 When the user asks about discovering, searching, or installing agent skills or
 extending capabilities, apply `.claude/skills/find-skills/SKILL.md`.
+
+---
+
+## Teammate & Loop Agent Rules
+
+### Teammate delegation (Presets supporting multi-teams)
+- Utilize parallel sub-agent execution by enabling `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` in `settings.json`.
+- Allocate tasks to specific teammates: use `sonnet` for Orchestrator and Architect, and delegate secondary tasks (e.g. testing, review, docs) to `haiku` to optimize token budgets.
+
+### Loop Agent Mode (Intense Workflows)
+- If tests or verifications fail, do not stop. Re-route the failure logs back to the Implementer teammate.
+- The workflow iterates: Implementer (applies fix) -> Tester (verifies suite).
+- Permit up to 3 self-correction iterations. If tests still fail, halt and escalate to the human with diagnostic details.
 
 ---
 

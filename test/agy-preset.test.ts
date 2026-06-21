@@ -93,7 +93,7 @@ describe('Antigravity CLI (agy) Manifest and Model Config', () => {
     expect(srcDirs).toContain('opencode/skills');
     expect(srcDirs).toContain('agy/skills');
     expect(srcDirs).toContain('opencode/agents');
-    expect(srcDirs).toContain('opencode/prompts/v0.2.0');
+    expect(srcDirs).toContain('opencode/prompts/v0.3.0');
 
     const destDirs = manifest.entries.map(e => e.dest);
     expect(destDirs).toContain('.agents/AGENTS.md');
@@ -105,7 +105,7 @@ describe('Antigravity CLI (agy) Manifest and Model Config', () => {
     expect(destDirs).toContain('.agents/scripts');
     expect(destDirs).toContain('.agents/skills');
     expect(destDirs).toContain('.agents/agents');
-    expect(destDirs).toContain('.agents/prompts/v0.2.0');
+    expect(destDirs).toContain('.agents/prompts/v0.3.0');
   });
 
   test('model config loads successfully and contains tools mapping', async () => {

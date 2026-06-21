@@ -14,7 +14,7 @@ export interface PresetResolution {
   readonly warnings: readonly string[];
 }
 
-const CURRENT_PRESET_VERSION = 'v0.2.0';
+const CURRENT_PRESET_VERSION = 'v0.3.0';
 
 export function resolvePreset(
   target: Exclude<RunnerTargetInput, 'all'>,
@@ -66,16 +66,16 @@ function resolveStack(profile: Pick<ProjectProfile, 'frameworks' | 'runtimes'>):
 function resolveAssets(target: Exclude<RunnerTargetInput, 'all'>): string[] {
   switch (target) {
     case 'opencode':
-      return ['opencode.jsonc', 'agents', 'commands', 'prompts/v0.2.0', 'skills'];
+      return ['opencode.jsonc', 'agents', 'commands', 'prompts/v0.3.0', 'skills'];
     case 'claude':
-      return ['CLAUDE.md', 'settings.json', 'commands', 'skills', 'agents', 'prompts/v0.2.0'];
+      return ['CLAUDE.md', 'settings.json', 'commands', 'skills', 'agents', 'prompts/v0.3.0'];
     case 'codex':
-      return ['AGENTS.md', 'skills', 'prompts/v0.2.0'];
+      return ['AGENTS.md', 'skills', 'prompts/v0.3.0'];
     case 'gemini':
-      return ['agents', 'prompts/v0.2.0'];
+      return ['agents', 'prompts/v0.3.0'];
     case 'cursor':
-      return ['agents', 'prompts/v0.2.0'];
+      return ['agents', 'prompts/v0.3.0'];
     case 'agy':
-      return ['AGENTS.md', 'rules', 'workflows', 'skills', 'prompts/v0.2.0'];
+      return ['AGENTS.md', 'rules', 'workflows', 'skills', 'prompts/v0.3.0'];
   }
 }

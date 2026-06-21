@@ -37,7 +37,7 @@ async function cleanup() {
   }
 }
 
-describe('v0.2.0 roadmap completion', () => {
+describe('v0.3.0 roadmap completion', () => {
   beforeEach(async () => {
     await cleanup();
   });
@@ -71,7 +71,7 @@ describe('v0.2.0 roadmap completion', () => {
     expect(resolution.target).toBe('opencode');
     expect(resolution.stack).toBe('node');
     expect(resolution.architecture).toBe('single-project');
-    expect(resolution.presetVersion).toBe('v0.2.0');
+    expect(resolution.presetVersion).toBe('v0.3.0');
     expect(resolution.assets).toContain('commands');
     expect(resolution.warnings.length).toBeGreaterThan(0);
   });
@@ -135,7 +135,7 @@ describe('v0.2.0 roadmap completion', () => {
 
     const json = JSON.parse(result.stdout);
     expect(json.presetResolution.target).toBe('opencode');
-    expect(json.presetResolution.presetVersion).toBe('v0.2.0');
+    expect(json.presetResolution.presetVersion).toBe('v0.3.0');
     expect(json.presetResolution.confidence).toBeDefined();
     expect(existsSync(join(PROJECT_ROOT, '.codeconductor', 'config.yml'))).toBe(false);
   });

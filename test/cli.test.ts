@@ -527,7 +527,7 @@ describe('CLI', () => {
 
     const { existsSync } = await import('node:fs');
     expect(
-      existsSync(join(PROJECT_ROOT, '.opencode', 'prompts', 'v0.2.0', 'orchestrator.md'))
+      existsSync(join(PROJECT_ROOT, '.opencode', 'prompts', 'v0.3.0', 'orchestrator.md'))
     ).toBe(true);
     expect(
       existsSync(join(PROJECT_ROOT, '.opencode', 'skills', 'api-versioning', 'SKILL.md'))
@@ -572,7 +572,7 @@ describe('CLI', () => {
     expect(existsSync(join(PROJECT_ROOT, '.codex', 'skills', 'api-versioning', 'SKILL.md'))).toBe(
       true
     );
-    expect(existsSync(join(PROJECT_ROOT, '.codex', 'prompts', 'v0.2.0', 'orchestrator.md'))).toBe(
+    expect(existsSync(join(PROJECT_ROOT, '.codex', 'prompts', 'v0.3.0', 'orchestrator.md'))).toBe(
       true
     );
   });

@@ -337,10 +337,11 @@ describe('copyFromManifest with modelConfig', () => {
   test('template entries are detected from opencode manifest', async () => {
     const manifest = await loadManifest('opencode');
     const templateEntries = manifest.entries.filter((e) => e.template === true);
-    // agents + README.md (locale placeholder injection)
-    expect(templateEntries.length).toBe(2);
+    // agents + README.md (locale placeholder injection) + prompts (v0.3.0)
+    expect(templateEntries.length).toBe(3);
     expect(templateEntries.some((e) => e.src.includes('agents'))).toBe(true);
     expect(templateEntries.some((e) => e.src.includes('README.md'))).toBe(true);
+    expect(templateEntries.some((e) => e.src.includes('prompts'))).toBe(true);
   });
 
   test('non-template entries exist in manifest', async () => {
@@ -487,9 +488,9 @@ describe('Manifest template flag', () => {
 
   test('non-template non-locale entries do not have template flag set', async () => {
     const manifest = await loadManifest('opencode');
-    // Entries that legitimately have template: true are 'agents' and 'README.md'
+    // Entries that legitimately have template: true are 'agents', 'README.md', and 'prompts'
     const nonTemplateEntries = manifest.entries.filter(
-      (e) => !e.src.includes('agents') && !e.src.includes('README.md')
+      (e) => !e.src.includes('agents') && !e.src.includes('README.md') && !e.src.includes('prompts')
     );
     for (const entry of nonTemplateEntries) {
       expect(entry.template).toBeFalsy();
@@ -661,7 +662,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
 
     const content = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', 'tester.md'), 'utf-8');
     // opencode install: frontmatter has opencode model for tester
-    expect(content).toContain('minimax-m2.7');
+    expect(content).toContain('minimax-m3');
     expect(content).not.toContain('{{MODEL}}');
   });
 
@@ -798,7 +799,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
 
     const content = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', 'docs.md'), 'utf-8');
     // opencode install: frontmatter has opencode model for docs
-    expect(content).toContain('qwen3.6-plus');
+    expect(content).toContain('qwen3.7-plus');
     expect(content).not.toContain('{{MODEL}}');
   });
 });

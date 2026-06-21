@@ -7,6 +7,7 @@ entries:
   - src: codex/skills
     dest: .codex/skills
     strategy: overwrite
-  - src: opencode/prompts/v0.2.0
-    dest: .codex/prompts/v0.2.0
+  - src: opencode/prompts/v0.3.0
+    dest: .codex/prompts/v0.3.0
     strategy: overwrite
+    template: true

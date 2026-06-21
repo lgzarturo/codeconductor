@@ -1,29 +1,29 @@
 ---
 trigger: always_on
-description: Reglas para generar mensajes de commit con formato Conventional Commits
+description: Rules for generating commit messages using Conventional Commits format
 ---
 
 ## Git Commit Messages
 
-### Formato
+### Format
 
 ```
-<tipo>(<scope>): <descripcion corta>
+<type>(<scope>): <short description>
 
-- <detalle 1>
-- <detalle 2>
+- <detail 1>
+- <detail 2>
 ```
 
-### Tipos validos
+### Valid Types
 
 `feat` `fix` `docs` `style` `refactor` `test` `chore` `perf` `ci` `build`
 `revert`
 
-### Reglas
+### Rules
 
-- Idioma: **inglés neutro** siempre
-- Encabezado: maximo 69 caracteres, sin punto final
-- Cuerpo: viñetas concisas, una idea por linea
-- Footer: solo para breaking changes o issues
-- Sin gerundios ("agregando", "corrigiendo")
-- Usar infinitivo o imperativo ("agregar", "corregir", "actualizar")
+- Language: **neutral English** always
+- Header: maximum 69 characters, no trailing period
+- Body: concise bullet points, one idea per line
+- Footer: only for breaking changes or issues
+- No gerunds ("adding", "fixing")
+- Use infinitive or imperative ("add", "fix", "update")

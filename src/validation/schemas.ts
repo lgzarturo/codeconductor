@@ -172,3 +172,11 @@ export function validateConfig(data: unknown): CodeConductorConfigInput {
 export function validateRunnerTarget(data: unknown): RunnerTargetInput {
   return RunnerTargetSchema.parse(data);
 }
+
+/**
+ * Validate model configuration
+ */
+export function validateModelConfig(data: unknown): ModelConfig {
+  return ModelConfigSchema.parse(data);
+}
+

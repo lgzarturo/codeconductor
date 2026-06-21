@@ -6,6 +6,7 @@ import { PathResolver, createPathResolver } from '../src/core/filesystem/path-re
 import { renderTemplate, renderTemplates } from '../src/core/generation/template-renderer';
 import { loadConfig, configExists } from '../src/core/config/config-loader';
 import { writeConfig, getConfigPath } from '../src/core/config/config-writer';
+import { validateModelConfig } from '../src/validation/schemas';
 
 const TMP_DIR = resolve(import.meta.dir, '..', 'test', 'fixtures', 'coverage-tmp');
 
@@ -131,3 +132,62 @@ describe('Coverage Expansion — config integration tests', () => {
     expect(content3).toContain('name: overwritten-name');
   });
 });
+
+describe('Coverage Expansion — model config validation tests', () => {
+  test('U-106: validateModelConfig parses valid model config correctly', () => {
+    const validConfig = {
+      target: 'opencode',
+      agents: {
+        orchestrator: {
+          opencode: 'opencode/big-pickle',
+          gemini: 'gemini-2.5-pro',
+        },
+        implementer: {
+          opencode: 'opencode-go/deepseek-v4-flash',
+        },
+      },
+      tools: {
+        orchestrator: {
+          read_file: 'custom-read-file',
+        },
+      },
+      permissions: {
+        read_file: 'allow',
+      },
+    };
+
+    const parsed = validateModelConfig(validConfig);
+    expect(parsed.target).toBe('opencode');
+    expect(parsed.agents.orchestrator.opencode).toBe('opencode/big-pickle');
+    expect(parsed.agents.implementer.opencode).toBe('opencode-go/deepseek-v4-flash');
+    expect(parsed.tools?.orchestrator?.read_file).toBe('custom-read-file');
+    expect(parsed.permissions?.read_file).toBe('allow');
+  });
+
+  test('U-107: validateModelConfig throws on invalid target', () => {
+    const invalidConfig = {
+      target: 'invalid-target', // Should be one of the enum values
+      agents: {
+        orchestrator: {
+          gemini: 'gemini-2.5-pro',
+        },
+      },
+    };
+
+    expect(() => validateModelConfig(invalidConfig)).toThrow();
+  });
+
+  test('U-108: validateModelConfig throws on invalid agent model key type', () => {
+    const invalidConfig = {
+      target: 'gemini',
+      agents: {
+        orchestrator: {
+          gemini: 123, // invalid type (must be string)
+        },
+      },
+    };
+
+    expect(() => validateModelConfig(invalidConfig)).toThrow();
+  });
+});
+

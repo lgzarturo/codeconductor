@@ -106,7 +106,7 @@ if ! command_exists git-cliff; then
   log "Skipping CHANGELOG generation"
 else
   log "Generating CHANGELOG..."
-  git-cliff --config .cliff.toml --output CHANGELOG.md
+  env -u GIT_DIR -u GIT_WORK_TREE git-cliff --workdir "$PWD" --repository "$PWD" --config .cliff.toml --output CHANGELOG.md
   git add CHANGELOG.md
 fi
 

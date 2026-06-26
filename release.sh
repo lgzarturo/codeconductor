@@ -106,6 +106,10 @@ if ! command_exists git-cliff; then
   log "Skipping CHANGELOG generation"
 else
   log "Generating CHANGELOG..."
+  # Workaround for libgit2 bug: git-cliff fails if .git/commondir contains '.'
+  if [[ -f .git/commondir ]] && grep -q '^.$' .git/commondir; then
+    rm -f .git/commondir
+  fi
   env -u GIT_DIR -u GIT_WORK_TREE git-cliff --workdir "$PWD" --repository "$PWD" --config .cliff.toml --output CHANGELOG.md
   git add CHANGELOG.md
 fi

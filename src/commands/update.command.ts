@@ -1,6 +1,6 @@
 import { homedir } from 'node:os';
 import { resolve, dirname } from 'node:path';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, stat } from 'node:fs/promises';
 import { loadConfig } from '../core/config/config-loader';
 import type { OutputMode } from '../utils/logger';
 import {

@@ -27,6 +27,13 @@ describe('Coverage Expansion — safe-merger unit tests', () => {
     const incoming = `${MANAGED_END_MARKER}\ncontent\n${MANAGED_BEGIN_MARKER}`;
     expect(() => mergeManagedBlock('some existing', incoming)).toThrow(/markers in the wrong order/);
   });
+
+  test('U-102b: mergeManagedBlock on existing content without markers overwrites with incoming', () => {
+    const incoming = `${MANAGED_BEGIN_MARKER}\nincoming content\n${MANAGED_END_MARKER}`;
+    const result = mergeManagedBlock('some existing content without markers', incoming);
+    expect(result.action).toBe('written');
+    expect(result.content).toBe(incoming);
+  });
 });
 
 describe('Coverage Expansion — path-resolver unit tests', () => {

@@ -7,7 +7,8 @@ import {
   isTargetInstalled,
   validateAgentFileSizes,
   checkUpdates,
-  loadSkillsLock
+  loadSkillsLock,
+  validateAgentMarkers
 } from '../src/core/presets/update-checker';
 
 const TEST_DIR = resolve(import.meta.dir, '..', 'test-update-checker-tmp');
@@ -93,6 +94,34 @@ describe('Update Checker & Smart Updates', () => {
     expect(result.council).toBe(true);
     expect(result.policy).toBe(true);
     expect(result.hasUpdates).toBe(true);
+  });
+
+  test('validateAgentMarkers warns on missing or invalid markers', async () => {
+    // Create target directories for claude
+    const claudeDir = join(TEST_DIR, '.claude');
+    await mkdir(claudeDir, { recursive: true });
+
+    const claudeFile = join(claudeDir, 'CLAUDE.md');
+
+    // Missing markers entirely
+    await writeFile(claudeFile, 'no markers at all', 'utf-8');
+    let results = await validateAgentMarkers(TEST_DIR, false);
+    
+    const fileResult = results.find(r => r.path.endsWith('CLAUDE.md'));
+    expect(fileResult).toBeDefined();
+    expect(fileResult?.error).toBe('Missing managed markers');
+
+    // Invalid markers (begin but no end)
+    await writeFile(claudeFile, '<!-- CODECONDUCTOR:BEGIN managed -->\nno end marker', 'utf-8');
+    results = await validateAgentMarkers(TEST_DIR, false);
+    const fileResult2 = results.find(r => r.path.endsWith('CLAUDE.md'));
+    expect(fileResult2?.error).toContain('Must contain exactly one managed begin marker');
+
+    // Valid markers
+    await writeFile(claudeFile, '<!-- CODECONDUCTOR:BEGIN managed -->\ncontent\n<!-- CODECONDUCTOR:END managed -->', 'utf-8');
+    results = await validateAgentMarkers(TEST_DIR, false);
+    const fileResult3 = results.find(r => r.path.endsWith('CLAUDE.md'));
+    expect(fileResult3).toBeUndefined();
   });
 });
 

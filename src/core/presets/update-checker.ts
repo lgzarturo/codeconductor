@@ -5,7 +5,7 @@ import { parse } from 'yaml';
 import { loadManifest, loadModelConfig, PRESETS_DIR } from './manifest-loader';
 import { renderTemplate, resolveEntryFiles, mergeDeep } from './file-copier';
 import { loadConfig } from '../config/config-loader';
-import { mergeManagedBlock } from '../filesystem/safe-merger';
+import { mergeManagedBlock, MANAGED_BEGIN_MARKER, MANAGED_END_MARKER } from '../filesystem/safe-merger';
 import { ROOT_PRESETS_DIR, SRC_PRESETS_DIR, POLICY_PATH } from './package-paths';
 import type { InstallStrategy } from '../../validation/schemas';
 
@@ -83,6 +83,83 @@ export async function validateAgentFileSizes(
   }
 
   return largeFiles;
+}
+
+/**
+ * Check if installed agent files that use merge-managed strategy have valid markers
+ */
+export async function validateAgentMarkers(
+  basePath: string,
+  isGlobal: boolean
+): Promise<Array<{ path: string; error: string }>> {
+  const targetsToCheck: Array<'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'> = [
+    'opencode',
+    'claude',
+    'codex',
+    'gemini',
+    'cursor',
+    'agy',
+  ];
+
+  const results: Array<{ path: string; error: string }> = [];
+
+  for (const target of targetsToCheck) {
+    const isInstalled = await isTargetInstalled(target, basePath, isGlobal);
+    if (!isInstalled) {
+      continue;
+    }
+
+    let manifest;
+    try {
+      manifest = await loadManifest(target);
+    } catch {
+      continue;
+    }
+
+    for (const entry of manifest.entries) {
+      const strategy: InstallStrategy = isGlobal && entry.globalStrategy ? entry.globalStrategy : entry.strategy;
+      if (strategy !== 'merge-managed') {
+        continue;
+      }
+
+      let resolvedEntry = entry;
+      let targetBaseDir = basePath;
+      if (target === 'agy' && isGlobal) {
+        targetBaseDir = join(homedir(), '.gemini', 'config');
+        resolvedEntry = {
+          ...entry,
+          dest: entry.dest.replace(/^\.agents\/?/, ''),
+        };
+      }
+
+      const files = await resolveEntryFiles(resolvedEntry, PRESETS_DIR, targetBaseDir);
+      for (const { dest } of files) {
+        try {
+          const content = await readFile(dest, 'utf-8');
+          const beginCount = content.split(MANAGED_BEGIN_MARKER).length - 1;
+          const endCount = content.split(MANAGED_END_MARKER).length - 1;
+
+          if (beginCount === 0 && endCount === 0) {
+            results.push({ path: dest, error: 'Missing managed markers' });
+          } else if (beginCount !== 1 || endCount !== 1) {
+            results.push({
+              path: dest,
+              error: 'Must contain exactly one managed begin marker and one managed end marker',
+            });
+          } else if (content.indexOf(MANAGED_BEGIN_MARKER) > content.indexOf(MANAGED_END_MARKER)) {
+            results.push({
+              path: dest,
+              error: 'Managed markers are in the wrong order',
+            });
+          }
+        } catch {
+          // File does not exist, ignore
+        }
+      }
+    }
+  }
+
+  return results;
 }
 
 /**

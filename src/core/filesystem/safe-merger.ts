@@ -13,6 +13,13 @@ export function mergeManagedBlock(existing: string | null, incoming: string): Ma
     return { content: incoming, action: 'written' };
   }
 
+  const hasBegin = existing.includes(MANAGED_BEGIN_MARKER);
+  const hasEnd = existing.includes(MANAGED_END_MARKER);
+
+  if (!hasBegin && !hasEnd) {
+    return { content: incoming, action: 'written' };
+  }
+
   validateMarkers(existing, 'existing content');
 
   const existingBlock = getManagedBlockRange(existing);

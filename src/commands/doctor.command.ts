@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { configExists, loadConfig } from '../core/config/config-loader';
 import { loadTargetSecurityCompatibility } from '../core/security/target-compatibility';
-import { checkUpdates, validateAgentFileSizes } from '../core/presets/update-checker';
+import { checkUpdates, validateAgentFileSizes, validateAgentMarkers } from '../core/presets/update-checker';
 import type { OutputMode } from '../utils/logger';
 
 export interface DoctorOptions {
@@ -159,6 +159,25 @@ export async function doctorCommand(
         name: 'agent-file-sizes',
         status: 'pass',
         message: 'All agent files (AGENTS.md/CLAUDE.md) are under 40KB',
+      });
+    }
+
+    // Check agent file markers
+    const missingMarkersLocal = await validateAgentMarkers(projectRoot, false);
+    const missingMarkersGlobal = await validateAgentMarkers(homedir(), true);
+    const allMissingMarkers = [...missingMarkersLocal, ...missingMarkersGlobal];
+
+    if (allMissingMarkers.length > 0) {
+      checks.push({
+        name: 'agent-file-markers',
+        status: 'warn',
+        message: `The following files have missing or invalid managed markers: ${allMissingMarkers.map((f) => `${f.path} (${f.error})`).join(', ')}`,
+      });
+    } else {
+      checks.push({
+        name: 'agent-file-markers',
+        status: 'pass',
+        message: 'All agent files have valid managed markers',
       });
     }
 

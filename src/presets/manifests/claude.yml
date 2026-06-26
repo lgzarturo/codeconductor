@@ -2,8 +2,8 @@ target: claude
 entries:
   - src: claude/CLAUDE.md
     dest: .claude/CLAUDE.md
-    strategy: overwrite
-    globalStrategy: append
+    strategy: merge-managed
+    globalStrategy: merge-managed
     template: true
   - src: claude/settings.json
     dest: .claude/settings.json

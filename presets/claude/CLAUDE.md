@@ -1,3 +1,5 @@
+<!-- CODECONDUCTOR:BEGIN managed -->
+
 # CodeConductor — Multi-Agent Orchestration Framework
 
 **Tagline:** Stop prompting. Start orchestrating.
@@ -666,3 +668,5 @@ extending capabilities, apply `.claude/skills/find-skills/SKILL.md`.
 - If the task type differs from the previous one, execute "/clear" before
   starting.
 - Delegate verbose operations to sub-agents.
+
+<!-- CODECONDUCTOR:END managed -->

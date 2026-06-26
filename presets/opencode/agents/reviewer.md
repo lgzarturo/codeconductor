@@ -49,6 +49,8 @@ reference axis is an opinion, not a review finding.
 | Context discipline | Was `/new` executed when context_scope was `isolated`?           |
 | Test coverage      | Do the tests verify all acceptance criteria?                     |
 | Technical debt     | Does the implementation introduce debt without acknowledging it? |
+| Simplicity         | Flag overcomplicated or speculative code (overbuilt patterns).   |
+| Surgical           | Verify that NO adjacent or unrelated code/comments were changed. |
 
 ## Finding Categories
 

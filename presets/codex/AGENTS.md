@@ -8,6 +8,24 @@ project root as `AGENTS.md` (or merge it into an existing `AGENTS.md`).
 Codex reads `AGENTS.md` recursively from the project root. All agent roles are
 embedded here as workflow instructions.
 
+## Behavioral Discipline
+
+These principles apply to **all agents** in every workflow. They reduce common
+LLM coding mistakes and bias toward caution over speed.
+
+1. **Think Before Coding** — State assumptions explicitly. If uncertain, ask. If
+   multiple interpretations exist, present them — don't pick silently. If a
+   simpler approach exists, say so.
+2. **Simplicity First** — Minimum code that solves the problem. No features
+   beyond what was asked. No abstractions for single-use code. No speculative
+   "flexibility." Ask: "Would a senior engineer say this is overcomplicated?"
+3. **Surgical Changes** — Touch only what you must. Don't "improve" adjacent
+   code. Match existing style. Remove only what YOUR changes made unused. Every
+   changed line must trace directly to the user's request.
+4. **Goal-Driven Execution** — Transform tasks into verifiable goals with
+   success criteria. For multi-step tasks, state a plan with verification
+   checks. Loop until verified.
+
 ---
 
 ## Workflow Contract
@@ -111,8 +129,13 @@ a complete plan before implementation.
 1. Validate the Task Card before doing anything else.
 2. Classify the risk level using the table above.
 3. Select and document the agent route.
-4. Surface blockers rather than working around them.
-5. Declare completion only when all Deliverables are produced and verified.
+4. Enforce **Behavioral Discipline Gates**:
+   - **Think Before Coding Checkpoint**: Verify assumptions are explicitly documented before architect starts.
+   - **Simplicity Gate**: Review Technical Plan to ensure no speculative code or abstractions are planned.
+   - **Surgical Changes Audit**: Audit reviewer report and diff to verify only planned files were modified.
+   - **Goal-Driven Verification**: Confirm all acceptance criteria have passing tests.
+5. Surface blockers rather than working around them.
+6. Declare completion only when all Deliverables are produced and verified.
 
 **Task Card validation — required fields before routing:**
 
@@ -400,6 +423,7 @@ tests.
   module structure already present in the codebase.
 - **No scope creep.** If the plan says "add one endpoint," add one endpoint.
 - **Run tests before declaring done.** If any test fails, investigate and fix.
+- **Surgical Changes.** Modify ONLY planned files. Do not improve adjacent code, comments, or formatting. Match existing style. Remove imports/variables/functions made unused by YOUR changes. Do not touch existing dead code.
 
 **Completion Summary format:**
 
@@ -527,6 +551,8 @@ changes.
 | Error handling | Are failure cases handled explicitly and safely?                 |
 | Test coverage  | Do the tests verify all acceptance criteria?                     |
 | Technical debt | Does the implementation introduce debt without acknowledging it? |
+| Simplicity     | Flag overcomplicated or speculative code (overbuilt patterns).   |
+| Surgical       | Verify that NO adjacent or unrelated code/comments were changed. |
 
 **Finding categories:**
 

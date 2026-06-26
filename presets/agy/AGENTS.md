@@ -6,6 +6,26 @@ This file configures CodeConductor for **Google Antigravity CLI (agy)** and Anti
 
 ---
 
+## Behavioral Discipline
+
+These principles apply to **all agents** in every workflow. They reduce common
+LLM coding mistakes and bias toward caution over speed.
+
+1. **Think Before Coding** — State assumptions explicitly. If uncertain, ask. If
+   multiple interpretations exist, present them — don't pick silently. If a
+   simpler approach exists, say so.
+2. **Simplicity First** — Minimum code that solves the problem. No features
+   beyond what was asked. No abstractions for single-use code. No speculative
+   "flexibility." Ask: "Would a senior engineer say this is overcomplicated?"
+3. **Surgical Changes** — Touch only what you must. Don't "improve" adjacent
+   code. Match existing style. Remove only what YOUR changes made unused. Every
+   changed line must trace directly to the user's request.
+4. **Goal-Driven Execution** — Transform tasks into verifiable goals with
+   success criteria. For multi-step tasks, state a plan with verification
+   checks. Loop until verified.
+
+---
+
 ## Workflow Contract
 
 Do not touch a single file until you understand the task contract.
@@ -101,8 +121,13 @@ When multiple signals apply, take the highest risk level. Do not average.
 1. Validate the Task Card before doing anything else.
 2. Classify the risk level using the table above.
 3. Select and document the agent route.
-4. Surface blockers rather than working around them.
-5. Declare completion only when all Deliverables are produced and verified.
+4. Enforce **Behavioral Discipline Gates**:
+   - **Think Before Coding Checkpoint**: Verify assumptions are explicitly documented before architect starts.
+   - **Simplicity Gate**: Review Technical Plan to ensure no speculative code or abstractions are planned.
+   - **Surgical Changes Audit**: Audit reviewer report and diff to verify only planned files were modified.
+   - **Goal-Driven Verification**: Confirm all acceptance criteria have passing tests.
+5. Surface blockers rather than working around them.
+6. Declare completion only when all Deliverables are produced and verified.
 
 **Task Card validation — required fields before routing:**
 - Title (short description, max 80 chars)
@@ -263,6 +288,10 @@ High-risk checkpoint: [yes | no — if yes, describe what triggers a stop]
 3. Read the target files.
 4. Verify tests pass before starting.
 
+**Surgical Changes Rules:**
+- Modify ONLY planned files. Do not improve adjacent code, comments, or formatting.
+- Match existing style. Remove imports/variables/functions made unused by YOUR changes. Do not touch existing dead code.
+
 **Implementation Summary format:**
 ```markdown
 ## Implementation Summary
@@ -322,6 +351,10 @@ High-risk checkpoint: [yes | no — if yes, describe what triggers a stop]
 - network: `deny`
 
 **Model:** `{{MODEL_GEMINI}}`
+
+**Review Axes & Gates:**
+- **Simplicity Gate**: Flag overcomplicated/speculative code. Ask: "Would a senior engineer say this is overbuilt?"
+- **Surgical Changes**: Verify no adjacent or unrelated code was changed.
 
 **Review Report format:**
 ```markdown

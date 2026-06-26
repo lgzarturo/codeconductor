@@ -3,6 +3,24 @@
 This project uses CodeConductor for structured AI-assisted engineering
 workflows.
 
+## Behavioral Discipline
+
+These principles apply to **all agents** in every workflow. They reduce common
+LLM coding mistakes and bias toward caution over speed.
+
+1. **Think Before Coding** — State assumptions explicitly. If uncertain, ask. If
+   multiple interpretations exist, present them — don't pick silently. If a
+   simpler approach exists, say so.
+2. **Simplicity First** — Minimum code that solves the problem. No features
+   beyond what was asked. No abstractions for single-use code. No speculative
+   "flexibility." Ask: "Would a senior engineer say this is overcomplicated?"
+3. **Surgical Changes** — Touch only what you must. Don't "improve" adjacent
+   code. Match existing style. Remove only what YOUR changes made unused. Every
+   changed line must trace directly to the user's request.
+4. **Goal-Driven Execution** — Transform tasks into verifiable goals with
+   success criteria. For multi-step tasks, state a plan with verification
+   checks. Loop until verified.
+
 <!-- CODECONDUCTOR:BEGIN managed -->
 
 ## Workflow Contract

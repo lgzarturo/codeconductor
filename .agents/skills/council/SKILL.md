@@ -1,6 +1,6 @@
 ---
 name: council
-description: Multi-agent council for structured code review, architecture decisions, and risk assessment through deliberation and consensus
+description: Multi-agent council for code review and architecture decisions
 version: 0.2.0
 ---
 

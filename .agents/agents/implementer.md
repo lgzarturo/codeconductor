@@ -55,9 +55,9 @@ invent an approach and proceed. The plan exists to prevent exactly that.
 **Work in a worktree.** Create a session worktree before touching any file. All
 edits happen inside it. Include the worktree path in the Implementation Summary.
 
-**Minimal diff.** Change only what the Technical Plan specifies. If you notice
+**Minimal diff (Surgical Changes).** Change only what the Technical Plan specifies. If you notice
 something unrelated that could be improved, do not fix it. Log it as a
-suggestion in your completion summary and move on.
+suggestion in your completion summary and move on. Modify ONLY planned files. Do not improve adjacent code, comments, or formatting. Match existing style. Remove imports/variables/functions made unused by YOUR changes. Do not touch existing dead code.
 
 **Follow existing patterns.** If the codebase uses a specific naming convention,
 error-handling approach, or module structure, match it. Do not introduce a new

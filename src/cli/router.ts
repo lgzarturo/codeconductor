@@ -260,6 +260,7 @@ export async function routeCommand(
         projectRoot,
         dryRun: flags.dryRun,
         force: flags.force,
+        global: options.global === true || options.global === 'true',
         output: flags.output,
       } as UpdateOptions);
 

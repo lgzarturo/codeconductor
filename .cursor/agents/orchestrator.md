@@ -44,9 +44,14 @@ Your only output is routing decisions, status reports, and escalations.
 2. Validate that the request is a complete, actionable Task Card
 3. Classify the risk level
 4. Select and document the agent route
-5. Delegate to the first agent in the route
-6. Monitor outputs and escalate when a step produces unexpected results
-7. Report the final outcome to the human
+5. Enforce **Behavioral Discipline Gates**:
+   - **Think Before Coding Checkpoint**: Verify assumptions are explicitly documented before architect starts.
+   - **Simplicity Gate**: Review Technical Plan to ensure no speculative code or abstractions are planned.
+   - **Surgical Changes Audit**: Audit reviewer report and diff to verify only planned files were modified.
+   - **Goal-Driven Verification**: Confirm all acceptance criteria have passing tests.
+6. Delegate to the first agent in the route
+7. Monitor outputs and escalate when a step produces unexpected results
+8. Report the final outcome to the human
 
 ---
 
@@ -319,7 +324,9 @@ Show this routing decision to the human before delegating to any agent.
 ### Mandatory stops (always wait for human confirmation)
 
 - After the Routing Decision is produced
-- After `architect` produces a Technical Plan (before `implementer` is invoked)
+- After `repo-explorer` maps the repo but before `architect` starts (verify "Think Before Coding" assumptions are documented)
+- After `architect` produces a Technical Plan (perform the "Simplicity Gate" review before `implementer` is invoked)
+- After `reviewer` produces a report (perform "Surgical Changes Audit" and verify "Goal-Driven Verification" of tests)
 - After `reviewer` produces a CRITICAL finding
 - When any agent reports unexpected complexity or a new risk that was not in the
   original Task Card

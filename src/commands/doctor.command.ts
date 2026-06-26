@@ -1,6 +1,8 @@
 import { join } from 'node:path';
+import { homedir } from 'node:os';
 import { configExists, loadConfig } from '../core/config/config-loader';
 import { loadTargetSecurityCompatibility } from '../core/security/target-compatibility';
+import { checkUpdates, validateAgentFileSizes } from '../core/presets/update-checker';
 import type { OutputMode } from '../utils/logger';
 
 export interface DoctorOptions {
@@ -94,6 +96,69 @@ export async function doctorCommand(
         name: 'council-enabled',
         status: 'pass',
         message: `Council preset enabled (v${config.presets.council.version})`,
+      });
+    }
+
+    // Check updates availability
+    const localUpdates = await checkUpdates(projectRoot, false);
+    const globalUpdates = await checkUpdates(homedir(), true);
+
+    const updateDetails: string[] = [];
+    if (localUpdates.hasUpdates) {
+      if (localUpdates.council) updateDetails.push('local council preset');
+      if (localUpdates.policy) updateDetails.push('local policy');
+      const updatedLocalTargets = localUpdates.targets.filter(t => t.hasUpdate).map(t => t.target);
+      if (updatedLocalTargets.length > 0) {
+        updateDetails.push(`local targets (${updatedLocalTargets.join(', ')})`);
+      }
+      const updatedLocalSkills = localUpdates.skills.filter(s => s.hasUpdate).map(s => s.id);
+      if (updatedLocalSkills.length > 0) {
+        updateDetails.push(`local skills (${updatedLocalSkills.join(', ')})`);
+      }
+    }
+    if (globalUpdates.hasUpdates) {
+      if (globalUpdates.council) updateDetails.push('global council preset');
+      if (globalUpdates.policy) updateDetails.push('global policy');
+      const updatedGlobalTargets = globalUpdates.targets.filter(t => t.hasUpdate).map(t => t.target);
+      if (updatedGlobalTargets.length > 0) {
+        updateDetails.push(`global targets (${updatedGlobalTargets.join(', ')})`);
+      }
+      const updatedGlobalSkills = globalUpdates.skills.filter(s => s.hasUpdate).map(s => s.id);
+      if (updatedGlobalSkills.length > 0) {
+        updateDetails.push(`global skills (${updatedGlobalSkills.join(', ')})`);
+      }
+    }
+
+    if (updateDetails.length > 0) {
+      checks.push({
+        name: 'updates-available',
+        status: 'warn',
+        message: `Updates available for: ${updateDetails.join(', ')}`,
+      });
+    } else {
+      checks.push({
+        name: 'updates-available',
+        status: 'pass',
+        message: 'All presets, targets, and skills are up to date',
+      });
+    }
+
+    // Check agent file sizes
+    const largeFilesLocal = await validateAgentFileSizes(projectRoot, false);
+    const largeFilesGlobal = await validateAgentFileSizes(homedir(), true);
+    const allLargeFiles = [...largeFilesLocal, ...largeFilesGlobal];
+
+    if (allLargeFiles.length > 0) {
+      checks.push({
+        name: 'agent-file-sizes',
+        status: 'warn',
+        message: `The following files exceed 40KB: ${allLargeFiles.map((f) => f.path).join(', ')}`,
+      });
+    } else {
+      checks.push({
+        name: 'agent-file-sizes',
+        status: 'pass',
+        message: 'All agent files (AGENTS.md/CLAUDE.md) are under 40KB',
       });
     }
 

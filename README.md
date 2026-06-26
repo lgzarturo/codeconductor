@@ -57,7 +57,6 @@ contracts, task cards, and risk-based routing.
 > - Policy compiler
 > - Automated agent evaluation
 > - Safe Merger
-> - Multi-target `update` (currently updates only the `defaults.target` runner)
 >
 > Security note:
 >
@@ -252,17 +251,19 @@ Supported targets: opencode, claude, codex, gemini, cursor, agy.
 npx cc-codeconductor doctor
 ```
 
-Checks config exists and is valid, reports runner directory status.
+Checks config exists and is valid, reports runner directory status, validates that `AGENTS.md` and `CLAUDE.md` do not exceed the 40KB size limit, and checks if updates are available for installed presets, target runner configurations, or skills.
 
-#### `update` — re-apply preset
+#### `update` — smart update preset
 
 ```bash
 npx cc-codeconductor update
 npx cc-codeconductor update --force
 npx cc-codeconductor update --dry-run
+npx cc-codeconductor update --global
 ```
 
-Re-generates preset files for the `defaults.target` in your config.
+Smart updates all currently installed target presets, council configurations, and skills (from `skills-lock.json`), preserving user edits outside managed blocks. Also validates that `AGENTS.md` and `CLAUDE.md` do not exceed the 40KB size limit.
+
 
 ### Global options
 

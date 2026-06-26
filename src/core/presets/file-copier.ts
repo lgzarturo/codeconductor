@@ -26,7 +26,7 @@ export interface FileCopyResult {
   error?: string;
 }
 
-async function listFilesRecursive(dir: string, base = dir): Promise<string[]> {
+export async function listFilesRecursive(dir: string, base = dir): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true });
   const files: string[] = [];
   for (const entry of entries) {
@@ -40,7 +40,7 @@ async function listFilesRecursive(dir: string, base = dir): Promise<string[]> {
   return files;
 }
 
-async function resolveEntryFiles(
+export async function resolveEntryFiles(
   entry: ManifestEntry,
   presetsDir: string,
   baseDir: string
@@ -61,7 +61,7 @@ async function resolveEntryFiles(
   }
 }
 
-function mergeDeep(
+export function mergeDeep(
   target: Record<string, unknown>,
   source: Record<string, unknown>
 ): Record<string, unknown> {
@@ -119,7 +119,7 @@ function extractAgentRole(filePath: string): string | null {
  * within an agent section (e.g., "### Routing Decision" inside "### orchestrator") must
  * appear AFTER the --- separator and before the next agent section to parse correctly.
  */
-function renderTemplate(content: string, modelConfig: ModelConfig, filePath: string, locale = 'en'): string {
+export function renderTemplate(content: string, modelConfig: ModelConfig, filePath: string, locale = 'en'): string {
   const cleanLocale = (locale === 'es' || locale === 'en') ? locale : 'en';
   const templatedContent = content
     .replace(/\{\{COMMIT_STYLE\}\}/g, COMMIT_STYLE[cleanLocale])

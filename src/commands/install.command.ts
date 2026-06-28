@@ -87,10 +87,20 @@ export async function installCommand(
       const generatedFiles = await installer.generate();
 
       // Anchor relative paths to baseDir
-      const resolvedFiles = generatedFiles.map((f) => ({
-        ...f,
-        path: resolve(baseDir, f.path),
-      }));
+      const resolvedFiles = generatedFiles.map((f) => {
+        let targetPath = f.path;
+        let targetBase = baseDir;
+
+        if (t === 'agy' && isGlobal) {
+          targetBase = resolve(homedir(), '.gemini', 'config');
+          targetPath = targetPath.replace(/^\.agents\/?/, '');
+        }
+
+        return {
+          ...f,
+          path: resolve(targetBase, targetPath),
+        };
+      });
 
       const results = await writeGeneratedFiles(resolvedFiles, writeOptions);
 

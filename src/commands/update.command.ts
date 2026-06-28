@@ -153,6 +153,67 @@ export async function updateCommand(
             throw new Error(`Failed to copy target file: ${r.error}`);
           }
         }
+
+        // Re-generate and write council files if they were out-of-sync
+        if (['opencode', 'claude', 'codex', 'agy'].includes(targetName)) {
+          const { loadCouncilPreset } = await import('../core/presets/preset-loader');
+          const { createOpenCodeInstaller } = await import('../adapters/opencode/opencode-installer');
+          const { createClaudeInstaller } = await import('../adapters/claude/claude-installer');
+          const { createCodexInstaller } = await import('../adapters/codex/codex-installer');
+          const { createAgyInstaller } = await import('../adapters/agy/agy-installer');
+          const { writeGeneratedFiles } = await import('../core/filesystem/file-writer');
+
+          const presetResult = await loadCouncilPreset(basePath);
+          if (presetResult.success) {
+            const spec = presetResult.data;
+            let installer;
+            switch (targetName) {
+              case 'opencode':
+                installer = createOpenCodeInstaller(spec);
+                break;
+              case 'claude':
+                installer = createClaudeInstaller(spec);
+                break;
+              case 'codex':
+                installer = createCodexInstaller(spec);
+                break;
+              case 'agy':
+                installer = createAgyInstaller(spec);
+                break;
+            }
+
+            if (installer) {
+              const generatedFiles = await installer.generate();
+              const resolvedFiles = generatedFiles.map((f) => {
+                let targetPath = f.path;
+                let targetBase = basePath;
+
+                if (targetName === 'agy' && isGlobal) {
+                  targetBase = resolve(homedir(), '.gemini', 'config');
+                  targetPath = targetPath.replace(/^\.agents\/?/, '');
+                }
+
+                return {
+                  ...f,
+                  path: resolve(targetBase, targetPath),
+                };
+              });
+
+              // Filter to files that actually need updates
+              const filesToWrite = resolvedFiles.filter((f) => t.files.includes(f.path));
+              if (filesToWrite.length > 0) {
+                const writeResults = await writeGeneratedFiles(filesToWrite, { dryRun: false, force: true });
+                for (const wr of writeResults) {
+                  if (wr.success) {
+                    updated.push(wr.path);
+                  } else {
+                    throw new Error(`Failed to update council file ${wr.path}: ${wr.error}`);
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
 

@@ -357,6 +357,64 @@ export async function checkUpdates(
       }
     }
 
+    // Check generated council files if supported
+    if (['opencode', 'claude', 'codex', 'agy'].includes(target)) {
+      const { loadCouncilPreset } = await import('./preset-loader');
+      const { createOpenCodeInstaller } = await import('../../adapters/opencode/opencode-installer');
+      const { createClaudeInstaller } = await import('../../adapters/claude/claude-installer');
+      const { createCodexInstaller } = await import('../../adapters/codex/codex-installer');
+      const { createAgyInstaller } = await import('../../adapters/agy/agy-installer');
+
+      const presetResult = await loadCouncilPreset(basePath);
+      if (presetResult.success) {
+        const spec = presetResult.data;
+        let installer;
+        switch (target) {
+          case 'opencode':
+            installer = createOpenCodeInstaller(spec);
+            break;
+          case 'claude':
+            installer = createClaudeInstaller(spec);
+            break;
+          case 'codex':
+            installer = createCodexInstaller(spec);
+            break;
+          case 'agy':
+            installer = createAgyInstaller(spec);
+            break;
+        }
+
+        if (installer) {
+          try {
+            const generatedFiles = await installer.generate();
+            for (const f of generatedFiles) {
+              let targetPath = f.path;
+              let targetBase = basePath;
+
+              if (target === 'agy' && isGlobal) {
+                targetBase = join(homedir(), '.gemini', 'config');
+                targetPath = targetPath.replace(/^\.agents\/?/, '');
+              }
+
+              const dest = resolve(targetBase, targetPath);
+              let destContent: string;
+              try {
+                destContent = await readFile(dest, 'utf-8');
+                if (destContent.trim() !== f.content.trim()) {
+                  changedFiles.push(dest);
+                }
+              } catch {
+                // File does not exist
+                changedFiles.push(dest);
+              }
+            }
+          } catch {
+            // Ignore generator failures during update checking
+          }
+        }
+      }
+    }
+
     targetResults.push({
       target,
       hasUpdate: changedFiles.length > 0,

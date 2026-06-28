@@ -505,6 +505,29 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
   });
 
+  test('install --global --target=agy writes to .gemini/config with --dry-run', async () => {
+    await runCli(['init', '--force']);
+
+    const result = await runCli([
+      'install',
+      'council',
+      '--target=agy',
+      '--global',
+      '--dry-run',
+      '--output=json',
+    ]);
+    expect(result.exitCode).toBe(0);
+
+    const json = JSON.parse(result.stdout);
+    expect(json.success).toBe(true);
+
+    const hasWrongPaths = json.written.some((path: string) => path.includes('.agents'));
+    const hasRightPaths = json.written.some((path: string) => path.includes('.gemini/config'));
+
+    expect(hasWrongPaths).toBe(false);
+    expect(hasRightPaths).toBe(true);
+  });
+
   test('install --global --target=all dry-run succeeds', async () => {
     await runCli(['init', '--force']);
 

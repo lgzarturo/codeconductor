@@ -450,6 +450,7 @@ describe('CLI', () => {
     const { existsSync } = await import('node:fs');
     expect(existsSync(join(PROJECT_ROOT, '.agents', 'skills', 'council', 'SKILL.md'))).toBe(true);
     expect(existsSync(join(PROJECT_ROOT, '.agents', 'agents', 'council-architect.md'))).toBe(true);
+    expect(existsSync(join(PROJECT_ROOT, '.agents', 'workflows', 'cc-council.md'))).toBe(true);
   });
 
   test('install codex --force targets codex (not opencode)', async () => {

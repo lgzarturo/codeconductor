@@ -14,7 +14,10 @@ describe('tracked skills', () => {
     expect(content.startsWith('---\n') || content.startsWith('---\r\n')).toBe(true);
     const normalized = content.replace(/\r/g, '');
     expect(normalized).toContain('\nname: council\n');
-    expect(normalized).toContain('\ndescription: Multi-agent council for code review and architecture decisions\n');
+    expect(
+      normalized.includes('\ndescription: Multi-agent council for code review and architecture decisions\n') ||
+      normalized.includes('\ndescription: "Multi-agent council for code review and architecture decisions"\n')
+    ).toBe(true);
     expect(normalized.indexOf('\n---\n')).toBeGreaterThan(0);
   });
 });

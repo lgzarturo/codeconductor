@@ -277,8 +277,21 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    // Claude target creates files in .claude/skills/ and .claude/agents/
+    // Claude target creates files in .claude/skills/, .claude/agents/ and .claude/commands/
     expect(existsSync(join(PROJECT_ROOT, '.claude', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(PROJECT_ROOT, '.claude', 'commands', 'cc-council.md'))).toBe(true);
+  });
+
+  test('install council --target gemini generates files', async () => {
+    await runCli(['init', '--force']);
+
+    const result = await runCli(['install', 'council', '--target=gemini', '--force']);
+    expect(result.exitCode).toBe(0);
+
+    const { existsSync } = await import('node:fs');
+    // Gemini target uses agy installer and generates under .agents/
+    expect(existsSync(join(PROJECT_ROOT, '.agents', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(PROJECT_ROOT, '.agents', 'workflows', 'cc-council.md'))).toBe(true);
   });
 
   test('install council --target codex generates files', async () => {
@@ -299,9 +312,10 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    // All target creates files for all four runners
+    // All target creates files for all runners
     expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(true);
     expect(existsSync(join(PROJECT_ROOT, '.claude', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(PROJECT_ROOT, '.claude', 'commands', 'cc-council.md'))).toBe(true);
     expect(existsSync(join(PROJECT_ROOT, '.codex', 'config.toml'))).toBe(true);
     expect(existsSync(join(PROJECT_ROOT, '.agents', 'skills', 'council', 'SKILL.md'))).toBe(true);
   });
@@ -512,6 +526,29 @@ describe('CLI', () => {
       'install',
       'council',
       '--target=agy',
+      '--global',
+      '--dry-run',
+      '--output=json',
+    ]);
+    expect(result.exitCode).toBe(0);
+
+    const json = JSON.parse(result.stdout);
+    expect(json.success).toBe(true);
+
+    const hasWrongPaths = json.written.some((path: string) => path.includes('.agents'));
+    const hasRightPaths = json.written.some((path: string) => path.includes('.gemini/config'));
+
+    expect(hasWrongPaths).toBe(false);
+    expect(hasRightPaths).toBe(true);
+  });
+
+  test('install --global --target=gemini writes to .gemini/config with --dry-run', async () => {
+    await runCli(['init', '--force']);
+
+    const result = await runCli([
+      'install',
+      'council',
+      '--target=gemini',
       '--global',
       '--dry-run',
       '--output=json',

@@ -77,6 +77,7 @@ export async function installCommand(
         case 'codex':
           installer = createCodexInstaller(spec);
           break;
+        case 'gemini':
         case 'agy':
           installer = createAgyInstaller(spec);
           break;
@@ -91,7 +92,7 @@ export async function installCommand(
         let targetPath = f.path;
         let targetBase = baseDir;
 
-        if (t === 'agy' && isGlobal) {
+        if ((t === 'agy' || t === 'gemini') && isGlobal) {
           targetBase = resolve(homedir(), '.gemini', 'config');
           targetPath = targetPath.replace(/^\.agents\/?/, '');
         }

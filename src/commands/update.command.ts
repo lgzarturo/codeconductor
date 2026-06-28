@@ -155,7 +155,7 @@ export async function updateCommand(
         }
 
         // Re-generate and write council files if they were out-of-sync
-        if (['opencode', 'claude', 'codex', 'agy'].includes(targetName)) {
+        if (['opencode', 'claude', 'codex', 'gemini', 'agy'].includes(targetName)) {
           const { loadCouncilPreset } = await import('../core/presets/preset-loader');
           const { createOpenCodeInstaller } = await import('../adapters/opencode/opencode-installer');
           const { createClaudeInstaller } = await import('../adapters/claude/claude-installer');
@@ -177,6 +177,7 @@ export async function updateCommand(
               case 'codex':
                 installer = createCodexInstaller(spec);
                 break;
+              case 'gemini':
               case 'agy':
                 installer = createAgyInstaller(spec);
                 break;
@@ -188,7 +189,7 @@ export async function updateCommand(
                 let targetPath = f.path;
                 let targetBase = basePath;
 
-                if (targetName === 'agy' && isGlobal) {
+                if ((targetName === 'agy' || targetName === 'gemini') && isGlobal) {
                   targetBase = resolve(homedir(), '.gemini', 'config');
                   targetPath = targetPath.replace(/^\.agents\/?/, '');
                 }

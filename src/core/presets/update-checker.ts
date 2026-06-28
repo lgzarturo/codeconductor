@@ -358,7 +358,7 @@ export async function checkUpdates(
     }
 
     // Check generated council files if supported
-    if (['opencode', 'claude', 'codex', 'agy'].includes(target)) {
+    if (['opencode', 'claude', 'codex', 'gemini', 'agy'].includes(target)) {
       const { loadCouncilPreset } = await import('./preset-loader');
       const { createOpenCodeInstaller } = await import('../../adapters/opencode/opencode-installer');
       const { createClaudeInstaller } = await import('../../adapters/claude/claude-installer');
@@ -379,6 +379,7 @@ export async function checkUpdates(
           case 'codex':
             installer = createCodexInstaller(spec);
             break;
+          case 'gemini':
           case 'agy':
             installer = createAgyInstaller(spec);
             break;
@@ -391,7 +392,7 @@ export async function checkUpdates(
               let targetPath = f.path;
               let targetBase = basePath;
 
-              if (target === 'agy' && isGlobal) {
+              if ((target === 'agy' || target === 'gemini') && isGlobal) {
                 targetBase = join(homedir(), '.gemini', 'config');
                 targetPath = targetPath.replace(/^\.agents\/?/, '');
               }

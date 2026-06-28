@@ -18,7 +18,7 @@ export async function doctorCommand(
 ): Promise<{ code: number; data?: unknown }> {
   const { projectRoot, output } = options;
 
-  const checks: { name: string; status: 'pass' | 'fail' | 'warn'; message: string }[] = [];
+  const checks: { name: string; status: 'pass' | 'fail' | 'warn' | 'info'; message: string }[] = [];
 
   try {
     // Check 1: Config exists

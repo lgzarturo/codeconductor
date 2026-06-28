@@ -4,7 +4,8 @@ import type { CouncilSpec } from '../../domain/council/council-spec';
 import { generateAgyFiles } from './agy-council-generator';
 
 export class AgyInstaller implements RunnerInstaller {
-  public readonly target = 'agy';
+  readonly name = 'agy';
+  readonly target = 'agy';
   private spec: CouncilSpec | null = null;
 
   setSpec(spec: CouncilSpec): void {
@@ -16,6 +17,11 @@ export class AgyInstaller implements RunnerInstaller {
       throw new Error('Council spec not set');
     }
     return generateAgyFiles(this.spec);
+  }
+
+  async isAvailable(): Promise<boolean> {
+    // Agy is always "available" as we generate files for it
+    return true;
   }
 }
 

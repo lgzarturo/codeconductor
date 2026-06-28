@@ -459,3 +459,7 @@ export async function checkUpdates(
     skills: skillResults,
   };
 }
+
+export { detectComplementaryTools, type ComplementaryToolsStatus } from './complementary-detector';
+
+

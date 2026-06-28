@@ -15,6 +15,7 @@ import type {
   ModelConfig,
 } from '../../validation/schemas';
 import { mergeManagedBlock } from '../filesystem/safe-merger';
+import { detectComplementaryTools } from './complementary-detector';
 
 export type FileAction = 'written' | 'appended' | 'merged' | 'skipped' | 'error';
 
@@ -121,9 +122,59 @@ function extractAgentRole(filePath: string): string | null {
  */
 export function renderTemplate(content: string, modelConfig: ModelConfig, filePath: string, locale = 'en'): string {
   const cleanLocale = (locale === 'es' || locale === 'en') ? locale : 'en';
+
+  const tools = detectComplementaryTools();
+  let complementaryRules = '';
+  if (cleanLocale === 'es') {
+    if (tools.rtk) {
+      complementaryRules += '\n- **RTK**: Ejecuta los comandos de bash con el prefijo rtk (ej. rtk test) para comprimir la salida.';
+    }
+    if (tools.codeReviewGraph) {
+      complementaryRules += '\n- **code-review-graph**: Usa code-review-graph para calcular el radio de impacto antes de realizar revisiones.';
+    }
+    if (tools.tokenSavior) {
+      complementaryRules += '\n- **token-savior**: Usa las herramientas MCP de token-savior para navegación de símbolos y memoria persistente.';
+    }
+    if (tools.caveman) {
+      complementaryRules += '\n- **caveman**: Responde usando el estilo caveman (conciso y directo) para ahorrar tokens de salida.';
+    }
+    if (tools.engram) {
+      complementaryRules += '\n- **engram**: Guarda y busca memorias de sesión usando las herramientas MCP de engram.';
+    }
+    if (tools.gentleAi) {
+      complementaryRules += '\n- **gentle-ai**: Sigue las guías de Gentle AI SDD para flujos de trabajo multi-fase.';
+    }
+    if (complementaryRules) {
+      complementaryRules = '\n\n## Herramientas Complementarias\n' + complementaryRules;
+    }
+  } else {
+    if (tools.rtk) {
+      complementaryRules += '\n- **RTK**: Run bash commands prefixed with rtk (e.g. rtk test) for compressed command output.';
+    }
+    if (tools.codeReviewGraph) {
+      complementaryRules += '\n- **code-review-graph**: Use code-review-graph to map code impact radius before editing/reviewing.';
+    }
+    if (tools.tokenSavior) {
+      complementaryRules += '\n- **token-savior**: Use token-savior MCP tools for symbol navigation/recall instead of full file reads.';
+    }
+    if (tools.caveman) {
+      complementaryRules += '\n- **caveman**: Adopt Caveman style (terse, direct, no fluff) in your responses.';
+    }
+    if (tools.engram) {
+      complementaryRules += '\n- **engram**: Save/search session memories using the engram MCP tools.';
+    }
+    if (tools.gentleAi) {
+      complementaryRules += '\n- **gentle-ai**: Follow Gentle AI SDD guidelines for multi-phase workflows.';
+    }
+    if (complementaryRules) {
+      complementaryRules = '\n\n## Complementary Tools\n' + complementaryRules;
+    }
+  }
+
   const templatedContent = content
     .replace(/\{\{COMMIT_STYLE\}\}/g, COMMIT_STYLE[cleanLocale])
-    .replace(/\{\{COMMIT_WORKFLOW\}\}/g, COMMIT_WORKFLOW[cleanLocale]);
+    .replace(/\{\{COMMIT_WORKFLOW\}\}/g, COMMIT_WORKFLOW[cleanLocale])
+    .replace(/\{\{COMPLEMENTARY_RULES\}\}/g, complementaryRules);
 
   const agentRole = extractAgentRole(filePath);
 
@@ -238,7 +289,59 @@ function substituteToolNames(content: string, modelConfig: ModelConfig): string 
   return content.replace(fmMatch[0], `---\n${updatedFrontmatter}\n---`);
 }
 
-async function applySingleFile(
+function injectMcpServers(jsonString: string, filePath: string): string {
+  const isAgyMcpConfig = filePath.endsWith('mcp_config.json');
+  const isClaudeSettings = filePath.endsWith('settings.json');
+  const isOpencodeJsonc = filePath.endsWith('opencode.jsonc') || filePath.endsWith('opencode.json');
+  
+  if (!isAgyMcpConfig && !isClaudeSettings && !isOpencodeJsonc) {
+    return jsonString;
+  }
+
+  try {
+    let cleanJson = jsonString;
+    if (isOpencodeJsonc) {
+      cleanJson = jsonString.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+    }
+    
+    const obj = JSON.parse(cleanJson);
+    const tools = detectComplementaryTools();
+    const mcpServers: Record<string, any> = {};
+    
+    if (tools.tokenSavior) {
+      mcpServers['token-savior-recall'] = {
+        command: 'token-savior',
+        env: {
+          TOKEN_SAVIOR_CLIENT: isClaudeSettings ? 'claude-code' : isOpencodeJsonc ? 'opencode' : 'agy',
+        }
+      };
+    }
+    
+    if (tools.codeReviewGraph) {
+      mcpServers['code-review-graph'] = {
+        command: 'code-review-graph',
+        args: ['mcp']
+      };
+    }
+
+    if (Object.keys(mcpServers).length === 0) {
+      return jsonString;
+    }
+
+    if (isClaudeSettings || isAgyMcpConfig) {
+      obj.mcpServers = mergeDeep(obj.mcpServers || {}, mcpServers);
+    } else if (isOpencodeJsonc) {
+      obj.mcp = obj.mcp || {};
+      obj.mcp.servers = mergeDeep(obj.mcp.servers || {}, mcpServers);
+    }
+
+    return JSON.stringify(obj, null, 2);
+  } catch {
+    return jsonString;
+  }
+}
+
+export async function applySingleFile(
   srcPath: string,
   destPath: string,
   strategy: InstallStrategy,
@@ -259,8 +362,9 @@ async function applySingleFile(
     return { src: srcPath, dest: destPath, action: 'error', error: `Cannot read source: ${e}` };
   }
 
-  const incomingContent =
+  let incomingContent =
     isTemplate && modelConfig ? renderTemplate(content, modelConfig, srcPath, locale) : content;
+  incomingContent = injectMcpServers(incomingContent, destPath);
   let finalContent = incomingContent;
   let action: FileAction = 'written';
 

@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { configExists, loadConfig } from '../core/config/config-loader';
 import { loadTargetSecurityCompatibility } from '../core/security/target-compatibility';
-import { checkUpdates, validateAgentFileSizes, validateAgentMarkers } from '../core/presets/update-checker';
+import { checkUpdates, validateAgentFileSizes, validateAgentMarkers, detectComplementaryTools } from '../core/presets/update-checker';
 import type { OutputMode } from '../utils/logger';
 
 export interface DoctorOptions {
@@ -192,6 +192,33 @@ export async function doctorCommand(
             ? `${compatibility.target} can represent the canonical policy model`
             : `${compatibility.target} cannot enforce: ${compatibility.unsupportedRules.join(', ') || 'see warnings'}`,
       });
+    }
+
+    // Check complementary tools
+    const compTools = detectComplementaryTools();
+    const toolDetails = [
+      { name: 'rtk', key: 'rtk' as const, label: 'RTK', desc: 'Run `brew install rtk` to compress command outputs' },
+      { name: 'code-review-graph', key: 'codeReviewGraph' as const, label: 'code-review-graph', desc: 'Run `pipx install code-review-graph` to navigate symbol graph' },
+      { name: 'token-savior', key: 'tokenSavior' as const, label: 'token-savior', desc: 'Run `pip install token-savior-recall` to use symbol navigation and persistent memory' },
+      { name: 'caveman', key: 'caveman' as const, label: 'caveman', desc: 'Install JuliusBrussee/caveman plugin to shorten agent outputs' },
+      { name: 'engram', key: 'engram' as const, label: 'Engram', desc: 'Install gentleman-programming/engram to persist session memories' },
+      { name: 'gentle-ai', key: 'gentleAi' as const, label: 'Gentle AI', desc: 'Install Gentleman-Programming/gentle-ai to coordinate agent ecosystems' },
+    ];
+
+    for (const tool of toolDetails) {
+      if (compTools[tool.key]) {
+        checks.push({
+          name: `tool-${tool.name}`,
+          status: 'pass',
+          message: `${tool.label} is installed and available`,
+        });
+      } else {
+        checks.push({
+          name: `tool-${tool.name}`,
+          status: 'info',
+          message: `${tool.label} is not installed. ${tool.desc}.`,
+        });
+      }
     }
 
     // All checks passed

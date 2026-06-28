@@ -269,10 +269,12 @@ export async function checkUpdates(
     // Ignore config load error
   }
 
-  for (const target of targetsToCheck) {
+  const checkTarget = async (
+    target: 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'
+  ): Promise<{ target: string; hasUpdate: boolean; files: string[] } | null> => {
     const isInstalled = await isTargetInstalled(target, basePath, isGlobal);
     if (!isInstalled) {
-      continue;
+      return null;
     }
 
     let manifest;
@@ -281,7 +283,7 @@ export async function checkUpdates(
       manifest = await loadManifest(target);
       modelConfig = await loadModelConfig(target);
     } catch {
-      continue; // Manifest/model config failed to load, ignore target
+      return null; // Manifest/model config failed to load, ignore target
     }
 
     const changedFiles: string[] = [];
@@ -416,11 +418,16 @@ export async function checkUpdates(
       }
     }
 
-    targetResults.push({
+    return {
       target,
       hasUpdate: changedFiles.length > 0,
       files: changedFiles,
-    });
+    };
+  };
+
+  const perTargetResults = await Promise.all(targetsToCheck.map(checkTarget));
+  for (const r of perTargetResults) {
+    if (r) targetResults.push(r);
   }
 
   // 3. Check skills

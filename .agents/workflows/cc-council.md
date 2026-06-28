@@ -1,6 +1,6 @@
 ---
 name: cc-council
-description: "Multi-agent council for code review and architecture decisions"
+description: Run the full Council-Driven Development workflow — SDD spec creation, TDD enforcement, surgical implementation, and multi-perspective review.
 ---
 
 # Council-Driven Workflow

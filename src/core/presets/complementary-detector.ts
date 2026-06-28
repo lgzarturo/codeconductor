@@ -12,7 +12,13 @@ export interface ComplementaryToolsStatus {
   readonly gentleAi: boolean;
 }
 
+let cachedStatus: ComplementaryToolsStatus | null = null;
+
 export function detectComplementaryTools(): ComplementaryToolsStatus {
+  if (cachedStatus) {
+    return cachedStatus;
+  }
+
   const isCmdAvailable = (cmd: string): boolean => {
     try {
       const command = process.platform === 'win32' ? `where ${cmd}` : `which ${cmd}`;
@@ -48,7 +54,7 @@ export function detectComplementaryTools(): ComplementaryToolsStatus {
     return false;
   };
 
-  return {
+  cachedStatus = {
     rtk: isCmdAvailable('rtk'),
     codeReviewGraph: isCmdAvailable('code-review-graph'),
     tokenSavior: isCmdAvailable('token-savior') || isCmdAvailable('token-savior-recall'),
@@ -56,4 +62,10 @@ export function detectComplementaryTools(): ComplementaryToolsStatus {
     engram: isCmdAvailable('engram'),
     gentleAi: isCmdAvailable('gentle-ai'),
   };
+
+  return cachedStatus;
+}
+
+export function resetComplementaryToolsCache(): void {
+  cachedStatus = null;
 }

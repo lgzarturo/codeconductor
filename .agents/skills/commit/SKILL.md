@@ -1,9 +1,5 @@
 ---
 name: commit
-description: Genera un commit en inglés siguiendo Conventional Commits basado en los cambios staged
----
----
-name: commit
 description: Generates a commit in English following Conventional Commits based on staged changes
 ---
 

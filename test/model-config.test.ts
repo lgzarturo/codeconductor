@@ -587,7 +587,43 @@ describe('Locale instruction injection ({{LANGUAGE_INSTRUCTIONS}})', () => {
     expect(content).toContain('Prose/docs/code comments: be terse and direct');
     expect(content).not.toContain('{{LANGUAGE_INSTRUCTIONS}}');
   });
+
+  test('install agy with locale=es generates Spanish commit instructions and workflow', async () => {
+    const modelConfig = await loadModelConfig('agy');
+    const manifest = await loadManifest('agy');
+    await copyFromManifest(manifest, PRESETS_DIR, tmpDir, false, false, true, modelConfig, 'es');
+
+    const commitStyle = await readFile(join(tmpDir, '.agents', 'rules', 'commit-style.md'), 'utf-8');
+    expect(commitStyle).toContain('Idioma: **español neutro** siempre');
+    expect(commitStyle).not.toContain('{{COMMIT_STYLE}}');
+
+    const commitSkill = await readFile(join(tmpDir, '.agents', 'skills', 'commit', 'SKILL.md'), 'utf-8');
+    expect(commitSkill).toContain('Genera un commit en español');
+    expect(commitSkill).not.toContain('Genera un commit en inglés');
+    expect(commitSkill).not.toContain('{{COMMIT_WORKFLOW}}');
+
+    // Check that there are no duplicate frontmatter blocks (only 1 occurrence of name: commit in the file)
+    const matches = commitSkill.match(/name: commit/g);
+    expect(matches).not.toBeNull();
+    expect(matches!.length).toBe(1);
+  });
+
+  test('install agy with locale=en generates English commit instructions and workflow', async () => {
+    const modelConfig = await loadModelConfig('agy');
+    const manifest = await loadManifest('agy');
+    await copyFromManifest(manifest, PRESETS_DIR, tmpDir, false, false, true, modelConfig, 'en');
+
+    const commitStyle = await readFile(join(tmpDir, '.agents', 'rules', 'commit-style.md'), 'utf-8');
+    expect(commitStyle).toContain('Language: **neutral English** always');
+    expect(commitStyle).not.toContain('{{COMMIT_STYLE}}');
+
+    const commitSkill = await readFile(join(tmpDir, '.agents', 'skills', 'commit', 'SKILL.md'), 'utf-8');
+    expect(commitSkill).toContain('Generates a commit in English');
+    expect(commitSkill).not.toContain('Genera un commit en español');
+    expect(commitSkill).not.toContain('{{COMMIT_WORKFLOW}}');
+  });
 });
+
 
 
 describe('End-to-end: CLI install preset renders model names', () => {

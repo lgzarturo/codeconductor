@@ -74,7 +74,7 @@ description: Reglas para generar mensajes de commit con formato Conventional Com
 
 ### Reglas
 
-- Idioma: **inglés neutro** siempre
+- Idioma: **español neutro** siempre
 - Encabezado: maximo 69 caracteres, sin punto final
 - Cuerpo: viñetas concisas, una idea por linea
 - Footer: solo para breaking changes o issues
@@ -103,7 +103,7 @@ description: Generates a commit in English following Conventional Commits based 
 
   es: `---
 name: commit
-description: Genera un commit en inglés siguiendo Conventional Commits basado en los cambios staged
+description: Genera un commit en español siguiendo Conventional Commits basado en los cambios staged
 ---
 
 // turbo-all

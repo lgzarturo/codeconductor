@@ -51,6 +51,7 @@ Antigravity CLI loads custom slash commands from `.agents/workflows/*.md`. The f
 | Slash Command    | Workflow Description                                                |
 | ---------------- | ------------------------------------------------------------------ |
 | `/cc-feature`    | Runs the full feature design, implementation, and review workflow |
+| `/cc-council`    | Runs Council-Driven Development workflow (SDD, TDD, surgical changes) |
 | `/cc-fix`        | Runs the bug fix verification and repair workflow                  |
 | `/cc-refactor`   | Runs the code refactoring and test safety workflow                 |
 | `/cc-review`     | Runs a structured, multi-perspective code review and audit         |

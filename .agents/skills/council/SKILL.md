@@ -26,8 +26,18 @@ Multi-perspective analysis through structured deliberation. Each council agent r
 | **DataOps** | Data | Data integrity, migration safety, pipeline impact, schema compatibility |
 | **Devil** | Failure | Edge cases, hidden assumptions, failure modes, worst-case scenarios, race conditions |
 
-## Deliberation Protocol
+## Deliberation Protocols
 
+### Protocol 1: Spec-Driven Development (Pre-Implementation)
+When invoked for planning (SDD Phase):
+1. **Requirements Analysis** — `task-coach` (Product) clarifies the prompt and defines verifiable acceptance criteria.
+2. **Technical Proposal** — `architect` proposes the simplest possible technical approach.
+3. **Devil's Advocate** — `devil` challenges the approach for over-engineering, hidden assumptions, or missing edge cases.
+4. **Consensus** — Agree on the absolute minimum scope.
+5. **Output** — A strict, verifiable Task Card & Technical Plan.
+
+### Protocol 2: Code Review (Post-Implementation)
+When invoked for code review:
 1. **Individual Review** — Each agent reviews independently against their axis. Produces findings categorized as CRITICAL, WARNING, or SUGGESTION.
 2. **Cross-Review** — Agents read each other's findings. Flag agreements and conflicts.
 3. **Consensus Round** — Resolve conflicts through evidence. If unresolvable, escalate.

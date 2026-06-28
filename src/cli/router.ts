@@ -153,12 +153,14 @@ Examples:
   npx cc-codeconductor install preset --target opencode
   npx cc-codeconductor install preset --target claude
   npx cc-codeconductor install preset --target codex
+  npx cc-codeconductor install preset --target agy
   npx cc-codeconductor install preset --target all
   npx cc-codeconductor install preset --target claude --global
   npx cc-codeconductor install preset --target claude --locale=es
   npx cc-codeconductor install council --target opencode
   npx cc-codeconductor install council --target claude
   npx cc-codeconductor install council --target codex
+  npx cc-codeconductor install council --target agy
   npx cc-codeconductor install council --target all
   npx cc-codeconductor install lsp --target opencode
   npx cc-codeconductor install lsp --target all --lang typescript,python

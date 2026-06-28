@@ -110,6 +110,7 @@ Claude Code, Codex).
 npx cc-codeconductor install council --target opencode
 npx cc-codeconductor install council --target claude
 npx cc-codeconductor install council --target codex
+npx cc-codeconductor install council --target agy
 
 # Install for all supported targets
 npx cc-codeconductor install council --target all
@@ -131,6 +132,42 @@ npx cc-codeconductor install council --target opencode --force
 | `opencode` | `.opencode/commands/cc-council.md`, `.opencode/agents/council-*.md` |
 | `claude`   | `.claude/skills/council/SKILL.md`, `.claude/agents/council-*.md` |
 | `codex`    | `.codex/config.toml`, `.codex/agents/council_*.toml`             |
+| `agy`      | `.agents/skills/council/SKILL.md`, `.agents/agents/council-*.md` |
+
+---
+
+### `install preset` — Install Full Agent Preset
+
+Generates and writes full preset configuration files (agents, prompts, skills, commands) for AI agent runners (OpenCode, Claude Code, Codex, Antigravity CLI).
+
+```bash
+# Install for a specific target
+npx cc-codeconductor install preset --target opencode
+npx cc-codeconductor install preset --target claude
+npx cc-codeconductor install preset --target codex
+npx cc-codeconductor install preset --target agy
+
+# Install for all supported targets
+npx cc-codeconductor install preset --target all
+
+# Install to home directory instead of project
+npx cc-codeconductor install preset --target claude --global
+
+# Preview without writing files
+npx cc-codeconductor install preset --target all --dry-run
+
+# Overwrite existing files
+npx cc-codeconductor install preset --target opencode --force
+```
+
+**Files generated per target:**
+
+| Target     | Files written                                                    |
+| ---------- | ---------------------------------------------------------------- |
+| `opencode` | `.opencode/AGENTS.md`, `.opencode/commands/`, etc.               |
+| `claude`   | `.claude/AGENTS.md`, `.claude/skills/`, etc.                     |
+| `codex`    | `.codex/config.toml`, `.codex/AGENTS.md`, etc.                   |
+| `agy`      | `.agents/AGENTS.md`, `.agents/skills/`, `.agents/workflows/`, etc. |
 
 ---
 

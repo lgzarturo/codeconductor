@@ -174,6 +174,9 @@ npx cc-codeconductor install preset --target opencode
 # Install preset for all runners
 npx cc-codeconductor install preset --target all
 
+# Install preset for Antigravity CLI
+npx cc-codeconductor install preset --target agy
+
 # Install globally for Claude
 npx cc-codeconductor install preset --target claude --global
 
@@ -199,7 +202,8 @@ the council structure.
 | `opencode` | `.opencode/`    | OpenCode-formatted council spec |
 | `claude`   | `.claude/`      | Claude-formatted council spec   |
 | `codex`    | `.codex/`       | Codex-formatted council spec    |
-| `all`      | All three above | All three formats               |
+| `agy`      | `.agents/`      | Antigravity-formatted council spec |
+| `all`      | All four above  | All four formats                |
 
 **Options:**
 

@@ -18,9 +18,9 @@ contracts, task cards, and risk-based routing.
 > - `npx cc-codeconductor init` — detects project stack, writes
 >   `.codeconductor/config.yml`, copies `council.yml` and `policy.yml` into
 >   `.codeconductor/presets/`
-> - `npx cc-codeconductor install council --target <opencode|claude|codex|all>` —
+> - `npx cc-codeconductor install council --target <opencode|claude|codex|agy|all>` —
 >   generates and writes preset files; supports `--global` to install to
->   `~/.opencode/`, `~/.claude/`, `~/.codex/`
+>   `~/.opencode/`, `~/.claude/`, `~/.codex/`, `~/.agents/`
 > - `npx cc-codeconductor install lsp --target <opencode|claude|codex|gemini|cursor|agy|all>` —
 >   installs LSP servers and configures AI coding tools; auto-detects project
 >   languages or use `--lang` to override
@@ -41,7 +41,7 @@ contracts, task cards, and risk-based routing.
 >   Core Web Vitals (LCP, TBT, CLS, FCP, TTFB) with framework-specific fixes;
 >   requires `PAGESPEED_API_KEY` env var for full CrUX field data (optional but
 >   recommended)
-> - `npx cc-codeconductor install preset --target <opencode|claude|codex|all>` —
+> - `npx cc-codeconductor install preset --target <opencode|claude|codex|agy|all>` —
 >   installs the full preset (agents, prompts, skills, commands, settings) for the
 >   chosen runner; use `--locale=es` to inject Spanish-aware instructions into
 >   agent files, or rely on the locale saved during `init`
@@ -189,6 +189,7 @@ Detected:
 npx cc-codeconductor install preset --target opencode     # project-level
 npx cc-codeconductor install preset --target claude
 npx cc-codeconductor install preset --target codex
+npx cc-codeconductor install preset --target agy          # antigravity cli
 npx cc-codeconductor install preset --target all          # all targets
 
 npx cc-codeconductor install preset --target claude --global   # write to ~/.claude/
@@ -221,7 +222,8 @@ With `--global`, files are written under `~/` instead of `./`.
 npx cc-codeconductor install council --target opencode     # project-level
 npx cc-codeconductor install council --target claude
 npx cc-codeconductor install council --target codex
-npx cc-codeconductor install council --target all          # all three targets
+npx cc-codeconductor install council --target agy          # antigravity cli
+npx cc-codeconductor install council --target all          # all targets
 
 npx cc-codeconductor install council --target claude --global  # write to ~/.claude/
 npx cc-codeconductor install council --target opencode --global

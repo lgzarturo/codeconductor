@@ -1,5 +1,6 @@
 import { homedir } from 'node:os';
 import { resolve } from 'node:path';
+import { createAgyInstaller } from '../adapters/agy/agy-installer';
 import { createClaudeInstaller } from '../adapters/claude/claude-installer';
 import { createCodexInstaller } from '../adapters/codex/codex-installer';
 import { createOpenCodeInstaller } from '../adapters/opencode/opencode-installer';
@@ -75,6 +76,9 @@ export async function installCommand(
           break;
         case 'codex':
           installer = createCodexInstaller(spec);
+          break;
+        case 'agy':
+          installer = createAgyInstaller(spec);
           break;
         default:
           continue;

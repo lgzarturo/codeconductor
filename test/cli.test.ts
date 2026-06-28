@@ -299,10 +299,11 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    // All target creates files for all three runners
+    // All target creates files for all four runners
     expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(true);
     expect(existsSync(join(PROJECT_ROOT, '.claude', 'skills', 'council', 'SKILL.md'))).toBe(true);
     expect(existsSync(join(PROJECT_ROOT, '.codex', 'config.toml'))).toBe(true);
+    expect(existsSync(join(PROJECT_ROOT, '.agents', 'skills', 'council', 'SKILL.md'))).toBe(true);
   });
 
   test('install with --dry-run does not write files', async () => {
@@ -428,6 +429,27 @@ describe('CLI', () => {
     const result = await runCli(['--help']);
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('codex');
+  });
+
+  test('install council --target codex generates files', async () => {
+    await runCli(['init', '--force']);
+
+    const result = await runCli(['install', 'council', '--target=codex', '--force']);
+    expect(result.exitCode).toBe(0);
+
+    const { existsSync } = await import('node:fs');
+    expect(existsSync(join(PROJECT_ROOT, '.codex', 'config.toml'))).toBe(true);
+  });
+
+  test('install council --target agy generates files', async () => {
+    await runCli(['init', '--force']);
+
+    const result = await runCli(['install', 'council', '--target=agy', '--force']);
+    expect(result.exitCode).toBe(0);
+
+    const { existsSync } = await import('node:fs');
+    expect(existsSync(join(PROJECT_ROOT, '.agents', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(PROJECT_ROOT, '.agents', 'agents', 'council-architect.md'))).toBe(true);
   });
 
   test('install codex --force targets codex (not opencode)', async () => {

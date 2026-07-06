@@ -43,13 +43,37 @@ reviewer.
 
 ---
 
-## Step 2 — Code review (reviewer)
+## Step 2 — Security and code review
+
+### Security review (security-reviewer)
+
+Invoke `security-reviewer` **before** `reviewer` when the change touches:
+
+- Authentication or authorization logic
+- Payment or financial processing
+- Credentials, tokens, secrets, or API keys
+- SQL injection, XSS, or other injection vectors
+- Supply-chain dependencies (new packages, lockfile changes)
+- OWASP Top 10 categories
+
+`security-reviewer` performs deep security analysis and can apply a **security
+veto** that overrides majority consensus:
+
+- When `securityVeto: true` and verdict is `REJECTED`, the veto forces the
+  final status to `REJECTED` regardless of other reviewers' opinions
+- The veto agent ID is recorded in `vetoByAgentId` for traceability
+
+If `security-reviewer` applies a veto, the review is **BLOCKED** — all CRITICAL
+findings must be resolved before proceeding.
+
+### Code review (reviewer)
 
 Invoke `reviewer` with:
 
 - The full diff
 - The Task Card or PR description (if available)
 - The target specification from $ARGUMENTS
+- The security-reviewer report (if one was generated)
 
 reviewer must evaluate the diff against the following checklist:
 

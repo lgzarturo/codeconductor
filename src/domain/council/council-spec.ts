@@ -66,6 +66,13 @@ export const DEFAULT_COUNCIL_AGENTS: CouncilAgentSpec[] = [
     focus: ['data', 'pipelines', 'analytics'],
   },
   {
+    id: 'security-reviewer',
+    role: 'Security Reviewer',
+    context: 'repo-readonly',
+    modelHint: 'security-reasoning',
+    focus: ['security', 'vulnerabilities', 'credentials', 'injection', 'auth', 'supply-chain'],
+  },
+  {
     id: 'devil',
     role: 'Devil',
     context: 'repo-readonly',
@@ -73,6 +80,22 @@ export const DEFAULT_COUNCIL_AGENTS: CouncilAgentSpec[] = [
     focus: ['review', 'edge-cases', 'failure-modes'],
   },
 ];
+
+/**
+ * Convert a CouncilSpec to an AgentContract targeting specific providers.
+ * Convenience helper — no changes to existing CouncilSpec types.
+ */
+export function toAgentContract(
+  spec: CouncilSpec,
+  targets: readonly ('claude' | 'opencode' | 'codex' | 'gemini' | 'cursor' | 'agy')[],
+  contractVersion = '1.0.0',
+): import('./agent-contract').AgentContract {
+  return {
+    council: spec,
+    targets: targets.map((target) => ({ target })),
+    contractVersion,
+  };
+}
 
 /**
  * SEO Hotel council agents

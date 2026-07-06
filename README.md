@@ -129,6 +129,8 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 - Scorecard template
 - End-to-end example
 - YAML-driven model configuration
+- Provider-agnostic `AgentContract` abstraction with target renderers for Claude and OpenCode
+- Council consensus engine (`councilConsensus()`) for multi-agent governance with majority/unanimous algorithms and security veto
 
 ---
 

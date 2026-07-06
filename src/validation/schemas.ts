@@ -43,6 +43,24 @@ export const ProjectProfileSchema = z.object({
 });
 
 /**
+ * Compile check config schema — validates the compileCheck section
+ */
+export const CompileCheckConfigSchema = z.object({
+  enabled: z.boolean(),
+  command: z.string().optional(),
+  timeoutMs: z.number().positive().optional(),
+});
+
+/**
+ * Loop config schema — validates the loop section for compile-fix iteration
+ */
+export const LoopConfigSchema = z.object({
+  enabled: z.boolean().optional().default(true),
+  maxIterations: z.number().int().positive().optional().default(3),
+  maxTokenBudget: z.number().nonnegative().optional().default(0),
+});
+
+/**
  * CodeConductor config schema
  */
 export const CodeConductorConfigSchema = z.object({
@@ -65,7 +83,9 @@ export const CodeConductorConfigSchema = z.object({
   safety: z.object({
     destructiveCommands: z.array(z.string()),
     secretPatterns: z.array(z.string()),
+    compileCheck: CompileCheckConfigSchema.optional(),
   }),
+  loop: LoopConfigSchema.optional(),
 });
 
 /**
@@ -143,6 +163,8 @@ export type CouncilAgentSpecInput = z.infer<typeof CouncilAgentSpecSchema>;
 export type CouncilSpecInput = z.infer<typeof CouncilSpecSchema>;
 export type ProjectProfileInput = z.infer<typeof ProjectProfileSchema>;
 export type CodeConductorConfigInput = z.infer<typeof CodeConductorConfigSchema>;
+export type CompileCheckConfigInput = z.infer<typeof CompileCheckConfigSchema>;
+export type LoopConfigInput = z.infer<typeof LoopConfigSchema>;
 export type RunnerTargetInput = z.infer<typeof RunnerTargetSchema>;
 
 /**
@@ -178,5 +200,189 @@ export function validateRunnerTarget(data: unknown): RunnerTargetInput {
  */
 export function validateModelConfig(data: unknown): ModelConfig {
   return ModelConfigSchema.parse(data);
+}
+
+// ─── Agent Contract Schemas ────────────────────────────────────────────────────
+
+/**
+ * Contract target enum
+ */
+export const ContractTargetSchema = z.enum([
+  'claude',
+  'opencode',
+  'codex',
+  'gemini',
+  'cursor',
+  'agy',
+]);
+
+/**
+ * Contract format schema — a target with optional render options
+ */
+export const ContractFormatSchema = z.object({
+  target: ContractTargetSchema,
+  options: z.record(z.unknown()).optional(),
+});
+
+/**
+ * Agent contract schema — provider-agnostic contract definition
+ */
+export const AgentContractSchema = z.object({
+  council: CouncilSpecSchema,
+  targets: z.array(ContractFormatSchema),
+  contractVersion: z.string(),
+  renderHints: z
+    .record(ContractTargetSchema, z.record(z.unknown()))
+    .optional(),
+});
+
+// ─── Council Consensus Schemas ─────────────────────────────────────────────────
+
+/**
+ * Council finding schema — a single review observation
+ */
+export const CouncilFindingSchema = z.object({
+  category: z.string(),
+  severity: z.enum(['info', 'warning', 'critical']),
+  message: z.string(),
+  agentId: z.string(),
+});
+
+/**
+ * Council verdict input schema — verdict from a single reviewer
+ */
+export const CouncilVerdictInputSchema = z.object({
+  agentId: z.string(),
+  agentRole: z.string(),
+  status: z.enum(['APPROVED', 'REJECTED', 'ABSTAIN']),
+  securityVeto: z.boolean(),
+  findings: z.array(CouncilFindingSchema),
+  summary: z.string(),
+});
+
+/**
+ * Consensus config schema
+ */
+export const ConsensusConfigSchema = z.object({
+  algorithm: z.enum(['majority', 'unanimous']),
+  allowSecurityVeto: z.boolean(),
+});
+
+/**
+ * Council verdict schema — the final output of the consensus engine
+ */
+export const CouncilVerdictSchema = z.object({
+  status: z.enum(['APPROVED', 'REJECTED', 'ESCALATED']),
+  totalAgents: z.number(),
+  approvedCount: z.number(),
+  rejectedCount: z.number(),
+  abstainedCount: z.number(),
+  vetoApplied: z.boolean(),
+  vetoByAgentId: z.string().optional(),
+  findings: z.array(CouncilFindingSchema),
+  summary: z.string(),
+  individualVerdicts: z.array(CouncilVerdictInputSchema),
+});
+
+// ─── Provider Rendered File Schemas ────────────────────────────────────────────
+
+/**
+ * Claude agent file schema — validates a single Claude-generated agent markdown file
+ */
+export const ClaudeAgentFileSchema = z.object({
+  path: z.string().startsWith('.claude/'),
+  content: z.string(),
+  overwrite: z.boolean(),
+});
+
+/**
+ * OpenCode agent file schema — validates a single OpenCode-generated agent markdown file
+ */
+export const OpenCodeAgentFileSchema = z.object({
+  path: z.string().startsWith('.opencode/'),
+  content: z.string(),
+  overwrite: z.boolean(),
+});
+
+// ─── Sentry Webhook Schema ──────────────────────────────────────────────────
+
+/**
+ * Stack frame schema — a single frame from a Sentry stack trace
+ */
+export const SentryStackFrameSchema = z.object({
+  filename: z.string(),
+  function: z.string(),
+  lineNo: z.number(),
+  colNo: z.number().optional(),
+  context: z.array(z.string()),
+});
+
+/**
+ * Sentry webhook payload schema — validates the issue context from Sentry webhooks
+ */
+export const SentryWebhookSchema = z.object({
+  issueId: z.string(),
+  title: z.string(),
+  culprit: z.string(),
+  filename: z.string().optional(),
+  stackTrace: z.array(SentryStackFrameSchema),
+  environment: z.string().optional(),
+  release: z.string().optional(),
+});
+
+export type SentryWebhookInput = z.infer<typeof SentryWebhookSchema>;
+
+// ─── Schema Type Exports ──────────────────────────────────────────────────────
+
+export type ContractTargetInput = z.infer<typeof ContractTargetSchema>;
+export type ContractFormatInput = z.infer<typeof ContractFormatSchema>;
+export type AgentContractInput = z.infer<typeof AgentContractSchema>;
+export type CouncilFindingInput = z.infer<typeof CouncilFindingSchema>;
+export type CouncilVerdictInputData = z.infer<typeof CouncilVerdictInputSchema>;
+export type ConsensusConfigInput = z.infer<typeof ConsensusConfigSchema>;
+export type CouncilVerdictOutput = z.infer<typeof CouncilVerdictSchema>;
+
+// ─── Validate Helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Validate agent contract input
+ */
+export function validateAgentContract(data: unknown): AgentContractInput {
+  return AgentContractSchema.parse(data);
+}
+
+/**
+ * Validate council verdict input
+ */
+export function validateCouncilVerdictInput(data: unknown): CouncilVerdictInputData {
+  return CouncilVerdictInputSchema.parse(data);
+}
+
+/**
+ * Validate consensus config
+ */
+export function validateConsensusConfig(data: unknown): ConsensusConfigInput {
+  return ConsensusConfigSchema.parse(data);
+}
+
+/**
+ * Validate council verdict output
+ */
+export function validateCouncilVerdict(data: unknown): CouncilVerdictOutput {
+  return CouncilVerdictSchema.parse(data);
+}
+
+/**
+ * Validate a Claude agent file
+ */
+export function validateClaudeAgentFile(data: unknown): z.infer<typeof ClaudeAgentFileSchema> {
+  return ClaudeAgentFileSchema.parse(data);
+}
+
+/**
+ * Validate an OpenCode agent file
+ */
+export function validateOpenCodeAgentFile(data: unknown): z.infer<typeof OpenCodeAgentFileSchema> {
+  return OpenCodeAgentFileSchema.parse(data);
 }
 

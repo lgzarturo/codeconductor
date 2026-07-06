@@ -98,6 +98,7 @@ When multiple signals apply, take the highest risk level. Do not average.
 | Documentation update | any         | `docs`                                              |
 | Codebase exploration | any         | `repo-explorer`                                     |
 | Code review          | any         | `reviewer`                                          |
+| Security review      | high        | `security-reviewer` → `reviewer`                    |
 
 ---
 
@@ -601,6 +602,42 @@ _(none)_ if no suggestions
 - Critical: [count] | Warning: [count] | Suggestion: [count]
 - **Verdict justification**: [one sentence]
 ```
+
+---
+
+### security-reviewer
+
+**Role:** Dedicated security review. Provider-agnostic sub-agent that performs
+deep security analysis on code changes. Can apply a security veto that overrides
+majority consensus.
+
+**Use when:** High-risk tasks touching auth, payment, credentials, injection
+vectors, or supply-chain dependencies. Mandatory for security-sensitive changes.
+
+**Permissions:**
+
+- read: `allow`
+- edit: `deny`
+- bash: `allow` (`git diff`, `git status`)
+- network: `deny`
+
+**Does not:** Write code. Edit files. Bypass security veto mechanism.
+
+**Provider-agnostic constraints:**
+
+- No vendor-specific prompts, APIs, or model identifiers in role definition
+- All security analysis must be expressed through the council consensus
+  interface (`securityVeto` flag on `REJECTED` verdict)
+- Focus areas: vulnerabilities, credentials, injection, auth, supply-chain,
+  OWASP Top 10
+
+**Veto behavior:**
+
+- When `securityVeto: true` and `status: 'REJECTED'`, the veto overrides
+  majority consensus → final status becomes `REJECTED`
+- The veto agent is recorded in `vetoByAgentId` for traceability
+- Composable: can be added alongside existing council agents without replacing
+  the general `security` agent
 
 ---
 

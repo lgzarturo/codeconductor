@@ -1,9 +1,11 @@
 import { access, mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { UnsafeOperationError, ValidationError } from '../../cli/errors';
+import { CredentialGuardError, UnsafeOperationError, ValidationError } from '../../cli/errors';
 import { err, ok, type Result } from '../../utils/result';
+import type { CodeConductorConfig } from '../config/codeconductor-config';
 import type { FileWriteResult, GeneratedFile } from '../generation/generated-file';
-import { validateWritePath } from './safety';
+import { loadCredentialPatterns } from './credential-guard';
+import { isProtectedPath, scanForCredentials, validateWritePath } from './safety';
 
 /**
  * Write options
@@ -11,6 +13,8 @@ import { validateWritePath } from './safety';
 export interface WriteOptions {
   readonly force: boolean;
   readonly dryRun: boolean;
+  /** CodeConductor config — used to load project-specific secret patterns. */
+  readonly config?: CodeConductorConfig;
 }
 
 /**
@@ -21,6 +25,20 @@ export async function writeGeneratedFiles(
   options: WriteOptions
 ): Promise<FileWriteResult[]> {
   const results: FileWriteResult[] = [];
+
+  // Credential scan — must happen before any write to guarantee no partial writes.
+  // Scan ALL files including protected paths — credentials should never be written anywhere.
+  const secretPatterns = await loadCredentialPatterns(options.config);
+  const allMatches = files.flatMap((file) => {
+    return scanForCredentials(file.path, file.content, secretPatterns);
+  });
+
+  if (allMatches.length > 0) {
+    throw new CredentialGuardError(
+      `Credential leak detected in ${allMatches.length} file(s). No files written.`,
+      allMatches
+    );
+  }
 
   for (const file of files) {
     // Validate path

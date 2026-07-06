@@ -61,8 +61,12 @@ export async function installCommand(
       };
     }
 
+    // Load config for credential pattern resolution
+    const configResult = await loadConfig(projectRoot);
+    const config = configResult.success ? configResult.data : undefined;
+
     const spec = presetResult.data;
-    const writeOptions: WriteOptions = { dryRun, force };
+    const writeOptions: WriteOptions = { dryRun, force, config };
     const allFiles: { target: string; path: string; success: boolean; error?: string }[] = [];
 
     for (const t of targets) {

@@ -21,11 +21,28 @@ export interface CodeConductorConfig {
   safety: {
     destructiveCommands: string[];
     secretPatterns: string[];
+    compileCheck?: {
+      enabled: boolean;
+      command?: string;
+      timeoutMs?: number;
+    };
+  };
+  loop?: {
+    enabled?: boolean;
+    maxIterations?: number;
+    maxTokenBudget?: number;
   };
 }
 
+// Single source of truth — imported from credential-guard.ts.
+// No runtime circular dependency: credential-guard.ts uses `import type` only.
+import { DEFAULT_SECRET_PATTERNS } from '../filesystem/credential-guard';
+
 /**
- * Default configuration
+ * Default configuration.
+ * `safety.secretPatterns` references `DEFAULT_SECRET_PATTERNS` from
+ * credential-guard.ts so there is a single source of truth for default
+ * credential patterns.
  */
 export const DEFAULT_CONFIG: CodeConductorConfig = {
   version: '0.2.0',
@@ -45,6 +62,16 @@ export const DEFAULT_CONFIG: CodeConductorConfig = {
   },
   safety: {
     destructiveCommands: ['rm -rf', 'drop table', 'delete from'],
-    secretPatterns: ['password', 'secret', 'api_key', 'token'],
+    secretPatterns: DEFAULT_SECRET_PATTERNS,
+    compileCheck: {
+      enabled: true,
+      command: 'tsc --noEmit',
+      timeoutMs: 120_000,
+    },
+  },
+  loop: {
+    enabled: true,
+    maxIterations: 3,
+    maxTokenBudget: 0,
   },
 };

@@ -6,6 +6,7 @@ import { createCodexLspGenerator } from '../adapters/codex/codex-lsp-generator';
 import { createCursorLspGenerator } from '../adapters/cursor/cursor-lsp-generator';
 import { createGeminiLspGenerator } from '../adapters/gemini/gemini-lsp-generator';
 import { createOpenCodeLspGenerator } from '../adapters/opencode/opencode-lsp-generator';
+import { loadConfig } from '../core/config/config-loader';
 import { detectProject } from '../core/detection/project-detector';
 import { writeGeneratedFiles, type WriteOptions } from '../core/filesystem/file-writer';
 import type { LspConfigGenerator } from '../core/lsp/lsp-config-generator';
@@ -84,8 +85,12 @@ export async function installLspCommand(
     const installer = createLspInstaller();
     const installReport = await installer.installAll(lsps, { dryRun });
 
+    // Load config for credential pattern resolution
+    const configResult = await loadConfig(projectRoot);
+    const config = configResult.success ? configResult.data : undefined;
+
     // Generate config for each target
-    const writeOptions: WriteOptions = { dryRun, force };
+    const writeOptions: WriteOptions = { dryRun, force, config };
     const allConfigResults: ConfigResult[] = [];
 
     for (const t of targets) {

@@ -7,6 +7,7 @@ export const ExitCode = {
   UNSAFE_OPERATION: 2,
   UNSUPPORTED_PROJECT: 3,
   CONFIG_CONFLICT: 4,
+  CREDENTIAL_LEAK: 5,
 } as const;
 
 export type ExitCodeType = (typeof ExitCode)[keyof typeof ExitCode];
@@ -62,6 +63,25 @@ export class ConfigConflictError extends CliError {
   constructor(message: string, details?: unknown) {
     super(message, ExitCode.CONFIG_CONFLICT, details);
     this.name = 'ConfigConflictError';
+  }
+}
+
+/**
+ * Credential leak - content contains secrets or API keys
+ */
+export class CredentialGuardError extends CliError {
+  constructor(
+    message: string,
+    public readonly matches: ReadonlyArray<{
+      filePath: string;
+      line: number;
+      pattern: string;
+      matched: string;
+    }>,
+    details?: unknown
+  ) {
+    super(message, ExitCode.CREDENTIAL_LEAK, details);
+    this.name = 'CredentialGuardError';
   }
 }
 

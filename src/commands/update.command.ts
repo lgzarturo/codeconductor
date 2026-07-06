@@ -203,7 +203,7 @@ export async function updateCommand(
               // Filter to files that actually need updates
               const filesToWrite = resolvedFiles.filter((f) => t.files.includes(f.path));
               if (filesToWrite.length > 0) {
-                const writeResults = await writeGeneratedFiles(filesToWrite, { dryRun: false, force: true });
+                const writeResults = await writeGeneratedFiles(filesToWrite, { dryRun: false, force: true, config });
                 for (const wr of writeResults) {
                   if (wr.success) {
                     updated.push(wr.path);

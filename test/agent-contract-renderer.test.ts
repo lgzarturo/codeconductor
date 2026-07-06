@@ -1,0 +1,411 @@
+import { describe, expect, test } from 'bun:test';
+import type { AgentContract } from '../src/domain/council/agent-contract';
+import type { CouncilSpec } from '../src/domain/council/council-spec';
+import { ClaudeAgentContractRenderer } from '../src/adapters/claude/agent-contract-renderer';
+import { OpenCodeAgentContractRenderer } from '../src/adapters/opencode/agent-contract-renderer';
+import { validateClaudeAgentFile, validateOpenCodeAgentFile } from '../src/validation/schemas';
+
+const SPEC: CouncilSpec = {
+  name: 'test-council',
+  version: '1.0.0',
+  description: 'Test council for renderer round-trip',
+  outputContract: 'structured',
+  agents: [
+    {
+      id: 'architect',
+      role: 'Architect',
+      context: 'repo-readonly',
+      modelHint: 'strong-reasoning',
+      focus: ['architecture', 'design-patterns'],
+    },
+    {
+      id: 'security',
+      role: 'Security',
+      context: 'repo-readonly',
+      modelHint: 'security-reasoning',
+      focus: ['security', 'vulnerabilities'],
+    },
+    {
+      id: 'product',
+      role: 'Product',
+      context: 'prompt-only',
+      modelHint: 'balanced',
+      focus: ['requirements', 'ux'],
+    },
+  ],
+};
+
+function createContract(
+  targets: readonly ('claude' | 'opencode' | 'codex' | 'gemini' | 'cursor' | 'agy')[],
+): AgentContract {
+  return {
+    council: SPEC,
+    targets: targets.map((target) => ({ target })),
+    contractVersion: '1.0.0',
+  };
+}
+
+// ─── Claude Renderer ───────────────────────────────────────────────────────────
+
+describe('ClaudeAgentContractRenderer', () => {
+  test('round-trip: AgentContract → Claude renderer → all files under .claude/', () => {
+    const renderer = new ClaudeAgentContractRenderer();
+    const contract = createContract(['claude']);
+    const result = renderer.render(contract);
+
+    expect(result.allValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+    expect(result.files.length).toBeGreaterThan(0);
+
+    for (const file of result.files) {
+      expect(file.path).toMatch(/^\.claude\//);
+      expect(file.content.length).toBeGreaterThan(0);
+    }
+  });
+
+  test('generates skill file for council', () => {
+    const renderer = new ClaudeAgentContractRenderer();
+    const contract = createContract(['claude']);
+    const result = renderer.render(contract);
+
+    const skillFile = result.files.find((f) => f.path.includes('/skills/council/'));
+    expect(skillFile).toBeDefined();
+    expect(skillFile!.content).toContain('Council Skill');
+    expect(skillFile!.content).toContain(SPEC.version);
+  });
+
+  test('generates agent files for each council agent', () => {
+    const renderer = new ClaudeAgentContractRenderer();
+    const contract = createContract(['claude']);
+    const result = renderer.render(contract);
+
+    const agentFiles = result.files.filter((f) => f.path.includes('/agents/'));
+    expect(agentFiles.length).toBe(SPEC.agents.length);
+  });
+
+  test('generates command file', () => {
+    const renderer = new ClaudeAgentContractRenderer();
+    const contract = createContract(['claude']);
+    const result = renderer.render(contract);
+
+    const commandFile = result.files.find((f) => f.path.includes('/commands/'));
+    expect(commandFile).toBeDefined();
+  });
+
+  test('fails when contract does not include claude target', () => {
+    const renderer = new ClaudeAgentContractRenderer();
+    const contract = createContract(['opencode']);
+    const result = renderer.render(contract);
+
+    expect(result.allValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.files).toHaveLength(0);
+  });
+
+  test('fails validation when CouncilSpec has no agents', () => {
+    const renderer = new ClaudeAgentContractRenderer();
+    const contract: AgentContract = {
+      council: { name: '', version: '', description: '', outputContract: '', agents: [] } as CouncilSpec,
+      targets: [{ target: 'claude' }],
+      contractVersion: '1.0.0',
+    };
+    // CouncilSpecSchema passes (empty agents is valid), but generated output
+    // lacks agent files → validation fails
+    const result = renderer.render(contract);
+    expect(result.allValid).toBe(false);
+    expect(result.errors.some((e) => e.includes('agent file'))).toBe(true);
+  });
+});
+
+// ─── OpenCode Renderer ─────────────────────────────────────────────────────────
+
+describe('OpenCodeAgentContractRenderer', () => {
+  test('round-trip: AgentContract → OpenCode renderer → all files under .opencode/', () => {
+    const renderer = new OpenCodeAgentContractRenderer();
+    const contract = createContract(['opencode']);
+    const result = renderer.render(contract);
+
+    expect(result.allValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+    expect(result.files.length).toBeGreaterThan(0);
+
+    for (const file of result.files) {
+      expect(file.path).toMatch(/^\.opencode\//);
+      expect(file.content.length).toBeGreaterThan(0);
+    }
+  });
+
+  test('generated agent files have frontmatter', () => {
+    const renderer = new OpenCodeAgentContractRenderer();
+    const contract = createContract(['opencode']);
+    const result = renderer.render(contract);
+
+    const agentFiles = result.files.filter((f) => f.path.includes('/agents/'));
+    for (const file of agentFiles) {
+      expect(file.content.startsWith('---')).toBe(true);
+    }
+  });
+
+  test('generated command file has frontmatter', () => {
+    const renderer = new OpenCodeAgentContractRenderer();
+    const contract = createContract(['opencode']);
+    const result = renderer.render(contract);
+
+    const commandFiles = result.files.filter((f) => f.path.includes('/commands/'));
+    for (const file of commandFiles) {
+      expect(file.content.startsWith('---')).toBe(true);
+    }
+  });
+
+  test('generates lead agent and individual agent files', () => {
+    const renderer = new OpenCodeAgentContractRenderer();
+    const contract = createContract(['opencode']);
+    const result = renderer.render(contract);
+
+    const leadAgent = result.files.find((f) => f.path.includes('council-lead'));
+    expect(leadAgent).toBeDefined();
+
+    const agentFiles = result.files.filter(
+      (f) => f.path.includes('/agents/council-') && !f.path.includes('council-lead'),
+    );
+    expect(agentFiles.length).toBe(SPEC.agents.length);
+  });
+
+  test('fails when contract does not include opencode target', () => {
+    const renderer = new OpenCodeAgentContractRenderer();
+    const contract = createContract(['claude']);
+    const result = renderer.render(contract);
+
+    expect(result.allValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.files).toHaveLength(0);
+  });
+});
+
+// ─── Malformed render edge cases ──────────────────────────────────────────────
+
+describe('malformed render handling', () => {
+  test('Claude renderer returns allValid=false for missing target', () => {
+    const renderer = new ClaudeAgentContractRenderer();
+    const contract = createContract(['opencode']);
+    const result = renderer.render(contract);
+    expect(result.allValid).toBe(false);
+  });
+
+  test('OpenCode renderer returns allValid=false for missing target', () => {
+    const renderer = new OpenCodeAgentContractRenderer();
+    const contract = createContract(['claude']);
+    const result = renderer.render(contract);
+    expect(result.allValid).toBe(false);
+  });
+});
+
+// ─── Round-trip: rendered files pass provider-specific schema validation ──────
+
+describe('Claude renderer → schema validation round-trip', () => {
+  test('every rendered Claude file passes ClaudeAgentFileSchema validation', () => {
+    const renderer = new ClaudeAgentContractRenderer();
+    const contract = createContract(['claude']);
+    const result = renderer.render(contract);
+
+    expect(result.allValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+
+    for (const file of result.files) {
+      // Should not throw — every file must conform to ClaudeAgentFileSchema
+      const parsed = validateClaudeAgentFile(file);
+      expect(parsed.path).toBe(file.path);
+      expect(parsed.content).toBe(file.content);
+      expect(parsed.overwrite).toBe(file.overwrite);
+    }
+  });
+});
+
+describe('OpenCode renderer → schema validation round-trip', () => {
+  test('every rendered OpenCode file passes OpenCodeAgentFileSchema validation', () => {
+    const renderer = new OpenCodeAgentContractRenderer();
+    const contract = createContract(['opencode']);
+    const result = renderer.render(contract);
+
+    expect(result.allValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+
+    for (const file of result.files) {
+      // Should not throw — every file must conform to OpenCodeAgentFileSchema
+      const parsed = validateOpenCodeAgentFile(file);
+      expect(parsed.path).toBe(file.path);
+      expect(parsed.content).toBe(file.content);
+      expect(parsed.overwrite).toBe(file.overwrite);
+    }
+  });
+});
+
+// ─── Multi-target single contract ──────────────────────────────────────────────
+
+describe('single contract → both providers', () => {
+  test('renders correctly for both Claude and OpenCode from one AgentContract', () => {
+    const contract = createContract(['claude', 'opencode']);
+
+    const claudeResult = new ClaudeAgentContractRenderer().render(contract);
+    const opencodeResult = new OpenCodeAgentContractRenderer().render(contract);
+
+    expect(claudeResult.allValid).toBe(true);
+    expect(opencodeResult.allValid).toBe(true);
+
+    expect(claudeResult.target).toBe('claude');
+    expect(opencodeResult.target).toBe('opencode');
+
+    for (const file of claudeResult.files) {
+      expect(file.path).toMatch(/^\.claude\//);
+    }
+    for (const file of opencodeResult.files) {
+      expect(file.path).toMatch(/^\.opencode\//);
+    }
+
+    // The two outputs should be disjoint in their paths
+    for (const cf of claudeResult.files) {
+      for (const of of opencodeResult.files) {
+        expect(cf.path).not.toBe(of.path);
+      }
+    }
+  });
+});
+
+// ─── JSON serialization round-trip ─────────────────────────────────────────────
+
+describe('JSON serialization round-trip', () => {
+  test('Claude: contract survives JSON.stringify → JSON.parse and renders identically', () => {
+    const renderer = new ClaudeAgentContractRenderer();
+    const original = createContract(['claude']);
+
+    const json = JSON.stringify(original);
+    const restored: AgentContract = JSON.parse(json);
+
+    const originalResult = renderer.render(original);
+    const restoredResult = renderer.render(restored);
+
+    expect(restoredResult.allValid).toBe(true);
+    expect(restoredResult.errors).toEqual(originalResult.errors);
+    expect(restoredResult.files.length).toBe(originalResult.files.length);
+
+    for (let i = 0; i < restoredResult.files.length; i++) {
+      expect(restoredResult.files[i]!.path).toBe(originalResult.files[i]!.path);
+      expect(restoredResult.files[i]!.content).toBe(originalResult.files[i]!.content);
+    }
+  });
+
+  test('OpenCode: contract survives JSON.stringify → JSON.parse and renders identically', () => {
+    const renderer = new OpenCodeAgentContractRenderer();
+    const original = createContract(['opencode']);
+
+    const json = JSON.stringify(original);
+    const restored: AgentContract = JSON.parse(json);
+
+    const originalResult = renderer.render(original);
+    const restoredResult = renderer.render(restored);
+
+    expect(restoredResult.allValid).toBe(true);
+    expect(restoredResult.errors).toEqual(originalResult.errors);
+    expect(restoredResult.files.length).toBe(originalResult.files.length);
+
+    for (let i = 0; i < restoredResult.files.length; i++) {
+      expect(restoredResult.files[i]!.path).toBe(originalResult.files[i]!.path);
+      expect(restoredResult.files[i]!.content).toBe(originalResult.files[i]!.content);
+    }
+  });
+});
+
+// ─── renderHints metadata ──────────────────────────────────────────────────────
+
+describe('renderHints metadata', () => {
+  test('contract with renderHints still renders valid Claude output', () => {
+    const renderer = new ClaudeAgentContractRenderer();
+    const contract: AgentContract = {
+      council: SPEC,
+      targets: [{ target: 'claude' }],
+      contractVersion: '1.0.0',
+      renderHints: { claude: { overwrite: true } },
+    };
+    const result = renderer.render(contract);
+    expect(result.allValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+    expect(result.files.length).toBeGreaterThan(0);
+  });
+
+  test('contract with renderHints still renders valid OpenCode output', () => {
+    const renderer = new OpenCodeAgentContractRenderer();
+    const contract: AgentContract = {
+      council: SPEC,
+      targets: [{ target: 'opencode' }],
+      contractVersion: '1.0.0',
+      renderHints: { opencode: { locale: 'es' } },
+    };
+    const result = renderer.render(contract);
+    expect(result.allValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+    expect(result.files.length).toBeGreaterThan(0);
+  });
+});
+
+// ─── Generator error path ──────────────────────────────────────────────────────
+
+describe('generator error path', () => {
+  test('Claude renderer: invalid CouncilSpec yields allValid=false with descriptive error', () => {
+    const renderer = new ClaudeAgentContractRenderer();
+    const contract: AgentContract = {
+      // Force the Zod parse to fail by passing an invalid context value
+      council: {
+        name: 'broken',
+        version: '1.0.0',
+        description: 'broken council',
+        outputContract: 'structured',
+        agents: [
+          {
+            id: 'broken',
+            role: 'Broken',
+            // @ts-expect-error — invalid context to force schema failure
+            context: 'superuser',
+            modelHint: 'strong-reasoning',
+            focus: [],
+          },
+        ],
+      },
+      targets: [{ target: 'claude' }],
+      contractVersion: '1.0.0',
+    };
+    const result = renderer.render(contract);
+    expect(result.allValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.errors[0]).toContain('Invalid CouncilSpec');
+    expect(result.files).toHaveLength(0);
+  });
+
+  test('OpenCode renderer: invalid CouncilSpec yields allValid=false with descriptive error', () => {
+    const renderer = new OpenCodeAgentContractRenderer();
+    const contract: AgentContract = {
+      council: {
+        name: 'broken',
+        version: '1.0.0',
+        description: 'broken council',
+        outputContract: 'structured',
+        agents: [
+          {
+            id: 'broken',
+            role: 'Broken',
+            // @ts-expect-error — invalid modelHint to force schema failure
+            modelHint: 'super-duper',
+            context: 'repo-readonly',
+            focus: [],
+          },
+        ],
+      },
+      targets: [{ target: 'opencode' }],
+      contractVersion: '1.0.0',
+    };
+    const result = renderer.render(contract);
+    expect(result.allValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.errors[0]).toContain('Invalid CouncilSpec');
+    expect(result.files).toHaveLength(0);
+  });
+});

@@ -11,7 +11,7 @@ operation.
 > provide its own sandbox, policy compiler, or OS-level isolation yet.
 
 > [!NOTE] The Codex preset differs architecturally from the Claude and OpenCode
-> presets. Codex has no named agent files and no slash commands. All 8 agent
+> presets. Codex has no named agent files and no slash commands. All 10 agent
 > contracts are embedded in a single `AGENTS.md`. Workflows are triggered by
 > natural language phrases instead of `/commands`.
 
@@ -66,7 +66,7 @@ paths.
 
 ```text
 your-project/
-├── AGENTS.md                  ← CodeConductor instructions (all 8 agents)
+├── AGENTS.md                  ← CodeConductor instructions (all 10 agents)
 └── .codex/
     └── skills/
         ├── testing-strategy/SKILL.md
@@ -219,14 +219,15 @@ cp /tmp/codeconductor/presets/codex/AGENTS.md ./AGENTS.md
 Merge the CodeConductor sections manually. Keep one authoritative `AGENTS.md`
 per directory scope. Do not append duplicate copies of the agent contracts.
 
-After merging, verify the file contains all 8 agent role sections:
+After merging, verify the file contains all 10 agent role sections:
 
 ```bash
 grep "^### " AGENTS.md
 ```
 
 Expected output includes: `orchestrator`, `task-coach`, `architect`,
-`implementer`, `tester`, `reviewer`, `docs`, `repo-explorer`.
+`implementer`, `tester`, `reviewer`, `security-reviewer`, `complexity-auditor`,
+`docs`, `repo-explorer`.
 
 ---
 
@@ -292,14 +293,17 @@ checklist to confirm the installation is complete and correct.
 # AGENTS.md must exist at project root
 ls AGENTS.md
 
-# Must contain all 8 agent role sections
-grep "^### orchestrator"   AGENTS.md
-grep "^### task-coach"     AGENTS.md
-grep "^### architect"      AGENTS.md
-grep "^### implementer"    AGENTS.md
-grep "^### tester"         AGENTS.md
-grep "^### reviewer"       AGENTS.md
-grep "^### docs"           AGENTS.md
+# Must contain all 10 agent role sections
+grep "^### orchestrator"        AGENTS.md
+grep "^### task-coach"          AGENTS.md
+grep "^### architect"           AGENTS.md
+grep "^### implementer"         AGENTS.md
+grep "^### tester"              AGENTS.md
+grep "^### reviewer"            AGENTS.md
+grep "^### security-reviewer"   AGENTS.md
+grep "^### complexity-auditor"  AGENTS.md
+grep "^### docs"                AGENTS.md
+grep "^### repo-explorer"       AGENTS.md
 grep "^### repo-explorer"  AGENTS.md
 
 # Codex-only: verify skill files are in .codex/
@@ -315,7 +319,7 @@ codex --version
 Expected state:
 
 - [ ] `AGENTS.md` exists in project root
-- [ ] All 8 agent sections are present in `AGENTS.md`
+- [ ] All 10 agent sections are present in `AGENTS.md`
 - [ ] Skill files exist at the path referenced in `AGENTS.md` (`.codex/skills/`
       or `.opencode/skills/`)
 - [ ] `codex --version` exits with code 0

@@ -127,8 +127,8 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 - Codex preset
 - Spring Boot / Kotlin workflow
 - Python / Django workflow guidance
-- 8 core Conductor Agents
-- Routing Policy v0.1.0
+- 10 core Conductor Agents
+- Routing Policy v0.2.0
 - Task Card template
 - Scorecard template
 - End-to-end example

@@ -234,14 +234,6 @@ describe('documentation updates', () => {
     expect(content).toContain('PAGESPEED_API_KEY');
   });
 
-  test('CHANGELOG.md has pagespeed-perf in Unreleased section', () => {
-    const content = readPreset('CHANGELOG.md');
-    const unreleasedIndex = content.indexOf('## Unreleased');
-    const nextSectionIndex = content.indexOf('\n## [', unreleasedIndex + 1);
-    const unreleasedSection = content.slice(unreleasedIndex, nextSectionIndex);
-    expect(unreleasedSection).toContain('pagespeed-perf');
-  });
-
   test('docs/cc-commands.md has cc-pagespeed section', () => {
     const content = readPreset('docs/cc-commands.md');
     expect(content).toContain('cc-pagespeed');

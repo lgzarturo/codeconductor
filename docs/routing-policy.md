@@ -1,6 +1,6 @@
 # Routing Policy
 
-**Version:** v0.1.0
+**Version:** v0.2.0
 
 ---
 
@@ -40,19 +40,20 @@ When multiple signals apply, take the highest risk level. Do not average.
 
 ## Routing Table
 
-| Task Type            | Risk        | Agent Sequence                                      |
-| -------------------- | ----------- | --------------------------------------------------- |
-| New feature design   | any         | `architect` → `implementer`                         |
-| Bug fix              | low         | `implementer`                                       |
-| Bug fix              | medium–high | `task-coach` → `implementer` → `tester`             |
-| Refactor             | low         | `implementer`                                       |
-| Refactor             | medium–high | `architect` → `implementer` → `reviewer`            |
-| API change           | any         | `architect` → `implementer` → `reviewer`            |
-| Database migration   | any         | `architect` → `implementer` → `tester` → `reviewer` |
-| Test coverage        | any         | `tester`                                            |
-| Documentation update | any         | `docs`                                              |
-| Codebase exploration | any         | `repo-explorer`                                     |
-| Code review          | any         | `reviewer`                                          |
+| Task Type            | Risk        | Agent Sequence                                                  |
+| -------------------- | ----------- | --------------------------------------------------------------- |
+| New feature design   | any         | `architect` → `implementer`                                     |
+| Bug fix              | low         | `implementer`                                                   |
+| Bug fix              | medium–high | `task-coach` → `implementer` → `tester`                         |
+| Refactor             | low         | `implementer`                                                   |
+| Refactor             | medium–high | `architect` → `implementer` → `complexity-auditor` → `reviewer`  |
+| API change           | any         | `architect` → `implementer` → `complexity-auditor` → `reviewer`  |
+| Database migration   | any         | `architect` → `implementer` → `tester` → `complexity-auditor` → `reviewer` |
+| Test coverage        | any         | `tester`                                                        |
+| Documentation update | any         | `docs`                                                          |
+| Codebase exploration | any         | `repo-explorer`                                                 |
+| Code review          | any         | `reviewer`                                                      |
+| Complexity audit only| any         | `complexity-auditor`                                            |
 
 Each arrow (`→`) represents a handoff. The next agent does not start until the
 previous agent produces an accepted Deliverable.
@@ -121,6 +122,12 @@ through `reviewer`.
 classified Task Card must refuse to proceed and return the request to
 `task-coach` or `orchestrator`.
 
+**Complexity auditor always runs before reviewer.** For refactor, API change,
+and database migration routes, `complexity-auditor` executes between
+`implementer` and `reviewer`. The auditor analyzes the diff for bloat,
+unnecessary abstractions, and non-native solutions. Its output feeds the
+scorecard's cc-gain criterion. Skipping the auditor is a workflow defect.
+
 **Skipping is a defect.** If `implementer` starts writing code without a routing
 decision, the workflow is broken. The scorecard for that Deliverable will
 reflect the violation.
@@ -139,4 +146,5 @@ must record the reviewer's name.
 
 | Version | Date       | Change                                                                                        |
 | ------- | ---------- | --------------------------------------------------------------------------------------------- |
+| v0.2.0  | 2026-07-06 | Add complexity-auditor route for refactor, API change, DB migration. Auditor runs before reviewer. |
 | v0.1.0  | 2026-05-07 | Initial routing policy with OpenCode, Claude, Spring Boot/Kotlin, and Python/Django guidance. |

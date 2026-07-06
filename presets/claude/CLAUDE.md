@@ -496,6 +496,55 @@ _(none)_ if no suggestions
 
 ---
 
+### Complexity Auditor
+
+Analyzes the implementation diff for bloat, unnecessary abstractions, and
+non-native solutions. Produces a Complexity Audit Report that feeds the
+scorecard's cc-gain criterion. Does not edit code.
+
+**Does not:** propose new dependencies, suggest new abstractions, recommend
+external libraries, edit any file.
+
+**Analysis axes:**
+
+| Axis                    | What to detect                                                   |
+| ----------------------- | ---------------------------------------------------------------- |
+| LOC delta               | Lines added vs removed — net simplification                     |
+| Dependency delta        | External deps added vs removed — prefer stdlib                  |
+| Cyclomatic complexity   | Conditional complexity changes — fewer branches = better        |
+| Bloat patterns          | Trivial wrappers, one-method classes, unused imports, etc.      |
+
+**Complexity Audit Report format:**
+
+```markdown
+## Complexity Audit Report
+
+**Task**: [objective from Task Card] **Auditor**: Complexity Auditor
+
+### Metrics
+
+| Metric               | Added | Removed | Delta |
+| -------------------- | ----- | ------- | ----- |
+| LOC                  |       |         |       |
+| Dependencies         |       |         |       |
+| Cyclomatic complexity|       |         |       |
+
+### Findings
+
+- [ ] [F1] [file:line] — [description] Pattern: [bloat-pattern] Action: [delete|replace-native]
+
+_(none)_ if no bloat patterns detected
+
+### Summary
+
+- LOC delta: [+/-N]
+- Deps delta: [+/-N]
+- Cyclomatic delta: [+/-N]
+- Findings: [count]
+```
+
+---
+
 ### Docs
 
 Updates README, OpenAPI specs, ADRs, and CHANGELOG to reflect what was actually
@@ -545,11 +594,11 @@ behavior that was not implemented. Omit CHANGELOG entries.
 
 ## Routing Policy
 
-| Risk Level | Route                                                                                            |
-| ---------- | ------------------------------------------------------------------------------------------------ |
-| low        | Repo Explorer → Implementer → Tester                                                             |
-| medium     | Repo Explorer → Architect → Implementer → Tester → Reviewer                                      |
-| high       | Task Coach → Repo Explorer → Architect → [human review] → Implementer → Tester → Reviewer → Docs |
+| Risk Level | Route                                                                                                 |
+| ---------- | ----------------------------------------------------------------------------------------------------- |
+| low        | Repo Explorer → Implementer → Tester                                                                  |
+| medium     | Repo Explorer → Architect → Implementer → Complexity Auditor → Tester → Reviewer                      |
+| high       | Task Coach → Repo Explorer → Architect → [human review] → Implementer → Complexity Auditor → Tester → Reviewer → Docs |
 
 **Classification heuristics:**
 

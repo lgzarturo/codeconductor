@@ -71,20 +71,20 @@ introduces maintenance burden, supply-chain risk, and version conflicts.
 
 ### Agent Routing Table
 
-| Task Type            | Risk        | Route To                                            |
-| -------------------- | ----------- | --------------------------------------------------- |
-| New feature design   | any         | `architect` → `implementer`                         |
-| Bug fix              | low         | `implementer`                                       |
-| Bug fix              | medium–high | `task-coach` → `implementer` → `tester`             |
-| Refactor             | low         | `implementer`                                       |
-| Refactor             | medium–high | `architect` → `implementer` → `reviewer`            |
-| API change           | any         | `architect` → `implementer` → `reviewer`            |
-| Database migration   | any         | `architect` → `implementer` → `tester` → `reviewer` |
-| Test coverage        | any         | `tester`                                            |
-| Documentation update | any         | `docs`                                              |
-| Codebase exploration | any         | `repo-explorer`                                     |
-| Code review          | any         | `reviewer`                                          |
-| Security review      | high        | `security-reviewer` → `reviewer`                    |
+| Task Type            | Risk        | Route To                                                    |
+| -------------------- | ----------- | ----------------------------------------------------------- |
+| New feature design   | any         | `architect` → `implementer`                                 |
+| Bug fix              | low         | `implementer`                                               |
+| Bug fix              | medium–high | `task-coach` → `implementer` → `tester`                     |
+| Refactor             | low         | `implementer`                                               |
+| Refactor             | medium–high | `architect` → `implementer` → `complexity-auditor` → `reviewer` |
+| API change           | any         | `architect` → `implementer` → `complexity-auditor` → `reviewer` |
+| Database migration   | any         | `architect` → `implementer` → `tester` → `complexity-auditor` → `reviewer` |
+| Test coverage        | any         | `tester`                                                    |
+| Documentation update | any         | `docs`                                                      |
+| Codebase exploration | any         | `repo-explorer`                                             |
+| Code review          | any         | `reviewer`                                                  |
+| Security review      | high        | `security-reviewer` → `reviewer`                            |
 
 When uncertain about routing, escalate to `orchestrator`.
 
@@ -239,6 +239,27 @@ vectors, or supply-chain dependencies. Mandatory for security-sensitive changes.
 - The veto agent is recorded in `vetoByAgentId` for traceability
 - Composable: can be added alongside existing council agents without replacing
   the general `security` agent
+
+---
+
+### complexity-auditor
+
+**Role:** Analyzes code for bloat, unnecessary abstractions, and non-native
+solutions. Produces a structured Complexity Audit Report with LOC deltas,
+dependency changes, cyclomatic complexity metrics, and bloat pattern findings.
+
+**Use when:** Before reviewer in refactor (medium–high), API change, and
+database migration routes. Always runs as the final step before reviewer.
+
+**Permissions:**
+
+- read: `allow`
+- edit: `deny`
+- bash: `deny`
+- network: `deny`
+
+**Does not:** Propose new dependencies. Suggest new abstractions. Recommend
+external libraries. Edit any file.
 
 ---
 

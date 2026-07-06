@@ -1,0 +1,21 @@
+diff --git a/src/components/header.tsx b/src/components/header.tsx
+index 1234567..abcdefg 100644
+--- a/src/components/header.tsx
++++ b/src/components/header.tsx
+@@ -1,12 +1,16 @@
++import { useState } from 'react';
++
+ export function Header() {
++  const [menuOpen, setMenuOpen] = useState(false);
++
+   return (
+     <header>
+       <nav>
++        <button onClick={() => setMenuOpen(!menuOpen)}>
++          {menuOpen ? 'Close' : 'Menu'}
++        </button>
++        {menuOpen && <ul><li>Home</li><li>About</li></ul>}
+       </nav>
+     </header>
+   );
+ }

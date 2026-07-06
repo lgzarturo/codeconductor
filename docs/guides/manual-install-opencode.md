@@ -100,7 +100,7 @@ presets/opencode/skills/testing-strategy/SKILL.md        -> .opencode/skills/tes
 AGENTS.md (managed section)                              -> AGENTS.md (merge with existing or create)
 ```
 
-Total: 1 config file, 8 agent contracts, 5 command definitions, 4 skill files, 1
+Total: 1 config file, 10 agent contracts, 5 command definitions, 4 skill files, 1
 AGENTS.md.
 
 ---
@@ -141,15 +141,17 @@ with the actual path where you placed the CodeConductor repository:
 # Configuration file
 cp /tmp/codeconductor/presets/opencode/opencode.jsonc ./opencode.jsonc
 
-# Agent contracts (8 files)
-cp /tmp/codeconductor/presets/opencode/agents/orchestrator.md  .opencode/agents/orchestrator.md
-cp /tmp/codeconductor/presets/opencode/agents/task-coach.md    .opencode/agents/task-coach.md
-cp /tmp/codeconductor/presets/opencode/agents/architect.md     .opencode/agents/architect.md
-cp /tmp/codeconductor/presets/opencode/agents/implementer.md   .opencode/agents/implementer.md
-cp /tmp/codeconductor/presets/opencode/agents/tester.md        .opencode/agents/tester.md
-cp /tmp/codeconductor/presets/opencode/agents/reviewer.md      .opencode/agents/reviewer.md
-cp /tmp/codeconductor/presets/opencode/agents/docs.md          .opencode/agents/docs.md
-cp /tmp/codeconductor/presets/opencode/agents/repo-explorer.md .opencode/agents/repo-explorer.md
+# Agent contracts (10 files)
+cp /tmp/codeconductor/presets/opencode/agents/orchestrator.md        .opencode/agents/orchestrator.md
+cp /tmp/codeconductor/presets/opencode/agents/task-coach.md          .opencode/agents/task-coach.md
+cp /tmp/codeconductor/presets/opencode/agents/architect.md           .opencode/agents/architect.md
+cp /tmp/codeconductor/presets/opencode/agents/implementer.md         .opencode/agents/implementer.md
+cp /tmp/codeconductor/presets/opencode/agents/tester.md              .opencode/agents/tester.md
+cp /tmp/codeconductor/presets/opencode/agents/reviewer.md            .opencode/agents/reviewer.md
+cp /tmp/codeconductor/presets/opencode/agents/security-reviewer.md   .opencode/agents/security-reviewer.md
+cp /tmp/codeconductor/presets/opencode/agents/complexity-auditor.md  .opencode/agents/complexity-auditor.md
+cp /tmp/codeconductor/presets/opencode/agents/docs.md                .opencode/agents/docs.md
+cp /tmp/codeconductor/presets/opencode/agents/repo-explorer.md       .opencode/agents/repo-explorer.md
 
 # Command definitions (5 files)
 cp /tmp/codeconductor/presets/opencode/commands/feature.md   .opencode/commands/feature.md
@@ -282,7 +284,7 @@ Run each check from your project root:
 # Config file present
 ls opencode.jsonc
 
-# Agent contracts — must list exactly 8 files
+# Agent contracts — must list exactly 10 files
 ls .opencode/agents/
 
 # Command definitions — must list exactly 5 files
@@ -311,7 +313,7 @@ opencode --version
 Expected state for each check:
 
 - [ ] `opencode.jsonc` exists in project root
-- [ ] `.opencode/agents/` contains 8 `.md` files
+- [ ] `.opencode/agents/` contains 10 `.md` files
 - [ ] `.opencode/commands/` contains 5 `.md` files
 - [ ] `.opencode/skills/` contains 4 directories
 - [ ] Each skill directory has a `SKILL.md` file

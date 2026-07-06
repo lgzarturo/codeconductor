@@ -51,11 +51,12 @@ Contract version:** v0.1.0 **Date:** [YYYY-MM-DD] **Evaluator:** [human name or
 | --- | --------------------------------- | ------ | ----------- | ----- |
 | 1   | Acceptance criteria met           | 30%    |             |       |
 | 2   | Minimal diff (no scope creep)     | 20%    |             |       |
-| 3   | Tests present and passing         | 20%    |             |       |
+| 3   | Tests present and passing         | 15%    |             |       |
 | 4   | No regressions introduced         | 15%    |             |       |
 | 5   | Code follows project conventions  | 10%    |             |       |
 | 6   | Documentation updated if required | 5%     |             |       |
 | 7   | Context discipline                | 5%     |             |       |
+| 8   | Complexity diffusion (cc-gain)    | 5%     |             |       |
 
 **Score scale:** 0 = not met, 1 = partial, 2 = met, 3 = exceeded
 
@@ -171,6 +172,33 @@ specified by the Task Card's `context_scope` field.
 When no context scope is specified in the Task Card, score this criterion 2 (met
 by default) and note it.
 
+### 8. Complexity Diffusion — cc-gain (5%)
+
+Evaluate whether the implementation reduced complexity, avoided unnecessary
+dependencies, or removed bloat. This criterion is driven by the
+`complexity-auditor` agent's output when it runs in the routing chain.
+
+**cc-gain formula:**
+
+```text
+gain = (locRemoved * 0.4) + (depsAvoided * 1.5) + (complexityReduced * 2.0) - (abstractionFindings * 1.0)
+```
+
+- `depsAvoided` = deps removed - deps added
+- `complexityReduced` = cyclomatic keywords removed - cyclomatic keywords added
+- `abstractionFindings` = count of bloat pattern findings (trivial-wrapper,
+  one-method-class, excessive-abstraction, single-implementation-interface)
+
+**Score mapping:**
+
+- **0** — cc-gain verdict is negative (net complexity or bloat increase).
+- **1** — cc-gain verdict is neutral (no significant change).
+- **2** — cc-gain verdict is positive with raw score < 10.
+- **3** — cc-gain verdict is positive with raw score >= 10 (significant simplification).
+
+When no `complexity-auditor` runs (e.g., low-risk routes), score this criterion
+2 (met by design) and note it.
+
 ---
 
 ## Weighted Score Calculation
@@ -179,11 +207,12 @@ by default) and note it.
 weighted_score =
   (score_1 * 0.30) +
   (score_2 * 0.20) +
-  (score_3 * 0.20) +
+  (score_3 * 0.15) +
   (score_4 * 0.15) +
   (score_5 * 0.10) +
   (score_6 * 0.05) +
-  (score_7 * 0.05)
+  (score_7 * 0.05) +
+  (score_8 * 0.05)
 ```
 
 Maximum possible score: 3.0

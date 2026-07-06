@@ -126,7 +126,7 @@ retirement.
 | Version | Status           | Date       | Changes                                                                                                                       |
 | ------- | ---------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | v0.1.0  | active           | 2026-05-07 | Initial contracts — all 8 Conductor Agents                                                                                    |
-| v0.2.0  | unreleased draft | 2026-05-07 | Draft orchestrator and tester updates for Python/Django routing and tests. Not released while `package.json` remains `0.1.0`. |
+| v0.2.0  | active           | 2026-07-06 | Added `complexity-auditor` agent; routing policy updated to v0.2.0 with auditor in refactor/API/DB routes. Scorecard criterion #8 (cc-gain) added. |
 
 ---
 

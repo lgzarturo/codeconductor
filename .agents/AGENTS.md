@@ -24,6 +24,21 @@ LLM coding mistakes and bias toward caution over speed.
    success criteria. For multi-step tasks, state a plan with verification
    checks. Loop until verified.
 
+### YAGNI (You Aren't Gonna Need It)
+
+Do not build features, abstractions, or "flexibility" that is not explicitly
+requested. If the user asks for a function, write a function — not a class
+hierarchy. If they ask for a string, return a string — not a Result type
+with 15 error codes. Every line you write must solve a problem that exists
+**now**.
+
+### Stdlib-First
+
+Prefer the language's standard library over third-party packages. Before
+adding a dependency, ask: "Does `node:fs`, `node:path`, `node:crypto`, or
+a built-in module solve this?" If yes, use it. Every external dependency
+introduces maintenance burden, supply-chain risk, and version conflicts.
+
 ---
 
 ## Workflow Contract

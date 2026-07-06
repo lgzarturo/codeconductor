@@ -19,8 +19,8 @@ const DEFER_REGEX = /\/\/\s*defer\s*[-:]\s*(.+?)(?:\s*--(\w+))?\s*$/gm;
 
 const SOURCE_EXTENSIONS = new Set([
   '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
-  '.py', '.rb', '.go', '.rs', '.java', '.kt',
-  '.php', '.cs', '.swift', '.scala', '.sh',
+  '.go', '.rs', '.java', '.kt', '.swift', '.cs',
+  '.php', '.scala', '.dart', '.c', '.cpp', '.h', '.hpp',
 ]);
 
 async function walkDir(dir: string, extensions: Set<string>): Promise<string[]> {

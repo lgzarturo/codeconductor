@@ -36,6 +36,10 @@ contracts, task cards, and risk-based routing.
 >   a sitemap.xml with rate limiting and SSRF prevention
 > - `npx cc-codeconductor seo llms --sitemap <url>` — generates a `llms.txt` file
 >   for AI-search readiness from sitemap content
+> - `npx cc-codeconductor help` (alias: `cc-help`) — shows preset inventory
+>   (skills, subagents, commands) for the active or specified target
+> - `npx cc-codeconductor debt-harvest` (alias: `harvest`) — scans source files
+>   for `// defer` comments and writes `.codeconductor/debt-ledger.md`
 > - `/cc-pagespeed --url <url>` — audits web performance using the PageSpeed
 >   Insights API; applies the 80/20 principle to produce a prioritized report of
 >   Core Web Vitals (LCP, TBT, CLS, FCP, TTFB) with framework-specific fixes;
@@ -129,7 +133,7 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 - Scorecard template
 - End-to-end example
 - YAML-driven model configuration
-- Provider-agnostic `AgentContract` abstraction with target renderers for Claude and OpenCode
+- Provider-agnostic `AgentContract` abstraction with target renderers for Claude, OpenCode, Codex, and Agy
 - Council consensus engine (`councilConsensus()`) for multi-agent governance with majority/unanimous algorithms and security veto
 
 ---
@@ -267,6 +271,34 @@ npx cc-codeconductor update --global
 ```
 
 Smart updates all currently installed target presets, council configurations, and skills (from `skills-lock.json`), preserving user edits outside managed blocks. Also validates that `AGENTS.md` and `CLAUDE.md` do not exceed the 40KB size limit.
+
+#### `help` — show preset inventory
+
+```bash
+npx cc-codeconductor help                    # show inventory for active target
+npx cc-codeconductor help --target claude    # show inventory for specific target
+npx cc-codeconductor cc-help                 # alias
+npx cc-codeconductor help --output json      # machine-readable output
+```
+
+Lists the skills, subagents, commands, and workflows available in the active
+preset. Reads from `presets/<target>/` in the project root.
+
+#### `debt-harvest` — collect deferred debt items
+
+```bash
+npx cc-codeconductor debt-harvest            # scan src/ for // defer comments
+npx cc-codeconductor debt-harvest --dir lib  # scan a different directory
+npx cc-codeconductor harvest                 # alias
+npx cc-codeconductor debt-harvest --output json
+```
+
+Scans source files for `// defer - [reason]` comments and consolidates them
+into `.codeconductor/debt-ledger.md`, grouped by optional tag
+(`// defer - reason --tag`). Read-only on source files; only writes the ledger.
+
+Supported extensions: `.ts`, `.tsx`, `.js`, `.jsx`, `.go`, `.rs`, `.java`,
+`.kt`, `.swift`, `.cs`, `.php`, `.scala`, `.dart`, `.c`, `.cpp`, `.h`, `.hpp`.
 
 
 ### Global options

@@ -189,9 +189,6 @@ export async function routeCommand(
   const { command, subcommand, options, flags } = args;
 
   switch (command) {
-    case 'help':
-      return { code: 0, data: { help: getHelp() } };
-
     case 'init':
       return initCommand({
         projectRoot,

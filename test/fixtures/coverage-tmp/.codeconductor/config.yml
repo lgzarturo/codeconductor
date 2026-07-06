@@ -20,3 +20,15 @@ safety:
     - secret
     - api_key
     - token
+    - api[_-]?key
+    - access[_-]?token
+    - auth[_-]?token
+    - private[_-]?key
+  compileCheck:
+    enabled: true
+    command: tsc --noEmit
+    timeoutMs: 120000
+loop:
+  enabled: true
+  maxIterations: 3
+  maxTokenBudget: 0

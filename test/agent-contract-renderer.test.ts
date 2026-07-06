@@ -3,6 +3,8 @@ import type { AgentContract } from '../src/domain/council/agent-contract';
 import type { CouncilSpec } from '../src/domain/council/council-spec';
 import { ClaudeAgentContractRenderer } from '../src/adapters/claude/agent-contract-renderer';
 import { OpenCodeAgentContractRenderer } from '../src/adapters/opencode/agent-contract-renderer';
+import { CodexAgentContractRenderer } from '../src/adapters/codex/agent-contract-renderer';
+import { AgyAgentContractRenderer } from '../src/adapters/agy/agent-contract-renderer';
 import { validateClaudeAgentFile, validateOpenCodeAgentFile } from '../src/validation/schemas';
 
 const SPEC: CouncilSpec = {
@@ -407,5 +409,181 @@ describe('generator error path', () => {
     expect(result.errors.length).toBeGreaterThan(0);
     expect(result.errors[0]).toContain('Invalid CouncilSpec');
     expect(result.files).toHaveLength(0);
+  });
+});
+
+// ─── Codex Renderer ────────────────────────────────────────────────────────────
+
+describe('CodexAgentContractRenderer', () => {
+  test('round-trip: AgentContract → Codex renderer → all files under .codex/', () => {
+    const renderer = new CodexAgentContractRenderer();
+    const contract = createContract(['codex']);
+    const result = renderer.render(contract);
+
+    expect(result.allValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+    expect(result.files.length).toBeGreaterThan(0);
+
+    for (const file of result.files) {
+      expect(file.path).toMatch(/^\.codex\//);
+      expect(file.content.length).toBeGreaterThan(0);
+    }
+  });
+
+  test('generates skill file for council', () => {
+    const renderer = new CodexAgentContractRenderer();
+    const contract = createContract(['codex']);
+    const result = renderer.render(contract);
+
+    const skillFile = result.files.find((f) => f.path.includes('/skills/'));
+    expect(skillFile).toBeDefined();
+    expect(skillFile!.content).toContain('council');
+    expect(skillFile!.content).toContain(SPEC.version);
+  });
+
+  test('generates agent files for each council agent', () => {
+    const renderer = new CodexAgentContractRenderer();
+    const contract = createContract(['codex']);
+    const result = renderer.render(contract);
+
+    const agentFiles = result.files.filter((f) => f.path.includes('/agents/'));
+    expect(agentFiles.length).toBe(SPEC.agents.length);
+  });
+
+  test('generates config file', () => {
+    const renderer = new CodexAgentContractRenderer();
+    const contract = createContract(['codex']);
+    const result = renderer.render(contract);
+
+    const configFile = result.files.find((f) => f.path.includes('config.toml'));
+    expect(configFile).toBeDefined();
+  });
+
+  test('fails when contract does not include codex target', () => {
+    const renderer = new CodexAgentContractRenderer();
+    const contract = createContract(['claude']);
+    const result = renderer.render(contract);
+
+    expect(result.allValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.files).toHaveLength(0);
+  });
+
+  test('fails validation when CouncilSpec has no agents', () => {
+    const renderer = new CodexAgentContractRenderer();
+    const contract: AgentContract = {
+      council: { name: '', version: '', description: '', outputContract: '', agents: [] } as CouncilSpec,
+      targets: [{ target: 'codex' }],
+      contractVersion: '1.0.0',
+    };
+    const result = renderer.render(contract);
+    expect(result.allValid).toBe(false);
+    expect(result.errors.some((e) => e.includes('agent file'))).toBe(true);
+  });
+});
+
+// ─── Agy Renderer ──────────────────────────────────────────────────────────────
+
+describe('AgyAgentContractRenderer', () => {
+  test('round-trip: AgentContract → Agy renderer → all files under .agents/', () => {
+    const renderer = new AgyAgentContractRenderer();
+    const contract = createContract(['agy']);
+    const result = renderer.render(contract);
+
+    expect(result.allValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+    expect(result.files.length).toBeGreaterThan(0);
+
+    for (const file of result.files) {
+      expect(file.path).toMatch(/^\.agents\//);
+      expect(file.content.length).toBeGreaterThan(0);
+    }
+  });
+
+  test('generates skill file for council', () => {
+    const renderer = new AgyAgentContractRenderer();
+    const contract = createContract(['agy']);
+    const result = renderer.render(contract);
+
+    const skillFile = result.files.find((f) => f.path.includes('/skills/'));
+    expect(skillFile).toBeDefined();
+    expect(skillFile!.content).toContain('council');
+    expect(skillFile!.content).toContain(SPEC.version);
+  });
+
+  test('generates agent files for each council agent', () => {
+    const renderer = new AgyAgentContractRenderer();
+    const contract = createContract(['agy']);
+    const result = renderer.render(contract);
+
+    const agentFiles = result.files.filter((f) => f.path.includes('/agents/'));
+    expect(agentFiles.length).toBe(SPEC.agents.length);
+  });
+
+  test('generates workflow file', () => {
+    const renderer = new AgyAgentContractRenderer();
+    const contract = createContract(['agy']);
+    const result = renderer.render(contract);
+
+    const workflowFile = result.files.find((f) => f.path.includes('/workflows/'));
+    expect(workflowFile).toBeDefined();
+  });
+
+  test('fails when contract does not include agy target', () => {
+    const renderer = new AgyAgentContractRenderer();
+    const contract = createContract(['claude']);
+    const result = renderer.render(contract);
+
+    expect(result.allValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.files).toHaveLength(0);
+  });
+
+  test('fails validation when CouncilSpec has no agents', () => {
+    const renderer = new AgyAgentContractRenderer();
+    const contract: AgentContract = {
+      council: { name: '', version: '', description: '', outputContract: '', agents: [] } as CouncilSpec,
+      targets: [{ target: 'agy' }],
+      contractVersion: '1.0.0',
+    };
+    const result = renderer.render(contract);
+    expect(result.allValid).toBe(false);
+    expect(result.errors.some((e) => e.includes('agent file'))).toBe(true);
+  });
+});
+
+// ─── Multi-target: all four providers ──────────────────────────────────────────
+
+describe('single contract → all four providers', () => {
+  test('renders correctly for Claude, OpenCode, Codex, and Agy from one AgentContract', () => {
+    const contract = createContract(['claude', 'opencode', 'codex', 'agy']);
+
+    const claudeResult = new ClaudeAgentContractRenderer().render(contract);
+    const opencodeResult = new OpenCodeAgentContractRenderer().render(contract);
+    const codexResult = new CodexAgentContractRenderer().render(contract);
+    const agyResult = new AgyAgentContractRenderer().render(contract);
+
+    expect(claudeResult.allValid).toBe(true);
+    expect(opencodeResult.allValid).toBe(true);
+    expect(codexResult.allValid).toBe(true);
+    expect(agyResult.allValid).toBe(true);
+
+    expect(claudeResult.target).toBe('claude');
+    expect(opencodeResult.target).toBe('opencode');
+    expect(codexResult.target).toBe('codex');
+    expect(agyResult.target).toBe('agy');
+
+    for (const file of claudeResult.files) {
+      expect(file.path).toMatch(/^\.claude\//);
+    }
+    for (const file of opencodeResult.files) {
+      expect(file.path).toMatch(/^\.opencode\//);
+    }
+    for (const file of codexResult.files) {
+      expect(file.path).toMatch(/^\.codex\//);
+    }
+    for (const file of agyResult.files) {
+      expect(file.path).toMatch(/^\.agents\//);
+    }
   });
 });

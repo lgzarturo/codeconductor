@@ -71,7 +71,7 @@ export function formatAgentMessage(
  * @returns Concise error summary.
  */
 export function formatConciseFeedback(
-  errors: readonly Array<{ file?: string; code?: string; message: string }>,
+  errors: ReadonlyArray<{ file?: string; code?: string; message: string }>,
 ): string {
   if (errors.length === 0) return '';
 

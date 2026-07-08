@@ -22,6 +22,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Define auth data model and DB schema',
         type: 'feature',
         risk: 'high',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: [],
         acceptance_criteria: [
           'User entity with email, password_hash, created_at fields',
@@ -34,6 +36,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Define auth API contract',
         type: 'feature',
         risk: 'medium',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: ['auth-schema'],
         acceptance_criteria: [
           'POST /auth/register endpoint defined',
@@ -47,6 +51,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Implement auth endpoints',
         type: 'feature',
         risk: 'high',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: ['auth-api'],
         acceptance_criteria: [
           'Register endpoint hashes password and stores user',
@@ -60,6 +66,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Write auth tests',
         type: 'test',
         risk: 'medium',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: ['auth-impl'],
         acceptance_criteria: [
           'Unit tests for password hashing',
@@ -77,6 +85,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Define data model and schema',
         type: 'feature',
         risk: 'medium',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: [],
         acceptance_criteria: [
           'Entity definition with required fields',
@@ -89,6 +99,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Implement repository/service layer',
         type: 'feature',
         risk: 'medium',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: ['crud-model'],
         acceptance_criteria: [
           'Create, Read (list + by id), Update, Delete operations',
@@ -101,6 +113,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Implement API endpoints',
         type: 'feature',
         risk: 'medium',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: ['crud-service'],
         acceptance_criteria: [
           'REST endpoints for all CRUD operations',
@@ -113,6 +127,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Write tests',
         type: 'test',
         risk: 'low',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: ['crud-api'],
         acceptance_criteria: [
           'Unit tests for service layer',
@@ -130,6 +146,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Design search schema and indexing strategy',
         type: 'feature',
         risk: 'medium',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: [],
         acceptance_criteria: [
           'Search index definition',
@@ -142,6 +160,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Implement search service',
         type: 'feature',
         risk: 'medium',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: ['search-schema'],
         acceptance_criteria: [
           'Full-text search with ranking',
@@ -154,6 +174,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Implement search API',
         type: 'feature',
         risk: 'low',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: ['search-service'],
         acceptance_criteria: [
           'GET /search endpoint with query params',
@@ -166,6 +188,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Write search tests',
         type: 'test',
         risk: 'low',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: ['search-api'],
         acceptance_criteria: [
           'Unit tests for search logic',
@@ -183,6 +207,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Design notification data model',
         type: 'feature',
         risk: 'medium',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: [],
         acceptance_criteria: [
           'Notification entity with type, payload, status, user_id',
@@ -195,6 +221,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Implement notification service',
         type: 'feature',
         risk: 'medium',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: ['notif-model'],
         acceptance_criteria: [
           'Send notification by type',
@@ -207,6 +235,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Implement notification API',
         type: 'feature',
         risk: 'low',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: ['notif-service'],
         acceptance_criteria: [
           'POST /notifications endpoint',
@@ -219,6 +249,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Write notification tests',
         type: 'test',
         risk: 'low',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: ['notif-api'],
         acceptance_criteria: [
           'Unit tests for notification logic',
@@ -236,6 +268,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Write migration script',
         type: 'feature',
         risk: 'high',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: [],
         acceptance_criteria: [
           'Migration is reversible',
@@ -248,6 +282,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Update domain model',
         type: 'refactor',
         risk: 'medium',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: ['migrate-script'],
         acceptance_criteria: [
           'Domain model reflects new schema',
@@ -260,6 +296,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Update data access layer',
         type: 'refactor',
         risk: 'medium',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: ['migrate-model'],
         acceptance_criteria: [
           'Repository/service reads/writes new schema',
@@ -272,6 +310,8 @@ const TEMPLATES: readonly GoalTemplate[] = [
         title: 'Write migration tests',
         type: 'test',
         risk: 'high',
+        status: 'pending',
+        context_scope: 'isolated',
         depends_on: ['migrate-dal'],
         acceptance_criteria: [
           'Migration up/down test',
@@ -291,8 +331,10 @@ const GENERIC_TEMPLATE: readonly GoalTaskInput[] = [
     id: 'plan-scope',
     title: 'Clarify requirements and scope',
     type: 'feature',
-    risk: 'low',
-    depends_on: [],
+        risk: 'low',
+        status: 'pending',
+        context_scope: 'isolated',
+        depends_on: [],
     acceptance_criteria: ['Objective is well-defined', 'Scope boundaries identified'],
   },
   {
@@ -300,6 +342,8 @@ const GENERIC_TEMPLATE: readonly GoalTaskInput[] = [
     title: 'Design technical approach',
     type: 'feature',
     risk: 'medium',
+    status: 'pending',
+    context_scope: 'isolated',
     depends_on: ['plan-scope'],
     acceptance_criteria: ['Architecture decisions documented', 'API contracts defined'],
   },
@@ -308,6 +352,8 @@ const GENERIC_TEMPLATE: readonly GoalTaskInput[] = [
     title: 'Implement solution',
     type: 'feature',
     risk: 'medium',
+    status: 'pending',
+    context_scope: 'isolated',
     depends_on: ['plan-design'],
     acceptance_criteria: ['Core functionality implemented', 'Follows project conventions'],
   },
@@ -316,6 +362,8 @@ const GENERIC_TEMPLATE: readonly GoalTaskInput[] = [
     title: 'Write tests and verify',
     type: 'test',
     risk: 'low',
+    status: 'pending',
+    context_scope: 'isolated',
     depends_on: ['plan-impl'],
     acceptance_criteria: ['Unit tests pass', 'Integration tests pass', 'No regressions'],
   },

@@ -67,7 +67,7 @@ describe('Phase 3 documentation: AGENTS.md', () => {
     expect(goalPlannerSection).not.toBeNull();
     if (goalPlannerSection) {
       expect(goalPlannerSection[0]).toMatch(/\*\*Role:\*\*/);
-      expect(goalPlannerSection[0]).toMatch(/[Pp]ure function/);
+      expect(goalPlannerSection[0]).toMatch(/Deterministic template matching/);
     }
   });
 

@@ -305,7 +305,7 @@ module, or identifying impact radius of a change.
 ### goal-planner
 
 **Role:** Transforms an objective string into a YAML task graph with
-dependencies. Pure function: objective → GoalGraph. No side effects.
+dependencies. Deterministic template matching; `created_at` is set at call time.
 
 **Use when:** User runs `codeconductor goal "<objective>"` or the orchestrator
 needs a multi-step plan before delegation.

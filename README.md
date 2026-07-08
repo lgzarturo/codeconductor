@@ -40,6 +40,9 @@ contracts, task cards, and risk-based routing.
 >   (skills, subagents, commands) for the active or specified target
 > - `npx cc-codeconductor debt-harvest` (alias: `harvest`) — scans source files
 >   for `// defer` comments and writes `.codeconductor/debt-ledger.md`
+> - `npx cc-codeconductor goal "<objective>"` (alias: `cc-goal`) — decomposes an
+>   objective into a dependency-ordered task graph, writes
+>   `.codeconductor/current-goal.yml`
 > - `/cc-pagespeed --url <url>` — audits web performance using the PageSpeed
 >   Insights API; applies the 80/20 principle to produce a prioritized report of
 >   Core Web Vitals (LCP, TBT, CLS, FCP, TTFB) with framework-specific fixes;
@@ -127,7 +130,7 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 - Codex preset
 - Spring Boot / Kotlin workflow
 - Python / Django workflow guidance
-- 10 core Conductor Agents
+- 11 core Conductor Agents
 - Routing Policy v0.2.0
 - Task Card template
 - Scorecard template
@@ -300,6 +303,20 @@ into `.codeconductor/debt-ledger.md`, grouped by optional tag
 Supported extensions: `.ts`, `.tsx`, `.js`, `.jsx`, `.go`, `.rs`, `.java`,
 `.kt`, `.swift`, `.cs`, `.php`, `.scala`, `.dart`, `.c`, `.cpp`, `.h`, `.hpp`.
 
+#### `goal` — decompose objective into task graph
+
+```bash
+npx cc-codeconductor goal "Add user authentication"
+npx cc-codeconductor goal "Implement CRUD for invoices"
+npx cc-codeconductor cc-goal "Add search with filters"   # alias
+npx cc-codeconductor goal "Add user authentication" --output json
+```
+
+Matches the objective against built-in templates (auth, crud, search,
+notification, migration) or falls back to a generic 4-task chain. Writes the
+resulting task graph to `.codeconductor/current-goal.yml` with dependency
+ordering. The orchestrator uses this file to delegate tasks in dependency order.
+
 
 ### Global options
 
@@ -404,7 +421,7 @@ codeconductor/
 ├── src/                    ← CLI source (TypeScript + Bun)
 │   ├── cli/                ← entry point, router, error codes
 │   ├── commands/           ← init, detect, install, doctor, update
-│   ├── core/               ← config, detection, filesystem, presets
+│   ├── core/               ← config, detection, filesystem, presets, goal
 │   ├── adapters/           ← opencode, claude, codex generators
 │   ├── domain/council/     ← council spec, agent, contract
 │   ├── validation/         ← Zod schemas

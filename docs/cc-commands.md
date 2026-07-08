@@ -443,9 +443,107 @@ npx cc-codeconductor harvest
 | File | Line | Reason |
 | ---- | ---- | ------ |
 | src/utils/parser.ts | 7 | Replace with proper error type |
-
 <!-- CODECONDUCTOR:END managed -->
+
 ```
+
+---
+
+### `npx cc-codeconductor goal`
+
+Decomposes an objective string into a dependency-ordered task graph. Matches
+the objective against built-in templates or falls back to a generic 4-task
+chain. Writes the result to `.codeconductor/current-goal.yml`.
+
+**Aliases:** `cc-goal`
+
+**Behavior:**
+
+1. Matches objective keywords against built-in templates (auth, crud, search,
+   notification, migration)
+2. Falls back to generic 4-task chain: `task-coach → architect → implementer → tester`
+3. Validates the graph (unique IDs, valid `depends_on` references, no cycles)
+4. Writes `.codeconductor/current-goal.yml`
+5. Renders a dependency tree diagram (human output) or structured JSON
+
+**Templates:**
+
+| Keywords | Tasks |
+| --- | --- |
+| `login`, `auth`, `authentication`, `signin` | schema → API → implementation → tests |
+| `crud`, `resource`, `api`, `endpoint`, `rest` | model → service → API → tests |
+| `search`, `filter`, `query`, `full-text`, `fts` | schema → service → API → tests |
+| `notification`, `email`, `alert`, `push`, `notify` | model → service → API → tests |
+| `migration`, `migrate`, `schema change` | script → model → DAL → tests |
+| *(no match)* | scope → design → implementation → tests |
+
+**Options:**
+
+- `--output, -o` — Output format (`human` / `json`)
+
+**Exit codes:**
+
+- `0` — Success
+- `1` — Error (empty objective, write failure, validation error)
+
+**Examples:**
+
+```bash
+# Plan an auth goal
+npx cc-codeconductor goal "Add user authentication"
+
+# Plan a CRUD goal
+npx cc-codeconductor goal "Implement CRUD for invoices"
+
+# Using the alias
+npx cc-codeconductor cc-goal "Add search with filters"
+
+# JSON output for scripting
+npx cc-codeconductor goal "Add user authentication" --output json
+```
+
+**Human output:**
+
+```text
+Objective: Add user authentication
+
+Task dependency graph:
+├── auth-schema: Define auth data model and DB schema
+│   └── auth-api: Define auth API contract
+│       └── auth-impl: Implement auth endpoints
+│           └── auth-tests: Write auth tests
+
+Tasks: 4 total
+File: .codeconductor/current-goal.yml
+```
+
+**JSON output shape:**
+
+```json
+{
+  "success": true,
+  "command": "goal",
+  "objective": "Add user authentication",
+  "tasks": [
+    {
+      "id": "auth-schema",
+      "title": "Define auth data model and DB schema",
+      "type": "feature",
+      "risk": "high",
+      "depends_on": [],
+      "status": "pending"
+    }
+  ],
+  "file": ".codeconductor/current-goal.yml"
+}
+```
+
+**Orchestrator integration:**
+
+The orchestrator reads `.codeconductor/current-goal.yml` and delegates tasks in
+dependency order. A task is only routed after all its `depends_on` targets
+complete with status `done`. If a dependency is `blocked`, the dependent task
+remains `pending`.
 
 ---
 

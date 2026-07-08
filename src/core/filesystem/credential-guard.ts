@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
 import { parse } from 'yaml';
+import { POLICY_PATH } from '../presets/package-paths';
 import type { CodeConductorConfig } from '../config/codeconductor-config';
 
 /**
@@ -17,11 +17,6 @@ export const DEFAULT_SECRET_PATTERNS = [
   'auth[_-]?token',
   'private[_-]?key',
 ];
-
-/**
- * Path to the root policy.yml file.
- */
-const POLICY_PATH = resolve(import.meta.dir, '..', '..', '..', 'policy.yml');
 
 /**
  * Load secret patterns from policy.yml.

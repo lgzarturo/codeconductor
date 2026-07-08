@@ -84,6 +84,7 @@ introduces maintenance burden, supply-chain risk, and version conflicts.
 | Documentation update | any         | `docs`                                                      |
 | Codebase exploration | any         | `repo-explorer`                                             |
 | Code review          | any         | `reviewer`                                                  |
+| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `implementer` → `tester` |
 | Security review      | high        | `security-reviewer` → `reviewer`                            |
 
 When uncertain about routing, escalate to `orchestrator`.
@@ -331,6 +332,26 @@ When the orchestrator receives a GoalGraph, it delegates tasks in dependency
 order. A task is only routed after all its `depends_on` targets complete with
 status `done`. If a dependency is `blocked`, the dependent task remains `pending`.
 The orchestrator tracks the graph state in `.codeconductor/current-goal.yml`.
+
+---
+
+### contract-builder
+
+**Role:** Defines API contracts, data shapes, and behavior specs before
+implementation. Produces OpenAPI specs, JSON Schema, or TypeScript interfaces
+that the implementer and tester use as the source of truth.
+
+**Use when:** New feature needs spec-before-implementation, API contract needs
+definition, or the DDD→SDD→TDD pipeline is triggered.
+
+**Permissions:**
+
+- read: `allow`
+- edit: `ask` (docs, ADRs, OpenAPI only)
+- bash: `deny`
+- network: `deny`
+
+**Does not:** Write implementation code. Modify source files.
 
 ## Hard Rules (all agents)
 

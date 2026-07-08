@@ -123,15 +123,15 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 
 ---
 
-## Current Support (v0.2.0)
+## Current Support
 
 - OpenCode preset
 - Claude Code-compatible preset (see [Claude Environment Options & Best Practices](file:///c:/Users/R2D2/Documents/GitHub/codeconductor/docs/claude-env-options.md))
 - Codex preset
 - Spring Boot / Kotlin workflow
 - Python / Django workflow guidance
-- 11 core Conductor Agents
-- Routing Policy v0.2.0
+- 12 core Conductor Agents
+- Routing Policy v0.3.0
 - Task Card template
 - Scorecard template
 - End-to-end example

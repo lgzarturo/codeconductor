@@ -1,6 +1,6 @@
 # Routing Policy
 
-**Version:** v0.2.0
+**Version:** v0.3.0
 
 ---
 
@@ -53,6 +53,7 @@ When multiple signals apply, take the highest risk level. Do not average.
 | Documentation update | any         | `docs`                                                          |
 | Codebase exploration | any         | `repo-explorer`                                                 |
 | Code review          | any         | `reviewer`                                                      |
+| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `implementer` → `tester`      |
 | Complexity audit only| any         | `complexity-auditor`                                            |
 
 Each arrow (`→`) represents a handoff. The next agent does not start until the
@@ -116,6 +117,26 @@ through `reviewer`.
 
 ---
 
+## TDD Loop Guard
+
+When the `implementer` → `tester` iteration loop runs, the orchestrator tracks
+the number of failed iterations per Task Card. The guard behavior:
+
+1. Each iteration that produces a failing test or compile error counts as a
+   failed iteration.
+2. On the 3rd consecutive failed iteration, the loop halts automatically.
+3. The task is marked `blocked` in the goal graph via `markTaskBlocked()`.
+4. An escalation report is emitted to
+   `.codeconductor/escalated-<taskId>.json`.
+5. The report includes: iterations attempted, error history, attempted fixes,
+   original context, and a recommended action.
+
+This prevents infinite retry loops when the implementer cannot resolve errors
+within the budget. The orchestrator must surface the escalation report for
+human review before unblocking.
+
+---
+
 ## Rules
 
 **No agent bypasses routing.** An agent that receives a request without a
@@ -146,5 +167,6 @@ must record the reviewer's name.
 
 | Version | Date       | Change                                                                                        |
 | ------- | ---------- | --------------------------------------------------------------------------------------------- |
+| v0.3.0  | 2026-07-08 | Add DDD→SDD→TDD pipeline (contract-builder). Add TDD loop guard with escalation at 3rd failed iteration. |
 | v0.2.0  | 2026-07-06 | Add complexity-auditor route for refactor, API change, DB migration. Auditor runs before reviewer. |
 | v0.1.0  | 2026-05-07 | Initial routing policy with OpenCode, Claude, Spring Boot/Kotlin, and Python/Django guidance. |

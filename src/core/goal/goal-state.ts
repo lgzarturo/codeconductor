@@ -90,3 +90,26 @@ export async function loadGoal(
     return err(e instanceof Error ? e : new Error(String(e)));
   }
 }
+
+/**
+ * Mark a task as blocked in the goal graph.
+ * Loads the graph, finds the task by ID, sets status to 'blocked', and writes back.
+ */
+export async function markTaskBlocked(
+  projectRoot: string,
+  taskId: string,
+  reason: string,
+): Promise<Result<void, Error>> {
+  const loadResult = await loadGoal(projectRoot);
+  if (!loadResult.success) return loadResult;
+
+  const graph = loadResult.data;
+  const task = graph.tasks.find((t) => t.id === taskId);
+  if (!task) {
+    return err(new Error(`Task "${taskId}" not found in goal graph`));
+  }
+
+  task.status = 'blocked';
+  task.blocked_reason = reason;
+  return writeGoal(projectRoot, graph);
+}

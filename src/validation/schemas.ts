@@ -345,6 +345,7 @@ export const GoalTaskSchema = z.object({
   status: z.enum(['pending', 'in-progress', 'done', 'blocked']),
   depends_on: z.array(z.string()).optional().default([]),
   acceptance_criteria: z.array(z.string()),
+  blocked_reason: z.string().optional(),
 });
 
 /**

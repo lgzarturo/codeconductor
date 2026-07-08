@@ -138,6 +138,7 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 - YAML-driven model configuration
 - Provider-agnostic `AgentContract` abstraction with target renderers for Claude, OpenCode, Codex, and Agy
 - Council consensus engine (`councilConsensus()`) for multi-agent governance with majority/unanimous algorithms and security veto
+- Phase 5 runtime modules — scoped context injection, TDD history compaction, concise inter-agent messaging, and token budget enforcement in the compile-fix loop
 
 ---
 
@@ -422,8 +423,13 @@ codeconductor/
 │   ├── cli/                ← entry point, router, error codes
 │   ├── commands/           ← init, detect, install, doctor, update
 │   ├── core/               ← config, detection, filesystem, presets, goal
+│   │   ├── context/        ← scoped context injection (Phase 5)
+│   │   ├── compaction/     ← TDD history compaction hook (Phase 5)
+│   │   ├── messages/       ← concise inter-agent formatter (Phase 5)
+│   │   └── loop/           ← compile-fix loop controller (Phase 5)
 │   ├── adapters/           ← opencode, claude, codex generators
 │   ├── domain/council/     ← council spec, agent, contract
+│   ├── domain/loop/        ← loop state machine
 │   ├── validation/         ← Zod schemas
 │   ├── utils/              ← Result type, logger, invariant
 │   └── presets/council/    ← bundled council.yml preset

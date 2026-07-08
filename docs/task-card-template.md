@@ -140,6 +140,33 @@ retain: `isolated` (task-only, minimal prior context), `continuation` (relevant
 prior context), or `full` (all session context). Defaults to `isolated` for most
 tasks.
 
+When `isolated` or `continuation` is set, only files listed in **Scope / Files**
+are injected into the agent context. For scopes with >10 files, the first 10 are
+loaded eagerly and the rest are deferred — load on demand when needed. This keeps
+context under the 40KB budget.
+
+---
+
+## Context Injection Rules
+
+1. **Isolated mode** — Agent receives only the files listed in Scope / Files.
+   No prior session history, no other modules. Use for low-risk, well-scoped
+   tasks.
+
+2. **Continuation mode** — Agent receives Scope / Files plus relevant prior
+   context (e.g., dependencies, interfaces). Use for medium-risk tasks that
+   build on existing work.
+
+3. **Full mode** — Agent receives all session context. Use sparingly — only for
+   high-risk architectural changes where full codebase awareness is required.
+
+4. **Token budget** — The loop controller enforces a token budget. When exceeded,
+   the loop escalates to human review. Set `maxTokenBudget` in config to enable.
+
+5. **Compaction** — After tests pass in TDD phases, iteration history is
+   compacted to a summary. The full RED/GREEN history is not carried forward.
+   Set `compaction.enabled: true` in loop config (default: true).
+
 ---
 
 ## Example: Low-Risk Feature

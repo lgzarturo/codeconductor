@@ -32,6 +32,7 @@ export type LoopAction =
   | { readonly type: 'CODE_GENERATED' }
   | { readonly type: 'COMPILE_CHECK_COMPLETED'; readonly errors: readonly CompileError[] }
   | { readonly type: 'FEEDBACK_FORMATTED' }
+  | { readonly type: 'TOKEN_BUDGET_EXCEEDED'; readonly tokenUsage: number }
   | { readonly type: 'ABORT' };
 
 export type LoopActionResult = 'CONTINUE' | 'TERMINATE';
@@ -48,9 +49,6 @@ export function createInitialState(overrides?: Partial<LoopState>): LoopState {
     maxIterations: 3,
     errors: [],
     errorHistory: [],
-    // TODO: token budget tracking — tokenBudgetUsed is a placeholder for future
-    // implementation. When enabled, increment on each LLM call and check against
-    // maxTokenBudget to early-terminate the loop.
     tokenBudgetUsed: 0,
     maxTokenBudget: 0,
     ...overrides,
@@ -89,7 +87,7 @@ function isStuckLoop(errorHistory: readonly (readonly CompileError[])[]): boolea
 
 const VALID_TRANSITIONS: Record<LoopPhase, LoopAction['type'][]> = {
   IDLE: ['START', 'ABORT'],
-  RUNNING: ['CODE_GENERATED', 'ABORT'],
+  RUNNING: ['CODE_GENERATED', 'TOKEN_BUDGET_EXCEEDED', 'ABORT'],
   CHECKING: ['COMPILE_CHECK_COMPLETED', 'ABORT'],
   FEEDBACK: ['FEEDBACK_FORMATTED', 'ABORT'],
   DONE: [],
@@ -143,6 +141,16 @@ export function loopStateMachine(
         return {
           state: { ...state, phase: 'CHECKING' },
           result: 'CONTINUE',
+        };
+      }
+      if (action.type === 'TOKEN_BUDGET_EXCEEDED') {
+        return {
+          state: {
+            ...state,
+            phase: 'ESCALATED',
+            tokenBudgetUsed: action.tokenUsage,
+          },
+          result: 'TERMINATE',
         };
       }
       break;

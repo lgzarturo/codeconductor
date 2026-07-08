@@ -58,6 +58,10 @@ export const LoopConfigSchema = z.object({
   enabled: z.boolean().optional().default(true),
   maxIterations: z.number().int().positive().optional().default(3),
   maxTokenBudget: z.number().nonnegative().optional().default(0),
+  compaction: z.object({
+    enabled: z.boolean().optional().default(true),
+    historyFile: z.string().optional(),
+  }).optional(),
 });
 
 /**
@@ -346,6 +350,7 @@ export const GoalTaskSchema = z.object({
   depends_on: z.array(z.string()).optional().default([]),
   acceptance_criteria: z.array(z.string()),
   blocked_reason: z.string().optional(),
+  context_scope: z.enum(['isolated', 'continuation', 'full']).optional().default('isolated'),
 });
 
 /**

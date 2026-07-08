@@ -80,7 +80,7 @@ function logTransition(phase: string, action: string, iteration: number): void {
 
 // ─── Loop Runner ─────────────────────────────────────────────────────────────
 
-export type GenerateFn = (feedback?: string) => Promise<void>;
+export type GenerateFn = (feedback?: string) => Promise<{ tokenUsage: number }>;
 export type CompileCheckFn = () => Promise<CompileResult>;
 
 /**
@@ -99,9 +99,6 @@ export async function runLoop(
   originalTask?: string,
 ): Promise<LoopResult> {
   const maxIterations = config.maxIterations ?? 3;
-  // TODO: token budget tracking — maxTokenBudget is configured but not enforced.
-  // When implemented, check tokenBudgetUsed against maxTokenBudget in the main
-  // loop and early-terminate with ESCALATED if exceeded.
   const maxTokenBudget = config.maxTokenBudget ?? 0;
 
   let state = createInitialState({ maxIterations, maxTokenBudget });
@@ -120,10 +117,27 @@ export async function runLoop(
     switch (state.phase) {
       case 'RUNNING': {
         logTransition(state.phase, 'GENERATE', state.iteration);
-        await generateFn(feedbackText);
+        const genResult2 = await generateFn(feedbackText);
         feedbackText = undefined;
 
-        const genResult = loopStateMachine(state, { type: 'CODE_GENERATED' });
+        // Token budget enforcement — handle both new { tokenUsage } and legacy void returns
+        const tokenUsage = (genResult2 && typeof genResult2 === 'object' && 'tokenUsage' in genResult2)
+          ? (genResult2 as { tokenUsage: number }).tokenUsage
+          : 0;
+        const newBudgetUsed = state.tokenBudgetUsed + tokenUsage;
+        if (state.maxTokenBudget > 0 && newBudgetUsed > state.maxTokenBudget) {
+          const budgetResult = loopStateMachine(state, {
+            type: 'TOKEN_BUDGET_EXCEEDED',
+            tokenUsage: newBudgetUsed,
+          });
+          state = budgetResult.state;
+          logTransition(state.phase, 'TOKEN_BUDGET_EXCEEDED', state.iteration);
+          break;
+        }
+
+        // Update token budget tracking
+        const updatedState = { ...state, tokenBudgetUsed: newBudgetUsed };
+        const genResult = loopStateMachine(updatedState, { type: 'CODE_GENERATED' });
         state = genResult.state;
         logTransition(state.phase, 'CODE_GENERATED', state.iteration);
         break;

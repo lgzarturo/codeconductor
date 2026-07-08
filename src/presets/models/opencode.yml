@@ -51,6 +51,12 @@ agents:
     codex: gpt-5.4-mini
     gemini: gemini-2.5-flash
     cursor: gpt-5.4-mini
+  goal-planner:
+    claude: claude-haiku-4-5-20251001
+    opencode: opencode-go/deepseek-v4-flash
+    codex: gpt-5.4-mini
+    gemini: gemini-2.5-flash
+    cursor: gpt-5.4-mini
 permissions:
   Read: read
   Write: edit

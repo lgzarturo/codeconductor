@@ -57,6 +57,13 @@ agents:
     gemini: gemini-2.5-flash
     cursor: gpt-5.4-mini
     agy: gemini-2.5-flash
+  goal-planner:
+    claude: claude-haiku-4-5-20251001
+    opencode: opencode-go/qwen3.6-plus
+    codex: gpt-5.4-mini
+    gemini: gemini-2.5-flash
+    cursor: gpt-5.4-mini
+    agy: gemini-2.5-flash
 tools:
   Read:
     agy: view_file

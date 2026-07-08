@@ -124,4 +124,52 @@ safety:
       expect(parsed.mcpServers['token-savior-recall']).toBeDefined();
     }
   });
+
+  test('applySingleFile injects MCP config for opencode.jsonc in OpenCode format', async () => {
+    const { applySingleFile } = await import('../src/core/presets/file-copier');
+    const srcPath = join(TEST_DIR, 'src-opencode.jsonc');
+    const destPath = join(TEST_DIR, 'opencode.jsonc');
+    
+    const initialConfig = JSON.stringify({
+      model: 'opencode-go/qwen3.7-max',
+      mcp: {}
+    }, null, 2);
+    
+    await writeFile(srcPath, initialConfig, 'utf-8');
+    
+    const result = await applySingleFile(
+      srcPath,
+      destPath,
+      'overwrite',
+      true, // force
+      false, // dryRun
+      false, // isTemplate
+      null, // modelConfig
+      'en'
+    );
+    
+    expect(result.action).toBe('written');
+    const writtenContent = await readFile(destPath, 'utf-8');
+    const parsed = JSON.parse(writtenContent);
+    
+    expect(parsed.mcpServers).toBeUndefined(); // Should not use the Claude settings name
+    expect(parsed.mcp.servers).toBeUndefined(); // Should not use the nested servers name
+    
+    const tools = detectComplementaryTools();
+    if (tools.codeReviewGraph) {
+      expect(parsed.mcp['code-review-graph']).toBeDefined();
+      expect(parsed.mcp['code-review-graph'].type).toBe('local');
+      expect(parsed.mcp['code-review-graph'].enabled).toBe(true);
+      expect(Array.isArray(parsed.mcp['code-review-graph'].command)).toBe(true);
+      expect(parsed.mcp['code-review-graph'].command).toEqual(['code-review-graph', 'mcp']);
+    }
+    if (tools.tokenSavior) {
+      expect(parsed.mcp['token-savior-recall']).toBeDefined();
+      expect(parsed.mcp['token-savior-recall'].type).toBe('local');
+      expect(parsed.mcp['token-savior-recall'].enabled).toBe(true);
+      expect(Array.isArray(parsed.mcp['token-savior-recall'].command)).toBe(true);
+      expect(parsed.mcp['token-savior-recall'].environment).toBeDefined();
+      expect(parsed.mcp['token-savior-recall'].environment.TOKEN_SAVIOR_CLIENT).toBe('opencode');
+    }
+  });
 });

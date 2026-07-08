@@ -790,6 +790,40 @@ module, or identifying the impact radius of a change.
 
 ---
 
+### goal-planner
+
+**Role:** Transforms an objective string into a YAML task graph with
+dependencies. Pure function: objective → GoalGraph. No side effects.
+
+**Use when:** User runs `codeconductor goal "<objective>"` or the orchestrator
+needs a multi-step plan before delegation.
+
+**Permissions:**
+
+- read: `allow`
+- edit: `deny`
+- bash: `deny`
+- network: `deny`
+
+**Does not:** Write files. Execute commands. Make routing decisions.
+
+**Template matching:**
+
+The planner matches objective keywords against built-in templates (auth, crud,
+search, notification, migration) and falls back to a generic 4-task chain:
+`task-coach → architect → implementer → tester`.
+
+**Dependency order delegation (orchestrator):**
+
+When the orchestrator receives a GoalGraph, it delegates tasks in dependency
+order. A task is only routed after all its `depends_on` targets complete with
+status `done`. If a dependency is `blocked`, the dependent task remains `pending`.
+The orchestrator tracks the graph state in `.codeconductor/current-goal.yml`.
+
+**Model:** `{{MODEL_CODEX}}`
+
+---
+
 ## Hard Rules (all agents)
 
 These apply regardless of agent or task.

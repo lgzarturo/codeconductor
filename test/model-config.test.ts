@@ -242,7 +242,7 @@ describe('loadModelConfig', () => {
     for (const target of ['opencode', 'claude', 'codex', 'gemini', 'cursor'] as const) {
       const config = await loadModelConfig(target);
       const roleKeys = Object.keys(config.agents);
-      expect(roleKeys.length).toBe(8);
+      expect(roleKeys.length).toBe(9);
     }
   });
 
@@ -449,7 +449,7 @@ describe('Agent file templates (source presets)', () => {
     const codexCount = (content.match(/\{\{MODEL_CODEX\}\}/g) || []).length;
     expect(claudeCount).toBe(0);
     expect(opencodeCount).toBe(0);
-    expect(codexCount).toBe(8);
+    expect(codexCount).toBe(9);
   });
 
   test('opencode agent files still have valid frontmatter', async () => {

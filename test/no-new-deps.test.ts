@@ -81,3 +81,55 @@ describe('Phase 1 AC6 — Phase 1 source files use only node:* imports', () => {
     }
   });
 });
+
+describe('Phase 3 AC8 — goal source files use only stdlib or relative imports', () => {
+  /**
+   * Phase 3 introduced the goal-planner, goal-state, and goal.command modules.
+   * AC8 forbids new runtime dependencies. The only third-party packages
+   * allowed are `zod` and `yaml` (already in the baseline), so the new
+   * modules must restrict imports to node:*, relative paths, or those two
+   * packages.
+   */
+  const ALLOWED_EXTERNAL = new Set(['zod', 'yaml']);
+
+  async function checkImports(file: string): Promise<string[]> {
+    const src = await readFile(join(REPO_ROOT, file), 'utf-8');
+    return [...src.matchAll(/from\s+['"]([^'"]+)['"]/g)].map((m) => m[1]!);
+  }
+
+  test('goal-planner.ts imports are stdlib, relative, or in baseline set', async () => {
+    const specifiers = await checkImports('src/core/goal/goal-planner.ts');
+    for (const spec of specifiers) {
+      const ok =
+        spec.startsWith('node:') ||
+        spec.startsWith('./') ||
+        spec.startsWith('../') ||
+        ALLOWED_EXTERNAL.has(spec);
+      expect(ok).toBe(true);
+    }
+  });
+
+  test('goal-state.ts imports are stdlib, relative, or in baseline set', async () => {
+    const specifiers = await checkImports('src/core/goal/goal-state.ts');
+    for (const spec of specifiers) {
+      const ok =
+        spec.startsWith('node:') ||
+        spec.startsWith('./') ||
+        spec.startsWith('../') ||
+        ALLOWED_EXTERNAL.has(spec);
+      expect(ok).toBe(true);
+    }
+  });
+
+  test('goal.command.ts imports are stdlib, relative, or in baseline set', async () => {
+    const specifiers = await checkImports('src/commands/goal.command.ts');
+    for (const spec of specifiers) {
+      const ok =
+        spec.startsWith('node:') ||
+        spec.startsWith('./') ||
+        spec.startsWith('../') ||
+        ALLOWED_EXTERNAL.has(spec);
+      expect(ok).toBe(true);
+    }
+  });
+});

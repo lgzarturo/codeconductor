@@ -332,6 +332,30 @@ export const SentryWebhookSchema = z.object({
 
 export type SentryWebhookInput = z.infer<typeof SentryWebhookSchema>;
 
+// ─── Goal Graph Schemas ───────────────────────────────────────────────────────
+
+/**
+ * Goal task schema — a single task in a goal graph
+ */
+export const GoalTaskSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  type: z.enum(['feature', 'fix', 'refactor', 'test', 'docs']),
+  risk: z.enum(['low', 'medium', 'high']),
+  status: z.enum(['pending', 'in-progress', 'done', 'blocked']),
+  depends_on: z.array(z.string()).optional().default([]),
+  acceptance_criteria: z.array(z.string()),
+});
+
+/**
+ * Goal graph schema — a complete goal with task dependencies
+ */
+export const GoalGraphSchema = z.object({
+  objective: z.string(),
+  tasks: z.array(GoalTaskSchema),
+  created_at: z.string(),
+});
+
 // ─── Schema Type Exports ──────────────────────────────────────────────────────
 
 export type ContractTargetInput = z.infer<typeof ContractTargetSchema>;
@@ -341,6 +365,8 @@ export type CouncilFindingInput = z.infer<typeof CouncilFindingSchema>;
 export type CouncilVerdictInputData = z.infer<typeof CouncilVerdictInputSchema>;
 export type ConsensusConfigInput = z.infer<typeof ConsensusConfigSchema>;
 export type CouncilVerdictOutput = z.infer<typeof CouncilVerdictSchema>;
+export type GoalTaskInput = z.infer<typeof GoalTaskSchema>;
+export type GoalGraphInput = z.infer<typeof GoalGraphSchema>;
 
 // ─── Validate Helpers ─────────────────────────────────────────────────────────
 
@@ -384,5 +410,12 @@ export function validateClaudeAgentFile(data: unknown): z.infer<typeof ClaudeAge
  */
 export function validateOpenCodeAgentFile(data: unknown): z.infer<typeof OpenCodeAgentFileSchema> {
   return OpenCodeAgentFileSchema.parse(data);
+}
+
+/**
+ * Validate goal graph
+ */
+export function validateGoalGraph(data: unknown): z.infer<typeof GoalGraphSchema> {
+  return GoalGraphSchema.parse(data);
 }
 

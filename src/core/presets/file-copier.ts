@@ -211,6 +211,7 @@ export function renderTemplate(content: string, modelConfig: ModelConfig, filePa
     'reviewer',
     'docs',
     'repo-explorer',
+    'goal-planner',
   ];
   let result = templatedContent;
 
@@ -331,8 +332,25 @@ function injectMcpServers(jsonString: string, filePath: string): string {
     if (isClaudeSettings || isAgyMcpConfig) {
       obj.mcpServers = mergeDeep(obj.mcpServers || {}, mcpServers);
     } else if (isOpencodeJsonc) {
-      obj.mcp = obj.mcp || {};
-      obj.mcp.servers = mergeDeep(obj.mcp.servers || {}, mcpServers);
+      const opencodeMcp: Record<string, any> = {};
+      for (const [key, server] of Object.entries(mcpServers)) {
+        const commandArray = typeof server.command === 'string'
+          ? [server.command, ...(server.args || [])]
+          : server.command;
+
+        const formattedServer: Record<string, any> = {
+          type: 'local',
+          command: commandArray,
+          enabled: true,
+        };
+
+        if (server.env) {
+          formattedServer.environment = server.env;
+        }
+
+        opencodeMcp[key] = formattedServer;
+      }
+      obj.mcp = mergeDeep(obj.mcp || {}, opencodeMcp);
     }
 
     return JSON.stringify(obj, null, 2);

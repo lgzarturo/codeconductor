@@ -49,6 +49,7 @@ Task Card is the contract.
 **ID:** [project-YYYYMMDD-NNN] **Title:** [one line, verb + object] **Type:**
 feature | fix | refactor | review | docs | test **Risk:** low | medium | high
 **Status:** draft | ready | in-progress | review | done
+**depends_on:** [optional: list of task IDs this task depends on]
 
 **Scope:**
 
@@ -102,6 +103,12 @@ accurately describes the work. A bug fix that requires a new test is still
 
 **Status** — Tracks lifecycle. `draft` means it is not yet ready for routing.
 Only `ready` cards are accepted by `orchestrator`.
+
+**depends_on** — Optional. List of task IDs this task depends on. When present,
+the orchestrator delegates tasks in dependency order — a task is only routed
+after all its dependencies complete. Use this to model sequential chains
+(e.g., schema → API → implementation → tests) or parallel branches. If omitted,
+the task has no ordering constraints.
 
 **Scope / Files** — Explicit list. Not "the auth module" — list the actual files
 or packages. If you cannot list them, `repo-explorer` runs first.

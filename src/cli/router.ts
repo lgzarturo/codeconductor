@@ -10,6 +10,7 @@ import {
 } from '../commands/install.command';
 import { installLspCommand, type InstallLspOptions } from '../commands/install-lsp.command';
 import { debtHarvestCommand, type DebtHarvestOptions } from '../commands/debt-harvest.command';
+import { goalCommand, type GoalOptions } from '../commands/goal.command';
 import { helpCommand, type HelpOptions } from '../commands/help.command';
 import { seoAuditCommand } from '../commands/seo-audit.command';
 import { seoLlmsCommand } from '../commands/seo-llms.command';
@@ -138,6 +139,7 @@ Commands:
   update                 Update installed presets
   help / cc-help         Show preset inventory (skills, subagents, commands)
   debt-harvest / harvest Scan source files for deferred debt items
+  goal / cc-goal        Plan goal into task graph with dependencies
 
 Options:
   --help, -h             Show this help message
@@ -282,6 +284,14 @@ export async function routeCommand(
         dir: options.dir as string | undefined,
         output: flags.output,
       } as DebtHarvestOptions);
+
+    case 'goal':
+    case 'cc-goal':
+      return goalCommand({
+        objective: subcommand || (options.objective as string) || '',
+        projectRoot,
+        output: flags.output,
+      } as GoalOptions);
 
     case 'seo': {
       if (subcommand === 'audit') {

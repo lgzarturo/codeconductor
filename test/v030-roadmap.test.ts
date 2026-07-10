@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, test } from 'bun:test';
+import { beforeAll, afterAll, beforeEach, describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { calculateConfidence, detectProject } from '../src/core/detection/project-detector';
@@ -9,35 +10,52 @@ import { resolvePreset } from '../src/core/presets/preset-resolver';
 import { validatePromptChangelog } from '../src/core/prompts/changelog-discipline';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
-const CLI_CMD = ['bun', 'run', 'src/cli/main.ts'];
+const CLI_CMD = [process.execPath, 'run', join(PROJECT_ROOT, 'src/cli/main.ts')];
+let TEST_DIR: string;
 
 async function runCli(
   args: string[]
 ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
   const { spawn } = await import('bun');
-  const process = spawn({
+  const child = spawn({
     cmd: [...CLI_CMD, ...args],
-    cwd: PROJECT_ROOT,
+    cwd: TEST_DIR,
     stdout: 'pipe',
     stderr: 'pipe',
   });
   const [stdout, stderr] = await Promise.all([
-    new Response(process.stdout).text(),
-    new Response(process.stderr).text(),
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
   ]);
-  const exitCode = await process.exited;
+  const exitCode = await child.exited;
   return { exitCode, stdout, stderr };
 }
 
 async function cleanup() {
   for (const dir of ['.opencode', '.claude', '.codex', '.codeconductor']) {
     try {
-      await rm(join(PROJECT_ROOT, dir), { recursive: true, force: true });
+      await rm(join(TEST_DIR, dir), { recursive: true, force: true });
     } catch {}
   }
 }
 
 describe('v0.3.0 roadmap completion', () => {
+  beforeAll(async () => {
+    TEST_DIR = await mkdtemp(join(tmpdir(), 'cc-roadmap-test-'));
+    await writeFile(join(TEST_DIR, 'package.json'), await readFile(join(PROJECT_ROOT, 'package.json')));
+    try {
+      await writeFile(join(TEST_DIR, 'bun.lockb'), await readFile(join(PROJECT_ROOT, 'bun.lockb')));
+    } catch {
+      // bun.lockb is optional
+    }
+  });
+
+  afterAll(async () => {
+    if (TEST_DIR) {
+      await rm(TEST_DIR, { recursive: true, force: true });
+    }
+  });
+
   beforeEach(async () => {
     await cleanup();
   });
@@ -178,7 +196,7 @@ describe('v0.3.0 roadmap completion', () => {
     expect(json.presetResolution.target).toBe('opencode');
     expect(json.presetResolution.presetVersion).toBe('v0.3.0');
     expect(json.presetResolution.confidence).toBeDefined();
-    expect(existsSync(join(PROJECT_ROOT, '.codeconductor', 'config.yml'))).toBe(false);
+    expect(existsSync(join(TEST_DIR, '.codeconductor', 'config.yml'))).toBe(false);
   });
 
   test('install preset --dry-run exposes preset resolution in json', async () => {
@@ -221,16 +239,16 @@ describe('v0.3.0 roadmap completion', () => {
     const result = await runCli(['install', 'preset', '--target=all', '--force']);
     expect(result.exitCode).toBe(0);
 
-    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'cc-api-contract.md'))).toBe(
+    expect(existsSync(join(TEST_DIR, '.opencode', 'commands', 'cc-api-contract.md'))).toBe(
       true
     );
-    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'cc-db-migration.md'))).toBe(
+    expect(existsSync(join(TEST_DIR, '.opencode', 'commands', 'cc-db-migration.md'))).toBe(
       true
     );
-    expect(existsSync(join(PROJECT_ROOT, '.claude', 'commands', 'cc', 'api-contract.md'))).toBe(
+    expect(existsSync(join(TEST_DIR, '.claude', 'commands', 'cc', 'api-contract.md'))).toBe(
       true
     );
-    expect(existsSync(join(PROJECT_ROOT, '.claude', 'commands', 'cc', 'db-migration.md'))).toBe(
+    expect(existsSync(join(TEST_DIR, '.claude', 'commands', 'cc', 'db-migration.md'))).toBe(
       true
     );
   });
@@ -238,9 +256,9 @@ describe('v0.3.0 roadmap completion', () => {
   test('merge-managed manifest updates only managed Codex AGENTS block', async () => {
     await runCli(['init', '--force']);
 
-    await mkdir(join(PROJECT_ROOT, '.codex'), { recursive: true });
+    await mkdir(join(TEST_DIR, '.codex'), { recursive: true });
     await writeFile(
-      join(PROJECT_ROOT, '.codex', 'AGENTS.md'),
+      join(TEST_DIR, '.codex', 'AGENTS.md'),
       [
         '# Local heading',
         '',
@@ -255,7 +273,7 @@ describe('v0.3.0 roadmap completion', () => {
     const result = await runCli(['install', 'preset', '--target=codex']);
     expect(result.exitCode).toBe(0);
 
-    const content = await readFile(join(PROJECT_ROOT, '.codex', 'AGENTS.md'), 'utf-8');
+    const content = await readFile(join(TEST_DIR, '.codex', 'AGENTS.md'), 'utf-8');
     expect(content).toContain('# Local heading');
     expect(content).toContain('Local footer {{MODEL_CODEX}}');
     expect(content).toContain('Workflow Contract');

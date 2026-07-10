@@ -9,17 +9,19 @@
  *   - cycles in the dependency graph
  *   - malformed YAML and schema-violating data
  */
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { loadGoal, writeGoal } from '../src/core/goal/goal-state';
 import { planGoal } from '../src/core/goal/goal-planner';
 import { GoalGraphSchema, type GoalGraphInput } from '../src/validation/schemas';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
-const GOAL_DIR = join(PROJECT_ROOT, '.codeconductor');
-const GOAL_FILE = join(GOAL_DIR, 'current-goal.yml');
+let TEST_DIR: string;
+let GOAL_DIR: string;
+let GOAL_FILE: string;
 
 async function cleanup() {
   try {
@@ -28,6 +30,18 @@ async function cleanup() {
 }
 
 describe('goal-state: writeGoal / loadGoal', () => {
+  beforeAll(async () => {
+    TEST_DIR = await mkdtemp(join(tmpdir(), 'cc-goal-state-test-'));
+    GOAL_DIR = join(TEST_DIR, '.codeconductor');
+    GOAL_FILE = join(GOAL_DIR, 'current-goal.yml');
+  });
+
+  afterAll(async () => {
+    if (TEST_DIR) {
+      await rm(TEST_DIR, { recursive: true, force: true });
+    }
+  });
+
   beforeEach(async () => {
     await cleanup();
   });
@@ -38,7 +52,7 @@ describe('goal-state: writeGoal / loadGoal', () => {
 
   test('writeGoal creates .codeconductor directory and current-goal.yml', async () => {
     const graph = planGoal('Create a login system');
-    const result = await writeGoal(PROJECT_ROOT, graph);
+    const result = await writeGoal(TEST_DIR, graph);
     expect(result.success).toBe(true);
     expect(existsSync(GOAL_DIR)).toBe(true);
     expect(existsSync(GOAL_FILE)).toBe(true);
@@ -46,10 +60,10 @@ describe('goal-state: writeGoal / loadGoal', () => {
 
   test('writeGoal + loadGoal round-trip preserves all fields', async () => {
     const graph = planGoal('Build a CRUD API for products');
-    const writeResult = await writeGoal(PROJECT_ROOT, graph);
+    const writeResult = await writeGoal(TEST_DIR, graph);
     expect(writeResult.success).toBe(true);
 
-    const loadResult = await loadGoal(PROJECT_ROOT);
+    const loadResult = await loadGoal(TEST_DIR);
     expect(loadResult.success).toBe(true);
     if (!loadResult.success) return;
 
@@ -71,9 +85,9 @@ describe('goal-state: writeGoal / loadGoal', () => {
 
   test('loaded graph passes Zod schema validation', async () => {
     const graph = planGoal('Create a login system');
-    await writeGoal(PROJECT_ROOT, graph);
+    await writeGoal(TEST_DIR, graph);
 
-    const loadResult = await loadGoal(PROJECT_ROOT);
+    const loadResult = await loadGoal(TEST_DIR);
     expect(loadResult.success).toBe(true);
     if (!loadResult.success) return;
 
@@ -83,7 +97,7 @@ describe('goal-state: writeGoal / loadGoal', () => {
   });
 
   test('loadGoal returns error when file does not exist', async () => {
-    const loadResult = await loadGoal(PROJECT_ROOT);
+    const loadResult = await loadGoal(TEST_DIR);
     expect(loadResult.success).toBe(false);
     if (loadResult.success) return;
     expect(loadResult.error).toBeInstanceOf(Error);
@@ -93,7 +107,7 @@ describe('goal-state: writeGoal / loadGoal', () => {
     await mkdir(GOAL_DIR, { recursive: true });
     await writeFile(GOAL_FILE, '::: not valid yaml :::\n  - [\n', 'utf-8');
 
-    const loadResult = await loadGoal(PROJECT_ROOT);
+    const loadResult = await loadGoal(TEST_DIR);
     expect(loadResult.success).toBe(false);
   });
 
@@ -111,7 +125,7 @@ tasks:
 `;
     await writeFile(GOAL_FILE, broken, 'utf-8');
 
-    const loadResult = await loadGoal(PROJECT_ROOT);
+    const loadResult = await loadGoal(TEST_DIR);
     expect(loadResult.success).toBe(false);
   });
 
@@ -131,7 +145,7 @@ tasks:
 `;
     await writeFile(GOAL_FILE, broken, 'utf-8');
 
-    const loadResult = await loadGoal(PROJECT_ROOT);
+    const loadResult = await loadGoal(TEST_DIR);
     expect(loadResult.success).toBe(false);
   });
 });
@@ -162,7 +176,7 @@ describe('goal-state: validation rejects malformed graphs', () => {
       return tasks;
     });
 
-    const result = await writeGoal(PROJECT_ROOT, graph);
+    const result = await writeGoal(TEST_DIR, graph);
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.error.message).toMatch(/[Dd]uplicate/);
@@ -174,7 +188,7 @@ describe('goal-state: validation rejects malformed graphs', () => {
       return tasks;
     });
 
-    const result = await writeGoal(PROJECT_ROOT, graph);
+    const result = await writeGoal(TEST_DIR, graph);
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.error.message).toMatch(/unknown task/i);
@@ -189,7 +203,7 @@ describe('goal-state: validation rejects malformed graphs', () => {
       return tasks;
     });
 
-    const result = await writeGoal(PROJECT_ROOT, graph);
+    const result = await writeGoal(TEST_DIR, graph);
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.error.message).toMatch(/[Cc]ycle/);
@@ -202,7 +216,7 @@ describe('goal-state: validation rejects malformed graphs', () => {
       return tasks;
     });
 
-    const result = await writeGoal(PROJECT_ROOT, graph);
+    const result = await writeGoal(TEST_DIR, graph);
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.error.message).toMatch(/[Cc]ycle/);
@@ -214,7 +228,7 @@ describe('goal-state: validation rejects malformed graphs', () => {
       return tasks;
     });
 
-    await writeGoal(PROJECT_ROOT, graph);
+    await writeGoal(TEST_DIR, graph);
     expect(existsSync(GOAL_FILE)).toBe(false);
   });
 });
@@ -230,7 +244,7 @@ describe('goal-state: YAML structure', () => {
 
   test('YAML file contains objective, tasks, and created_at top-level keys', async () => {
     const graph = planGoal('Implement full-text search');
-    await writeGoal(PROJECT_ROOT, graph);
+    await writeGoal(TEST_DIR, graph);
 
     const content = await readFile(GOAL_FILE, 'utf-8');
     expect(content).toMatch(/^objective:/m);
@@ -241,7 +255,7 @@ describe('goal-state: YAML structure', () => {
   test('YAML re-parses to the same objective', async () => {
     const objective = 'Add email notification system';
     const graph = planGoal(objective);
-    await writeGoal(PROJECT_ROOT, graph);
+    await writeGoal(TEST_DIR, graph);
 
     const content = await readFile(GOAL_FILE, 'utf-8');
     const { parse } = await import('yaml');

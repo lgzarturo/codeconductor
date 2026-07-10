@@ -336,6 +336,28 @@ export const SentryWebhookSchema = z.object({
 
 export type SentryWebhookInput = z.infer<typeof SentryWebhookSchema>;
 
+// ─── Memory Index Schemas ─────────────────────────────────────────────────────
+
+/**
+ * Memory pointer schema — a lightweight reference to an Engram observation
+ */
+export const MemoryPointerSchema = z.object({
+  topic_key: z.string().min(1).max(128),
+  id: z.number().int().positive(),
+  file: z.string().min(1),
+  summary: z.string().min(1).max(200),
+  timestamp: z.string().datetime(),
+  tags: z.array(z.string().max(64)).max(10).optional().default([]),
+});
+
+/**
+ * Memory index schema — the persistent pointer layer of the 3-layer memory arch
+ */
+export const MemoryIndexSchema = z.object({
+  version: z.literal(1),
+  pointers: z.array(MemoryPointerSchema),
+});
+
 // ─── Goal Graph Schemas ───────────────────────────────────────────────────────
 
 /**
@@ -373,6 +395,8 @@ export type ConsensusConfigInput = z.infer<typeof ConsensusConfigSchema>;
 export type CouncilVerdictOutput = z.infer<typeof CouncilVerdictSchema>;
 export type GoalTaskInput = z.infer<typeof GoalTaskSchema>;
 export type GoalGraphInput = z.infer<typeof GoalGraphSchema>;
+export type MemoryPointerInput = z.infer<typeof MemoryPointerSchema>;
+export type MemoryIndexInput = z.infer<typeof MemoryIndexSchema>;
 
 // ─── Validate Helpers ─────────────────────────────────────────────────────────
 
@@ -423,5 +447,19 @@ export function validateOpenCodeAgentFile(data: unknown): z.infer<typeof OpenCod
  */
 export function validateGoalGraph(data: unknown): z.infer<typeof GoalGraphSchema> {
   return GoalGraphSchema.parse(data);
+}
+
+/**
+ * Validate memory pointer
+ */
+export function validateMemoryPointer(data: unknown): z.infer<typeof MemoryPointerSchema> {
+  return MemoryPointerSchema.parse(data);
+}
+
+/**
+ * Validate memory index
+ */
+export function validateMemoryIndex(data: unknown): z.infer<typeof MemoryIndexSchema> {
+  return MemoryIndexSchema.parse(data);
 }
 

@@ -2,13 +2,15 @@
  * Integration tests for install lsp command.
  * Tests the full pipeline from CLI to file generation.
  */
-import { beforeAll, beforeEach, describe, expect, test } from 'bun:test';
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
-const CLI_CMD = ['bun', 'run', 'src/cli/main.ts'];
+const CLI_CMD = [process.execPath, 'run', join(PROJECT_ROOT, 'src/cli/main.ts')];
+let CLI_ROOT: string;
 
 async function runCli(
   args: string[]
@@ -17,7 +19,7 @@ async function runCli(
 
   const process = spawn({
     cmd: [...CLI_CMD, ...args],
-    cwd: PROJECT_ROOT,
+    cwd: CLI_ROOT,
     stdout: 'pipe',
     stderr: 'pipe',
   });
@@ -35,14 +37,21 @@ async function cleanup() {
   const dirs = ['.opencode', '.claude', '.codex', '.gemini', '.cursor', '.agy', '.codeconductor'];
   for (const dir of dirs) {
     try {
-      await rm(join(PROJECT_ROOT, dir), { recursive: true, force: true });
+      await rm(join(CLI_ROOT, dir), { recursive: true, force: true });
     } catch {}
   }
 }
 
 describe('install lsp command', () => {
   beforeAll(async () => {
-    await cleanup();
+    CLI_ROOT = await mkdtemp(join(tmpdir(), 'cc-lsp-test-'));
+    await writeFile(join(CLI_ROOT, 'package.json'), await readFile(join(PROJECT_ROOT, 'package.json')));
+  });
+
+  afterAll(async () => {
+    if (CLI_ROOT) {
+      await rm(CLI_ROOT, { recursive: true, force: true });
+    }
   });
 
   beforeEach(async () => {
@@ -56,7 +65,7 @@ describe('install lsp command', () => {
       expect(result.exitCode).toBe(0);
 
       // In dry-run, no files should be created
-      expect(existsSync(join(PROJECT_ROOT, '.opencode', 'opencode.json'))).toBe(false);
+      expect(existsSync(join(CLI_ROOT, '.opencode', 'opencode.json'))).toBe(false);
     });
 
     test('install lsp --target opencode --force can create config file', async () => {
@@ -164,11 +173,11 @@ describe('install lsp command', () => {
     test('--dry-run does not create any files', async () => {
       await runCli(['install', 'lsp', '--target=opencode', '--force', '--dry-run']);
 
-      expect(existsSync(join(PROJECT_ROOT, '.opencode'))).toBe(false);
-      expect(existsSync(join(PROJECT_ROOT, '.claude'))).toBe(false);
-      expect(existsSync(join(PROJECT_ROOT, '.codex'))).toBe(false);
-      expect(existsSync(join(PROJECT_ROOT, '.gemini'))).toBe(false);
-      expect(existsSync(join(PROJECT_ROOT, '.cursor'))).toBe(false);
+      expect(existsSync(join(CLI_ROOT, '.opencode'))).toBe(false);
+      expect(existsSync(join(CLI_ROOT, '.claude'))).toBe(false);
+      expect(existsSync(join(CLI_ROOT, '.codex'))).toBe(false);
+      expect(existsSync(join(CLI_ROOT, '.gemini'))).toBe(false);
+      expect(existsSync(join(CLI_ROOT, '.cursor'))).toBe(false);
     });
 
     test('--dry-run output shows LSPs that would be processed', async () => {
@@ -194,8 +203,8 @@ describe('install lsp command', () => {
   describe('--force flag', () => {
     test('--force allows overwriting existing config', async () => {
       // First, create a config file
-      await mkdir(join(PROJECT_ROOT, '.opencode'), { recursive: true });
-      await writeFile(join(PROJECT_ROOT, '.opencode', 'opencode.json'), '{"old": "config"}');
+      await mkdir(join(CLI_ROOT, '.opencode'), { recursive: true });
+      await writeFile(join(CLI_ROOT, '.opencode', 'opencode.json'), '{"old": "config"}');
 
       // Run with --force
       const result = await runCli(['install', 'lsp', '--target=opencode', '--lang=typescript', '--force']);
@@ -218,7 +227,7 @@ describe('install lsp command', () => {
       expect(result.exitCode).toBe(0);
 
       // Should not create .opencode in project directory
-      expect(existsSync(join(PROJECT_ROOT, '.opencode'))).toBe(false);
+      expect(existsSync(join(CLI_ROOT, '.opencode'))).toBe(false);
     });
 
     test('--global --dry-run shows global paths in output', async () => {
@@ -323,7 +332,7 @@ describe('install lsp command', () => {
       await runCli(['init', '--force']);
       const result = await runCli(['install', 'council', '--target=opencode', '--force']);
       expect(result.exitCode).toBe(0);
-      expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(true);
+      expect(existsSync(join(CLI_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(true);
     });
 
     test('install council --target=claude still works', async () => {
@@ -390,10 +399,9 @@ describe('install lsp command', () => {
       expect(result.stdout).toMatch(/\d+ config files/);
     });
   });
-});
 
-// Acceptance Criterion 3: Supports 4 languages
-describe('Four Languages Support', () => {
+  // Acceptance Criterion 3: Supports 4 languages
+  describe('Four Languages Support', () => {
   test('typescript LSP is available', async () => {
     const result = await runCli(['install', 'lsp', '--target=opencode', '--lang=typescript', '--dry-run']);
     expect(result.exitCode).toBe(0);
@@ -431,5 +439,6 @@ describe('Four Languages Support', () => {
     expect(result.stdout).toContain('php');
     expect(result.stdout).toContain('python');
     expect(result.stdout).toContain('kotlin');
+  });
   });
 });

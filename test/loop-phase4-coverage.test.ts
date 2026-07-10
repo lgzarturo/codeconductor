@@ -14,9 +14,10 @@
  *   - runLoop: shorter maxIterations, all-success path, stuck-loop
  *     recommendedAction, max-iterations recommendedAction
  */
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { runLoop, type EscalationReport } from '../src/core/loop/loop-controller';
 import { writeEscalationReport } from '../src/core/loop/escalation-emitter';
@@ -25,7 +26,8 @@ import { planGoal } from '../src/core/goal/goal-planner';
 import type { CompileResult } from '../src/core/compilation/compile-checker';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
-const GOAL_DIR = join(PROJECT_ROOT, '.codeconductor');
+let TEST_DIR: string;
+let GOAL_DIR: string;
 const ROUTING_POLICY = join(PROJECT_ROOT, 'docs', 'routing-policy.md');
 const AGENTS_MD = join(PROJECT_ROOT, 'AGENTS.md');
 
@@ -66,6 +68,17 @@ function varyingFailingCompile(iteration: number): CompileResult {
 // ─── markTaskBlocked: edge cases ─────────────────────────────────────────────
 
 describe('Phase 4 coverage: markTaskBlocked edge cases', () => {
+  beforeAll(async () => {
+    TEST_DIR = await mkdtemp(join(tmpdir(), 'cc-loop-coverage-test-'));
+    GOAL_DIR = join(TEST_DIR, '.codeconductor');
+  });
+
+  afterAll(async () => {
+    if (TEST_DIR) {
+      await rm(TEST_DIR, { recursive: true, force: true });
+    }
+  });
+
   beforeEach(async () => {
     await cleanup();
   });
@@ -77,25 +90,25 @@ describe('Phase 4 coverage: markTaskBlocked edge cases', () => {
   test('marking a task already blocked is idempotent (status stays blocked)', async () => {
     // Setup: write a goal graph
     const graph = planGoal('Build a user authentication API');
-    await writeGoal(PROJECT_ROOT, graph);
+    await writeGoal(TEST_DIR, graph);
     const taskId = graph.tasks[0]!.id;
 
     // First block: pending → blocked
-    const first = await markTaskBlocked(PROJECT_ROOT, taskId, 'first reason');
+    const first = await markTaskBlocked(TEST_DIR, taskId, 'first reason');
     expect(first.success).toBe(true);
 
     // Reload and confirm blocked
-    const load1 = await loadGoal(PROJECT_ROOT);
+    const load1 = await loadGoal(TEST_DIR);
     if (!load1.success) throw new Error('expected load success');
     const task1 = load1.data.tasks.find((t) => t.id === taskId);
     expect(task1!.status).toBe('blocked');
 
     // Second block: blocked → blocked (no error, no status change)
-    const second = await markTaskBlocked(PROJECT_ROOT, taskId, 'second reason');
+    const second = await markTaskBlocked(TEST_DIR, taskId, 'second reason');
     expect(second.success).toBe(true);
 
     // Reload and confirm still blocked
-    const load2 = await loadGoal(PROJECT_ROOT);
+    const load2 = await loadGoal(TEST_DIR);
     if (!load2.success) throw new Error('expected load success');
     const task2 = load2.data.tasks.find((t) => t.id === taskId);
     expect(task2!.status).toBe('blocked');
@@ -103,7 +116,7 @@ describe('Phase 4 coverage: markTaskBlocked edge cases', () => {
 
   test('markTaskBlocked returns error when no goal file exists', async () => {
     // No writeGoal call — the .codeconductor/current-goal.yml file does not exist.
-    const result = await markTaskBlocked(PROJECT_ROOT, 'any-task', 'reason');
+    const result = await markTaskBlocked(TEST_DIR, 'any-task', 'reason');
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.error).toBeInstanceOf(Error);
@@ -113,15 +126,15 @@ describe('Phase 4 coverage: markTaskBlocked edge cases', () => {
 
   test('marking one task as blocked leaves dependent tasks unaffected', async () => {
     const graph = planGoal('Build a CRUD API for products');
-    await writeGoal(PROJECT_ROOT, graph);
+    await writeGoal(TEST_DIR, graph);
 
     // Block the first task in the chain
     const firstTaskId = graph.tasks[0]!.id;
-    const blockResult = await markTaskBlocked(PROJECT_ROOT, firstTaskId, 'stuck');
+    const blockResult = await markTaskBlocked(TEST_DIR, firstTaskId, 'stuck');
     expect(blockResult.success).toBe(true);
 
     // Reload and check statuses
-    const load = await loadGoal(PROJECT_ROOT);
+    const load = await loadGoal(TEST_DIR);
     if (!load.success) throw new Error('expected load success');
 
     const statuses = load.data.tasks.map((t) => t.status);
@@ -158,7 +171,7 @@ describe('Phase 4 coverage: writeEscalationReport', () => {
       recommendedAction: 'rec',
     };
 
-    await writeEscalationReport(PROJECT_ROOT, 'task-shape', report);
+    await writeEscalationReport(TEST_DIR, 'task-shape', report);
 
     const content = await readFile(join(GOAL_DIR, 'escalated-task-shape.json'), 'utf-8');
     const parsed = JSON.parse(content) as Record<string, unknown>;
@@ -182,7 +195,7 @@ describe('Phase 4 coverage: writeEscalationReport', () => {
       recommendedAction: 'rec',
     };
 
-    await writeEscalationReport(PROJECT_ROOT, 't-indent', report);
+    await writeEscalationReport(TEST_DIR, 't-indent', report);
 
     const content = await readFile(join(GOAL_DIR, 'escalated-t-indent.json'), 'utf-8');
     // Pretty-print signature: top-level key must be followed by newline + 2 spaces.
@@ -200,7 +213,7 @@ describe('Phase 4 coverage: writeEscalationReport', () => {
       recommendedAction: 'use `npm` && `tsc`',
     };
 
-    await writeEscalationReport(PROJECT_ROOT, 't-escape', report);
+    await writeEscalationReport(TEST_DIR, 't-escape', report);
 
     const filePath = join(GOAL_DIR, 'escalated-t-escape.json');
     const content = await readFile(filePath, 'utf-8');
@@ -236,7 +249,7 @@ describe('Phase 4 coverage: writeEscalationReport', () => {
       recommendedAction: 'rec',
     };
 
-    await writeEscalationReport(PROJECT_ROOT, 't-nested', report);
+    await writeEscalationReport(TEST_DIR, 't-nested', report);
     const content = await readFile(join(GOAL_DIR, 'escalated-t-nested.json'), 'utf-8');
     const parsed = JSON.parse(content) as EscalationReport;
 
@@ -261,7 +274,7 @@ describe('Phase 4 coverage: writeEscalationReport', () => {
     };
 
     await expect(
-      writeEscalationReport(PROJECT_ROOT, 't-no-dir', report),
+      writeEscalationReport(TEST_DIR, 't-no-dir', report),
     ).rejects.toThrow();
   });
 
@@ -276,7 +289,7 @@ describe('Phase 4 coverage: writeEscalationReport', () => {
       recommendedAction: 'rec',
     };
 
-    await writeEscalationReport(PROJECT_ROOT, 'my-task-123', report);
+    await writeEscalationReport(TEST_DIR, 'my-task-123', report);
 
     // File exists at the documented path
     expect(existsSync(join(GOAL_DIR, 'escalated-my-task-123.json'))).toBe(true);

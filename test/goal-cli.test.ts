@@ -5,40 +5,55 @@
  * write → load. Confirms both `goal` and `cc-goal` work as aliases for the
  * same handler, JSON output goes to stdout, and error cases exit non-zero.
  */
-import { beforeEach, describe, expect, test } from 'bun:test';
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
-import { readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
-const GOAL_FILE = join(PROJECT_ROOT, '.codeconductor', 'current-goal.yml');
-const CLI_CMD = ['bun', 'run', 'src/cli/main.ts'];
+let TEST_DIR: string;
+let GOAL_FILE: string;
+const CLI_CMD = [process.execPath, 'run', join(PROJECT_ROOT, 'src/cli/main.ts')];
 
 async function runCli(
   args: string[],
 ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
   const { spawn } = await import('bun');
-  const process = spawn({
+  const child = spawn({
     cmd: [...CLI_CMD, ...args],
-    cwd: PROJECT_ROOT,
+    cwd: TEST_DIR,
     stdout: 'pipe',
     stderr: 'pipe',
   });
   const [stdout, stderr] = await Promise.all([
-    new Response(process.stdout).text(),
-    new Response(process.stderr).text(),
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
   ]);
-  const exitCode = await process.exited;
+  const exitCode = await child.exited;
   return { exitCode, stdout, stderr };
 }
 
 async function cleanup() {
   try {
-    await rm(join(PROJECT_ROOT, '.codeconductor'), { recursive: true, force: true });
+    // Only remove the goal file we create; preserve project configuration.
+    await rm(GOAL_FILE, { force: true });
   } catch {}
 }
 
 describe('CLI: goal command (end-to-end)', () => {
+  beforeAll(async () => {
+    TEST_DIR = await mkdtemp(join(tmpdir(), 'cc-goal-cli-test-'));
+    GOAL_FILE = join(TEST_DIR, '.codeconductor', 'current-goal.yml');
+    await writeFile(join(TEST_DIR, 'package.json'), await readFile(join(PROJECT_ROOT, 'package.json')));
+  });
+
+  afterAll(async () => {
+    if (TEST_DIR) {
+      await rm(TEST_DIR, { recursive: true, force: true });
+    }
+  });
+
   beforeEach(async () => {
     await cleanup();
   });

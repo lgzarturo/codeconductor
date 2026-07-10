@@ -6,9 +6,10 @@
  * 2. markTaskBlocked() is called → status === 'blocked'
  * 3. Escalation report file is written to disk
  */
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { runLoop, type EscalationReport } from '../src/core/loop/loop-controller';
 import { writeEscalationReport } from '../src/core/loop/escalation-emitter';
@@ -18,7 +19,8 @@ import type { CompileResult } from '../src/core/compilation/compile-checker';
 import type { GoalGraphInput } from '../src/validation/schemas';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
-const GOAL_DIR = join(PROJECT_ROOT, '.codeconductor');
+let TEST_DIR: string;
+let GOAL_DIR: string;
 
 async function cleanup() {
   try {
@@ -58,6 +60,17 @@ function makeFailingCompileCheck(
 }
 
 describe('Phase 4: loop halts at 3rd failed iteration', () => {
+  beforeAll(async () => {
+    TEST_DIR = await mkdtemp(join(tmpdir(), 'cc-loop-integration-test-'));
+    GOAL_DIR = join(TEST_DIR, '.codeconductor');
+  });
+
+  afterAll(async () => {
+    if (TEST_DIR) {
+      await rm(TEST_DIR, { recursive: true, force: true });
+    }
+  });
+
   beforeEach(async () => {
     await cleanup();
   });
@@ -99,17 +112,17 @@ describe('Phase 4: loop halts at 3rd failed iteration', () => {
   test('markTaskBlocked sets task status to blocked', async () => {
     // Set up a goal graph
     const graph = planGoal('Build a user authentication API');
-    const writeResult = await writeGoal(PROJECT_ROOT, graph);
+    const writeResult = await writeGoal(TEST_DIR, graph);
     expect(writeResult.success).toBe(true);
 
     const firstTaskId = graph.tasks[0]!.id;
 
     // Mark it blocked
-    const blockResult = await markTaskBlocked(PROJECT_ROOT, firstTaskId, '3 failed iterations');
+    const blockResult = await markTaskBlocked(TEST_DIR, firstTaskId, '3 failed iterations');
     expect(blockResult.success).toBe(true);
 
     // Reload and verify
-    const loadResult = await loadGoal(PROJECT_ROOT);
+    const loadResult = await loadGoal(TEST_DIR);
     expect(loadResult.success).toBe(true);
     if (!loadResult.success) return;
 
@@ -125,9 +138,9 @@ describe('Phase 4: loop halts at 3rd failed iteration', () => {
 
   test('markTaskBlocked returns error for unknown task ID', async () => {
     const graph = planGoal('Build a user authentication API');
-    await writeGoal(PROJECT_ROOT, graph);
+    await writeGoal(TEST_DIR, graph);
 
-    const result = await markTaskBlocked(PROJECT_ROOT, 'nonexistent-task', 'reason');
+    const result = await markTaskBlocked(TEST_DIR, 'nonexistent-task', 'reason');
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.error.message).toContain('nonexistent-task');
@@ -154,7 +167,7 @@ describe('Phase 4: loop halts at 3rd failed iteration', () => {
       recommendedAction: 'Manual intervention required.',
     };
 
-    await writeEscalationReport(PROJECT_ROOT, 'task-abc', report);
+    await writeEscalationReport(TEST_DIR, 'task-abc', report);
 
     const filePath = join(GOAL_DIR, 'escalated-task-abc.json');
     expect(existsSync(filePath)).toBe(true);
@@ -170,7 +183,7 @@ describe('Phase 4: loop halts at 3rd failed iteration', () => {
   test('full pipeline: loop escalation → markBlocked → report on disk', async () => {
     // 1. Set up goal graph
     const graph = planGoal('Build payment processing module');
-    await writeGoal(PROJECT_ROOT, graph);
+    await writeGoal(TEST_DIR, graph);
     const taskId = graph.tasks[0]!.id;
 
     // 2. Run the loop — implementer always fails with varying errors
@@ -186,16 +199,16 @@ describe('Phase 4: loop halts at 3rd failed iteration', () => {
     expect(loopResult.escalationReport).toBeDefined();
 
     // 3. Write escalation report to disk
-    await writeEscalationReport(PROJECT_ROOT, taskId, loopResult.escalationReport!);
+    await writeEscalationReport(TEST_DIR, taskId, loopResult.escalationReport!);
     const reportPath = join(GOAL_DIR, `escalated-${taskId}.json`);
     expect(existsSync(reportPath)).toBe(true);
 
     // 4. Mark task blocked
-    const blockResult = await markTaskBlocked(PROJECT_ROOT, taskId, '3 failed iterations');
+    const blockResult = await markTaskBlocked(TEST_DIR, taskId, '3 failed iterations');
     expect(blockResult.success).toBe(true);
 
     // 5. Verify final state
-    const loadResult = await loadGoal(PROJECT_ROOT);
+    const loadResult = await loadGoal(TEST_DIR);
     expect(loadResult.success).toBe(true);
     if (!loadResult.success) return;
 

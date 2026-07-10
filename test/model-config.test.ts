@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -9,8 +9,9 @@ import { loadManifest, loadModelConfig } from '../src/core/presets/manifest-load
 import { ModelConfigSchema } from '../src/validation/schemas';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
-const CLI_CMD = ['bun', 'run', 'src/cli/main.ts'];
+const CLI_CMD = ['bun', 'run', join(PROJECT_ROOT, 'src/cli/main.ts')];
 const PRESETS_DIR = resolve(PROJECT_ROOT, 'presets');
+let TEST_DIR: string;
 
 async function runCli(
   args: string[]
@@ -18,7 +19,7 @@ async function runCli(
   const { spawn } = await import('bun');
   const process = spawn({
     cmd: [...CLI_CMD, ...args],
-    cwd: PROJECT_ROOT,
+    cwd: TEST_DIR,
     stdout: 'pipe',
     stderr: 'pipe',
   });
@@ -31,9 +32,9 @@ async function runCli(
 }
 
 async function cleanup() {
-  for (const dir of ['.opencode', '.claude', '.codex', '.gemini', '.cursor', '.codeconductor']) {
+  for (const dir of ['.opencode', '.claude', '.codex', '.gemini', '.cursor', '.codeconductor', '.agents']) {
     try {
-      await rm(join(PROJECT_ROOT, dir), { recursive: true, force: true });
+      await rm(join(TEST_DIR, dir), { recursive: true, force: true });
     } catch {}
   }
 }
@@ -278,6 +279,10 @@ describe('loadModelConfig', () => {
 
 describe('copyFromManifest with modelConfig', () => {
   beforeAll(async () => {
+    if (!TEST_DIR) {
+      TEST_DIR = await mkdtemp(join(tmpdir(), 'cc-model-config-'));
+      await writeFile(join(TEST_DIR, 'package.json'), await readFile(join(PROJECT_ROOT, 'package.json')));
+    }
     await cleanup();
   });
 
@@ -287,7 +292,7 @@ describe('copyFromManifest with modelConfig', () => {
     const results = await copyFromManifest(
       manifest,
       PRESETS_DIR,
-      join(PROJECT_ROOT, '.opencode'),
+      join(TEST_DIR, '.opencode'),
       false,
       true,
       true,
@@ -296,7 +301,7 @@ describe('copyFromManifest with modelConfig', () => {
 
     expect(results.length).toBeGreaterThan(0);
     expect(results.every((r) => r.dryRun === true)).toBe(true);
-    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'))).toBe(false);
+    expect(existsSync(join(TEST_DIR, '.opencode', 'agents', 'architect.md'))).toBe(false);
   });
 
   test('global opencode config merge preserves existing keys even with force', async () => {
@@ -359,7 +364,7 @@ describe('copyFromManifest with modelConfig', () => {
     const results = await copyFromManifest(
       manifest,
       PRESETS_DIR,
-      PROJECT_ROOT,
+      TEST_DIR,
       false,
       false,
       true,
@@ -367,7 +372,7 @@ describe('copyFromManifest with modelConfig', () => {
     );
 
     const architectContent = await readFile(
-      join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'),
+      join(TEST_DIR, '.opencode', 'agents', 'architect.md'),
       'utf-8'
     );
     // opencode install: only the opencode model appears in frontmatter
@@ -383,7 +388,7 @@ describe('copyFromManifest with modelConfig', () => {
     const results = await copyFromManifest(
       manifest,
       PRESETS_DIR,
-      PROJECT_ROOT,
+      TEST_DIR,
       false,
       false,
       true,
@@ -391,7 +396,7 @@ describe('copyFromManifest with modelConfig', () => {
     );
 
     const architectContent = await readFile(
-      join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'),
+      join(TEST_DIR, '.opencode', 'agents', 'architect.md'),
       'utf-8'
     );
     expect(architectContent).toContain('{{MODEL}}');
@@ -400,10 +405,10 @@ describe('copyFromManifest with modelConfig', () => {
   test('writing with modelConfig renders all 8 agent files correctly', async () => {
     const modelConfig = await loadModelConfig('opencode');
     const manifest = await loadManifest('opencode');
-    await copyFromManifest(manifest, PRESETS_DIR, PROJECT_ROOT, false, false, true, modelConfig);
+    await copyFromManifest(manifest, PRESETS_DIR, TEST_DIR, false, false, true, modelConfig);
 
     for (const file of ALL_AGENT_FILES) {
-      const content = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', file), 'utf-8');
+      const content = await readFile(join(TEST_DIR, '.opencode', 'agents', file), 'utf-8');
       expect(content).not.toContain('{{MODEL}}');
       expect(content).not.toContain('{{MODEL_');
       // opencode install: frontmatter has model: field resolved to opencode model
@@ -640,7 +645,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     expect(result.exitCode).toBe(0);
 
     for (const file of ALL_AGENT_FILES) {
-      expect(existsSync(join(PROJECT_ROOT, '.opencode', 'agents', file))).toBe(true);
+      expect(existsSync(join(TEST_DIR, '.opencode', 'agents', file))).toBe(true);
     }
   });
 
@@ -650,7 +655,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     expect(result.exitCode).toBe(0);
 
     for (const file of ALL_AGENT_FILES) {
-      expect(existsSync(join(PROJECT_ROOT, '.claude', 'agents', file))).toBe(true);
+      expect(existsSync(join(TEST_DIR, '.claude', 'agents', file))).toBe(true);
     }
   });
 
@@ -658,7 +663,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     await runCli(['init', '--force']);
     const result = await runCli(['install', 'preset', '--target=codex', '--force']);
     expect(result.exitCode).toBe(0);
-    expect(existsSync(join(PROJECT_ROOT, '.codex', 'AGENTS.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.codex', 'AGENTS.md'))).toBe(true);
   });
 
   // --- TEMPLATE RENDERING (Acceptance Criteria) ---
@@ -669,7 +674,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     await runCli(['install', 'preset', '--target=opencode', '--force']);
 
     const content = await readFile(
-      join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'),
+      join(TEST_DIR, '.opencode', 'agents', 'architect.md'),
       'utf-8'
     );
     // opencode install: frontmatter has the opencode model for architect
@@ -686,7 +691,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     await runCli(['install', 'preset', '--target=opencode', '--force']);
 
     for (const file of ALL_AGENT_FILES) {
-      const content = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', file), 'utf-8');
+      const content = await readFile(join(TEST_DIR, '.opencode', 'agents', file), 'utf-8');
       expect(content).not.toContain('{{MODEL}}');
       expect(content).not.toContain('{{MODEL_');
     }
@@ -696,7 +701,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     await runCli(['init', '--force']);
     await runCli(['install', 'preset', '--target=opencode', '--force']);
 
-    const content = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', 'tester.md'), 'utf-8');
+    const content = await readFile(join(TEST_DIR, '.opencode', 'agents', 'tester.md'), 'utf-8');
     // opencode install: frontmatter has opencode model for tester
     expect(content).toContain('minimax-m3');
     expect(content).not.toContain('{{MODEL}}');
@@ -706,7 +711,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     await runCli(['init', '--force']);
     await runCli(['install', 'preset', '--target=codex', '--force']);
 
-    const content = await readFile(join(PROJECT_ROOT, '.codex', 'AGENTS.md'), 'utf-8');
+    const content = await readFile(join(TEST_DIR, '.codex', 'AGENTS.md'), 'utf-8');
     // codex install: only codex model names appear (e.g. gpt-5.5 for architect)
     expect(content).toContain('gpt-5.5');
     expect(content).not.toContain('{{MODEL_CODEX}}');
@@ -722,7 +727,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     await runCli(['install', 'preset', '--target=claude', '--force']);
 
     const content = await readFile(
-      join(PROJECT_ROOT, '.claude', 'agents', 'architect.md'),
+      join(TEST_DIR, '.claude', 'agents', 'architect.md'),
       'utf-8'
     );
     // claude install: frontmatter has claude model for architect
@@ -737,7 +742,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     expect(result.exitCode).toBe(0);
 
     for (const file of ALL_AGENT_FILES) {
-      expect(existsSync(join(PROJECT_ROOT, '.gemini', 'agents', file))).toBe(true);
+      expect(existsSync(join(TEST_DIR, '.gemini', 'agents', file))).toBe(true);
     }
   });
 
@@ -747,7 +752,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     expect(result.exitCode).toBe(0);
 
     for (const file of ALL_AGENT_FILES) {
-      expect(existsSync(join(PROJECT_ROOT, '.cursor', 'agents', file))).toBe(true);
+      expect(existsSync(join(TEST_DIR, '.cursor', 'agents', file))).toBe(true);
     }
   });
 
@@ -756,7 +761,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     await runCli(['install', 'preset', '--target=gemini', '--force']);
 
     const content = await readFile(
-      join(PROJECT_ROOT, '.gemini', 'agents', 'architect.md'),
+      join(TEST_DIR, '.gemini', 'agents', 'architect.md'),
       'utf-8'
     );
     expect(content).toContain('gemini-2.5-pro');
@@ -768,7 +773,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     await runCli(['install', 'preset', '--target=cursor', '--force']);
 
     const content = await readFile(
-      join(PROJECT_ROOT, '.cursor', 'agents', 'architect.md'),
+      join(TEST_DIR, '.cursor', 'agents', 'architect.md'),
       'utf-8'
     );
     expect(content).toContain('gpt-5.5');
@@ -780,7 +785,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     await runCli(['install', 'preset', '--target=all', '--force']);
 
     const opencodeContent = await readFile(
-      join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'),
+      join(TEST_DIR, '.opencode', 'agents', 'architect.md'),
       'utf-8'
     );
     expect(opencodeContent).not.toContain('{{MODEL}}');
@@ -788,19 +793,19 @@ describe('End-to-end: CLI install preset renders model names', () => {
     expect(opencodeContent).toContain('deepseek-v4-pro');
 
     const claudeContent = await readFile(
-      join(PROJECT_ROOT, '.claude', 'agents', 'architect.md'),
+      join(TEST_DIR, '.claude', 'agents', 'architect.md'),
       'utf-8'
     );
     expect(claudeContent).not.toContain('{{MODEL}}');
     expect(claudeContent).not.toContain('{{MODEL_');
     expect(claudeContent).toContain('claude-opus-4-7');
 
-    const codexContent = await readFile(join(PROJECT_ROOT, '.codex', 'AGENTS.md'), 'utf-8');
+    const codexContent = await readFile(join(TEST_DIR, '.codex', 'AGENTS.md'), 'utf-8');
     expect(codexContent).not.toContain('{{MODEL_');
     expect(codexContent).toContain('gpt-5.5');
 
     const geminiContent = await readFile(
-      join(PROJECT_ROOT, '.gemini', 'agents', 'architect.md'),
+      join(TEST_DIR, '.gemini', 'agents', 'architect.md'),
       'utf-8'
     );
     expect(geminiContent).not.toContain('{{MODEL}}');
@@ -808,7 +813,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     expect(geminiContent).toContain('gemini-2.5-pro');
 
     const cursorContent = await readFile(
-      join(PROJECT_ROOT, '.cursor', 'agents', 'architect.md'),
+      join(TEST_DIR, '.cursor', 'agents', 'architect.md'),
       'utf-8'
     );
     expect(cursorContent).not.toContain('{{MODEL}}');
@@ -821,7 +826,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     await runCli(['install', 'preset', '--target=opencode', '--force']);
 
     const content = await readFile(
-      join(PROJECT_ROOT, '.opencode', 'agents', 'orchestrator.md'),
+      join(TEST_DIR, '.opencode', 'agents', 'orchestrator.md'),
       'utf-8'
     );
     // opencode install: frontmatter has opencode model for orchestrator
@@ -833,7 +838,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     await runCli(['init', '--force']);
     await runCli(['install', 'preset', '--target=opencode', '--force']);
 
-    const content = await readFile(join(PROJECT_ROOT, '.opencode', 'agents', 'docs.md'), 'utf-8');
+    const content = await readFile(join(TEST_DIR, '.opencode', 'agents', 'docs.md'), 'utf-8');
     // opencode install: frontmatter has opencode model for docs
     expect(content).toContain('qwen3.7-plus');
     expect(content).not.toContain('{{MODEL}}');
@@ -855,7 +860,7 @@ describe('Tool name substitution', () => {
     await runCli(['install', 'preset', '--target=opencode', '--force']);
 
     const content = await readFile(
-      join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'),
+      join(TEST_DIR, '.opencode', 'agents', 'architect.md'),
       'utf-8'
     );
     expect(content).not.toContain('tools:');
@@ -874,7 +879,7 @@ describe('Tool name substitution', () => {
     await runCli(['install', 'preset', '--target=claude', '--force']);
 
     const content = await readFile(
-      join(PROJECT_ROOT, '.claude', 'agents', 'architect.md'),
+      join(TEST_DIR, '.claude', 'agents', 'architect.md'),
       'utf-8'
     );
     expect(content).toContain('tools: ViewCodeItem / ReadFile, Glob, Grep');
@@ -884,7 +889,7 @@ describe('Tool name substitution', () => {
     await runCli(['init', '--force']);
     await runCli(['install', 'preset', '--target=codex', '--force']);
 
-    const content = await readFile(join(PROJECT_ROOT, '.codex', 'AGENTS.md'), 'utf-8');
+    const content = await readFile(join(TEST_DIR, '.codex', 'AGENTS.md'), 'utf-8');
     // codex AGENTS.md is monolithic and does not have a "tools:" frontmatter line
     expect(content).not.toContain('tools:');
   });
@@ -894,7 +899,7 @@ describe('Tool name substitution', () => {
     await runCli(['install', 'preset', '--target=gemini', '--force']);
 
     const content = await readFile(
-      join(PROJECT_ROOT, '.gemini', 'agents', 'architect.md'),
+      join(TEST_DIR, '.gemini', 'agents', 'architect.md'),
       'utf-8'
     );
     expect(content).toContain('tools: view_file, list_dir, search_grep');
@@ -905,7 +910,7 @@ describe('Tool name substitution', () => {
     await runCli(['install', 'preset', '--target=cursor', '--force']);
 
     const content = await readFile(
-      join(PROJECT_ROOT, '.cursor', 'agents', 'architect.md'),
+      join(TEST_DIR, '.cursor', 'agents', 'architect.md'),
       'utf-8'
     );
     expect(content).toContain('tools: read, find, grep');
@@ -916,7 +921,7 @@ describe('Tool name substitution', () => {
     await runCli(['install', 'preset', '--target=opencode', '--force']);
 
     const content = await readFile(
-      join(PROJECT_ROOT, '.opencode', 'agents', 'implementer.md'),
+      join(TEST_DIR, '.opencode', 'agents', 'implementer.md'),
       'utf-8'
     );
     expect(content).not.toContain('tools:');
@@ -939,11 +944,17 @@ describe('Tool name substitution', () => {
     await runCli(['install', 'preset', '--target=gemini', '--force']);
 
     const content = await readFile(
-      join(PROJECT_ROOT, '.gemini', 'agents', 'implementer.md'),
+      join(TEST_DIR, '.gemini', 'agents', 'implementer.md'),
       'utf-8'
     );
     expect(content).toContain(
       'tools: view_file, write_file, patch_file, execute_command, list_dir, search_grep'
     );
   });
+});
+
+afterAll(async () => {
+  if (TEST_DIR) {
+    await rm(TEST_DIR, { recursive: true, force: true });
+  }
 });

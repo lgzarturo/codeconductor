@@ -1,19 +1,34 @@
-import { beforeAll, beforeEach, describe, expect, test } from 'bun:test';
-import { mkdir, readFile, rm } from 'node:fs/promises';
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { goalCommand } from '../src/commands/goal.command';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
-const GOAL_FILE = join(PROJECT_ROOT, '.codeconductor', 'current-goal.yml');
+let TEST_DIR: string;
+let GOAL_FILE: string;
 
 async function cleanup() {
   try {
-    await rm(join(PROJECT_ROOT, '.codeconductor'), { recursive: true, force: true });
+    // Only remove the goal file we create; preserve project configuration.
+    await rm(GOAL_FILE, { force: true });
   } catch {}
 }
 
 describe('goal command', () => {
+  beforeAll(async () => {
+    TEST_DIR = await mkdtemp(join(tmpdir(), 'cc-goal-cmd-test-'));
+    GOAL_FILE = join(TEST_DIR, '.codeconductor', 'current-goal.yml');
+    await writeFile(join(TEST_DIR, 'package.json'), await readFile(join(PROJECT_ROOT, 'package.json')));
+  });
+
+  afterAll(async () => {
+    if (TEST_DIR) {
+      await rm(TEST_DIR, { recursive: true, force: true });
+    }
+  });
+
   beforeEach(async () => {
     await cleanup();
   });
@@ -21,7 +36,7 @@ describe('goal command', () => {
   test('goalCommand returns success with valid objective', async () => {
     const result = await goalCommand({
       objective: 'Create a login system',
-      projectRoot: PROJECT_ROOT,
+      projectRoot: TEST_DIR,
       output: 'human',
     });
     expect(result.code).toBe(0);
@@ -36,7 +51,7 @@ describe('goal command', () => {
   test('goalCommand writes current-goal.yml', async () => {
     const result = await goalCommand({
       objective: 'Create a login system',
-      projectRoot: PROJECT_ROOT,
+      projectRoot: TEST_DIR,
       output: 'human',
     });
     expect(result.code).toBe(0);
@@ -51,7 +66,7 @@ describe('goal command', () => {
   test('goalCommand with JSON output', async () => {
     const result = await goalCommand({
       objective: 'Create a login system',
-      projectRoot: PROJECT_ROOT,
+      projectRoot: TEST_DIR,
       output: 'json',
     });
     expect(result.code).toBe(0);
@@ -70,7 +85,7 @@ describe('goal command', () => {
   test('goalCommand fails with empty objective', async () => {
     const result = await goalCommand({
       objective: '',
-      projectRoot: PROJECT_ROOT,
+      projectRoot: TEST_DIR,
       output: 'human',
     });
     expect(result.code).toBe(1);
@@ -82,7 +97,7 @@ describe('goal command', () => {
   test('goalCommand fails with whitespace-only objective', async () => {
     const result = await goalCommand({
       objective: '   ',
-      projectRoot: PROJECT_ROOT,
+      projectRoot: TEST_DIR,
       output: 'human',
     });
     expect(result.code).toBe(1);
@@ -91,7 +106,7 @@ describe('goal command', () => {
   test('goalCommand renders dependency tree', async () => {
     const result = await goalCommand({
       objective: 'Create a login system',
-      projectRoot: PROJECT_ROOT,
+      projectRoot: TEST_DIR,
       output: 'human',
     });
     expect(result.code).toBe(0);
@@ -105,7 +120,7 @@ describe('goal command', () => {
     // Test that the command works the same way
     const result = await goalCommand({
       objective: 'Build a CRUD API',
-      projectRoot: PROJECT_ROOT,
+      projectRoot: TEST_DIR,
       output: 'human',
     });
     expect(result.code).toBe(0);
@@ -115,7 +130,7 @@ describe('goal command', () => {
   test('goalCommand produces re-readable YAML', async () => {
     await goalCommand({
       objective: 'Create a login system',
-      projectRoot: PROJECT_ROOT,
+      projectRoot: TEST_DIR,
       output: 'human',
     });
 
@@ -131,7 +146,7 @@ describe('goal command', () => {
   test('goalCommand with search objective produces search template via JSON', async () => {
     const result = await goalCommand({
       objective: 'Implement full-text search',
-      projectRoot: PROJECT_ROOT,
+      projectRoot: TEST_DIR,
       output: 'json',
     });
     expect(result.code).toBe(0);
@@ -146,7 +161,7 @@ describe('goal command', () => {
   test('goalCommand with notification objective produces notif template via JSON', async () => {
     const result = await goalCommand({
       objective: 'Add email notification system',
-      projectRoot: PROJECT_ROOT,
+      projectRoot: TEST_DIR,
       output: 'json',
     });
     expect(result.code).toBe(0);
@@ -158,7 +173,7 @@ describe('goal command', () => {
   test('goalCommand with migration objective produces migrate template via JSON', async () => {
     const result = await goalCommand({
       objective: 'Migrate user table schema',
-      projectRoot: PROJECT_ROOT,
+      projectRoot: TEST_DIR,
       output: 'json',
     });
     expect(result.code).toBe(0);
@@ -170,7 +185,7 @@ describe('goal command', () => {
   test('goalCommand with unknown objective uses generic template via JSON', async () => {
     const result = await goalCommand({
       objective: 'Do something completely novel',
-      projectRoot: PROJECT_ROOT,
+      projectRoot: TEST_DIR,
       output: 'json',
     });
     expect(result.code).toBe(0);
@@ -182,7 +197,7 @@ describe('goal command', () => {
   test('JSON output structure matches what loadGoal would return', async () => {
     const result = await goalCommand({
       objective: 'Create a login system',
-      projectRoot: PROJECT_ROOT,
+      projectRoot: TEST_DIR,
       output: 'json',
     });
     expect(result.code).toBe(0);
@@ -213,7 +228,7 @@ describe('goal command', () => {
   test('human output includes task count and file path summary', async () => {
     const result = await goalCommand({
       objective: 'Create a login system',
-      projectRoot: PROJECT_ROOT,
+      projectRoot: TEST_DIR,
       output: 'human',
     });
     expect(result.code).toBe(0);
@@ -225,7 +240,7 @@ describe('goal command', () => {
   test('JSON output does not include human-rendered tree', async () => {
     const result = await goalCommand({
       objective: 'Create a login system',
-      projectRoot: PROJECT_ROOT,
+      projectRoot: TEST_DIR,
       output: 'json',
     });
     expect(result.code).toBe(0);

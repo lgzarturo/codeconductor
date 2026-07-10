@@ -1,10 +1,12 @@
-import { beforeAll, beforeEach, describe, expect, test } from 'bun:test';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { beforeAll, afterAll, beforeEach, describe, expect, test } from 'bun:test';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import packageJson from '../package.json';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
-const CLI_CMD = ['bun', 'run', 'src/cli/main.ts'];
+const CLI_CMD = ['bun', 'run', join(PROJECT_ROOT, 'src/cli/main.ts')];
+let CLI_ROOT: string;
 
 /**
  * Helper to run CLI command and get exit code + output
@@ -16,7 +18,7 @@ async function runCli(
 
   const process = spawn({
     cmd: [...CLI_CMD, ...args],
-    cwd: PROJECT_ROOT,
+    cwd: CLI_ROOT,
     stdout: 'pipe',
     stderr: 'pipe',
   });
@@ -31,20 +33,34 @@ async function runCli(
 }
 
 /**
- * Clean up generated directories
+ * Clean up generated directories inside the temporary CLI root.
+ * Never touches the real project directories.
  */
 async function cleanup() {
-  const dirs = ['.opencode', '.claude', '.codex', '.codeconductor'];
+  const dirs = ['.opencode', '.claude', '.codex', '.codeconductor', '.agents', '.gemini'];
   for (const dir of dirs) {
     try {
-      await rm(join(PROJECT_ROOT, dir), { recursive: true, force: true });
+      await rm(join(CLI_ROOT, dir), { recursive: true, force: true });
     } catch {}
   }
 }
 
 describe('CLI', () => {
   beforeAll(async () => {
-    await cleanup();
+    CLI_ROOT = await mkdtemp(join(tmpdir(), 'cc-cli-test-'));
+    // Copy minimal project signals so init/detect treat the temp dir as a node project.
+    await writeFile(join(CLI_ROOT, 'package.json'), await readFile(join(PROJECT_ROOT, 'package.json')));
+    try {
+      await writeFile(join(CLI_ROOT, 'bun.lockb'), await readFile(join(PROJECT_ROOT, 'bun.lockb')));
+    } catch {
+      // bun.lockb is optional; package.json is enough for node detection.
+    }
+  });
+
+  afterAll(async () => {
+    if (CLI_ROOT) {
+      await rm(CLI_ROOT, { recursive: true, force: true });
+    }
   });
 
   beforeEach(async () => {
@@ -52,73 +68,42 @@ describe('CLI', () => {
   });
 
   test('init creates config', async () => {
-    const { spawn } = await import('bun');
-
-    const process = spawn({
-      cmd: ['bun', 'run', 'src/cli/main.ts', 'init', '--force'],
-      cwd: PROJECT_ROOT,
-    });
-
-    const exitCode = await process.exited;
-    expect(exitCode).toBe(0);
+    const result = await runCli(['init', '--force']);
+    expect(result.exitCode).toBe(0);
 
     // Check config was created
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.codeconductor', 'config.yml'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.codeconductor', 'config.yml'))).toBe(true);
   });
 
   test('detect identifies node project', async () => {
-    const { spawn } = await import('bun');
-
-    const process = spawn({
-      cmd: ['bun', 'run', 'src/cli/main.ts', 'detect'],
-      cwd: PROJECT_ROOT,
-    });
-
-    const exitCode = await process.exited;
-    expect(exitCode).toBe(0);
+    const result = await runCli(['detect']);
+    expect(result.exitCode).toBe(0);
   });
 
   test('install council --target opencode generates files', async () => {
-    const { spawn } = await import('bun');
-
     // First init
-    let process = spawn({
-      cmd: ['bun', 'run', 'src/cli/main.ts', 'init', '--force'],
-      cwd: PROJECT_ROOT,
-    });
-    await process.exited;
+    await runCli(['init', '--force']);
 
     // Then install
-    process = spawn({
-      cmd: ['bun', 'run', 'src/cli/main.ts', 'install', 'council', '--target=opencode', '--force'],
-      cwd: PROJECT_ROOT,
-    });
-    const exitCode = await process.exited;
-    expect(exitCode).toBe(0);
+    const result = await runCli(['install', 'council', '--target=opencode', '--force']);
+    expect(result.exitCode).toBe(0);
 
     // Check files were created
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(true);
   });
 
   test('dry-run does not write files', async () => {
     // Clean up first
-    await rm(join(PROJECT_ROOT, '.codeconductor'), { recursive: true, force: true });
+    await rm(join(CLI_ROOT, '.codeconductor'), { recursive: true, force: true });
 
-    const { spawn } = await import('bun');
-
-    const process = spawn({
-      cmd: ['bun', 'run', 'src/cli/main.ts', 'init', '--force', '--dry-run'],
-      cwd: PROJECT_ROOT,
-    });
-
-    const exitCode = await process.exited;
-    expect(exitCode).toBe(0);
+    const result = await runCli(['init', '--force', '--dry-run']);
+    expect(result.exitCode).toBe(0);
 
     // Check config was NOT created
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.codeconductor', 'config.yml'))).toBe(false);
+    expect(existsSync(join(CLI_ROOT, '.codeconductor', 'config.yml'))).toBe(false);
   });
 
   // ========== NEW TESTS FOR ACCEPTANCE CRITERIA ==========
@@ -160,23 +145,23 @@ describe('CLI', () => {
 
   test('--force overwrites existing files', async () => {
     // First create config
-    await mkdir(join(PROJECT_ROOT, '.codeconductor'), { recursive: true });
-    await writeFile(join(PROJECT_ROOT, '.codeconductor', 'config.yml'), 'old: config');
+    await mkdir(join(CLI_ROOT, '.codeconductor'), { recursive: true });
+    await writeFile(join(CLI_ROOT, '.codeconductor', 'config.yml'), 'old: config');
 
     // Run init with --force
     const result = await runCli(['init', '--force']);
     expect(result.exitCode).toBe(0);
 
     // Check config was overwritten
-    const content = await readFile(join(PROJECT_ROOT, '.codeconductor', 'config.yml'), 'utf-8');
+    const content = await readFile(join(CLI_ROOT, '.codeconductor', 'config.yml'), 'utf-8');
     expect(content).not.toContain('old: config');
     expect(content).toContain('project:');
   });
 
   test('without --force, existing files are skipped', async () => {
     // First create config
-    await mkdir(join(PROJECT_ROOT, '.codeconductor'), { recursive: true });
-    await writeFile(join(PROJECT_ROOT, '.codeconductor', 'config.yml'), 'existing: config');
+    await mkdir(join(CLI_ROOT, '.codeconductor'), { recursive: true });
+    await writeFile(join(CLI_ROOT, '.codeconductor', 'config.yml'), 'existing: config');
 
     // Run init without --force
     const result = await runCli(['init']);
@@ -184,7 +169,7 @@ describe('CLI', () => {
     // The current implementation returns exit code 0 but skips writing
 
     // Check config was NOT overwritten
-    const content = await readFile(join(PROJECT_ROOT, '.codeconductor', 'config.yml'), 'utf-8');
+    const content = await readFile(join(CLI_ROOT, '.codeconductor', 'config.yml'), 'utf-8');
     expect(content).toContain('existing: config');
   });
 
@@ -258,11 +243,11 @@ describe('CLI', () => {
     // Run detect using absolute path to CLI
     const cliPath = join(PROJECT_ROOT, 'src/cli/main.ts');
     const { spawn } = await import('bun');
-    const process = spawn({
-      cmd: ['bun', 'run', cliPath, 'detect'],
+    const child = spawn({
+      cmd: [process.execPath, 'run', cliPath, 'detect'],
       cwd: tempDir,
     });
-    const exitCode = await process.exited;
+    const exitCode = await child.exited;
 
     // Clean up
     await rm(tempDir, { recursive: true, force: true });
@@ -278,8 +263,8 @@ describe('CLI', () => {
 
     const { existsSync } = await import('node:fs');
     // Claude target creates files in .claude/skills/, .claude/agents/ and .claude/commands/
-    expect(existsSync(join(PROJECT_ROOT, '.claude', 'skills', 'council', 'SKILL.md'))).toBe(true);
-    expect(existsSync(join(PROJECT_ROOT, '.claude', 'commands', 'cc-council.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.claude', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.claude', 'commands', 'cc-council.md'))).toBe(true);
   });
 
   test('install council --target gemini generates files', async () => {
@@ -290,8 +275,8 @@ describe('CLI', () => {
 
     const { existsSync } = await import('node:fs');
     // Gemini target uses agy installer and generates under .agents/
-    expect(existsSync(join(PROJECT_ROOT, '.agents', 'skills', 'council', 'SKILL.md'))).toBe(true);
-    expect(existsSync(join(PROJECT_ROOT, '.agents', 'workflows', 'cc-council.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.agents', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.agents', 'workflows', 'cc-council.md'))).toBe(true);
   });
 
   test('install council --target codex generates files', async () => {
@@ -302,7 +287,7 @@ describe('CLI', () => {
 
     const { existsSync } = await import('node:fs');
     // Codex target creates .codex/config.toml and .codex/agents/
-    expect(existsSync(join(PROJECT_ROOT, '.codex', 'config.toml'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.codex', 'config.toml'))).toBe(true);
   });
 
   test('install council --target all generates files for all targets', async () => {
@@ -313,11 +298,11 @@ describe('CLI', () => {
 
     const { existsSync } = await import('node:fs');
     // All target creates files for all runners
-    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(true);
-    expect(existsSync(join(PROJECT_ROOT, '.claude', 'skills', 'council', 'SKILL.md'))).toBe(true);
-    expect(existsSync(join(PROJECT_ROOT, '.claude', 'commands', 'cc-council.md'))).toBe(true);
-    expect(existsSync(join(PROJECT_ROOT, '.codex', 'config.toml'))).toBe(true);
-    expect(existsSync(join(PROJECT_ROOT, '.agents', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.claude', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.claude', 'commands', 'cc-council.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.codex', 'config.toml'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.agents', 'skills', 'council', 'SKILL.md'))).toBe(true);
   });
 
   test('install with --dry-run does not write files', async () => {
@@ -327,7 +312,7 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(false);
+    expect(existsSync(join(CLI_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(false);
   });
 
   test('unknown command returns exit code 1', async () => {
@@ -341,8 +326,8 @@ describe('CLI', () => {
     await runCli(['init', '--force']);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.codeconductor'))).toBe(true);
-    expect(existsSync(join(PROJECT_ROOT, '.codeconductor', 'config.yml'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.codeconductor'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.codeconductor', 'config.yml'))).toBe(true);
   });
 
   test('detect with json output includes all detection fields', async () => {
@@ -366,7 +351,7 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.codeconductor', 'presets', 'council.yml'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.codeconductor', 'presets', 'council.yml'))).toBe(true);
   });
 
   test('init copies policy.yml to .codeconductor/presets/', async () => {
@@ -374,7 +359,7 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.codeconductor', 'presets', 'policy.yml'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.codeconductor', 'presets', 'policy.yml'))).toBe(true);
   });
 
   test('install uses .codeconductor/presets/council.yml when present', async () => {
@@ -382,7 +367,7 @@ describe('CLI', () => {
 
     // Patch the config-dir preset with a custom agent name
     const { existsSync, readFileSync } = await import('node:fs');
-    const presetPath = join(PROJECT_ROOT, '.codeconductor', 'presets', 'council.yml');
+    const presetPath = join(CLI_ROOT, '.codeconductor', 'presets', 'council.yml');
     expect(existsSync(presetPath)).toBe(true);
 
     const original = readFileSync(presetPath, 'utf-8');
@@ -392,7 +377,7 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     // Check opencode file was generated
-    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.opencode', 'commands', 'cc-council.md'))).toBe(true);
   });
 
   test('init --dry-run does not copy preset files', async () => {
@@ -400,14 +385,14 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.codeconductor', 'presets', 'council.yml'))).toBe(false);
+    expect(existsSync(join(CLI_ROOT, '.codeconductor', 'presets', 'council.yml'))).toBe(false);
   });
 
   test('init without --force does not overwrite council.yml preset', async () => {
     // First init with force to create preset
     await runCli(['init', '--force']);
 
-    const presetPath = join(PROJECT_ROOT, '.codeconductor', 'presets', 'council.yml');
+    const presetPath = join(CLI_ROOT, '.codeconductor', 'presets', 'council.yml');
     await writeFile(presetPath, 'custom: preset');
 
     // Re-run without force
@@ -452,7 +437,7 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.codex', 'config.toml'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.codex', 'config.toml'))).toBe(true);
   });
 
   test('install council --target agy generates files', async () => {
@@ -462,9 +447,9 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.agents', 'skills', 'council', 'SKILL.md'))).toBe(true);
-    expect(existsSync(join(PROJECT_ROOT, '.agents', 'agents', 'council-architect.md'))).toBe(true);
-    expect(existsSync(join(PROJECT_ROOT, '.agents', 'workflows', 'cc-council.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.agents', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.agents', 'agents', 'council-architect.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.agents', 'workflows', 'cc-council.md'))).toBe(true);
   });
 
   test('install codex --force targets codex (not opencode)', async () => {
@@ -473,7 +458,7 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.codex', 'config.toml'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.codex', 'config.toml'))).toBe(true);
     // Must NOT have installed to opencode only
     expect(result.stdout).toContain('codex');
     expect(result.stdout).not.toContain('opencode');
@@ -494,7 +479,7 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.claude', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.claude', 'skills', 'council', 'SKILL.md'))).toBe(true);
     expect(result.stdout).toContain('claude');
   });
 
@@ -598,8 +583,8 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'))).toBe(true);
-    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'commands', 'cc-feature.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.opencode', 'agents', 'architect.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.opencode', 'commands', 'cc-feature.md'))).toBe(true);
   });
 
   test('install preset --target=opencode copies prompts and skills', async () => {
@@ -610,10 +595,10 @@ describe('CLI', () => {
 
     const { existsSync } = await import('node:fs');
     expect(
-      existsSync(join(PROJECT_ROOT, '.opencode', 'prompts', 'v0.3.0', 'orchestrator.md'))
+      existsSync(join(CLI_ROOT, '.opencode', 'prompts', 'v0.3.0', 'orchestrator.md'))
     ).toBe(true);
     expect(
-      existsSync(join(PROJECT_ROOT, '.opencode', 'skills', 'api-versioning', 'SKILL.md'))
+      existsSync(join(CLI_ROOT, '.opencode', 'skills', 'api-versioning', 'SKILL.md'))
     ).toBe(true);
   });
 
@@ -624,11 +609,11 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.claude', 'skills', 'api-versioning', 'SKILL.md'))).toBe(
+    expect(existsSync(join(CLI_ROOT, '.claude', 'skills', 'api-versioning', 'SKILL.md'))).toBe(
       true
     );
-    expect(existsSync(join(PROJECT_ROOT, '.claude', 'agents', 'orchestrator.md'))).toBe(true);
-    expect(existsSync(join(PROJECT_ROOT, '.claude', 'CLAUDE.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.claude', 'agents', 'orchestrator.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.claude', 'CLAUDE.md'))).toBe(true);
   });
 
   test('install preset --target=claude copies settings.json locally', async () => {
@@ -638,8 +623,8 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.claude', 'settings.json'))).toBe(true);
-    const content = await readFile(join(PROJECT_ROOT, '.claude', 'settings.json'), 'utf-8');
+    expect(existsSync(join(CLI_ROOT, '.claude', 'settings.json'))).toBe(true);
+    const content = await readFile(join(CLI_ROOT, '.claude', 'settings.json'), 'utf-8');
     const json = JSON.parse(content);
     expect(json.permissions).toBeDefined();
   });
@@ -651,11 +636,11 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.codex', 'AGENTS.md'))).toBe(true);
-    expect(existsSync(join(PROJECT_ROOT, '.codex', 'skills', 'api-versioning', 'SKILL.md'))).toBe(
+    expect(existsSync(join(CLI_ROOT, '.codex', 'AGENTS.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.codex', 'skills', 'api-versioning', 'SKILL.md'))).toBe(
       true
     );
-    expect(existsSync(join(PROJECT_ROOT, '.codex', 'prompts', 'v0.3.0', 'orchestrator.md'))).toBe(
+    expect(existsSync(join(CLI_ROOT, '.codex', 'prompts', 'v0.3.0', 'orchestrator.md'))).toBe(
       true
     );
   });
@@ -667,9 +652,9 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'))).toBe(true);
-    expect(existsSync(join(PROJECT_ROOT, '.claude', 'agents', 'orchestrator.md'))).toBe(true);
-    expect(existsSync(join(PROJECT_ROOT, '.codex', 'AGENTS.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.opencode', 'agents', 'architect.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.claude', 'agents', 'orchestrator.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.codex', 'AGENTS.md'))).toBe(true);
   });
 
   test('install preset --dry-run does not write files', async () => {
@@ -679,7 +664,7 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(join(PROJECT_ROOT, '.opencode', 'agents', 'architect.md'))).toBe(false);
+    expect(existsSync(join(CLI_ROOT, '.opencode', 'agents', 'architect.md'))).toBe(false);
   });
 
   test('install preset --output=json returns fileResults', async () => {
@@ -704,15 +689,15 @@ describe('CLI', () => {
   test('install preset CLAUDE.md appends when already exists (local)', async () => {
     await runCli(['init', '--force']);
     // Pre-create CLAUDE.md
-    await mkdir(join(PROJECT_ROOT, '.claude'), { recursive: true });
-    await writeFile(join(PROJECT_ROOT, '.claude', 'CLAUDE.md'), '# Existing content\n');
+    await mkdir(join(CLI_ROOT, '.claude'), { recursive: true });
+    await writeFile(join(CLI_ROOT, '.claude', 'CLAUDE.md'), '# Existing content\n');
 
     // Local install without force → strategy=overwrite (overwrites)
     const result = await runCli(['install', 'preset', '--target=claude']);
     expect(result.exitCode).toBe(0);
 
     // Local uses overwrite strategy, so old content is replaced
-    const content = await readFile(join(PROJECT_ROOT, '.claude', 'CLAUDE.md'), 'utf-8');
+    const content = await readFile(join(CLI_ROOT, '.claude', 'CLAUDE.md'), 'utf-8');
     expect(content).not.toContain('# Existing content');
   });
 

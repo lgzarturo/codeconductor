@@ -1,9 +1,4 @@
-/**
- * Loop Controller — execution harness for the compile-fix iteration cycle.
- *
- * Orchestrates: generate → compile check → feedback → repeat.
- */
-
+import { execSync } from 'node:child_process';
 import type { CompileError, CompileResult } from '../compilation/compile-checker';
 import type { LoopState } from '../../domain/loop/loop-state';
 import {
@@ -22,6 +17,12 @@ export interface LoopConfig {
   buildCommand?: string;
   /** Working directory. Default: process.cwd() */
   cwd?: string;
+  /** Max time in seconds. Default: 0 (unlimited) */
+  maxWallClockSeconds?: number;
+  /** Max files allowed to be modified/created in git. Default: 0 (unlimited) */
+  maxFilesModified?: number;
+  /** Max lines allowed to be changed (added/deleted). Default: 0 (unlimited) */
+  maxLinesChanged?: number;
 }
 
 export interface EscalationReport {
@@ -40,6 +41,43 @@ export interface LoopResult {
   readonly finalPhase: LoopState['phase'];
   readonly escalationReport?: EscalationReport;
   readonly errorHistory: readonly (readonly CompileError[])[];
+}
+
+// ─── Git Helper Functions ───────────────────────────────────────────────────
+
+function getModifiedFilesCount(cwd?: string): number {
+  try {
+    const output = execSync('git status --porcelain', {
+      cwd: cwd || process.cwd(),
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    return output.split('\n').filter((line) => line.trim().length > 0).length;
+  } catch {
+    return 0;
+  }
+}
+
+function getLinesChangedCount(cwd?: string): number {
+  try {
+    const output = execSync('git diff --numstat', {
+      cwd: cwd || process.cwd(),
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    let total = 0;
+    const lines = output.split('\n').filter((line) => line.trim().length > 0);
+    for (const line of lines) {
+      const parts = line.split(/\s+/);
+      const added = parseInt(parts[0] || '0', 10);
+      const deleted = parseInt(parts[1] || '0', 10);
+      if (!isNaN(added)) total += added;
+      if (!isNaN(deleted)) total += deleted;
+    }
+    return total;
+  } catch {
+    return 0;
+  }
 }
 
 // ─── Feedback Formatting ─────────────────────────────────────────────────────
@@ -100,7 +138,11 @@ export async function runLoop(
 ): Promise<LoopResult> {
   const maxIterations = config.maxIterations ?? 3;
   const maxTokenBudget = config.maxTokenBudget ?? 0;
+  const maxWallClockSeconds = config.maxWallClockSeconds ?? 0;
+  const maxFilesModified = config.maxFilesModified ?? 0;
+  const maxLinesChanged = config.maxLinesChanged ?? 0;
 
+  const startTime = Date.now();
   let state = createInitialState({ maxIterations, maxTokenBudget });
   let totalErrors = 0;
   let feedbackText: string | undefined;
@@ -114,6 +156,72 @@ export async function runLoop(
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
+    // Check Guardrails before executing phase
+    if (maxWallClockSeconds > 0) {
+      const elapsedSeconds = (Date.now() - startTime) / 1000;
+      if (elapsedSeconds > maxWallClockSeconds) {
+        logTransition(state.phase, 'TIMEOUT_GUARDRAIL', state.iteration);
+        return {
+          success: false,
+          iterations: state.iteration,
+          totalErrors,
+          finalPhase: 'ESCALATED',
+          errorHistory: state.errorHistory,
+          escalationReport: {
+            taskTitle,
+            iterationsAttempted: state.iteration,
+            errorHistory: state.errorHistory,
+            attemptedFixes: [`Time limit exceeded: ${elapsedSeconds.toFixed(1)}s elapsed (max: ${maxWallClockSeconds}s)`],
+            originalContext: originalTask ?? 'No original task provided',
+            recommendedAction: `Operational guardrail triggered: maxWallClockSeconds limit (${maxWallClockSeconds}s) exceeded. Increase limit or optimize execution time.`,
+          },
+        };
+      }
+    }
+
+    if (maxFilesModified > 0) {
+      const modifiedCount = getModifiedFilesCount(config.cwd);
+      if (modifiedCount > maxFilesModified) {
+        logTransition(state.phase, 'FILES_MODIFIED_GUARDRAIL', state.iteration);
+        return {
+          success: false,
+          iterations: state.iteration,
+          totalErrors,
+          finalPhase: 'ESCALATED',
+          errorHistory: state.errorHistory,
+          escalationReport: {
+            taskTitle,
+            iterationsAttempted: state.iteration,
+            errorHistory: state.errorHistory,
+            attemptedFixes: [`Files modified limit exceeded: ${modifiedCount} files modified (max: ${maxFilesModified})`],
+            originalContext: originalTask ?? 'No original task provided',
+            recommendedAction: `Operational guardrail triggered: maxFilesModified limit (${maxFilesModified}) exceeded. Check for scope creep.`,
+          },
+        };
+      }
+    }
+
+    if (maxLinesChanged > 0) {
+      const linesCount = getLinesChangedCount(config.cwd);
+      if (linesCount > maxLinesChanged) {
+        logTransition(state.phase, 'LINES_CHANGED_GUARDRAIL', state.iteration);
+        return {
+          success: false,
+          iterations: state.iteration,
+          totalErrors,
+          finalPhase: 'ESCALATED',
+          errorHistory: state.errorHistory,
+          escalationReport: {
+            taskTitle,
+            iterationsAttempted: state.iteration,
+            errorHistory: state.errorHistory,
+            attemptedFixes: [`Lines changed limit exceeded: ${linesCount} lines changed (max: ${maxLinesChanged})`],
+            originalContext: originalTask ?? 'No original task provided',
+            recommendedAction: `Operational guardrail triggered: maxLinesChanged limit (${maxLinesChanged}) exceeded. Check for large diffs or unnecessary refactoring.`,
+          },
+        };
+      }
+    }
     switch (state.phase) {
       case 'RUNNING': {
         logTransition(state.phase, 'GENERATE', state.iteration);

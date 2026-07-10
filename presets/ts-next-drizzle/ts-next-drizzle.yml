@@ -1,0 +1,41 @@
+name: ts-next-drizzle
+version: 0.4.0
+description: JS/TS modern stack preset (Next.js, Astro, Tailwind, Drizzle, Bun, Postgres)
+outputContract: v1
+
+agents:
+  - id: architect
+    role: TS/Next Drizzle Architect
+    context: repo-readonly
+    modelHint: strong-reasoning
+    focus:
+      - nextjs-typescript
+      - drizzle-schema-architect
+      - tailwind-responsive-auditor
+      - seo-analytics-injector
+
+  - id: implementer
+    role: TS/Next Drizzle Implementer
+    context: repo-write
+    modelHint: practical-coding
+    focus:
+      - nextjs-typescript
+      - drizzle-schema-architect
+      - tailwind-responsive-auditor
+      - auth-token-inspector
+
+  - id: tester
+    role: TS/Next Tester
+    context: repo-write
+    modelHint: practical-coding
+    focus:
+      - nextjs-typescript
+      - tdd-mutation-tester
+
+  - id: reviewer
+    role: TS/Next Reviewer
+    context: repo-readonly
+    modelHint: analytical
+    focus:
+      - tailwind-responsive-auditor
+      - auth-token-inspector

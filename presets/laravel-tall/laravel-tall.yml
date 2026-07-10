@@ -1,0 +1,38 @@
+name: laravel-tall
+version: 0.4.0
+description: Laravel TALL stack preset (Laravel, Blade, Livewire, Alpine.js)
+outputContract: v1
+
+agents:
+  - id: architect
+    role: Laravel/Livewire Architect
+    context: repo-readonly
+    modelHint: strong-reasoning
+    focus:
+      - laravel-tall
+      - livewire-alpine-bridge
+
+  - id: implementer
+    role: Laravel/Livewire Implementer
+    context: repo-write
+    modelHint: practical-coding
+    focus:
+      - laravel-tall
+      - livewire-alpine-bridge
+      - tailwind-responsive-auditor
+
+  - id: tester
+    role: Laravel Tester
+    context: repo-write
+    modelHint: practical-coding
+    focus:
+      - laravel-tall
+      - tdd-mutation-tester
+
+  - id: reviewer
+    role: Laravel Reviewer
+    context: repo-readonly
+    modelHint: analytical
+    focus:
+      - tailwind-responsive-auditor
+      - auth-token-inspector

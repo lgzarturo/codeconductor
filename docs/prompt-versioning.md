@@ -125,8 +125,10 @@ retirement.
 
 | Version | Status           | Date       | Changes                                                                                                                       |
 | ------- | ---------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| v0.1.0  | active           | 2026-05-07 | Initial contracts — all 8 Conductor Agents                                                                                    |
-| v0.2.0  | active           | 2026-07-06 | Added `complexity-auditor` agent; routing policy updated to v0.2.0 with auditor in refactor/API/DB routes. Scorecard criterion #8 (cc-gain) added. |
+| v0.1.0  | deprecated       | 2026-05-07 | Initial contracts — all 8 Conductor Agents                                                                                    |
+| v0.2.0  | deprecated       | 2026-07-06 | Added `complexity-auditor` agent; routing policy updated to v0.2.0 with auditor in refactor/API/DB routes. Scorecard criterion #8 (cc-gain) added. |
+| v0.3.0  | deprecated       | 2026-07-08 | Added Next.js, FastAPI, generic presets, and monorepo support.                                                                 |
+| v0.4.0  | active           | 2026-07-10 | Added stack-specific presets, 9 custom skills, parallel subagents, and updated risk-based routing policy.                    |
 
 ---
 

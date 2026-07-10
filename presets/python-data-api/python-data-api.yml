@@ -1,0 +1,37 @@
+name: python-data-api
+version: 0.4.0
+description: Python data/API stack preset (Python, FastAPI, Django, uv)
+outputContract: v1
+
+agents:
+  - id: architect
+    role: Python Architect
+    context: repo-readonly
+    modelHint: strong-reasoning
+    focus:
+      - python-data-api
+      - fastapi-pydantic-strict
+
+  - id: implementer
+    role: Python Implementer
+    context: repo-write
+    modelHint: practical-coding
+    focus:
+      - python-data-api
+      - fastapi-pydantic-strict
+
+  - id: tester
+    role: Python Tester
+    context: repo-write
+    modelHint: practical-coding
+    focus:
+      - python-data-api
+      - tdd-mutation-tester
+
+  - id: reviewer
+    role: Python Reviewer
+    context: repo-readonly
+    modelHint: analytical
+    focus:
+      - fastapi-pydantic-strict
+      - auth-token-inspector

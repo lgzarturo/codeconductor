@@ -392,9 +392,9 @@ describe('Phase 4 coverage: runLoop additional scenarios', () => {
 // ─── docs/routing-policy.md: Phase 4 content contract ───────────────────────
 
 describe('Phase 4 coverage: docs/routing-policy.md', () => {
-  test('declares v0.3.0 as the current version', async () => {
+  test('declares v0.4.0 as the current version', async () => {
     const content = await readFile(ROUTING_POLICY, 'utf-8');
-    expect(content).toMatch(/\*\*Version:\*\*\s*v?0\.3\.0/);
+    expect(content).toMatch(/\*\*Version:\*\*\s*v?0\.4\.0/);
   });
 
   test('routing table includes a DDD→SDD→TDD pipeline row', async () => {

@@ -342,7 +342,7 @@ describe('copyFromManifest with modelConfig', () => {
   test('template entries are detected from opencode manifest', async () => {
     const manifest = await loadManifest('opencode');
     const templateEntries = manifest.entries.filter((e) => e.template === true);
-    // agents + README.md (locale placeholder injection) + prompts (v0.3.0)
+    // agents + README.md (locale placeholder injection) + prompts (v0.4.0)
     expect(templateEntries.length).toBe(3);
     expect(templateEntries.some((e) => e.src.includes('agents'))).toBe(true);
     expect(templateEntries.some((e) => e.src.includes('README.md'))).toBe(true);

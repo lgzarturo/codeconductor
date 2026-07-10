@@ -1,6 +1,6 @@
 # Routing Policy
 
-**Version:** v0.3.0
+**Version:** v0.4.0
 
 ---
 
@@ -167,6 +167,7 @@ must record the reviewer's name.
 
 | Version | Date       | Change                                                                                        |
 | ------- | ---------- | --------------------------------------------------------------------------------------------- |
+| v0.4.0  | 2026-07-10 | Add stack-specific presets, 9 custom skills, parallel subagents, and updated risk-based routing. |
 | v0.3.0  | 2026-07-08 | Add DDD→SDD→TDD pipeline (contract-builder). Add TDD loop guard with escalation at 3rd failed iteration. |
 | v0.2.0  | 2026-07-06 | Add complexity-auditor route for refactor, API change, DB migration. Auditor runs before reviewer. |
 | v0.1.0  | 2026-05-07 | Initial routing policy with OpenCode, Claude, Spring Boot/Kotlin, and Python/Django guidance. |

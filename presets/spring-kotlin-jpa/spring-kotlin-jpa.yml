@@ -1,0 +1,38 @@
+name: spring-kotlin-jpa
+version: 0.4.0
+description: Spring Boot Kotlin/JPA stack preset (Spring Boot, Kotlin/Java, Gradle, JPA, Hibernate)
+outputContract: v1
+
+agents:
+  - id: architect
+    role: Spring/Kotlin Architect
+    context: repo-readonly
+    modelHint: strong-reasoning
+    focus:
+      - spring-kotlin-jpa
+      - spring-auth-auditor
+
+  - id: implementer
+    role: Spring/Kotlin Implementer
+    context: repo-write
+    modelHint: practical-coding
+    focus:
+      - spring-kotlin-jpa
+      - jpa-nplusone-detector
+      - spring-auth-auditor
+
+  - id: tester
+    role: Spring/Kotlin Tester
+    context: repo-write
+    modelHint: practical-coding
+    focus:
+      - spring-kotlin-jpa
+      - tdd-mutation-tester
+
+  - id: reviewer
+    role: Spring/Kotlin Reviewer
+    context: repo-readonly
+    modelHint: analytical
+    focus:
+      - jpa-nplusone-detector
+      - spring-auth-auditor

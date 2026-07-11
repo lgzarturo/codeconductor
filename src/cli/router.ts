@@ -129,27 +129,47 @@ Usage: npx cc-codeconductor <command> [options]
 
 Commands:
   init                    Initialize CodeConductor in a project
-  detect                 Detect project stack and recommended presets
-  install council        Install generated council spec files to runner targets
-  install preset         Install full preset (agents, prompts, skills, commands)
-  install lsp            Install and configure LSP servers for AI coding tools
-  seo audit              Run SEO audit on a URL or sitemap
-  seo llms               Generate llms.txt from a URL or sitemap
-  doctor                 Validate configuration and generated files
-  update                 Update installed presets
-  help / cc-help         Show preset inventory (skills, subagents, commands)
-  debt-harvest / harvest Scan source files for deferred debt items
-  goal / cc-goal        Plan goal into task graph with dependencies
+  detect                  Detect project stack and recommended presets
+  install council         Install generated council spec files to runner targets
+  install preset          Install full preset (agents, prompts, skills, commands)
+  install lsp             Install and configure LSP servers for AI coding tools
+  seo audit               Run SEO audit on a URL or sitemap
+  seo llms                Generate llms.txt from a URL or sitemap
+  doctor                  Validate configuration and generated files
+  update                  Update installed presets
+  help / cc-help          Show preset inventory (skills, subagents, commands)
+  debt-harvest / harvest  Scan source files for deferred debt items
+  goal / cc-goal          Plan goal into task graph with dependencies
 
 Options:
-  --help, -h             Show this help message
-  --version, -v          Show package version
-  --dry-run              Show what would happen without writing files
-  --force                Allow overwriting existing files
-  --global               Install to home directory (~/.claude, ~/.opencode, etc.)
-  --output, -o           Output mode: human or json
-  --lang                 Comma-separated list of languages (e.g., typescript,php,python)
-  --locale               Instruction language for agent files: en (default) | es
+  --help, -h              Show this help message
+  --version, -v           Show package version
+  --dry-run               Show what would happen without writing files
+  --force                 Allow overwriting existing files
+  --global                Install to home directory (~/.claude, ~/.opencode, etc.)
+  --output, -o            Output mode: human or json
+  --lang                  Comma-separated list of languages (e.g., typescript,php,python)
+  --locale                Instruction language for agent files: en (default) | es
+  --target                Runner target: opencode, claude, codex, gemini, cursor, agy, all
+
+Stack-specific presets (v0.4.0, registered in preset-registry):
+  ts-next-drizzle         Next.js / Astro, Tailwind, Drizzle ORM, Bun, Postgres
+  spring-kotlin-jpa       Spring Boot, Kotlin/Java, Gradle, JPA, Hibernate
+  laravel-tall            Laravel, Blade, Livewire, Alpine.js
+  python-data-api         Python, FastAPI, Django, uv
+  Listed programmatically via listPresets() in src/core/presets/preset-registry.ts.
+  Stack detection wires matching specialized skills automatically when
+  init/detect identifies the stack.
+
+Workflow Loop Core (v0.4.0):
+  runWorkflowPipeline() in src/core/pipeline/workflow-loop.ts runs the
+  8-phase loop (intake -> structure -> design -> test -> implement ->
+  validate -> council -> compact) with wall-clock, files-modified and
+  lines-changed guardrails and STOP gates after Design and Council.
+
+Council consensus v0.4.0:
+  Per-agent confidence thresholds (< 0.6 or average < 0.7 escalate)
+  and a complianceVeto channel that overrides majority like securityVeto.
 
 Examples:
   npx cc-codeconductor init
@@ -178,6 +198,16 @@ Examples:
   npx cc-codeconductor seo audit --sitemap https://example.com/sitemap.xml --format markdown
   npx cc-codeconductor seo llms --sitemap https://example.com/sitemap.xml
   npx cc-codeconductor seo llms --url https://example.com --output llms.txt
+  npx cc-codeconductor goal "Add user authentication"
+  npx cc-codeconductor cc-goal "Implement CRUD for invoices"
+  npx cc-codeconductor help --target opencode
+  npx cc-codeconductor help --target claude --output json
+
+Docs: https://github.com/lgzarturo/codeconductor/tree/main/docs
+  docs/v0.4.0-release-notes.md   v0.4.0 feature breakdown
+  docs/routing-policy.md         Risk-based routing (v0.4.0)
+  docs/prompt-versioning.md      Agent contract versions
+  docs/usage-cli.md              Detailed CLI reference
 `;
 }
 

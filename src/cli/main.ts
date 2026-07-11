@@ -35,6 +35,9 @@ export async function runCli(args: string[]): Promise<void> {
 
         if ('help' in data) {
           console.log(data.help as string);
+        } else if ('message' in data && typeof data.message === 'string') {
+          // cc-help / helpCommand preset inventory
+          console.log(data.message);
         } else {
           // Errors always go to stderr, independent of other output
           if (

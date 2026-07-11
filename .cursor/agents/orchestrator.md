@@ -44,14 +44,9 @@ Your only output is routing decisions, status reports, and escalations.
 2. Validate that the request is a complete, actionable Task Card
 3. Classify the risk level
 4. Select and document the agent route
-5. Enforce **Behavioral Discipline Gates**:
-   - **Think Before Coding Checkpoint**: Verify assumptions are explicitly documented before architect starts.
-   - **Simplicity Gate**: Review Technical Plan to ensure no speculative code or abstractions are planned.
-   - **Surgical Changes Audit**: Audit reviewer report and diff to verify only planned files were modified.
-   - **Goal-Driven Verification**: Confirm all acceptance criteria have passing tests.
-6. Delegate to the first agent in the route
-7. Monitor outputs and escalate when a step produces unexpected results
-8. Report the final outcome to the human
+5. Delegate to the first agent in the route
+6. Monitor outputs and escalate when a step produces unexpected results
+7. Report the final outcome to the human
 
 ---
 
@@ -120,7 +115,9 @@ regression.
 
 | Task type          | Risk        | Route                                                              |
 | ------------------ | ----------- | ------------------------------------------------------------------ |
-| New feature        | any         | `architect` → `implementer` → `tester` → `reviewer`                |
+| New feature        | high        | `architect` → `implementer` → `tester` → `security-reviewer` (Council) |
+| New feature        | low-medium  | `architect` → `implementer` → `tester` → `reviewer`                |
+| Performance Opt    | medium      | `task-coach` → `implementer` → `reviewer`                           |
 | Bug fix            | low         | `implementer` → `tester`                                           |
 | Bug fix            | medium–high | `task-coach` → `architect` → `implementer` → `tester` → `reviewer` |
 | Refactor           | low         | `architect` → `implementer`                                        |
@@ -156,29 +153,49 @@ signals in order of priority:
 | `artisan` present                              | Laravel              |
 | `composer.json` or `*.php` present             | PHP                  |
 
-### Next.js
+### ts-next-drizzle (Next.js / Astro / Tailwind / Drizzle / Bun / Postgres)
 
-When a Next.js project is detected, include the following skill invocation
-instruction in the delegation message for each agent:
-
-| Delegated agent | Instruction to include in delegation                                                                                     |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `architect`     | "Invoke the `nextjs-typescript` skill before designing."                                                                 |
-| `implementer`   | "Invoke `nextjs-typescript` before writing any code."                                                                    |
-| `tester`        | "Invoke `testing-tdd` and write Next.js unit and integration tests (using Vitest or Playwright)."                        |
-| `reviewer`      | "Invoke the `nextjs-typescript` skill to check component boundaries (RSC vs RCC) and validation rules."                  |
-
-### FastAPI
-
-When a FastAPI project is detected, include the following skill invocation
-instruction in the delegation message for each agent:
+When a JS/TS project is detected matching this stack, include the following skill invocation instructions in the delegation message:
 
 | Delegated agent | Instruction to include in delegation                                                                                     |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `architect`     | "Invoke the `python-fastapi-stack` and `sqlalchemy` skills before designing."                                            |
-| `implementer`   | "Invoke `python-fastapi-stack` and `sqlalchemy` before writing any code."                                                |
-| `tester`        | "Invoke Python testing guidelines to write FastAPI endpoint contract tests."                                             |
-| `reviewer`      | "Invoke `python` to verify FastAPI routers and SQLAlchemy async patterns."                                               |
+| `architect`     | "Invoke the `nextjs-typescript`, `drizzle-schema-architect`, `tailwind-responsive-auditor`, and `seo-analytics-injector` skills before designing." |
+| `implementer`   | "Invoke `nextjs-typescript`, `drizzle-schema-architect`, `tailwind-responsive-auditor`, and `auth-token-inspector` before writing any code." |
+| `tester`        | "Invoke `tdd-mutation-tester` to verify the assertion quality of the Next.js/Astro tests."                                |
+| `reviewer`      | "Invoke the `tailwind-responsive-auditor` and `auth-token-inspector` skills during review."                              |
+
+### spring-kotlin-jpa (Spring Boot / Kotlin / Gradle / JPA / Hibernate)
+
+When a Spring Boot/JVM project is detected matching this stack, include the following skill invocation instructions in the delegation message:
+
+| Delegated agent | Instruction to include in delegation                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `architect`     | "Invoke the `spring-auth-auditor` skill before designing security filters and token handling."                         |
+| `implementer`   | "Invoke `jpa-nplusone-detector` and `spring-auth-auditor` skills before writing any code."                               |
+| `tester`        | "Invoke `tdd-mutation-tester` to verify the assertion quality of Spring/Kotlin tests."                                   |
+| `reviewer`      | "Invoke `jpa-nplusone-detector` and `spring-auth-auditor` skills during review."                                         |
+
+### laravel-tall (Laravel / Blade / Livewire / Alpine.js)
+
+When a Laravel/PHP project is detected matching this stack, include the following skill invocation instructions in the delegation message:
+
+| Delegated agent | Instruction to include in delegation                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `architect`     | "Invoke the `livewire-alpine-bridge` skill before designing components and reactivity."                                  |
+| `implementer`   | "Invoke `livewire-alpine-bridge` and `tailwind-responsive-auditor` skills before writing any code."                      |
+| `tester`        | "Invoke `tdd-mutation-tester` to verify the assertion quality of Pest/PHPUnit tests."                                    |
+| `reviewer`      | "Invoke the `tailwind-responsive-auditor` skill during review."                                                          |
+
+### python-data-api (Python / FastAPI / Django / uv)
+
+When a Python project is detected matching this stack, include the following skill invocation instructions in the delegation message:
+
+| Delegated agent | Instruction to include in delegation                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `architect`     | "Invoke the `fastapi-pydantic-strict` skill before designing models."                                                    |
+| `implementer`   | "Invoke `fastapi-pydantic-strict` before writing any code."                                                              |
+| `tester`        | "Invoke `tdd-mutation-tester` to verify the assertion quality of Python pytest/django tests."                            |
+| `reviewer`      | "Invoke `fastapi-pydantic-strict` and `auth-token-inspector` skills during review."                                      |
 
 ### Generic Backend
 
@@ -202,28 +219,6 @@ When an Android project is detected, include the following skill invocation inst
 | `tester`        | "Invoke the `android` skill to write unit or instrumentation tests (JUnit 5, MockK, Espresso, Compose UI Testing)."      |
 | `reviewer`      | "Invoke the `android` skill to verify Jetpack Compose components stability, ExoPlayer resource cleanup, and Kotlin Coroutines/Flows dispatchers." |
 
-### Laravel
-
-When a Laravel project is detected, include the following skill invocation instruction in the delegation message for each agent:
-
-| Delegated agent | Instruction to include in delegation                                                                                     |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `architect`     | "Invoke the `laravel-specialist` and `php-pro` skills before designing."                                                 |
-| `implementer`   | "Invoke `laravel-specialist` and `php-pro` before writing any code."                                                     |
-| `tester`        | "Invoke the `laravel-specialist` skill to write Pest/PHPUnit tests for Laravel features."                                |
-| `reviewer`      | "Invoke the `laravel-specialist` skill to verify Eloquent queries, Sanctum authentication, and Livewire components."     |
-
-### PHP
-
-When a PHP project is detected, include the following skill invocation instruction in the delegation message for each agent:
-
-| Delegated agent | Instruction to include in delegation                                                                                     |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `architect`     | "Invoke the `php-pro` skill before designing."                                                                           |
-| `implementer`   | "Invoke `php-pro` before writing any code."                                                                              |
-| `tester`        | "Invoke PHP testing and quality assurance guidelines in the `php-pro` skill."                                            |
-| `reviewer`      | "Invoke the `php-pro` skill to analyze strict typing, PHPStan level 9 violations, and PSR standards."                    |
-
 ### Generic Frontend
 
 When a generic frontend project is detected, include the following skill invocation
@@ -243,18 +238,6 @@ When a monorepo workspace signal is present, include this instruction for ALL ag
 > "This is a monorepo. Focus all file reads, edits, and commands strictly within
 > the sub-package or workspace directory specified in the Task Card scope. Avoid
 > modifying files or running commands outside this package's directory."
-
-### Python / Django / PostgreSQL
-
-When a Django project is detected, include the following skill invocation
-instruction in the delegation message for each agent:
-
-| Delegated agent | Instruction to include in delegation                                                                                                                    |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `architect`     | "Invoke the `python-django-stack` skill before designing. If the design touches models, queries, or migrations, also invoke `django-orm`."              |
-| `implementer`   | "Invoke `python-django-stack` before writing any code. If writing queryset logic, bulk operations, or service-layer DB code, also invoke `django-orm`." |
-| `tester`        | "Invoke `django-testing` before writing any test. The project uses multi-tenant PostgreSQL — do not use `TestCase` for tenant app models."              |
-| `reviewer`      | "Invoke `python` to check clean code conventions before reviewing."                                                                                     |
 
 **TDD gate for medium and high risk Python/Backend tasks:**
 
@@ -324,9 +307,7 @@ Show this routing decision to the human before delegating to any agent.
 ### Mandatory stops (always wait for human confirmation)
 
 - After the Routing Decision is produced
-- After `repo-explorer` maps the repo but before `architect` starts (verify "Think Before Coding" assumptions are documented)
-- After `architect` produces a Technical Plan (perform the "Simplicity Gate" review before `implementer` is invoked)
-- After `reviewer` produces a report (perform "Surgical Changes Audit" and verify "Goal-Driven Verification" of tests)
+- After `architect` produces a Technical Plan (before `implementer` is invoked)
 - After `reviewer` produces a CRITICAL finding
 - When any agent reports unexpected complexity or a new risk that was not in the
   original Task Card

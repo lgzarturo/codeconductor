@@ -97,6 +97,15 @@ function renderHuman(inventory: PresetInventory, defaultTarget: string): string 
     }
   }
 
+  lines.push('');
+  lines.push('Stack-specific presets (v0.4.0):');
+  lines.push('  ts-next-drizzle     Next.js / Astro, Tailwind, Drizzle ORM, Bun, Postgres');
+  lines.push('  spring-kotlin-jpa   Spring Boot, Kotlin/Java, Gradle, JPA, Hibernate');
+  lines.push('  laravel-tall        Laravel, Blade, Livewire, Alpine.js');
+  lines.push('  python-data-api     Python, FastAPI, Django, uv');
+  lines.push('  Browse: presets/<preset-name>/agents/ — copy into the target runner.');
+  lines.push('  Registry: src/core/presets/preset-registry.ts (listPresets / getPreset).');
+
   return lines.join('\n');
 }
 

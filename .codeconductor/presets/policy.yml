@@ -48,6 +48,18 @@ denyWrite:
   - "/var/**"
   - "~/**"
 
+# Credential patterns for secret detection.
+# These are merged with CodeConductorConfig.safety.secretPatterns at runtime.
+secretPatterns:
+  - password
+  - secret
+  - api_key
+  - token
+  - api[_-]?key
+  - access[_-]?token
+  - auth[_-]?token
+  - private[_-]?key
+
 targets:
   opencode:
     unsupportedRules: []

@@ -52,11 +52,40 @@ contracts, task cards, and risk-based routing.
 >   installs the full preset (agents, prompts, skills, commands, settings) for the
 >   chosen runner; use `--locale=es` to inject Spanish-aware instructions into
 >   agent files, or rely on the locale saved during `init`
+> - **Stack-specific presets (v0.4.0)**: `ts-next-drizzle`, `spring-kotlin-jpa`,
+>   `laravel-tall`, `python-data-api` — bundle `architect` + `implementer`
+>   contracts tuned to a single framework so `install preset` drops in the right
+>   defaults for that stack.
+> - **9 specialized skills (v0.4.0)**: `drizzle-schema-architect`,
+>   `tailwind-responsive-auditor`, `seo-analytics-injector`,
+>   `jpa-nplusone-detector`, `spring-auth-auditor`, `livewire-alpine-bridge`,
+>   `fastapi-pydantic-strict`, `tdd-mutation-tester`, `auth-token-inspector` —
+>   loaded automatically by the matching preset.
+> - **Workflow Loop Core (v0.4.0)** — 8-phase pipeline
+>   (`intake → structure → design → test → implement → validate → council →
+>   compact`) with operational guardrails (wall-clock timeout, max files
+>   modified, max lines changed) and human-in-the-loop STOP gates after Design
+>   and Council Verdict.
+> - **Council consensus v0.4.0** — agent confidence thresholds
+>   (`< 0.6` per-agent or `< 0.7` average escalates) and a `complianceVeto`
+>   channel that overrides majority the same way `securityVeto` does.
+> - **Goal orchestration (v0.4.0)** — `goal` planner writes
+>   `.codeconductor/current-goal.yml`; the orchestrator delegates tasks in
+>   dependency order and blocks dependents when a prerequisite is `blocked`.
+> - **Memory compression + escalation emitter (v0.4.0)** — Phase 5 memory index
+>   + token budget hook keeps inter-agent context below the configured budget;
+>   the loop controller emits escalation reports when guardrails fire.
+> - **Parallel subagents (v0.4.0)** — risk-based routing policy v0.4.0 enables
+>   parallel execution for eligible agent sequences (architect + implementer
+>   pattern, council verdict fan-out).
 > - Manual presets for OpenCode, Claude Code, and Codex
 > - Versioned Agent Contracts
 > - Routing Policy documentation
 > - Task Card, Scorecard, and workflow templates
 > - Spring Boot/Kotlin and Python/Django workflow guidance
+>
+> See [docs/v0.4.0-release-notes.md](docs/v0.4.0-release-notes.md) for the
+> full v0.4.0 feature breakdown.
 >
 > What does not exist yet:
 >
@@ -131,14 +160,19 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 - Spring Boot / Kotlin workflow
 - Python / Django workflow guidance
 - 12 core Conductor Agents
-- Routing Policy v0.3.0
+- Routing Policy v0.4.0
 - Task Card template
 - Scorecard template
 - End-to-end example
 - YAML-driven model configuration
 - Provider-agnostic `AgentContract` abstraction with target renderers for Claude, OpenCode, Codex, and Agy
-- Council consensus engine (`councilConsensus()`) for multi-agent governance with majority/unanimous algorithms and security veto
+- Council consensus engine (`councilConsensus()`) for multi-agent governance with majority/unanimous algorithms, security veto, **compliance veto**, and **agent confidence thresholds** (v0.4.0)
 - Phase 5 runtime modules — scoped context injection, TDD history compaction, concise inter-agent messaging, and token budget enforcement in the compile-fix loop
+- **Workflow Loop Core (v0.4.0)** — 8-phase pipeline (`runWorkflowPipeline`) with wall-clock / files-modified / lines-changed guardrails and STOP gates at Design and Council Verdict
+- **Stack-specific presets (v0.4.0)** — `ts-next-drizzle`, `spring-kotlin-jpa`, `laravel-tall`, `python-data-api`
+- **9 specialized skills (v0.4.0)** — drizzle-schema-architect, tailwind-responsive-auditor, seo-analytics-injector, jpa-nplusone-detector, spring-auth-auditor, livewire-alpine-bridge, fastapi-pydantic-strict, tdd-mutation-tester, auth-token-inspector
+- **Goal orchestration (v0.4.0)** — `goal` planner + `goal-state` writer feed the orchestrator's dependency-order delegation loop
+- **Memory compression + escalation emitter (v0.4.0)** — keeps inter-agent context within token budget and surfaces guardrail breaches as escalation reports
 
 ---
 
@@ -225,6 +259,43 @@ Files installed per target:
 | `codex`    | `.codex/AGENTS.md`, `.codex/skills/`, `.codex/prompts/`          |
 
 With `--global`, files are written under `~/` instead of `./`.
+
+#### Stack-specific presets (v0.4.0)
+
+Four stack-specific presets now ship in `presets/` and are registered in
+`src/core/presets/preset-registry.ts`. Each one bundles a tuned
+`architect.md` and `implementer.md` for a single stack, plus the matching
+specialized skills (see below).
+
+| Preset              | Stack                                                      | Contracts included        |
+| ------------------- | ---------------------------------------------------------- | ------------------------- |
+| `ts-next-drizzle`   | Next.js / Astro, Tailwind, Drizzle ORM, Bun, Postgres      | `architect`, `implementer`|
+| `spring-kotlin-jpa` | Spring Boot, Kotlin/Java, Gradle, JPA, Hibernate           | `architect`, `implementer`|
+| `laravel-tall`      | Laravel, Blade, Livewire, Alpine.js                        | `architect`, `implementer`|
+| `python-data-api`   | Python, FastAPI, Django, uv                                | `architect`, `implementer`|
+
+```ts
+// Programmatic access via the registry
+import { listPresets, getPreset } from 'cc-codeconductor/core/presets/preset-registry';
+
+listPresets();
+// [
+//   { name: 'council',            version: '0.1.0', ... },
+//   { name: 'seo-hotel',          version: '0.3.0', ... },
+//   { name: 'ts-next-drizzle',    version: '0.4.0', ... },
+//   { name: 'spring-kotlin-jpa',  version: '0.4.0', ... },
+//   { name: 'laravel-tall',       version: '0.4.0', ... },
+//   { name: 'python-data-api',    version: '0.4.0', ... },
+// ]
+
+const next = getPreset('ts-next-drizzle');
+```
+
+`init` / `detect` identifies the stack from the project and wires the
+matching specialized skills automatically when you run `install preset`.
+The full set of assets for a stack-specific preset is in
+`presets/<preset-name>/agents/` — copy them manually if you need to apply a
+preset by name.
 
 #### `install council` — install council spec
 
@@ -464,7 +535,7 @@ codeconductor/
 | ---------- | ----------------------------------------------------------- |
 | **v0.2.0** | **CLI: init, detect, install, doctor, update — shipped** ✅ |
 | v0.3.0     | Next.js, FastAPI, generic presets, monorepo support         |
-| v0.4.0     | Provider compatibility matrix and target sync workflows     |
+| **v0.4.0** | **Workflow Loop Core, stack-specific presets, 9 specialized skills, confidence thresholds + compliance veto in council consensus, goal orchestration, memory compression — shipped** ✅ |
 | v0.5.0     | Scorecard CLI, task outcome tracking, prompt regression     |
 | v1.0.0     | Stable contracts, stable routing, documented evaluation     |
 

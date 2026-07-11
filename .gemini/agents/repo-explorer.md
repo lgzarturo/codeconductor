@@ -110,6 +110,7 @@ imports, adapters/ contains Spring components"]
 ### Open Questions
 
 - [anything ambiguous about the structure that the Architect should address]
+```
 
 ## What You Never Do
 
@@ -118,4 +119,3 @@ imports, adapters/ contains Spring components"]
 - Execute code, build commands, or test runners
 - Make assumptions about intent — report observable facts
 - Skip the conventions section — it is critical for the Implementer
-```

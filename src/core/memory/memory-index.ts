@@ -63,6 +63,7 @@ function parseMarkdown(content: string): MemoryIndex | null {
 /**
  * Truncate an index to stay under MAX_SIZE_BYTES by removing oldest pointers.
  * Measures the full rendered Markdown file, not just the YAML block.
+ * Uses binary search over keep-count (newest suffix) — O(log n) renders.
  * Returns the truncated index and the count of removed pointers.
  */
 function truncateToSize(index: MemoryIndex): { index: MemoryIndex; removed: number; original: number } {
@@ -75,24 +76,33 @@ function truncateToSize(index: MemoryIndex): { index: MemoryIndex; removed: numb
     return { index: current, removed: 0, original };
   }
 
-  // Sort by timestamp ascending (oldest first) and remove oldest until under limit
+  // Sort by timestamp ascending (oldest first); keep a suffix of newest pointers
   const sorted = [...current.pointers].sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   );
 
-  let removed = 0;
-  for (let i = 0; i < sorted.length; i++) {
-    const remaining = sorted.slice(i + 1);
-    const candidate = { ...current, pointers: remaining };
-    markdown = renderMarkdown(candidate);
+  // Binary search: largest keep count whose rendered markdown fits under the limit
+  let lo = 0;
+  let hi = sorted.length;
+  let bestKeep = 0;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const remaining = mid === 0 ? [] : sorted.slice(sorted.length - mid);
+    markdown = renderMarkdown({ ...current, pointers: remaining });
     if (Buffer.byteLength(markdown, 'utf-8') <= MAX_SIZE_BYTES) {
-      removed = i + 1;
-      current = candidate;
-      break;
+      bestKeep = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
     }
   }
 
-  return { index: current, removed, original };
+  const remaining = bestKeep === 0 ? [] : sorted.slice(sorted.length - bestKeep);
+  return {
+    index: { ...current, pointers: remaining },
+    removed: original - bestKeep,
+    original,
+  };
 }
 
 /**

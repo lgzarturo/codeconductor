@@ -46,6 +46,8 @@ describe('install lsp command', () => {
   beforeAll(async () => {
     CLI_ROOT = await mkdtemp(join(tmpdir(), 'cc-lsp-test-'));
     await writeFile(join(CLI_ROOT, 'package.json'), await readFile(join(PROJECT_ROOT, 'package.json')));
+    // Prewarm Bun CLI compilation so the first real test is not cold-start bound in CI
+    await runCli(['install', 'lsp', '--target=opencode', '--lang=typescript', '--dry-run']);
   });
 
   afterAll(async () => {
@@ -60,13 +62,23 @@ describe('install lsp command', () => {
 
   // Acceptance Criterion 1: installs LSP servers and writes config
   describe('Basic Installation', () => {
-    test('install lsp --target opencode generates config file', async () => {
-      const result = await runCli(['install', 'lsp', '--target=opencode', '--dry-run']);
-      expect(result.exitCode).toBe(0);
+    test(
+      'install lsp --target opencode generates config file',
+      async () => {
+        const result = await runCli([
+          'install',
+          'lsp',
+          '--target=opencode',
+          '--lang=typescript',
+          '--dry-run',
+        ]);
+        expect(result.exitCode).toBe(0);
 
-      // In dry-run, no files should be created
-      expect(existsSync(join(CLI_ROOT, '.opencode', 'opencode.json'))).toBe(false);
-    });
+        // In dry-run, no files should be created
+        expect(existsSync(join(CLI_ROOT, '.opencode', 'opencode.json'))).toBe(false);
+      },
+      15_000
+    );
 
     test('install lsp --target opencode --force can create config file', async () => {
       // Without dry-run, files should be created (even if install might fail)

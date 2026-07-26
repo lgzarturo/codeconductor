@@ -16,7 +16,14 @@ jobs:
           bun-version: latest
       - run: bun install
       - run: bun run typecheck
-      - run: bun test
+      - run: bun run check:prompt-changelog
+      - run: bun test --coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          if-no-files-found: ignore
       - run: bun run build
       - run: bun run src/cli/main.ts doctor
       - run: bun run src/cli/main.ts ingest

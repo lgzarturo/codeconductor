@@ -106,7 +106,7 @@ regression.
 
 | Task type          | Risk        | Route                                                              |
 | ------------------ | ----------- | ------------------------------------------------------------------ |
-| New feature        | high        | `architect` → `implementer` → `tester` → `security-reviewer` (Council) |
+| New feature        | high        | `architect` → `implementer` → `tester` → `security-reviewer` → `reviewer` |
 | New feature        | low-medium  | `architect` → `implementer` → `tester` → `reviewer`                |
 | Performance Opt    | medium      | `task-coach` → `implementer` → `reviewer`                           |
 | Bug fix            | low         | `implementer` → `tester`                                           |

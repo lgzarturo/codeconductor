@@ -114,6 +114,7 @@ When multiple signals apply, take the highest risk level. Do not average.
 | Codebase exploration | any         | `repo-explorer`                                     |
 | Code review          | any         | `reviewer`                                          |
 | Security review      | high        | `security-reviewer` → `reviewer`                    |
+| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `implementer` → `tester` |
 
 ---
 
@@ -786,6 +787,62 @@ module, or identifying the impact radius of a change.
 ### Open Questions
 
 - [anything ambiguous the Architect should address]
+```
+
+---
+
+### contract-builder
+
+**Role:** Defines API contracts, data shapes, and behavior specs before
+implementation. Produces OpenAPI specs, JSON Schema, or TypeScript interfaces
+that the implementer and tester use as the source of truth.
+
+**Use when:** New feature needs spec-before-implementation, API contract needs
+definition, or the DDD→SDD→TDD pipeline is triggered.
+
+**Permissions:**
+
+- read: `allow`
+- edit: `ask` (docs, ADRs, OpenAPI only)
+- bash: `deny`
+- network: `deny`
+
+**Does not:** Write implementation code. Modify production source files.
+
+**Model:** `{{MODEL_CODEX}}`
+
+**Deliverables:**
+
+- OpenAPI 3.x spec (`openapi.yaml` or `*-api.yaml`)
+- JSON Schema for request/response bodies
+- TypeScript interfaces for shared types
+- Contract test matrix (endpoint × status × shape)
+
+**Contract specification format:**
+
+```markdown
+## API Contract
+
+**Task**: [objective from Task Card]
+
+### Endpoints / Interfaces
+
+| Method | Path | Request | Response | Errors |
+| ------ | ---- | ------- | -------- | ------ |
+| POST | /api/v1/... | [schema ref] | [schema ref] | 400, 401, 422 |
+
+### Data shapes
+
+- `[TypeName]`: [field list with types and constraints]
+
+### Compatibility
+
+- Breaking changes: [yes/no — list if yes]
+- Versioning strategy: [URL prefix | header | none]
+
+### Contract tests required
+
+- [ ] [test description — request shape, response shape, error cases]
 ```
 
 ---

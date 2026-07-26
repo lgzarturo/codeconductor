@@ -107,6 +107,8 @@ function extractAgentRole(filePath: string): string | null {
     'repo-explorer',
     'complexity-auditor',
     'security-reviewer',
+    'goal-planner',
+    'contract-builder',
   ];
   return knownRoles.includes(name) ? name : null;
 }

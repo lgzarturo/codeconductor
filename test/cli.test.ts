@@ -598,7 +598,13 @@ describe('CLI', () => {
       existsSync(join(CLI_ROOT, '.opencode', 'prompts', 'v0.5.0', 'orchestrator.md'))
     ).toBe(true);
     expect(
-      existsSync(join(CLI_ROOT, '.opencode', 'skills', 'api-versioning', 'SKILL.md'))
+      existsSync(join(CLI_ROOT, '.opencode', 'agents', 'contract-builder.md'))
+    ).toBe(true);
+    expect(
+      existsSync(join(CLI_ROOT, '.opencode', 'agents', 'goal-planner.md'))
+    ).toBe(true);
+    expect(
+      existsSync(join(CLI_ROOT, '.opencode', 'agents', 'security-reviewer.md'))
     ).toBe(true);
   });
 

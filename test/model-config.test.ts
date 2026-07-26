@@ -481,14 +481,14 @@ describe('Agent file templates (source presets)', () => {
     }
   });
 
-  test('codex AGENTS.md contains exactly 8 occurrences of {{MODEL_CODEX}} and none of the others', async () => {
+  test('codex AGENTS.md contains exactly 10 occurrences of {{MODEL_CODEX}} and none of the others', async () => {
     const content = await readFile(join(PRESETS_DIR, 'codex', 'AGENTS.md'), 'utf-8');
     const claudeCount = (content.match(/\{\{MODEL_CLAUDE\}\}/g) || []).length;
     const opencodeCount = (content.match(/\{\{MODEL_OPENCODE\}\}/g) || []).length;
     const codexCount = (content.match(/\{\{MODEL_CODEX\}\}/g) || []).length;
     expect(claudeCount).toBe(0);
     expect(opencodeCount).toBe(0);
-    expect(codexCount).toBe(9);
+    expect(codexCount).toBe(10);
   });
 
   test('opencode agent files still have valid frontmatter', async () => {

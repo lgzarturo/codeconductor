@@ -547,6 +547,36 @@ remains `pending`.
 
 ---
 
+### `npx cc-codeconductor openspec <subcommand>`
+
+OpenSpec backlog delivery: validate `BACKLOG.md`, scan changes, plan TaskCards,
+and return the next executable card.
+
+**Subcommands:**
+
+| Subcommand | Description |
+| ---------- | ----------- |
+| `validate` | Validate BACKLOG.md format and business rules (mandatory gate) |
+| `scan` | Git diff + item-level change detection vs last snapshot |
+| `plan [BC-id]` | Generate TaskCards and `openspec/changes/<slug>/` for an item |
+| `status` | Active item, next READY item, task card counts |
+| `next` | JSON for the next pending TaskCard (respects dependencies) |
+
+**Examples:**
+
+```bash
+npx cc-codeconductor openspec validate
+npx cc-codeconductor openspec scan
+npx cc-codeconductor openspec plan BC-001
+npx cc-codeconductor openspec status --output json
+npx cc-codeconductor openspec next --output json
+```
+
+**State files:**
+
+- `BACKLOG.md` — human-readable queue (root)
+- `.codeconductor/openspec-state.json` — task cards, snapshots, change paths
+
 ---
 
 ## Agent Commands (Claude / OpenCode)
@@ -618,6 +648,27 @@ the current working directory.
 ```
 
 See `docs/pagespeed-usage.md` for the complete usage guide.
+
+---
+
+### `/cc:openspec` / `/cc-openspec [BC-id]`
+
+Runs the OpenSpec backlog delivery workflow: validate `BACKLOG.md`, scan, plan
+TaskCards, orchestrate agents by phase (discover → design → test → implement →
+review), reviewer gate, and backlog updates.
+
+**Available in**: Claude Code (`/cc:openspec`), OpenCode (`/cc-openspec`), AGY
+(`/cc-openspec`).
+
+**CLI gate (mandatory):** `npx cc-codeconductor openspec validate` must pass before
+processing.
+
+**Examples:**
+
+```bash
+/cc:openspec
+/cc:openspec BC-001
+```
 
 ---
 

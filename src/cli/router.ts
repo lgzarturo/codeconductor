@@ -11,6 +11,7 @@ import {
 import { installLspCommand, type InstallLspOptions } from '../commands/install-lsp.command';
 import { debtHarvestCommand, type DebtHarvestOptions } from '../commands/debt-harvest.command';
 import { goalCommand, type GoalOptions } from '../commands/goal.command';
+import { openspecCommand, type OpenspecOptions } from '../commands/openspec.command';
 import { helpCommand, type HelpOptions } from '../commands/help.command';
 import { seoAuditCommand } from '../commands/seo-audit.command';
 import { seoLlmsCommand } from '../commands/seo-llms.command';
@@ -32,6 +33,7 @@ export interface CliArgs {
     force: boolean;
     output: OutputMode;
   };
+  rest?: string[];
 }
 
 /**
@@ -89,6 +91,7 @@ export function parseArgs(args: string[]): CliArgs {
   const subcommand = remaining[1] && !remaining[1].startsWith('-') ? remaining[1] : undefined;
 
   // Parse remaining args for options
+  const consumed = new Set<number>();
   for (let i = 1; i < remaining.length; i++) {
     const arg = remaining[i];
     if (arg.startsWith('--')) {
@@ -96,20 +99,33 @@ export function parseArgs(args: string[]): CliArgs {
       if (key === 'lang') {
         // Parse comma-separated values for --lang
         const langValue = value !== undefined ? value : remaining[++i];
+        consumed.add(i);
         if (langValue && typeof langValue === 'string') {
           options[key] = langValue.split(',').map((s) => s.trim());
         }
       } else if (value !== undefined) {
         options[key] = value;
+        consumed.add(i);
       } else if (remaining[i + 1] && !remaining[i + 1].startsWith('-')) {
         options[key] = remaining[++i];
+        consumed.add(i - 1);
+        consumed.add(i);
       } else {
         options[key] = true;
+        consumed.add(i);
       }
     }
   }
 
-  return { command, subcommand, options, flags };
+  const rest: string[] = [];
+  const startIdx = subcommand ? 2 : 1;
+  for (let i = startIdx; i < remaining.length; i++) {
+    if (!consumed.has(i) && !remaining[i].startsWith('-')) {
+      rest.push(remaining[i]);
+    }
+  }
+
+  return { command, subcommand, options, flags, rest };
 }
 
 /**
@@ -200,6 +216,11 @@ Examples:
   npx cc-codeconductor seo llms --url https://example.com --output llms.txt
   npx cc-codeconductor goal "Add user authentication"
   npx cc-codeconductor cc-goal "Implement CRUD for invoices"
+  npx cc-codeconductor openspec validate
+  npx cc-codeconductor openspec scan
+  npx cc-codeconductor openspec plan BC-001
+  npx cc-codeconductor openspec status
+  npx cc-codeconductor openspec next
   npx cc-codeconductor help --target opencode
   npx cc-codeconductor help --target claude --output json
 
@@ -322,6 +343,30 @@ export async function routeCommand(
         projectRoot,
         output: flags.output,
       } as GoalOptions);
+
+    case 'openspec':
+    case 'cc-openspec': {
+      const validSubs = ['validate', 'scan', 'plan', 'status', 'next'];
+      let openspecSub = 'validate';
+      let itemId: string | undefined = (options.item as string) || undefined;
+
+      if (subcommand && validSubs.includes(subcommand)) {
+        openspecSub = subcommand;
+        itemId = itemId ?? args.rest?.[0];
+      } else if (subcommand && /^BC-\d+$/i.test(subcommand)) {
+        openspecSub = 'plan';
+        itemId = subcommand;
+      } else if (subcommand) {
+        openspecSub = subcommand;
+      }
+
+      return openspecCommand({
+        subcommand: openspecSub,
+        itemId,
+        projectRoot,
+        output: flags.output,
+      } as OpenspecOptions);
+    }
 
     case 'seo': {
       if (subcommand === 'audit') {

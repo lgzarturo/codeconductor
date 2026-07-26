@@ -384,6 +384,89 @@ export const GoalGraphSchema = z.object({
   created_at: z.string(),
 });
 
+// ─── OpenSpec / Backlog Schemas ───────────────────────────────────────────────
+
+export const BacklogStatusSchema = z.enum([
+  'TODO',
+  'READY',
+  'PLANNED',
+  'IN_PROGRESS',
+  'BLOCKED',
+  'REVIEW',
+  'DONE',
+]);
+
+export const BacklogTypeSchema = z.enum(['feature', 'bug', 'refactor', 'tech-debt']);
+
+export const BacklogPrioritySchema = z.enum(['P0', 'P1', 'P2', 'P3']);
+
+export const BacklogGlobalSchema = z.object({
+  product: z.string().min(1),
+  strategy: z.string().min(1),
+  policy: z.string().min(1),
+  reviewRequired: z.boolean(),
+  tddRequired: z.boolean(),
+});
+
+export const BacklogItemSchema = z.object({
+  id: z.string().regex(/^BC-\d{3,}$/),
+  title: z.string().min(1),
+  priority: BacklogPrioritySchema,
+  status: BacklogStatusSchema,
+  type: BacklogTypeSchema,
+  owner: z.string().optional(),
+  dependencies: z.array(z.string()).default([]),
+  description: z.string().min(1),
+  scope: z.string().min(1),
+  outOfScope: z.string().default(''),
+  businessValue: z.string().optional(),
+  acceptanceCriteria: z.array(z.string().min(1)).min(1),
+  risks: z.string().optional(),
+  progress: z.number().int().min(0).max(100),
+  branch: z.string().optional(),
+  reviewer: z.string().optional(),
+  lastUpdate: z.string().optional(),
+});
+
+export const BacklogDocumentSchema = z.object({
+  global: BacklogGlobalSchema,
+  items: z.array(BacklogItemSchema),
+  archive: z.array(BacklogItemSchema).default([]),
+});
+
+export const OpenspecTaskCardPhaseSchema = z.enum([
+  'discover',
+  'design',
+  'implement',
+  'test',
+  'review',
+]);
+
+export const OpenspecTaskCardStatusSchema = z.enum(['pending', 'doing', 'blocked', 'done']);
+
+export const OpenspecTaskCardSchema = z.object({
+  id: z.string(),
+  backlogId: z.string(),
+  phase: OpenspecTaskCardPhaseSchema,
+  title: z.string(),
+  prompt: z.string(),
+  agent: z.string(),
+  modelHint: z.string().optional(),
+  dependsOn: z.array(z.string()).default([]),
+  acceptanceCriteria: z.array(z.string()),
+  status: OpenspecTaskCardStatusSchema,
+});
+
+export const OpenspecStateSchema = z.object({
+  version: z.literal(1),
+  activeItemId: z.string().optional(),
+  taskCards: z.array(OpenspecTaskCardSchema).default([]),
+  lastScanHash: z.string().optional(),
+  lastScanAt: z.string().optional(),
+  changePaths: z.record(z.string(), z.string()).optional().default({}),
+  itemSnapshots: z.record(z.string(), z.string()).optional().default({}),
+});
+
 // ─── Schema Type Exports ──────────────────────────────────────────────────────
 
 export type ContractTargetInput = z.infer<typeof ContractTargetSchema>;
@@ -397,6 +480,15 @@ export type GoalTaskInput = z.infer<typeof GoalTaskSchema>;
 export type GoalGraphInput = z.infer<typeof GoalGraphSchema>;
 export type MemoryPointerInput = z.infer<typeof MemoryPointerSchema>;
 export type MemoryIndexInput = z.infer<typeof MemoryIndexSchema>;
+export type BacklogStatusInput = z.infer<typeof BacklogStatusSchema>;
+export type BacklogTypeInput = z.infer<typeof BacklogTypeSchema>;
+export type BacklogPriorityInput = z.infer<typeof BacklogPrioritySchema>;
+export type BacklogGlobalInput = z.infer<typeof BacklogGlobalSchema>;
+export type BacklogItemInput = z.infer<typeof BacklogItemSchema>;
+export type BacklogDocumentInput = z.infer<typeof BacklogDocumentSchema>;
+export type OpenspecTaskCardPhaseInput = z.infer<typeof OpenspecTaskCardPhaseSchema>;
+export type OpenspecTaskCardInput = z.infer<typeof OpenspecTaskCardSchema>;
+export type OpenspecStateInput = z.infer<typeof OpenspecStateSchema>;
 
 // ─── Validate Helpers ─────────────────────────────────────────────────────────
 
@@ -461,5 +553,19 @@ export function validateMemoryPointer(data: unknown): z.infer<typeof MemoryPoint
  */
 export function validateMemoryIndex(data: unknown): z.infer<typeof MemoryIndexSchema> {
   return MemoryIndexSchema.parse(data);
+}
+
+/**
+ * Validate backlog document
+ */
+export function validateBacklogDocument(data: unknown): BacklogDocumentInput {
+  return BacklogDocumentSchema.parse(data);
+}
+
+/**
+ * Validate openspec state
+ */
+export function validateOpenspecState(data: unknown): OpenspecStateInput {
+  return OpenspecStateSchema.parse(data);
 }
 

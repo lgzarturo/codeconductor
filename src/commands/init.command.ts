@@ -3,7 +3,7 @@ import { homedir } from 'node:os';
 import { basename, resolve } from 'node:path';
 import { writeConfig } from '../core/config/config-writer';
 import { detectProject } from '../core/detection/project-detector';
-import { POLICY_PATH, SRC_PRESETS_DIR } from '../core/presets/package-paths';
+import { POLICY_PATH, ROOT_PRESETS_DIR, SRC_PRESETS_DIR } from '../core/presets/package-paths';
 import { resolvePreset } from '../core/presets/preset-resolver';
 import type { OutputMode } from '../utils/logger';
 
@@ -110,13 +110,14 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
     }
 
     const copiedPresets = await copyPresets(baseDir, presetsToCopy, force);
+    const openspecCreated = await initOpenspecArtifacts(baseDir, force);
 
     return {
       code: 0,
       data: {
         success: true,
         command: 'init',
-        created: ['.codeconductor/config.yml', ...copiedPresets],
+        created: ['.codeconductor/config.yml', ...copiedPresets, ...openspecCreated],
         ...(profile
           ? {
               detected: {
@@ -204,4 +205,43 @@ async function fileExists(path: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/**
+ * Create BACKLOG.md template and openspec state stub for project init.
+ */
+async function initOpenspecArtifacts(baseDir: string, force: boolean): Promise<string[]> {
+  if (baseDir === homedir()) return [];
+
+  const created: string[] = [];
+  const backlogDest = resolve(baseDir, 'BACKLOG.md');
+  const backlogTemplate = resolve(ROOT_PRESETS_DIR, 'templates', 'BACKLOG.md');
+
+  if (force || !(await fileExists(backlogDest))) {
+    if (await fileExists(backlogTemplate)) {
+      const content = await readFile(backlogTemplate, 'utf-8');
+      await writeFile(backlogDest, content, 'utf-8');
+      created.push('BACKLOG.md');
+    }
+  }
+
+  const stateDir = resolve(baseDir, '.codeconductor');
+  await mkdir(stateDir, { recursive: true });
+  const stateDest = resolve(stateDir, 'openspec-state.json');
+  if (force || !(await fileExists(stateDest))) {
+    const initialState = JSON.stringify(
+      {
+        version: 1,
+        taskCards: [],
+        changePaths: {},
+        itemSnapshots: {},
+      },
+      null,
+      2
+    );
+    await writeFile(stateDest, initialState, 'utf-8');
+    created.push('.codeconductor/openspec-state.json');
+  }
+
+  return created;
 }

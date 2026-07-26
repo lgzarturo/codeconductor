@@ -164,6 +164,7 @@ async function handlePlan(
     version: 1 as const,
     taskCards: [],
     changePaths: {},
+    itemSnapshots: {},
   };
 
   const taskCards = planTaskCardsForItem(item, doc, existingState.taskCards);

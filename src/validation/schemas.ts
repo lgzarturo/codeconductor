@@ -578,6 +578,7 @@ export type BacklogGlobalInput = z.infer<typeof BacklogGlobalSchema>;
 export type BacklogItemInput = z.infer<typeof BacklogItemSchema>;
 export type BacklogDocumentInput = z.infer<typeof BacklogDocumentSchema>;
 export type OpenspecTaskCardPhaseInput = z.infer<typeof OpenspecTaskCardPhaseSchema>;
+export type OpenspecTaskCardStatusInput = z.infer<typeof OpenspecTaskCardStatusSchema>;
 export type OpenspecTaskCardInput = z.infer<typeof OpenspecTaskCardSchema>;
 export type OpenspecStateInput = z.infer<typeof OpenspecStateSchema>;
 export type ScorecardVerdictInput = z.infer<typeof ScorecardVerdictSchema>;

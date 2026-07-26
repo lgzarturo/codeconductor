@@ -4,6 +4,7 @@ import {
   EvaluationIndexSchema,
   ScorecardRecordSchema,
   TaskOutcomeSchema,
+  type EvaluationIndexInput,
   type ScorecardRecordInput,
   type TaskOutcomeInput,
 } from '../../validation/schemas';
@@ -46,7 +47,7 @@ export async function appendOutcome(
     await appendFile(resolve(dir, OUTCOMES_FILE), JSON.stringify(validated) + '\n', 'utf-8');
 
     const indexPath = resolve(dir, INDEX_FILE);
-    let index = { version: 1 as const, lastOutcomeId: validated.id };
+    let index: EvaluationIndexInput = { version: 1, lastOutcomeId: validated.id };
     try {
       const raw = await readFile(indexPath, 'utf-8');
       index = EvaluationIndexSchema.parse(JSON.parse(raw));

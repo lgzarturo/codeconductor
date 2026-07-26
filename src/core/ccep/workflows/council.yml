@@ -1,0 +1,29 @@
+id: council
+version: 1
+command: council
+phases:
+  - id: deliberation
+    agents:
+      - task-coach
+      - architect
+      - devil
+    skill: council
+    outputSchema: planner-output
+    stopGate: confirmation
+  - id: tdd
+    agent: tester
+    requires: red-state
+  - id: implement
+    agent: implementer
+  - id: council-review
+    skill: council
+    outputSchema: council-verdict
+routing:
+  default:
+    - deliberation
+    - tdd
+    - implement
+    - council-review
+confirmationGate:
+  stopOnHighRisk: true
+  stopOnQuestions: true

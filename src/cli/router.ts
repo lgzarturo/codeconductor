@@ -11,6 +11,7 @@ import {
 import { installLspCommand, type InstallLspOptions } from '../commands/install-lsp.command';
 import { debtHarvestCommand, type DebtHarvestOptions } from '../commands/debt-harvest.command';
 import { goalCommand, type GoalOptions } from '../commands/goal.command';
+import { ccepCommand, type CcepOptions } from '../commands/ccep.command';
 import { openspecCommand, type OpenspecOptions } from '../commands/openspec.command';
 import { scorecardCommand, type ScorecardOptions } from '../commands/scorecard.command';
 import { helpCommand, type HelpOptions } from '../commands/help.command';
@@ -218,6 +219,9 @@ Examples:
   npx cc-codeconductor seo llms --url https://example.com --output llms.txt
   npx cc-codeconductor goal "Add user authentication"
   npx cc-codeconductor cc-goal "Implement CRUD for invoices"
+  npx cc-codeconductor ccep parse --command fix "login fails"
+  npx cc-codeconductor ccep profile council --output json
+  npx cc-codeconductor ccep resolve --command feature "Add CRUD"
   npx cc-codeconductor openspec validate
   npx cc-codeconductor openspec scan
   npx cc-codeconductor openspec plan BC-001
@@ -348,6 +352,36 @@ export async function routeCommand(
         projectRoot,
         output: flags.output,
       } as GoalOptions);
+
+    case 'ccep': {
+      const validSubs = ['parse', 'profile', 'resolve', 'compile', 'validate'];
+      const ccepSub = subcommand && validSubs.includes(subcommand) ? subcommand : 'parse';
+      const workflowCommand = (options.command as string) || undefined;
+      const requestParts = args.rest ?? [];
+      const userRequest =
+        ccepSub === 'profile' && !workflowCommand
+          ? requestParts[0]
+          : ['compile', 'resolve', 'parse'].includes(ccepSub)
+            ? requestParts.join(' ').trim()
+            : requestParts.join(' ').trim();
+
+      const validateRest =
+        ccepSub === 'validate' && !options.input ? requestParts : undefined;
+
+      return ccepCommand({
+        subcommand: ccepSub,
+        projectRoot,
+        output: flags.output,
+        command: workflowCommand,
+        userRequest: userRequest || undefined,
+        phase: options.phase as string | undefined,
+        role: options.role as string | undefined,
+        input: options.input as string | undefined,
+        contextPath: (options.context as string) || (options.contextPath as string),
+        promptVersion: (options['prompt-version'] as string) || (options.promptVersion as string),
+        rest: validateRest,
+      } as CcepOptions);
+    }
 
     case 'openspec':
     case 'cc-openspec': {

@@ -1,0 +1,28 @@
+id: db-migration
+version: 1
+command: db-migration
+taskCard:
+  type: feature
+  requiredFields:
+    - scope
+    - risk
+    - acceptanceCriteria
+phases:
+  - id: design
+    agent: architect
+    outputSchema: technical-plan
+  - id: implement
+    agent: implementer
+  - id: test
+    agent: tester
+  - id: review
+    agent: reviewer
+routing:
+  default:
+    - design
+    - implement
+    - test
+    - review
+confirmationGate:
+  stopOnHighRisk: true
+  stopOnQuestions: true

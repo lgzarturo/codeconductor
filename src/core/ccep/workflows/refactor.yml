@@ -1,0 +1,34 @@
+id: refactor
+version: 1
+command: refactor
+taskCard:
+  type: refactor
+  requiredFields:
+    - title
+    - risk
+    - scope
+    - acceptanceCriteria
+phases:
+  - id: intake
+    agent: task-coach
+    outputSchema: planner-output
+  - id: design
+    agent: architect
+    outputSchema: technical-plan
+  - id: implement
+    agent: implementer
+  - id: audit
+    agent: complexity-auditor
+    outputSchema: complexity-audit
+  - id: review
+    agent: reviewer
+routing:
+  default:
+    - intake
+    - design
+    - implement
+    - audit
+    - review
+confirmationGate:
+  stopOnHighRisk: true
+  stopOnQuestions: true

@@ -1,0 +1,44 @@
+id: feature
+version: 1
+command: feature
+taskCard:
+  type: feature
+  requiredFields:
+    - title
+    - type
+    - risk
+    - scope
+    - context
+    - acceptanceCriteria
+phases:
+  - id: intake
+    agent: task-coach
+    outputSchema: planner-output
+    stopGate: confirmation
+  - id: design
+    agent: architect
+    outputSchema: technical-plan
+    stopGate: approval
+  - id: implement
+    agent: implementer
+    dependsOn:
+      - design
+  - id: test
+    agent: tester
+  - id: review
+    agent: reviewer
+  - id: docs
+    agent: docs
+    parallelWith:
+      - review
+routing:
+  default:
+    - intake
+    - design
+    - implement
+    - test
+    - review
+    - docs
+confirmationGate:
+  stopOnHighRisk: true
+  stopOnQuestions: true

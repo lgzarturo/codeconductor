@@ -2,6 +2,7 @@ import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, resolve } from 'node:path';
 import { writeConfig } from '../core/config/config-writer';
+import { initWorkflowArtifacts } from '../core/ccep/workflow-init';
 import { detectProject } from '../core/detection/project-detector';
 import { POLICY_PATH, ROOT_PRESETS_DIR, SRC_PRESETS_DIR } from '../core/presets/package-paths';
 import { resolvePreset } from '../core/presets/preset-resolver';
@@ -112,13 +113,20 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
     const copiedPresets = await copyPresets(baseDir, presetsToCopy, force);
     const openspecCreated = await initOpenspecArtifacts(baseDir, force);
     const evalCreated = await initEvaluationArtifacts(baseDir, force);
+    const workflowsCreated = await initWorkflowArtifacts(baseDir, force);
 
     return {
       code: 0,
       data: {
         success: true,
         command: 'init',
-        created: ['.codeconductor/config.yml', ...copiedPresets, ...openspecCreated, ...evalCreated],
+        created: [
+          '.codeconductor/config.yml',
+          ...copiedPresets,
+          ...openspecCreated,
+          ...evalCreated,
+          ...workflowsCreated,
+        ],
         ...(profile
           ? {
               detected: {

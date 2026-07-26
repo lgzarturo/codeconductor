@@ -1,0 +1,18 @@
+id: pagespeed
+version: 1
+command: pagespeed
+intakeSchema: pagespeed-url
+phases:
+  - id: psi-fetch
+    agent: repo-explorer
+    type: external
+  - id: report
+    agent: docs
+    outputSchema: pagespeed-report
+routing:
+  default:
+    - psi-fetch
+    - report
+confirmationGate:
+  stopOnHighRisk: false
+  stopOnQuestions: false

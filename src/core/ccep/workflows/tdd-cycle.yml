@@ -1,0 +1,21 @@
+id: tdd-cycle
+version: 1
+command: tdd-cycle
+taskCard:
+  type: test
+  requiredFields:
+    - scope
+    - acceptanceCriteria
+phases:
+  - id: test
+    agent: tester
+    requires: red-state
+  - id: implement
+    agent: implementer
+routing:
+  default:
+    - test
+    - implement
+confirmationGate:
+  stopOnHighRisk: false
+  stopOnQuestions: true

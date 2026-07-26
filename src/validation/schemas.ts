@@ -468,6 +468,212 @@ export const OpenspecStateSchema = z.object({
   itemSnapshots: z.record(z.string(), z.string()).optional().default({}),
 });
 
+// ─── CCEP-1 (CodeConductor Execution Protocol) Schemas ───────────────────────
+
+export const WorkflowCommandSchema = z.enum([
+  'feature',
+  'fix',
+  'refactor',
+  'review',
+  'test-plan',
+  'tdd-cycle',
+  'api-contract',
+  'db-migration',
+  'pagespeed',
+  'openspec',
+  'scorecard',
+  'council',
+]);
+
+export const CcepOutputFormatSchema = z.enum(['taskcard', 'plan', 'verdict']);
+
+export const CommandEnvelopeSchema = z.object({
+  protocolVersion: z.literal('ccep-1'),
+  command: WorkflowCommandSchema,
+  userRequest: z.string(),
+  projectId: z.string(),
+  repoContext: z.object({
+    domain: z.string().optional(),
+    stack: z.array(z.string()),
+    existingModules: z.array(z.string()).default([]),
+    architecture: z.string().optional(),
+  }),
+  constraints: z.object({
+    outputFormat: CcepOutputFormatSchema,
+    needConfirmation: z.boolean(),
+    riskThreshold: z.enum(['low', 'medium', 'high']),
+  }),
+  executionPolicy: z.object({
+    modelMode: z.literal('structured'),
+    maxVariance: z.literal('low'),
+  }),
+});
+
+export const WorkflowPhaseSchema = z.object({
+  id: z.string(),
+  agent: z.string().optional(),
+  agents: z.array(z.string()).optional(),
+  skill: z.string().optional(),
+  type: z.string().optional(),
+  outputSchema: z.string().optional(),
+  stopGate: z.string().optional(),
+  dependsOn: z.array(z.string()).optional(),
+  requires: z.string().optional(),
+  parallelWith: z.array(z.string()).optional(),
+});
+
+export const WorkflowRiskRuleSchema = z.object({
+  when: z.object({
+    risk: z.union([
+      z.enum(['low', 'medium', 'high']),
+      z.array(z.enum(['low', 'medium', 'high'])),
+    ]),
+  }),
+  then: z.array(z.string()),
+});
+
+export const WorkflowProfileSchema = z
+  .object({
+    id: z.string(),
+    version: z.number().int().positive(),
+    command: WorkflowCommandSchema,
+    taskCard: z
+      .object({
+        type: z.string(),
+        requiredFields: z.array(z.string()),
+        optionalFields: z.array(z.string()).optional(),
+      })
+      .optional(),
+    intakeSchema: z.string().optional(),
+    phases: z.array(WorkflowPhaseSchema),
+    routing: z.object({
+      default: z.array(z.string()),
+      riskRules: z.array(WorkflowRiskRuleSchema).optional(),
+    }),
+    confirmationGate: z.object({
+      stopOnHighRisk: z.boolean(),
+      stopOnQuestions: z.boolean(),
+    }),
+  })
+  .refine((profile) => profile.id === profile.command, {
+    message: 'Workflow profile id must match command',
+  });
+
+export const ExecutionContextSchema = z.object({
+  envelope: CommandEnvelopeSchema,
+  profile: WorkflowProfileSchema,
+  intent: z.object({
+    type: WorkflowCommandSchema,
+    goal: z.string(),
+    domain: z.string().optional(),
+    entity: z.string().optional(),
+    operation: z.string().optional(),
+  }),
+  project: z.object({
+    name: z.string(),
+    rootDir: z.string(),
+    stack: z.array(z.string()).optional(),
+  }),
+  knowledge: z.record(z.string(), z.unknown()).default({}),
+  ast: z.object({
+    source: z.enum(['detect', 'graphify', 'manual']),
+    confidence: z.enum(['low', 'medium', 'high']),
+    domains: z.array(z.unknown()).optional(),
+    rules: z.array(z.string()).optional(),
+  }),
+  policies: z.object({
+    architecture: z.string(),
+    testing: z.string(),
+    documentation: z.string(),
+    breakingChanges: z.string(),
+  }),
+  currentPhase: z.string().optional(),
+  outputSchema: z.string(),
+});
+
+export const PlannerOutputSchema = z.object({
+  status: z.enum(['success', 'needs_clarification']),
+  confidence: z.number().min(0).max(1),
+  goal: z.string(),
+  assumptions: z.array(z.string()),
+  risks: z.array(
+    z.object({
+      type: z.string(),
+      description: z.string(),
+      severity: z.enum(['low', 'medium', 'high']),
+    }),
+  ),
+  tasks: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      priority: z.string(),
+      estimate: z.string(),
+      dependencies: z.array(z.string()),
+    }),
+  ),
+  questionsForUser: z.array(z.string()),
+  needsConfirmation: z.boolean(),
+});
+
+export const AgentArtifactSchema = z.object({
+  type: z.string(),
+  path: z.string().optional(),
+  content: z.string().optional(),
+});
+
+export const AgentOutputSchema = z.object({
+  status: z.enum(['success', 'failure', 'blocked', 'needs_clarification']),
+  confidence: z.number().min(0).max(1),
+  warnings: z.array(z.string()).default([]),
+  artifacts: z.array(AgentArtifactSchema).default([]),
+  next_actions: z.array(z.string()).default([]),
+});
+
+export const ImplementerOutputSchema = AgentOutputSchema.extend({
+  status: z.enum(['success', 'failure', 'blocked']),
+  filesChanged: z
+    .array(
+      z.object({
+        path: z.string(),
+        summary: z.string(),
+      }),
+    )
+    .default([]),
+  tests: z
+    .object({
+      runner: z.string(),
+      result: z.enum(['passed', 'failed']),
+      failedTests: z.array(z.string()).optional(),
+    })
+    .optional(),
+});
+
+export const ReviewFindingSchema = z.object({
+  severity: z.enum(['CRITICAL', 'WARNING', 'SUGGESTION']),
+  message: z.string(),
+  axis: z.string(),
+  path: z.string().optional(),
+  line: z.number().int().optional(),
+});
+
+export const ReviewerOutputSchema = z.object({
+  status: z.enum(['pass', 'fail']),
+  confidence: z.number().min(0).max(1),
+  verdict: z.enum(['approved', 'approved_with_warnings', 'blocked']),
+  warnings: z.array(z.string()).default([]),
+  findings: z.array(ReviewFindingSchema).default([]),
+  artifacts: z.array(AgentArtifactSchema).default([]),
+  next_actions: z.array(z.string()).default([]),
+});
+
+export const TechnicalPlanOutputSchema = z.object({
+  approach: z.string(),
+  filesAffected: z.array(z.string()).default([]),
+  risks: z.array(z.string()).default([]),
+  openQuestions: z.array(z.string()).optional(),
+});
+
 // ─── Evaluation / Scorecard Schemas ───────────────────────────────────────────
 
 export const ScorecardVerdictSchema = z.enum(['PASS', 'REVISE', 'REJECT']);
@@ -587,6 +793,14 @@ export type ScorecardRecordInput = z.infer<typeof ScorecardRecordSchema>;
 export type TaskOutcomeInput = z.infer<typeof TaskOutcomeSchema>;
 export type EvaluationIndexInput = z.infer<typeof EvaluationIndexSchema>;
 export type ExecutionProfileInput = z.infer<typeof ExecutionProfileSchema>;
+export type WorkflowCommandInput = z.infer<typeof WorkflowCommandSchema>;
+export type CommandEnvelopeInput = z.infer<typeof CommandEnvelopeSchema>;
+export type WorkflowProfileInput = z.infer<typeof WorkflowProfileSchema>;
+export type ExecutionContextInput = z.infer<typeof ExecutionContextSchema>;
+export type PlannerOutputInput = z.infer<typeof PlannerOutputSchema>;
+export type AgentOutputInput = z.infer<typeof AgentOutputSchema>;
+export type ImplementerOutputInput = z.infer<typeof ImplementerOutputSchema>;
+export type ReviewerOutputInput = z.infer<typeof ReviewerOutputSchema>;
 
 // ─── Validate Helpers ─────────────────────────────────────────────────────────
 
@@ -673,5 +887,33 @@ export function validateScorecardRecord(data: unknown): ScorecardRecordInput {
 
 export function validateTaskOutcome(data: unknown): TaskOutcomeInput {
   return TaskOutcomeSchema.parse(data);
+}
+
+export function validateCommandEnvelope(data: unknown): CommandEnvelopeInput {
+  return CommandEnvelopeSchema.parse(data);
+}
+
+export function validateWorkflowProfile(data: unknown): WorkflowProfileInput {
+  return WorkflowProfileSchema.parse(data);
+}
+
+export function validateExecutionContext(data: unknown): ExecutionContextInput {
+  return ExecutionContextSchema.parse(data);
+}
+
+export function validatePlannerOutput(data: unknown): PlannerOutputInput {
+  return PlannerOutputSchema.parse(data);
+}
+
+export function validateAgentOutput(data: unknown): AgentOutputInput {
+  return AgentOutputSchema.parse(data);
+}
+
+export function validateImplementerOutput(data: unknown): ImplementerOutputInput {
+  return ImplementerOutputSchema.parse(data);
+}
+
+export function validateReviewerOutput(data: unknown): ReviewerOutputInput {
+  return ReviewerOutputSchema.parse(data);
 }
 

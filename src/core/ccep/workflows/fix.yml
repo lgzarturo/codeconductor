@@ -1,0 +1,44 @@
+id: fix
+version: 1
+command: fix
+taskCard:
+  type: fix
+  requiredFields:
+    - actualBehavior
+    - expectedBehavior
+    - reproductionSteps
+    - risk
+    - scope
+phases:
+  - id: intake
+    agent: task-coach
+    outputSchema: fix-intake-output
+    stopGate: confirmation
+  - id: implement
+    agent: implementer
+  - id: test
+    agent: tester
+  - id: review
+    agent: reviewer
+routing:
+  default:
+    - intake
+    - implement
+    - test
+  riskRules:
+    - when:
+        risk: low
+      then:
+        - implement
+        - test
+    - when:
+        risk:
+          - medium
+          - high
+      then:
+        - implement
+        - test
+        - review
+confirmationGate:
+  stopOnHighRisk: true
+  stopOnQuestions: true

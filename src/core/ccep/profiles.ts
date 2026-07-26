@@ -1,0 +1,197 @@
+import type { WorkflowCommandInput, WorkflowProfileInput } from '../../validation/schemas';
+
+const baseGate = { stopOnHighRisk: true, stopOnQuestions: true };
+
+export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInput> = {
+  feature: {
+    id: 'feature',
+    version: 1,
+    command: 'feature',
+    taskCard: {
+      type: 'feature',
+      requiredFields: ['title', 'type', 'risk', 'scope', 'context', 'acceptanceCriteria'],
+    },
+    phases: [
+      { id: 'intake', agent: 'task-coach', outputSchema: 'planner-output', stopGate: 'confirmation' },
+      { id: 'design', agent: 'architect', outputSchema: 'technical-plan', stopGate: 'approval' },
+      { id: 'implement', agent: 'implementer', dependsOn: ['design'] },
+      { id: 'test', agent: 'tester' },
+      { id: 'review', agent: 'reviewer' },
+      { id: 'docs', agent: 'docs', parallelWith: ['review'] },
+    ],
+    routing: { default: ['intake', 'design', 'implement', 'test', 'review', 'docs'] },
+    confirmationGate: baseGate,
+  },
+  fix: {
+    id: 'fix',
+    version: 1,
+    command: 'fix',
+    taskCard: {
+      type: 'fix',
+      requiredFields: [
+        'actualBehavior',
+        'expectedBehavior',
+        'reproductionSteps',
+        'risk',
+        'scope',
+      ],
+    },
+    phases: [
+      { id: 'intake', agent: 'task-coach', outputSchema: 'fix-intake-output', stopGate: 'confirmation' },
+      { id: 'implement', agent: 'implementer' },
+      { id: 'test', agent: 'tester' },
+      { id: 'review', agent: 'reviewer' },
+    ],
+    routing: {
+      default: ['intake', 'implement', 'test'],
+      riskRules: [
+        { when: { risk: 'low' }, then: ['implement', 'test'] },
+        { when: { risk: ['medium', 'high'] }, then: ['implement', 'test', 'review'] },
+      ],
+    },
+    confirmationGate: { stopOnHighRisk: true, stopOnQuestions: true },
+  },
+  refactor: {
+    id: 'refactor',
+    version: 1,
+    command: 'refactor',
+    taskCard: {
+      type: 'refactor',
+      requiredFields: ['title', 'risk', 'scope', 'acceptanceCriteria'],
+    },
+    phases: [
+      { id: 'intake', agent: 'task-coach', outputSchema: 'planner-output' },
+      { id: 'design', agent: 'architect', outputSchema: 'technical-plan' },
+      { id: 'implement', agent: 'implementer' },
+      { id: 'audit', agent: 'complexity-auditor', outputSchema: 'complexity-audit' },
+      { id: 'review', agent: 'reviewer' },
+    ],
+    routing: { default: ['intake', 'design', 'implement', 'audit', 'review'] },
+    confirmationGate: baseGate,
+  },
+  review: {
+    id: 'review',
+    version: 1,
+    command: 'review',
+    intakeSchema: 'review-target',
+    phases: [
+      { id: 'diff-collection', agent: 'reviewer', type: 'diff' },
+      { id: 'review', agent: 'reviewer', outputSchema: 'review-report' },
+    ],
+    routing: { default: ['diff-collection', 'review'] },
+    confirmationGate: { stopOnHighRisk: false, stopOnQuestions: false },
+  },
+  'test-plan': {
+    id: 'test-plan',
+    version: 1,
+    command: 'test-plan',
+    taskCard: { type: 'test', requiredFields: ['scope', 'acceptanceCriteria'] },
+    phases: [
+      { id: 'intake', agent: 'task-coach', outputSchema: 'planner-output' },
+      { id: 'plan', agent: 'tester', outputSchema: 'test-plan' },
+    ],
+    routing: { default: ['intake', 'plan'] },
+    confirmationGate: baseGate,
+  },
+  'tdd-cycle': {
+    id: 'tdd-cycle',
+    version: 1,
+    command: 'tdd-cycle',
+    taskCard: { type: 'test', requiredFields: ['scope', 'acceptanceCriteria'] },
+    phases: [
+      { id: 'test', agent: 'tester', requires: 'red-state' },
+      { id: 'implement', agent: 'implementer' },
+    ],
+    routing: { default: ['test', 'implement'] },
+    confirmationGate: { stopOnHighRisk: false, stopOnQuestions: true },
+  },
+  'api-contract': {
+    id: 'api-contract',
+    version: 1,
+    command: 'api-contract',
+    taskCard: { type: 'feature', requiredFields: ['scope', 'acceptanceCriteria'] },
+    phases: [
+      { id: 'contract', agent: 'contract-builder', outputSchema: 'api-contract' },
+      { id: 'design', agent: 'architect', outputSchema: 'technical-plan' },
+    ],
+    routing: { default: ['contract', 'design'] },
+    confirmationGate: baseGate,
+  },
+  'db-migration': {
+    id: 'db-migration',
+    version: 1,
+    command: 'db-migration',
+    taskCard: { type: 'feature', requiredFields: ['scope', 'risk', 'acceptanceCriteria'] },
+    phases: [
+      { id: 'design', agent: 'architect', outputSchema: 'technical-plan' },
+      { id: 'implement', agent: 'implementer' },
+      { id: 'test', agent: 'tester' },
+      { id: 'review', agent: 'reviewer' },
+    ],
+    routing: { default: ['design', 'implement', 'test', 'review'] },
+    confirmationGate: baseGate,
+  },
+  pagespeed: {
+    id: 'pagespeed',
+    version: 1,
+    command: 'pagespeed',
+    intakeSchema: 'pagespeed-url',
+    phases: [
+      { id: 'psi-fetch', agent: 'repo-explorer', type: 'external' },
+      { id: 'report', agent: 'docs', outputSchema: 'pagespeed-report' },
+    ],
+    routing: { default: ['psi-fetch', 'report'] },
+    confirmationGate: { stopOnHighRisk: false, stopOnQuestions: false },
+  },
+  openspec: {
+    id: 'openspec',
+    version: 1,
+    command: 'openspec',
+    intakeSchema: 'openspec-backlog-item',
+    phases: [
+      { id: 'validate-backlog', agent: 'orchestrator', type: 'cli-gate' },
+      { id: 'discover', agent: 'repo-explorer' },
+      { id: 'design', agent: 'architect' },
+      { id: 'implement', agent: 'implementer' },
+      { id: 'test', agent: 'tester' },
+      { id: 'review', agent: 'reviewer' },
+    ],
+    routing: { default: ['validate-backlog', 'discover', 'design', 'implement', 'test', 'review'] },
+    confirmationGate: baseGate,
+  },
+  scorecard: {
+    id: 'scorecard',
+    version: 1,
+    command: 'scorecard',
+    intakeSchema: 'scorecard-task-id',
+    phases: [
+      { id: 'create', agent: 'orchestrator', type: 'cli-gate' },
+      { id: 'evaluate', agent: 'reviewer', outputSchema: 'scorecard-record' },
+    ],
+    routing: { default: ['create', 'evaluate'] },
+    confirmationGate: { stopOnHighRisk: false, stopOnQuestions: false },
+  },
+  council: {
+    id: 'council',
+    version: 1,
+    command: 'council',
+    phases: [
+      {
+        id: 'deliberation',
+        agents: ['task-coach', 'architect', 'devil'],
+        skill: 'council',
+        outputSchema: 'planner-output',
+        stopGate: 'confirmation',
+      },
+      { id: 'tdd', agent: 'tester', requires: 'red-state' },
+      { id: 'implement', agent: 'implementer' },
+      {
+        id: 'council-review',
+        skill: 'council',
+        outputSchema: 'council-verdict',
+      },
+    ],
+    routing: { default: ['deliberation', 'tdd', 'implement', 'council-review'] },
+    confirmationGate: baseGate,
+  },
+};

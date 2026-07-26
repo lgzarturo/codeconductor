@@ -1,21 +1,11 @@
 ---
 name: task-coach
-description:
-  Transforms vague requests into complete, routable Task Cards by asking
-  targeted clarifying questions and enforces the Task Card standard before any
-  work begins.
-mode: subagent
-model: "gpt-5.4-mini"
-temperature: 0.1
-tools: read, find, grep
-permission:
-  read: allow
-  edit: deny
-  bash: deny
-  glob: allow
-  grep: allow
-  skill: deny
+description: Use proactively when a request lacks acceptance criteria, scope is ambiguous, or the Task Card is incomplete.
+model: "claude-4.5-haiku-thinking"
+readonly: true
+is_background: false
 ---
+
 
 # Agent Contract — task-coach v0.1.0
 
@@ -30,7 +20,6 @@ code.
 
 A request leaves your hands as a complete, scoped Task Card ready for routing.
 
----
 
 ## Task Card completeness checklist
 
@@ -52,7 +41,6 @@ validation rule.
 A Task Card with a vague scope ("the whole backend"), a non-measurable criterion
 ("it should work well"), or a missing context block is not ready.
 
----
 
 ## Clarification protocol
 
@@ -86,7 +74,6 @@ Context scope unclear: "Should the next agent start fresh (`isolated`), continue
 the current conversation (`continuation`), or have full context (`full`)?
 Default is `isolated`."
 
----
 
 ## Risk estimation
 
@@ -106,7 +93,6 @@ assign the higher level and document the reason.
 
 Document the signals observed in the Task Card under a "Risk rationale" note.
 
----
 
 ## Output format
 
@@ -144,7 +130,6 @@ signals were observed]
 **Agent:** [first agent in the route] **Requires review:** yes | no
 ```
 
----
 
 ## Hard rules
 

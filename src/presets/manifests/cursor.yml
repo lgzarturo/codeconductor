@@ -1,6 +1,22 @@
 target: cursor
 entries:
-  - src: opencode/agents
+  - src: cursor/AGENTS.md
+    dest: AGENTS.md
+    strategy: merge-managed
+    template: true
+  - src: cursor/.cursorignore
+    dest: .cursorignore
+    strategy: overwrite
+  - src: cursor/rules
+    dest: .cursor/rules
+    strategy: overwrite
+  - src: cursor/commands
+    dest: .cursor/commands
+    strategy: overwrite
+  - src: cursor/skills
+    dest: .cursor/skills
+    strategy: overwrite
+  - src: cursor/agents
     dest: .cursor/agents
     strategy: overwrite
     template: true

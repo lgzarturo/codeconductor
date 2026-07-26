@@ -50,6 +50,12 @@ const ALL_AGENT_FILES = [
   'repo-explorer.md',
 ];
 
+const CURSOR_AGENT_FILES = [
+  ...ALL_AGENT_FILES,
+  'complexity-auditor.md',
+  'security-reviewer.md',
+];
+
 const EXPECTED_ROLES = [
   'architect',
   'implementer',
@@ -222,9 +228,18 @@ describe('loadModelConfig', () => {
     }
   });
 
-  test('cursor config has all 8 agent roles', async () => {
+  test('cursor config has updated model slugs', async () => {
     const config = await loadModelConfig('cursor');
-    for (const role of EXPECTED_ROLES) {
+    expect(config.agents.architect.cursor).toBe('claude-opus-5-thinking-high');
+    expect(config.agents.implementer.cursor).toBe('composer-2.5-fast');
+    expect(config.agents.orchestrator.cursor).toBe('composer-2.5');
+    expect(config.agents['security-reviewer'].cursor).toBe('claude-opus-5-thinking-high');
+    expect(config.agents['complexity-auditor'].cursor).toBe('claude-sonnet-5-thinking-high');
+  });
+
+  test('cursor config has all agent roles including security and complexity', async () => {
+    const config = await loadModelConfig('cursor');
+    for (const role of [...EXPECTED_ROLES, 'complexity-auditor', 'security-reviewer']) {
       expect(config.agents[role]).toBeDefined();
       expect(typeof config.agents[role].cursor).toBe('string');
     }
@@ -239,11 +254,18 @@ describe('loadModelConfig', () => {
     }
   });
 
-  test('each config has exactly 8 agent roles', async () => {
+  test('each config has expected agent role count', async () => {
+    const expectedCounts: Record<string, number> = {
+      opencode: 9,
+      claude: 9,
+      codex: 9,
+      gemini: 9,
+      cursor: 11,
+    };
     for (const target of ['opencode', 'claude', 'codex', 'gemini', 'cursor'] as const) {
       const config = await loadModelConfig(target);
       const roleKeys = Object.keys(config.agents);
-      expect(roleKeys.length).toBe(9);
+      expect(roleKeys.length).toBe(expectedCounts[target]);
     }
   });
 
@@ -751,7 +773,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     const result = await runCli(['install', 'preset', '--target=cursor', '--force']);
     expect(result.exitCode).toBe(0);
 
-    for (const file of ALL_AGENT_FILES) {
+    for (const file of CURSOR_AGENT_FILES) {
       expect(existsSync(join(TEST_DIR, '.cursor', 'agents', file))).toBe(true);
     }
   });
@@ -776,7 +798,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
       join(TEST_DIR, '.cursor', 'agents', 'architect.md'),
       'utf-8'
     );
-    expect(content).toContain('gpt-5.5');
+    expect(content).toContain('claude-opus-5-thinking-high');
     expect(content).not.toContain('{{MODEL}}');
   });
 
@@ -818,7 +840,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     );
     expect(cursorContent).not.toContain('{{MODEL}}');
     expect(cursorContent).not.toContain('{{MODEL_');
-    expect(cursorContent).toContain('gpt-5.5');
+    expect(cursorContent).toContain('claude-opus-5-thinking-high');
   });
 
   test('orchestrator agent should have correct opencode model in frontmatter', async () => {
@@ -905,7 +927,7 @@ describe('Tool name substitution', () => {
     expect(content).toContain('tools: view_file, list_dir, search_grep');
   });
 
-  test('cursor: architect.md should have cursor tool names', async () => {
+  test('cursor: architect.md should have native Cursor frontmatter', async () => {
     await runCli(['init', '--force']);
     await runCli(['install', 'preset', '--target=cursor', '--force']);
 
@@ -913,7 +935,11 @@ describe('Tool name substitution', () => {
       join(TEST_DIR, '.cursor', 'agents', 'architect.md'),
       'utf-8'
     );
-    expect(content).toContain('tools: read, find, grep');
+    expect(content).toContain('readonly: true');
+    expect(content).toContain('is_background: false');
+    expect(content).toContain('description:');
+    expect(content).not.toContain('mode: subagent');
+    expect(content).not.toContain('permission:');
   });
 
   test('opencode: implementer.md should use permissions and omit deprecated tools', async () => {

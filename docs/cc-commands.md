@@ -148,7 +148,10 @@ commands for the specified runner.
 | `opencode` | `.opencode/`    | OpenCode agent configuration      |
 | `claude`   | `.claude/`      | Claude (Anthropic) agent config   |
 | `codex`    | `.codex/`       | Codex (OpenAI) agent config       |
-| `all`      | All three above | Install for all supported runners |
+| `cursor`   | `.cursor/`      | Cursor IDE agent configuration    |
+| `gemini`   | `.gemini/`      | Gemini agent configuration        |
+| `agy`      | `.agents/`      | Antigravity CLI configuration     |
+| `all`      | All above       | Install for all supported runners |
 
 **Options:**
 
@@ -170,6 +173,9 @@ commands for the specified runner.
 ```bash
 # Install preset for OpenCode
 npx cc-codeconductor install preset --target opencode
+
+# Install preset for Cursor
+npx cc-codeconductor install preset --target cursor
 
 # Install preset for all runners
 npx cc-codeconductor install preset --target all
@@ -617,12 +623,34 @@ npx cc-codeconductor scorecard matrix --output json
 
 ---
 
-## Agent Commands (Claude / OpenCode)
+## Agent Commands (Claude / OpenCode / Cursor)
 
-Agent commands are slash commands available inside Claude Code and OpenCode. They
-are installed as part of the preset (see `install preset`). Unlike CLI commands,
-they do not require `npx cc-codeconductor` — they are invoked directly in the
-conversation.
+Agent commands are slash commands available inside Claude Code, OpenCode, and
+Cursor. They are installed as part of the preset (see `install preset`). Unlike
+CLI commands, they do not require `npx cc-codeconductor` — they are invoked
+directly in the conversation.
+
+### Cursor slash commands
+
+After `install preset --target cursor`, the following commands are available in
+`.cursor/commands/cc/`:
+
+| Command | Description |
+| ------- | ----------- |
+| `/cc-feature` | Full feature workflow |
+| `/cc-fix` | Bug fix workflow |
+| `/cc-refactor` | Refactor workflow |
+| `/cc-review` | Structured code review |
+| `/cc-test-plan` | Test planning |
+| `/cc-tdd-cycle` | TDD cycle |
+| `/cc-api-contract` | API contract definition |
+| `/cc-db-migration` | Database migration workflow |
+| `/cc-pagespeed` | PageSpeed audit |
+| `/cc-openspec` | OpenSpec backlog workflow |
+| `/cc-scorecard` | Agent scorecard evaluation |
+
+Use `/multitask` before parallel steps (e.g. review + docs) for concurrent
+subagent execution.
 
 ---
 

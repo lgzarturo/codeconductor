@@ -8,55 +8,67 @@ agents:
     opencode: opencode-go/deepseek-v4-pro
     codex: gpt-5.5
     gemini: gemini-2.5-pro
-    cursor: gpt-5.5
+    cursor: claude-opus-5-thinking-high
   implementer:
     claude: claude-sonnet-4-6
     opencode: opencode-go/mimo-v2.5-pro
     codex: gpt-5.3-codex
     gemini: gemini-2.5-flash
-    cursor: gpt-5.3
+    cursor: composer-2.5-fast
   tester:
     claude: claude-sonnet-4-6
     opencode: opencode-go/minimax-m2.7
     codex: gpt-5.3-codex
     gemini: gemini-2.5-flash
-    cursor: gpt-5.3
+    cursor: composer-2.5-fast
   orchestrator:
     claude: claude-sonnet-4-6
     opencode: opencode-go/deepseek-v4-pro
     codex: gpt-5.2
     gemini: gemini-2.5-pro
-    cursor: gpt-5.2
+    cursor: composer-2.5
   reviewer:
     claude: claude-sonnet-4-6
     opencode: opencode-go/qwen3.6-plus
     codex: gpt-5.4
     gemini: gemini-2.5-pro
-    cursor: gpt-5.4
+    cursor: claude-sonnet-5-thinking-high
+  complexity-auditor:
+    claude: claude-sonnet-4-6
+    opencode: opencode-go/qwen3.6-plus
+    codex: gpt-5.4
+    gemini: gemini-2.5-pro
+    cursor: claude-sonnet-5-thinking-high
+  security-reviewer:
+    claude: claude-opus-4-7
+    opencode: opencode-go/deepseek-v4-pro
+    codex: gpt-5.5
+    gemini: gemini-2.5-pro
+    cursor: claude-opus-5-thinking-high
   docs:
     claude: claude-haiku-4-5-20251001
     opencode: opencode-go/qwen3.6-plus
     codex: gpt-5.4-mini
     gemini: gemini-2.5-flash
-    cursor: gpt-5.4-mini
+    cursor: claude-4.5-haiku-thinking
   task-coach:
     claude: claude-haiku-4-5-20251001
     opencode: opencode-go/kimi-k2.6
     codex: gpt-5.4-mini
     gemini: gemini-2.5-flash
-    cursor: gpt-5.4-mini
+    cursor: claude-4.5-haiku-thinking
   repo-explorer:
     claude: claude-haiku-4-5-20251001
     opencode: opencode-go/qwen3.6-plus
     codex: gpt-5.4-mini
     gemini: gemini-2.5-flash
-    cursor: gpt-5.4-mini
+    cursor: composer-2.5-fast
   goal-planner:
     claude: claude-haiku-4-5-20251001
     opencode: opencode-go/qwen3.6-plus
     codex: gpt-5.4-mini
     gemini: gemini-2.5-flash
-    cursor: gpt-5.4-mini
+    cursor: claude-4.5-haiku-thinking
 tools:
   Read:
     claude: ViewCodeItem / ReadFile

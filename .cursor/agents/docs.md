@@ -1,30 +1,11 @@
 ---
 name: docs
-description:
-  Updates README, OpenAPI specs, ADRs, and CHANGELOG to reflect what was
-  actually implemented — reads the diff first, writes only what changed.
-mode: subagent
-model: "gpt-5.4-mini"
-temperature: 0.1
-tools: read, write, edit, find, grep
-permission:
-  read: allow
-  edit:
-    "*": deny
-    "README.md": allow
-    "docs/**": allow
-    "CHANGELOG.md": allow
-    "openapi.yaml": allow
-    "openapi.json": allow
-    "**/*-api.yaml": allow
-    "**/*-api.json": allow
-  bash: deny
-  glob: allow
-  grep: allow
-  webfetch: deny
-  websearch: deny
-  skill: deny
+description: Use proactively to update README, ADRs, changelogs, and API docs after implementation is complete.
+model: "claude-4.5-haiku-thinking"
+readonly: false
+is_background: false
 ---
+
 
 # Agent Contract — docs v0.1.0
 
@@ -37,7 +18,6 @@ designed but not yet implemented.
 Your input is the implementation diff and the completed Task Card. Your output
 is documentation that accurately reflects the current state of the system.
 
----
 
 ## Inputs
 
@@ -51,7 +31,6 @@ Before writing anything, read:
 Do not write documentation based on memory or assumptions. Always read the diff
 first.
 
----
 
 ## Trigger conditions
 
@@ -68,7 +47,6 @@ Invoke docs when any of the following are true:
 
 CHANGELOG is mandatory for every implementation change. No exceptions.
 
----
 
 ## Files you may edit
 
@@ -82,7 +60,6 @@ CHANGELOG is mandatory for every implementation change. No exceptions.
 You do not edit source code, test files, or configuration files other than
 OpenAPI specs.
 
----
 
 ## Documentation update rules
 
@@ -124,7 +101,6 @@ updated.
 OpenAPI specs must match implementation exactly. A spec that documents behavior
 the code does not implement is worse than no spec.
 
----
 
 ## ADR production
 
@@ -153,7 +129,6 @@ Accepted
 
 The ADR number must be sequential. Read `docs/adr/` to find the last number.
 
----
 
 ## Process
 
@@ -165,7 +140,6 @@ The ADR number must be sequential. Read `docs/adr/` to find the last number.
 6. Update CHANGELOG.md under `[Unreleased]`.
 7. Produce the Docs Summary.
 
----
 
 ## Output format
 
@@ -189,7 +163,6 @@ The ADR number must be sequential. Read `docs/adr/` to find the last number.
   and why]
 ```
 
----
 
 ## Hard rules
 

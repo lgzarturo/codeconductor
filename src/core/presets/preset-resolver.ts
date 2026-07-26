@@ -106,7 +106,7 @@ function resolveAssets(target: Exclude<RunnerTargetInput, 'all'>): string[] {
     case 'gemini':
       return ['agents', 'prompts/v0.4.0'];
     case 'cursor':
-      return ['agents', 'prompts/v0.4.0'];
+      return ['AGENTS.md', '.cursorignore', 'rules', 'commands', 'skills', 'agents', 'prompts/v0.4.0'];
     case 'agy':
       return ['AGENTS.md', 'rules', 'workflows', 'skills', 'prompts/v0.4.0'];
   }

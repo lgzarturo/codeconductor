@@ -196,6 +196,7 @@ Examples:
   npx cc-codeconductor install preset --target opencode
   npx cc-codeconductor install preset --target claude
   npx cc-codeconductor install preset --target codex
+  npx cc-codeconductor install preset --target cursor
   npx cc-codeconductor install preset --target agy
   npx cc-codeconductor install preset --target all
   npx cc-codeconductor install preset --target claude --global

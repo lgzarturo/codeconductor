@@ -1,6 +1,6 @@
 ---
 name: evaluation
-description: Scorecard criteria and outcome tracking CLI.
+description: Scorecard and outcome tracking for CodeConductor workflows.
 ---
 
-`npx cc-codeconductor scorecard create|record|aggregate|models|regression`
+Record outcomes via `scorecard record`. Use `scorecard models` before OpenSpec phases.

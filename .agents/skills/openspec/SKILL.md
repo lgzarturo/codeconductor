@@ -7,8 +7,26 @@ description:
 
 # OpenSpec / BACKLOG Skill
 
-See `presets/agy/skills/openspec/SKILL.md` for full rules.
+## BACKLOG.md contract
 
-`BACKLOG.md` at repo root is the FIFO queue. Run `npx cc-codeconductor openspec validate` before delivery.
+`BACKLOG.md` at repo root is the operational queue. Required sections:
 
-Phases: discover → design → test (if TDD) → implement → review.
+- `## Global` — Product, Strategy, Policy, Review required, TDD required
+- `## Items` — active backlog entries
+- `## Archive` — completed entries (do not re-execute)
+
+Each item: `### BC-001 | Short title` with Priority (P0–P3), Status, Type, Depends on, Description, Scope, Out of scope, Acceptance (measurable checklist).
+
+## Status machine
+
+`TODO` → `READY` → `PLANNED` → `IN_PROGRESS` → `REVIEW` → `DONE` → Archive
+
+## CLI
+
+`openspec validate | scan | plan | status | next`
+
+## Agent phases
+
+discover → repo-explorer, design → architect, test → tester, implement → implementer, review → reviewer.
+
+TDD required: test before implement.

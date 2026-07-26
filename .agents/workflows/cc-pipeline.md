@@ -49,7 +49,6 @@ The `implementer` writes the minimal code to satisfy the tests. The implementer 
 Runs validation checks:
 1. **Mutation Testing:** Automatically mutates operators and bounds to verify test assertions are strict (minimum score: 80%).
 2. **Diff Scope Audit:** Scans modified files to prevent out-of-scope code additions or speculative implementations.
-3. **Regression checklist:** `npx cc-codeconductor scorecard regression`
 
 ---
 
@@ -62,8 +61,6 @@ Reviewer agents audit the diff on 6 axes: Architecture, Security, Product, Deliv
 
 > [!IMPORTANT]
 > **STOP GATE (VERDICT/MERGE GATE):** Pauses execution after Council consensus to request final manual confirmation before compaction and delivery.
-
-Run `npx cc-codeconductor scorecard create --from-diff` and `scorecard record` before Phase 8.
 
 ---
 

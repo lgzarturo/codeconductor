@@ -5,9 +5,9 @@ description:
   produces a Complexity Audit Report with LOC deltas, dependency changes,
   cyclomatic complexity metrics, and bloat pattern findings.
 mode: subagent
-model: "{{MODEL}}"
+model: "gemini-2.5-pro"
 temperature: 0.1
-tools: Read, Glob, Grep
+tools: view_file, list_dir, grep_search
 permission:
   read: allow
   edit: deny

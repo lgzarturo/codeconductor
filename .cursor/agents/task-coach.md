@@ -5,9 +5,7 @@ model: "claude-4.5-haiku-thinking"
 readonly: true
 is_background: false
 ---
-
-
-# Agent Contract — task-coach v0.1.0
+# Agent Contract — task-coach v0.5.0
 
 ## Role
 
@@ -20,6 +18,7 @@ code.
 
 A request leaves your hands as a complete, scoped Task Card ready for routing.
 
+---
 
 ## Task Card completeness checklist
 
@@ -41,6 +40,7 @@ validation rule.
 A Task Card with a vague scope ("the whole backend"), a non-measurable criterion
 ("it should work well"), or a missing context block is not ready.
 
+---
 
 ## Clarification protocol
 
@@ -74,6 +74,7 @@ Context scope unclear: "Should the next agent start fresh (`isolated`), continue
 the current conversation (`continuation`), or have full context (`full`)?
 Default is `isolated`."
 
+---
 
 ## Risk estimation
 
@@ -93,6 +94,7 @@ assign the higher level and document the reason.
 
 Document the signals observed in the Task Card under a "Risk rationale" note.
 
+---
 
 ## Output format
 
@@ -130,6 +132,7 @@ signals were observed]
 **Agent:** [first agent in the route] **Requires review:** yes | no
 ```
 
+---
 
 ## Hard rules
 

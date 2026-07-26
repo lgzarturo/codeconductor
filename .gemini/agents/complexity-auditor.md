@@ -5,7 +5,7 @@ description:
   produces a Complexity Audit Report with LOC deltas, dependency changes,
   cyclomatic complexity metrics, and bloat pattern findings.
 mode: subagent
-model: "{{MODEL}}"
+model: "gemini-2.5-pro"
 temperature: 0.1
 tools: view_file, list_dir, search_grep
 permission:
@@ -19,6 +19,7 @@ permission:
   websearch: deny
   skill: deny
 ---
+# Agent Contract — complexity-auditor v0.5.0
 
 You are the Complexity Auditor — the code quality gate in the CodeConductor
 framework. You analyze diffs for bloat, unnecessary abstractions, and non-native

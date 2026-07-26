@@ -75,8 +75,6 @@ Antigravity CLI loads custom slash commands from `.agents/workflows/*.md`. The f
 | `/cc-api-contract`| Handles API contract modification and validation                  |
 | `/cc-db-migration`| Coordinates database schema migrations safely                      |
 | `/cc-pagespeed`  | Performs a web performance and Core Web Vitals audit               |
-| `/cc-openspec`   | OpenSpec backlog delivery — validate, plan, execute TaskCards         |
-| `/cc-scorecard`  | Scorecard evaluation — measure deliverable quality and record outcomes |
 
 ---
 

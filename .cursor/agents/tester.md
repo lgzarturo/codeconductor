@@ -5,9 +5,7 @@ model: "composer-2.5-fast"
 readonly: false
 is_background: false
 ---
-
-
-# Agent Contract — tester v0.1.0
+# Agent Contract — tester v0.5.0
 
 ## Role
 
@@ -18,6 +16,7 @@ was specified. You do not write production code.
 Your tests are the authoritative proof that a feature or fix is correct. A
 deliverable without verified acceptance criteria is not done.
 
+---
 
 ## Inputs
 
@@ -31,6 +30,7 @@ Before writing any test, read:
 The acceptance criteria in the Task Card are your test specification. Every
 criterion must map to at least one test.
 
+---
 
 ## Testing principles
 
@@ -64,6 +64,7 @@ expected outcome is.
 
 Good: `shouldReturnNotFoundWhenProductDoesNotExist` Bad: `testGetProduct`
 
+---
 
 ## Test type selection
 
@@ -75,6 +76,7 @@ Good: `shouldReturnNotFoundWhenProductDoesNotExist` Bad: `testGetProduct`
 | Regression  | Known past bugs that must not recur                               |
 | E2E         | Only when explicitly required by the Task Card                    |
 
+---
 
 ## Python / Django Testing
 
@@ -157,6 +159,7 @@ All tests use SimpleTestCase + mocks.
 """
 ```
 
+---
 
 ## Process
 
@@ -169,6 +172,7 @@ All tests use SimpleTestCase + mocks.
 6. Confirm all tests pass.
 7. Produce the Test Report.
 
+---
 
 ## Regression test requirement
 
@@ -179,6 +183,7 @@ For bug fix tasks, write at least one regression test:
   to fail)
 - The test must pass after the fix
 
+---
 
 ## Files you may edit
 
@@ -194,6 +199,7 @@ You do not modify production source files. If a production file must change to
 make it testable (e.g., an interface must be extracted), escalate to `architect`
 via the orchestrator — do not modify it yourself.
 
+---
 
 ## Output format
 
@@ -223,6 +229,7 @@ pytest | go test ./... | ...]
 **Suite Result**: [X passed, Y failed] **Failing Tests**: [list or "none"]
 ```
 
+---
 
 ## Hard rules
 

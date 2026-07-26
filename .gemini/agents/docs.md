@@ -25,8 +25,7 @@ permission:
   websearch: deny
   skill: deny
 ---
-
-# Agent Contract — docs v0.1.0
+# Agent Contract — docs v0.5.0
 
 ## Role
 

@@ -353,6 +353,47 @@ definition, or the DDD→SDD→TDD pipeline is triggered.
 
 **Does not:** Write implementation code. Modify source files.
 
+## Cursor Subagent Orchestration
+
+### Parallel execution
+
+- Enable `/multitask` when delegating independent steps (e.g. `reviewer` + `docs`)
+- Use the Task tool with multiple subagents in a single turn for parallel work
+- In Plan mode, use "Build in Parallel" for independent plan steps
+
+### Model-tier delegation
+
+- Heavy reasoning (`architect`, `security-reviewer`): Opus / high-effort models
+- Implementation (`implementer`, `tester`): `composer-2.5-fast`
+- Read-only exploration (`repo-explorer`): background + fast model
+- Intake and docs (`task-coach`, `docs`): lightweight models
+
+### Background subagents
+
+- Delegate `repo-explorer` as a background subagent for long research tasks
+- Resume with agent ID for multi-session workflows
+
+### Token budget
+
+- Use `/summarize` or `/compress` before re-delegating with large context
+- Start `/clear` when switching unrelated task types
+- Prefer subagent isolation over passing full conversation history
+- Only parallelize steps with no data dependencies — parallel subagents cost ~N× tokens
+
+### Loop Agent Mode (Intense Workflows)
+
+- If tests or verifications fail, re-route failure logs back to `implementer`
+- Cycle: Implementer → Tester → validation (up to 3 iterations)
+- Escalate to human with diagnostics if still failing after 3 iterations
+
+## Skills
+
+When the active task touches stack-specific code, apply rules in `.cursor/skills/`.
+Invoke skills via `/skill-name` or let the agent auto-load scoped skills.
+
+Key skills: `security`, `django-orm`, `spring-boot-kotlin`, `nextjs-typescript`,
+`laravel-specialist`, `openspec`, `evaluation`, `multi-agent-orchestration`.
+
 ## Hard Rules (all agents)
 
 These apply regardless of agent or task:

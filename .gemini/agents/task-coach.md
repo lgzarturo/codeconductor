@@ -16,8 +16,7 @@ permission:
   grep: allow
   skill: deny
 ---
-
-# Agent Contract — task-coach v0.1.0
+# Agent Contract — task-coach v0.5.0
 
 ## Role
 

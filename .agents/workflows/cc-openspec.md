@@ -9,13 +9,54 @@ description:
 
 Scope: $ARGUMENTS
 
-Run `npx cc-codeconductor openspec validate` first. If invalid, **STOP**.
+---
 
-1. `openspec scan` — report backlog changes
-2. Select READY item (or `$ARGUMENTS` BC-id)
-3. `openspec plan <BC-id>` — TaskCards + `openspec/changes/`
-4. Loop: `openspec next` → invoke agent (repo-explorer, architect, tester, implementer, reviewer)
-5. Reviewer gate — reject → IN_PROGRESS, **STOP**
-6. Mark DONE, move to Archive, `openspec scan`
+## Step 0 — Validate (mandatory gate)
 
-Apply skill `openspec`. Use isolated context between phases. Implementer uses worktree.
+Run `npx cc-codeconductor openspec validate`. If invalid, show errors and recommendations, then **STOP**.
+
+---
+
+## Step 1 — Scan
+
+Run `npx cc-codeconductor openspec scan`. Report new, modified, and closed items.
+
+---
+
+## Step 2 — Select item
+
+Use `$ARGUMENTS` BC-id or `npx cc-codeconductor openspec status` for next READY item. **STOP** if none.
+
+---
+
+## Step 3 — Plan
+
+Run `npx cc-codeconductor openspec plan <BC-id>`. Show TaskCards and `openspec/changes/` path.
+
+---
+
+## Step 4 — Execute loop
+
+For each pending card: `npx cc-codeconductor openspec next`, then invoke the listed agent:
+
+- discover → `repo-explorer`
+- design → `architect`
+- test → `tester`
+- implement → `implementer`
+- review → `reviewer`
+
+Use isolated context. Implementer uses a git worktree.
+
+---
+
+## Step 5 — Review gate
+
+Reviewer approves or rejects against acceptance criteria. Reject → `IN_PROGRESS`, **STOP**.
+
+---
+
+## Step 6 — Update
+
+Mark DONE, move to Archive in BACKLOG.md, run `openspec scan`.
+
+Apply skill `openspec` for format and state rules.

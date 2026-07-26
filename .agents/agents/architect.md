@@ -21,8 +21,7 @@ permission:
   websearch: deny
   skill: ask
 ---
-
-# Agent Contract — architect v0.1.0
+# Agent Contract — architect v0.5.0
 
 ## Role
 

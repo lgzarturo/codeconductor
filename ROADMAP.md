@@ -303,17 +303,36 @@ in v0.1.0.
 
 ---
 
-## v1.0.0 — Stable
+## v1.0.0 — Product Operating System
+
+**Goal:** File-based product memory, executable orchestrator, verification and feedback loop.
+
+- [x] Canonical entity schemas (`KnowledgeEntity`, `Decision`, `Evidence`, `CanonicalTaskCard`, `ProductGraph`)
+- [x] `cc ingest` — repo knowledge ingestion into `product-graph.json`
+- [x] `cc product` — graph, query, path, timeline, memory, decisions, insights, export
+- [x] Episodic memory (`events.jsonl`), operational and strategic memory
+- [x] `cc goal --product` — product-aware planning with impact preview
+- [x] `cc orchestrate` — runtime goal DAG (status, next, run, cycle)
+- [x] `cc impact` — blast-radius analysis from product graph
+- [x] `cc verify` — evidence-gated verification
+- [x] Feedback loop (`cc product insights`, orchestrate cycle)
+- [x] Business Agent, Continuous Architect, Impact Analyst presets
+- [x] GitHub Actions CI (doctor, ingest, test)
+- [x] ADR-011 and `docs/product-os.md`
+
+---
+
+## v1.0.0 — Stable (legacy checklist)
 
 **Goal:** Production-ready, well-documented, community-ready.
 
-- [ ] Stable agent contracts
-- [ ] Stable routing policy
-- [ ] Provider presets: OpenCode, Claude, Codex
-- [ ] Real examples (minimum 3 stacks)
-- [ ] Contribution guidelines finalized
-- [ ] Documented evaluation process
-- [ ] GitHub Actions integration
+- [x] Stable agent contracts (Product OS schemas v1)
+- [x] Stable routing policy
+- [x] Provider presets: OpenCode, Claude, Codex, Cursor, Agy
+- [x] Real examples (minimum 3 stacks)
+- [x] Contribution guidelines finalized
+- [x] Documented evaluation process
+- [x] GitHub Actions integration
 
 ---
 

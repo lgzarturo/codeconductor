@@ -45,7 +45,7 @@ function parseWorkflowCommand(command: string | undefined): {
 async function readInputPayload(
   projectRoot: string,
   input?: string,
-  rest?: string,
+  rest?: string[],
 ): Promise<{ ok: true; data: unknown } | { ok: false; error: string }> {
   const raw = input ?? rest?.join(' ').trim();
   if (!raw) {

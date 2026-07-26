@@ -1,13 +1,17 @@
 import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { detectProject } from '../detection/project-detector';
 import {
   validateExecutionContext,
+  ProductGraphSchema,
   type CommandEnvelopeInput,
   type ExecutionContextInput,
   type WorkflowProfileInput,
 } from '../../validation/schemas';
 import { parseCommand } from './command-parser';
+import { productGraphPath } from '../product-graph/paths';
+import { queryNodes } from '../product-graph/graph-store';
 
 const DEFAULT_POLICIES: ExecutionContextInput['policies'] = {
   architecture: 'modular',
@@ -16,9 +20,41 @@ const DEFAULT_POLICIES: ExecutionContextInput['policies'] = {
   breakingChanges: 'approval',
 };
 
+async function loadProductKnowledge(projectRoot: string): Promise<Record<string, unknown>> {
+  const graphPath = productGraphPath(projectRoot);
+  if (!existsSync(graphPath)) {
+    return {};
+  }
+  try {
+    const raw = await readFile(graphPath, 'utf-8');
+    const graph = ProductGraphSchema.parse(JSON.parse(raw));
+    return {
+      productName: graph.productName,
+      domains: queryNodes(graph, 'domain').map((n) => n.name),
+      decisions: queryNodes(graph, 'decision')
+        .slice(0, 10)
+        .map((n) => ({ id: n.id, name: n.name, data: n.data })),
+      risks: queryNodes(graph, 'risk')
+        .slice(0, 10)
+        .map((n) => ({ id: n.id, name: n.name })),
+      requirements: queryNodes(graph, 'requirement')
+        .slice(0, 10)
+        .map((n) => ({ id: n.id, name: n.name, status: (n.data as { status?: string }).status })),
+      nodeCount: graph.nodes.length,
+    };
+  } catch {
+    return {};
+  }
+}
+
 async function resolveAstSource(
   projectRoot: string,
 ): Promise<ExecutionContextInput['ast']> {
+  const graphPath = productGraphPath(projectRoot);
+  if (existsSync(graphPath)) {
+    return { source: 'product-graph', confidence: 'high' };
+  }
+
   const graphifyPath = join(projectRoot, 'graphify-out', 'graph.json');
   if (existsSync(graphifyPath)) {
     return { source: 'graphify', confidence: 'medium' };
@@ -42,6 +78,7 @@ export async function resolveContext(
   projectRoot: string,
 ): Promise<ExecutionContextInput> {
   const ast = await resolveAstSource(projectRoot);
+  const knowledge = await loadProductKnowledge(projectRoot);
   const firstPhase = profile.phases[0];
 
   let stack = envelope.repoContext.stack;
@@ -67,7 +104,7 @@ export async function resolveContext(
       rootDir: projectRoot,
       stack,
     },
-    knowledge: {},
+    knowledge,
     ast,
     policies: DEFAULT_POLICIES,
     outputSchema: firstPhase?.outputSchema ?? profile.intakeSchema ?? 'agent-output',

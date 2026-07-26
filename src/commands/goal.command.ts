@@ -1,4 +1,6 @@
 import { planGoal } from '../core/goal/goal-planner';
+import { planProductGoal, enrichGoalWithProduct } from '../core/planner/product-planner';
+import { loadGraph } from '../core/product-graph/graph-store';
 import { writeGoal } from '../core/goal/goal-state';
 import type { OutputMode } from '../utils/logger';
 
@@ -6,6 +8,8 @@ export interface GoalOptions {
   readonly objective: string;
   readonly projectRoot: string;
   readonly output: OutputMode;
+  readonly product?: boolean;
+  readonly dryRun?: boolean;
 }
 
 /**
@@ -52,7 +56,7 @@ function renderDependencyTree(
 export async function goalCommand(
   options: GoalOptions
 ): Promise<{ code: number; data?: unknown }> {
-  const { objective, projectRoot, output } = options;
+  const { objective, projectRoot, output, product, dryRun } = options;
 
   if (!objective || objective.trim().length === 0) {
     return {
@@ -66,7 +70,38 @@ export async function goalCommand(
   }
 
   try {
-    const graph = planGoal(objective);
+    let graph;
+    let impactPreview: string | undefined;
+
+    if (product) {
+      const pg = await loadGraph(projectRoot);
+      const productGraph = pg.success ? pg.data : undefined;
+      const planned = planProductGoal(objective, productGraph);
+      graph = { objective: planned.objective, tasks: planned.tasks, created_at: planned.created_at };
+      if (planned.impactPreview) {
+        impactPreview = `Components: ${planned.impactPreview.components.join(', ') || 'none'}`;
+      }
+    } else {
+      graph = planGoal(objective);
+    }
+
+    if (dryRun) {
+      const pg = product ? await loadGraph(projectRoot) : null;
+      const productGraph = pg?.success ? pg.data : undefined;
+      const enriched = product ? enrichGoalWithProduct(graph, productGraph) : null;
+      return {
+        code: 0,
+        data: {
+          success: true,
+          command: 'goal',
+          dryRun: true,
+          objective: graph.objective,
+          tasks: graph.tasks,
+          enriched: enriched?.enrichedTasks,
+          impactPreview,
+        },
+      };
+    }
 
     const writeResult = await writeGoal(projectRoot, graph);
     if (!writeResult.success) {
@@ -104,6 +139,9 @@ export async function goalCommand(
       `Tasks: ${graph.tasks.length} total`,
       `File: .codeconductor/current-goal.yml`,
     ];
+    if (impactPreview) {
+      lines.push('', 'Impact preview:', impactPreview);
+    }
 
     return {
       code: 0,

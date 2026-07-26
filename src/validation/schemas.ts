@@ -385,6 +385,222 @@ export const GoalGraphSchema = z.object({
   created_at: z.string(),
 });
 
+// ─── Product OS Schemas ─────────────────────────────────────────────────────────
+
+export const ConfidenceLevelSchema = z.enum(['low', 'medium', 'high']);
+
+export const ProductNodeTypeSchema = z.enum([
+  'product',
+  'domain',
+  'capability',
+  'requirement',
+  'decision',
+  'component',
+  'flow',
+  'contract',
+  'metric',
+  'risk',
+  'task',
+  'evidence',
+]);
+
+export const GraphRelationSchema = z.enum([
+  'implements',
+  'depends_on',
+  'documents',
+  'affects',
+  'evidences',
+  'blocks',
+  'contains',
+]);
+
+export const KnowledgeEntitySchema = z.object({
+  type: ProductNodeTypeSchema,
+  id: z.string(),
+  name: z.string(),
+  source: z.string(),
+  version: z.string().optional(),
+  confidence: ConfidenceLevelSchema,
+  relations: z
+    .array(
+      z.object({
+        targetId: z.string(),
+        relation: GraphRelationSchema,
+      }),
+    )
+    .default([]),
+  data: z.record(z.string(), z.unknown()).optional().default({}),
+});
+
+export const DecisionSchema = z.object({
+  id: z.string(),
+  context: z.string(),
+  alternatives: z.array(z.string()).default([]),
+  chosenOption: z.string(),
+  rationale: z.string(),
+  consequences: z.array(z.string()).default([]),
+  date: z.string(),
+  linkedTasks: z.array(z.string()).default([]),
+  linkedComponents: z.array(z.string()).default([]),
+  source: z.string().optional(),
+});
+
+export const EvidenceSchema = z.object({
+  id: z.string(),
+  source: z.string(),
+  type: z.string(),
+  timestamp: z.string(),
+  relatedTask: z.string().optional(),
+  relatedDecision: z.string().optional(),
+  confidence: z.number().min(0).max(1),
+  checksum: z.string().optional(),
+  summary: z.string().optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const CanonicalTaskCardStatusSchema = z.enum([
+  'draft',
+  'ready',
+  'in-progress',
+  'review',
+  'done',
+  'blocked',
+]);
+
+export const CanonicalTaskCardSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  objective: z.string(),
+  context: z.string(),
+  acceptanceCriteria: z.array(z.string()),
+  dependencies: z.array(z.string()).default([]),
+  constraints: z.array(z.string()).default([]),
+  risk: z.enum(['low', 'medium', 'high']),
+  targetFiles: z.array(z.string()).default([]),
+  agentType: z.string(),
+  evidenceRequired: z.array(z.string()).default([]),
+  status: CanonicalTaskCardStatusSchema,
+  type: z.enum(['feature', 'fix', 'refactor', 'review', 'docs', 'test']).optional(),
+  linkedCapabilities: z.array(z.string()).default([]),
+});
+
+export const ProductGraphNodeSchema = z.object({
+  id: z.string(),
+  type: ProductNodeTypeSchema,
+  name: z.string(),
+  data: z.record(z.string(), z.unknown()).default({}),
+  source: z.string().optional(),
+  confidence: ConfidenceLevelSchema.optional(),
+  version: z.string().optional(),
+});
+
+export const ProductGraphEdgeSchema = z.object({
+  from: z.string(),
+  to: z.string(),
+  relation: GraphRelationSchema,
+});
+
+export const ProductGraphSchema = z.object({
+  version: z.literal(1),
+  productId: z.string(),
+  productName: z.string(),
+  nodes: z.array(ProductGraphNodeSchema),
+  edges: z.array(ProductGraphEdgeSchema),
+  updatedAt: z.string(),
+});
+
+export const ProductMetaSchema = z.object({
+  version: z.literal(1),
+  graphVersion: z.string(),
+  lastIngestAt: z.string().optional(),
+  sourceHashes: z.record(z.string(), z.string()).default({}),
+});
+
+export const ProductEventTypeSchema = z.enum([
+  'task.started',
+  'task.completed',
+  'decision.recorded',
+  'evidence.added',
+  'ingest.completed',
+  'goal.updated',
+  'blocker.detected',
+  'verification.completed',
+  'feedback.processed',
+]);
+
+export const ProductEventSchema = z.object({
+  id: z.string(),
+  type: ProductEventTypeSchema,
+  timestamp: z.string(),
+  payload: z.record(z.string(), z.unknown()).default({}),
+});
+
+export const OperationalStateSchema = z.object({
+  version: z.literal(1),
+  activeAgents: z.array(z.string()).default([]),
+  activeTaskIds: z.array(z.string()).default([]),
+  blockers: z
+    .array(
+      z.object({
+        taskId: z.string(),
+        reason: z.string(),
+        since: z.string(),
+      }),
+    )
+    .default([]),
+  sprintFocus: z.string().optional(),
+  updatedAt: z.string(),
+});
+
+export const StrategicMemorySchema = z.object({
+  version: z.literal(1),
+  kpis: z
+    .array(
+      z.object({
+        name: z.string(),
+        target: z.string(),
+        current: z.string().optional(),
+      }),
+    )
+    .default([]),
+  quarterlyFocus: z.string().optional(),
+  tradeoffs: z.array(z.string()).default([]),
+  updatedAt: z.string(),
+});
+
+export const ImpactReportSchema = z.object({
+  target: z.string(),
+  brokenEndpoints: z.array(z.string()).default([]),
+  brokenContracts: z.array(z.string()).default([]),
+  affectedTests: z.array(z.string()).default([]),
+  affectedFlows: z.array(z.string()).default([]),
+  affectedComponents: z.array(z.string()).default([]),
+  summary: z.string(),
+});
+
+export const BusinessReviewOutputSchema = z.object({
+  status: z.enum(['proceed', 'defer', 'reject']),
+  roiEstimate: z.string().optional(),
+  userImpact: z.string().optional(),
+  eliminationRisk: z.string().optional(),
+  questions: z.array(z.string()).default([]),
+  confidence: z.number().min(0).max(1),
+});
+
+export const VerificationReportSchema = z.object({
+  taskId: z.string(),
+  passed: z.boolean(),
+  checks: z.array(
+    z.object({
+      name: z.string(),
+      passed: z.boolean(),
+      message: z.string(),
+    }),
+  ),
+  evidenceIds: z.array(z.string()).default([]),
+  confidence: z.number().min(0).max(1),
+});
+
 // ─── OpenSpec / Backlog Schemas ───────────────────────────────────────────────
 
 export const BacklogStatusSchema = z.enum([
@@ -576,7 +792,7 @@ export const ExecutionContextSchema = z.object({
   }),
   knowledge: z.record(z.string(), z.unknown()).default({}),
   ast: z.object({
-    source: z.enum(['detect', 'graphify', 'manual']),
+    source: z.enum(['detect', 'graphify', 'manual', 'product-graph']),
     confidence: z.enum(['low', 'medium', 'high']),
     domains: z.array(z.unknown()).optional(),
     rules: z.array(z.string()).optional(),
@@ -649,10 +865,20 @@ export const ImplementerOutputSchema = AgentOutputSchema.extend({
     .optional(),
 });
 
+export const ReviewAxisSchema = z.enum([
+  'complexity',
+  'cost',
+  'performance',
+  'maintainability',
+  'security',
+  'scalability',
+  'style',
+]);
+
 export const ReviewFindingSchema = z.object({
   severity: z.enum(['CRITICAL', 'WARNING', 'SUGGESTION']),
   message: z.string(),
-  axis: z.string(),
+  axis: z.union([ReviewAxisSchema, z.string()]),
   path: z.string().optional(),
   line: z.number().int().optional(),
 });
@@ -775,6 +1001,20 @@ export type ConsensusConfigInput = z.infer<typeof ConsensusConfigSchema>;
 export type CouncilVerdictOutput = z.infer<typeof CouncilVerdictSchema>;
 export type GoalTaskInput = z.infer<typeof GoalTaskSchema>;
 export type GoalGraphInput = z.infer<typeof GoalGraphSchema>;
+export type KnowledgeEntityInput = z.infer<typeof KnowledgeEntitySchema>;
+export type DecisionInput = z.infer<typeof DecisionSchema>;
+export type EvidenceInput = z.infer<typeof EvidenceSchema>;
+export type CanonicalTaskCardInput = z.infer<typeof CanonicalTaskCardSchema>;
+export type ProductGraphInput = z.infer<typeof ProductGraphSchema>;
+export type ProductGraphNodeInput = z.infer<typeof ProductGraphNodeSchema>;
+export type ProductGraphEdgeInput = z.infer<typeof ProductGraphEdgeSchema>;
+export type ProductMetaInput = z.infer<typeof ProductMetaSchema>;
+export type ProductEventInput = z.infer<typeof ProductEventSchema>;
+export type OperationalStateInput = z.infer<typeof OperationalStateSchema>;
+export type StrategicMemoryInput = z.infer<typeof StrategicMemorySchema>;
+export type ImpactReportInput = z.infer<typeof ImpactReportSchema>;
+export type BusinessReviewOutputInput = z.infer<typeof BusinessReviewOutputSchema>;
+export type VerificationReportInput = z.infer<typeof VerificationReportSchema>;
 export type MemoryPointerInput = z.infer<typeof MemoryPointerSchema>;
 export type MemoryIndexInput = z.infer<typeof MemoryIndexSchema>;
 export type BacklogStatusInput = z.infer<typeof BacklogStatusSchema>;
@@ -915,5 +1155,29 @@ export function validateImplementerOutput(data: unknown): ImplementerOutputInput
 
 export function validateReviewerOutput(data: unknown): ReviewerOutputInput {
   return ReviewerOutputSchema.parse(data);
+}
+
+export function validateProductGraph(data: unknown): ProductGraphInput {
+  return ProductGraphSchema.parse(data);
+}
+
+export function validateKnowledgeEntity(data: unknown): KnowledgeEntityInput {
+  return KnowledgeEntitySchema.parse(data);
+}
+
+export function validateDecision(data: unknown): DecisionInput {
+  return DecisionSchema.parse(data);
+}
+
+export function validateEvidence(data: unknown): EvidenceInput {
+  return EvidenceSchema.parse(data);
+}
+
+export function validateCanonicalTaskCard(data: unknown): CanonicalTaskCardInput {
+  return CanonicalTaskCardSchema.parse(data);
+}
+
+export function validateProductEvent(data: unknown): ProductEventInput {
+  return ProductEventSchema.parse(data);
 }
 

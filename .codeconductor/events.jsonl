@@ -1,0 +1,1 @@
+{"id":"evt-1785093396645-r4cy8k","type":"ingest.completed","timestamp":"2026-07-26T19:16:36.645Z","payload":{"sources":["README.md","docs/adr","graphify-out/graph.json","src/","src/ (defer)"],"nodeCount":3105,"edgeCount":3104}}

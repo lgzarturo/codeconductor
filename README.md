@@ -78,6 +78,9 @@ contracts, task cards, and risk-based routing.
 > - **Parallel subagents (v0.4.0)** — risk-based routing policy v0.4.0 enables
 >   parallel execution for eligible agent sequences (architect + implementer
 >   pattern, council verdict fan-out).
+> - **Product Operating System (v1.0.0)** — typed product graph in
+>   `.codeconductor/product-graph.json`, `cc ingest`, `cc product`, `cc orchestrate`,
+>   `cc impact`, `cc verify`, episodic memory (`events.jsonl`), and feedback loop
 > - Manual presets for OpenCode, Claude Code, and Codex
 > - Versioned Agent Contracts
 > - Routing Policy documentation

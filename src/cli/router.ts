@@ -19,6 +19,11 @@ import { seoAuditCommand } from '../commands/seo-audit.command';
 import { seoLlmsCommand } from '../commands/seo-llms.command';
 import type { SeoAuditOptions, SeoLlmsOptions } from '../domain/seo/seo-types';
 import { updateCommand, type UpdateOptions } from '../commands/update.command';
+import { ingestCommand, type IngestOptions } from '../commands/ingest.command';
+import { productCommand, type ProductOptions } from '../commands/product.command';
+import { orchestrateCommand, type OrchestrateOptions } from '../commands/orchestrate.command';
+import { impactCommand, type ImpactOptions } from '../commands/impact.command';
+import { verifyCommand, type VerifyOptions } from '../commands/verify.command';
 import type { OutputMode } from '../utils/logger';
 
 /**
@@ -158,6 +163,11 @@ Commands:
   help / cc-help          Show preset inventory (skills, subagents, commands)
   debt-harvest / harvest  Scan source files for deferred debt items
   goal / cc-goal          Plan goal into task graph with dependencies
+  ingest                  Ingest repo knowledge into product graph
+  product                 Explore product graph and memory
+  orchestrate             Runtime orchestrator for goal execution
+  impact                  Analyze change impact on product graph
+  verify                  Verify task completion with evidence
 
 Options:
   --help, -h              Show this help message
@@ -348,10 +358,71 @@ export async function routeCommand(
     case 'goal':
     case 'cc-goal':
       return goalCommand({
-        objective: subcommand || (options.objective as string) || '',
+        objective: subcommand || (options.objective as string) || args.rest?.join(' ') || '',
         projectRoot,
         output: flags.output,
+        product: options.product === true || options.product === 'true',
+        dryRun: flags.dryRun,
       } as GoalOptions);
+
+    case 'ingest':
+      return ingestCommand({
+        projectRoot,
+        output: flags.output,
+      } as IngestOptions);
+
+    case 'product':
+    case 'cc-product': {
+      const validSubs = ['graph', 'query', 'path', 'timeline', 'memory', 'decisions', 'insights', 'export'];
+      const productSub = subcommand && validSubs.includes(subcommand) ? subcommand : 'graph';
+      const queryText = productSub === 'query' ? args.rest?.join(' ') : undefined;
+      const pathFrom = productSub === 'path' ? args.rest?.[0] : undefined;
+      const pathTo = productSub === 'path' ? args.rest?.[1] : undefined;
+      return productCommand({
+        subcommand: productSub,
+        projectRoot,
+        output: flags.output,
+        query: queryText,
+        from: pathFrom,
+        to: pathTo,
+        since: options.since as string | undefined,
+        format: options.format as string | undefined,
+      } as ProductOptions);
+    }
+
+    case 'orchestrate':
+    case 'cc-orchestrate': {
+      const validSubs = ['status', 'next', 'run', 'cycle'];
+      const orchSub = subcommand && validSubs.includes(subcommand) ? subcommand : 'status';
+      return orchestrateCommand({
+        subcommand: orchSub,
+        projectRoot,
+        output: flags.output,
+        taskId: (options.task as string) ?? args.rest?.[0],
+        complete: options.complete === true || options.complete === 'true',
+      } as OrchestrateOptions);
+    }
+
+    case 'impact':
+    case 'cc-impact': {
+      const filesOpt = options.files as string | undefined;
+      const files = filesOpt ? filesOpt.split(',').map((s) => s.trim()) : args.rest;
+      return impactCommand({
+        projectRoot,
+        output: flags.output,
+        files: files?.length ? files : undefined,
+        node: options.node as string | undefined,
+        capability: options.capability as string | undefined,
+      } as ImpactOptions);
+    }
+
+    case 'verify':
+    case 'cc-verify':
+      return verifyCommand({
+        projectRoot,
+        output: flags.output,
+        taskId: (options.task as string) ?? args.rest?.[0] ?? '',
+      } as VerifyOptions);
 
     case 'ccep': {
       const validSubs = ['parse', 'profile', 'resolve', 'compile', 'validate'];

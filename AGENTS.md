@@ -86,6 +86,9 @@ introduces maintenance burden, supply-chain risk, and version conflicts.
 | Code review          | any         | `reviewer`                                                  |
 | DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `implementer` → `tester` |
 | Security review      | high        | `security-reviewer` → `reviewer`                            |
+| High-impact feature  | high        | `business-agent` → `impact-analyst` → `architect` → …     |
+| Pre-implementation   | medium+     | `impact-analyst` before `implementer`                     |
+| Post-implementation  | any         | `continuous-architect` after `task.completed`             |
 
 When uncertain about routing, escalate to `orchestrator`.
 
@@ -332,6 +335,40 @@ When the orchestrator receives a GoalGraph, it delegates tasks in dependency
 order. A task is only routed after all its `depends_on` targets complete with
 status `done`. If a dependency is `blocked`, the dependent task remains `pending`.
 The orchestrator tracks the graph state in `.codeconductor/current-goal.yml`.
+Runtime delegation uses `cc orchestrate next` to emit CCEP envelopes from the
+product graph and goal state.
+
+---
+
+### business-agent
+
+**Role:** Product Manager review — ROI, adoption, elimination risk. Does not
+write code.
+
+**Use when:** New high-impact features before architect/implementer routing.
+
+**Output:** `BusinessReviewOutput` JSON (`proceed` | `defer` | `reject`).
+
+---
+
+### impact-analyst
+
+**Role:** Blast-radius analysis using `product-graph.json` and `cc impact`.
+
+**Use when:** Medium or high-risk tasks before implementation.
+
+**Output:** `ImpactReport` (endpoints, contracts, tests, flows affected).
+
+---
+
+### continuous-architect
+
+**Role:** Updates ADRs, product graph metadata, and debt/risk nodes after tasks
+complete.
+
+**Use when:** `task.completed` event or post-merge documentation sync.
+
+**Does not:** Refactor production code.
 
 ---
 

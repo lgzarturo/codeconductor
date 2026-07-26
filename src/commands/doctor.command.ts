@@ -194,6 +194,35 @@ export async function doctorCommand(
       });
     }
 
+    // Product OS artifacts
+    const { existsSync } = await import('node:fs');
+    const { ProductGraphSchema } = await import('../validation/schemas');
+    const graphPath = join(projectRoot, '.codeconductor', 'product-graph.json');
+    if (existsSync(graphPath)) {
+      try {
+        const { readFile } = await import('node:fs/promises');
+        const raw = await readFile(graphPath, 'utf-8');
+        const graph = ProductGraphSchema.parse(JSON.parse(raw));
+        checks.push({
+          name: 'product-graph',
+          status: 'pass',
+          message: `Product graph valid (${graph.nodes.length} nodes, ${graph.edges.length} edges)`,
+        });
+      } catch (e) {
+        checks.push({
+          name: 'product-graph',
+          status: 'warn',
+          message: `Product graph exists but invalid: ${e instanceof Error ? e.message : String(e)}`,
+        });
+      }
+    } else {
+      checks.push({
+        name: 'product-graph',
+        status: 'info',
+        message: 'No product graph yet. Run `codeconductor ingest` to build product memory.',
+      });
+    }
+
     // Check complementary tools
     const compTools = detectComplementaryTools();
     const toolDetails = [

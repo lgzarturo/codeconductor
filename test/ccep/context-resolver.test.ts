@@ -19,8 +19,13 @@ describe('ccep context-resolver', () => {
     expect(context.intent.type).toBe('feature');
     expect(context.intent.goal).toBe('Add benefits CRUD');
     expect(context.project.rootDir).toBe(PROJECT_ROOT);
-    expect(context.ast.source).toMatch(/detect|graphify|manual/);
+    expect(context.ast.source).toMatch(/detect|graphify|manual|product-graph/);
     expect(context.outputSchema).toBe(profile.phases[0]?.outputSchema);
+
+    if (context.ast.source === 'product-graph') {
+      expect(context.knowledge).toBeDefined();
+      expect(typeof context.knowledge.nodeCount === 'number' || Object.keys(context.knowledge).length === 0).toBe(true);
+    }
   });
 
   test('derives intent from explicit command — not from user request keywords', async () => {

@@ -3,6 +3,9 @@
 This document explains how to run CodeConductor locally and how to package it
 for distribution as an npm package executable via `npx`.
 
+For **local smoke-test recipes** (all major commands via `bun run dev`), see
+[`usage-cc.md`](usage-cc.md).
+
 ## Requirements
 
 - **Runtime**: Bun ≥1.0 or Node.js ≥20.11

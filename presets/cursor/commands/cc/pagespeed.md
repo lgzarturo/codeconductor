@@ -4,6 +4,18 @@ Audit web performance using the PageSpeed Insights API. Applies the 80/20
 principle: identify the 20% of changes that produce 80% of the performance gain.
 Produces a prioritized report in the current working directory.
 
+## Step 0 — CCEP Bootstrap
+
+Command: `pagespeed` (fixed for this workflow — do not infer from user text)
+
+1. Run: `npx cc-codeconductor ccep parse --command pagespeed "$ARGUMENTS" --output json`
+2. Run: `npx cc-codeconductor ccep resolve --command pagespeed "$ARGUMENTS" --output json`
+3. Run: `npx cc-codeconductor ccep profile pagespeed --output json`
+4. If the ConfirmationGate stops the flow, show questions or risks and wait for human input.
+5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+
+---
+
 ## Usage
 
 ```

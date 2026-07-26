@@ -8,6 +8,18 @@ description:
 
 API contract request: $ARGUMENTS
 
+## Step 0 — CCEP Bootstrap
+
+Command: `api-contract` (fixed for this workflow — do not infer from user text)
+
+1. Run: `npx cc-codeconductor ccep parse --command api-contract "$ARGUMENTS" --output json`
+2. Run: `npx cc-codeconductor ccep resolve --command api-contract "$ARGUMENTS" --output json`
+3. Run: `npx cc-codeconductor ccep profile api-contract --output json`
+4. If the ConfirmationGate stops the flow, show questions or risks and wait for human input.
+5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+
+---
+
 ## Step 1 — Task Card validation (task-coach)
 
 Invoke `task-coach` with the request above.

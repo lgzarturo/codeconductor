@@ -18,6 +18,18 @@ Specify what to review. Accepted formats:
 
 ---
 
+## Step 0 — CCEP Bootstrap
+
+Command: `review` (fixed for this workflow — do not infer from user text)
+
+1. Run: `npx cc-codeconductor ccep parse --command review "$ARGUMENTS" --output json`
+2. Run: `npx cc-codeconductor ccep resolve --command review "$ARGUMENTS" --output json`
+3. Run: `npx cc-codeconductor ccep profile review --output json`
+4. If the ConfirmationGate stops the flow, show questions or risks and wait for human input.
+5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+
+---
+
 ## Step 1 — Diff collection
 
 Before invoking `reviewer`, collect the diff for the specified target.

@@ -10,6 +10,18 @@ Scope: $ARGUMENTS
 
 ---
 
+## Step 0 — CCEP Bootstrap
+
+Command: `scorecard` (fixed for this workflow — do not infer from user text)
+
+1. Run: `npx cc-codeconductor ccep parse --command scorecard "$ARGUMENTS" --output json`
+2. Run: `npx cc-codeconductor ccep resolve --command scorecard "$ARGUMENTS" --output json`
+3. Run: `npx cc-codeconductor ccep profile scorecard --output json`
+4. If the ConfirmationGate stops the flow, show questions or risks and wait for human input.
+5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+
+---
+
 ## Step 1 — Identify task
 
 Use `$ARGUMENTS` as task id (e.g. `BC-001`) or read active item from `npx cc-codeconductor openspec status`.

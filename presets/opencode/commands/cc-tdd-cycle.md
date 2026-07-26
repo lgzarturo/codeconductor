@@ -17,6 +17,18 @@ Describe what behavior you want to implement. Include:
 
 ---
 
+## Step 0 — CCEP Bootstrap
+
+Command: `tdd-cycle` (fixed for this workflow — do not infer from user text)
+
+1. Run: `npx cc-codeconductor ccep parse --command tdd-cycle "$ARGUMENTS" --output json`
+2. Run: `npx cc-codeconductor ccep resolve --command tdd-cycle "$ARGUMENTS" --output json`
+3. Run: `npx cc-codeconductor ccep profile tdd-cycle --output json`
+4. If the ConfirmationGate stops the flow, show questions or risks and wait for human input.
+5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+
+---
+
 ## Before you begin — mandatory pre-check
 
 This command enforces strict TDD discipline. The three phases are sequential and

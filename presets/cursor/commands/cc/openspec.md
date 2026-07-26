@@ -12,7 +12,21 @@ Orchestrate FIFO delivery from `BACKLOG.md`. CodeConductor owns planning; agents
 
 ---
 
-## Step 0 — Validate (mandatory gate)
+---
+
+## Step 0 — CCEP Bootstrap
+
+Command: `openspec` (fixed for this workflow — do not infer from user text)
+
+1. Run: `npx cc-codeconductor ccep parse --command openspec "$ARGUMENTS" --output json`
+2. Run: `npx cc-codeconductor ccep resolve --command openspec "$ARGUMENTS" --output json`
+3. Run: `npx cc-codeconductor ccep profile openspec --output json`
+4. If the ConfirmationGate stops the flow, show questions or risks and wait for human input.
+5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+
+---
+
+## Step 1 — Validate (mandatory gate)
 
 Run:
 
@@ -28,7 +42,7 @@ If validation fails:
 
 ---
 
-## Step 1 — Scan
+## Step 2 — Scan
 
 Run:
 
@@ -40,7 +54,7 @@ Report: new items, modified items, closed/archived items, and whether the file c
 
 ---
 
-## Step 2 — Select item
+## Step 3 — Select item
 
 If `$ARGUMENTS` contains a `BC-xxx` ID, use that item. Otherwise run:
 
@@ -54,7 +68,7 @@ Pick the next `READY` item with satisfied dependencies (FIFO by priority). Skip 
 
 ---
 
-## Step 3 — Plan
+## Step 4 — Plan
 
 Run:
 
@@ -71,7 +85,7 @@ Update BACKLOG item status to `PLANNED` (CLI does this automatically).
 
 ---
 
-## Step 4 — Model matrix and execute loop
+## Step 5 — Model matrix and execute loop
 
 Before executing phases, show resolved models:
 
@@ -106,7 +120,7 @@ Implementer: create a Git worktree before editing (`git worktree add ../<branch>
 
 ---
 
-## Step 5 — Review gate
+## Step 6 — Review gate
 
 Run regression when BACKLOG Global `Review required: yes`:
 
@@ -127,7 +141,7 @@ If **approved**: proceed to Step 6.
 
 ---
 
-## Step 6 — Scorecard and update backlog
+## Step 7 — Scorecard and update backlog
 
 1. `npx cc-codeconductor scorecard create --task <BC-id> --from-diff`
 2. Complete criteria; `scorecard record` with verdict and optional cost/tokens

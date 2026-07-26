@@ -1,6 +1,5 @@
 ---
-name: cc-council
-description: Run the full Council-Driven Development workflow — SDD spec creation, TDD enforcement, surgical implementation, and multi-perspective review.
+description: Council-driven workflow with CCEP-1 bootstrap
 ---
 
 # Council-Driven Workflow

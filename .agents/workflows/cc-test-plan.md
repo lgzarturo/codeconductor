@@ -21,6 +21,18 @@ If $ARGUMENTS is empty, describe the scope in your next message before invoking
 
 ---
 
+## Step 0 — CCEP Bootstrap
+
+Command: `test-plan` (fixed for this workflow — do not infer from user text)
+
+1. Run: `npx cc-codeconductor ccep parse --command test-plan "$ARGUMENTS" --output json`
+2. Run: `npx cc-codeconductor ccep resolve --command test-plan "$ARGUMENTS" --output json`
+3. Run: `npx cc-codeconductor ccep profile test-plan --output json`
+4. If the ConfirmationGate stops the flow, show questions or risks and wait for human input.
+5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+
+---
+
 ## Step 1 — Scope confirmation
 
 Before invoking `tester`, confirm the scope is well-defined.

@@ -44,16 +44,15 @@ Skipping any step is not an optimization. It is a defect.
 
 Do not build features, abstractions, or "flexibility" that is not explicitly
 requested. If the user asks for a function, write a function — not a class
-hierarchy. If they ask for a string, return a string — not a Result type
-with 15 error codes. Every line you write must solve a problem that exists
-**now**.
+hierarchy. If they ask for a string, return a string — not a Result type with 15
+error codes. Every line you write must solve a problem that exists **now**.
 
 ## Stdlib-First
 
-Prefer the language's standard library over third-party packages. Before
-adding a dependency, ask: "Does `node:fs`, `node:path`, `node:crypto`, or
-a built-in module solve this?" If yes, use it. Every external dependency
-introduces maintenance burden, supply-chain risk, and version conflicts.
+Prefer the language's standard library over third-party packages. Before adding
+a dependency, ask: "Does `node:fs`, `node:path`, `node:crypto`, or a built-in
+module solve this?" If yes, use it. Every external dependency introduces
+maintenance burden, supply-chain risk, and version conflicts.
 
 ## Routing Policy
 
@@ -71,24 +70,21 @@ introduces maintenance burden, supply-chain risk, and version conflicts.
 
 ### Agent Routing Table
 
-| Task Type            | Risk        | Route To                                                    |
-| -------------------- | ----------- | ----------------------------------------------------------- |
-| New feature design   | any         | `architect` → `implementer`                                 |
-| Bug fix              | low         | `implementer`                                               |
-| Bug fix              | medium–high | `task-coach` → `implementer` → `tester`                     |
-| Refactor             | low         | `implementer`                                               |
-| Refactor             | medium–high | `architect` → `implementer` → `complexity-auditor` → `reviewer` |
-| API change           | any         | `architect` → `implementer` → `complexity-auditor` → `reviewer` |
+| Task Type            | Risk        | Route To                                                                   |
+| -------------------- | ----------- | -------------------------------------------------------------------------- |
+| New feature design   | any         | `architect` → `implementer`                                                |
+| Bug fix              | low         | `implementer`                                                              |
+| Bug fix              | medium–high | `task-coach` → `implementer` → `tester`                                    |
+| Refactor             | low         | `implementer`                                                              |
+| Refactor             | medium–high | `architect` → `implementer` → `complexity-auditor` → `reviewer`            |
+| API change           | any         | `architect` → `implementer` → `complexity-auditor` → `reviewer`            |
 | Database migration   | any         | `architect` → `implementer` → `tester` → `complexity-auditor` → `reviewer` |
-| Test coverage        | any         | `tester`                                                    |
-| Documentation update | any         | `docs`                                                      |
-| Codebase exploration | any         | `repo-explorer`                                             |
-| Code review          | any         | `reviewer`                                                  |
-| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `implementer` → `tester` |
-| Security review      | high        | `security-reviewer` → `reviewer`                            |
-| High-impact feature  | high        | `business-agent` → `impact-analyst` → `architect` → …     |
-| Pre-implementation   | medium+     | `impact-analyst` before `implementer`                     |
-| Post-implementation  | any         | `continuous-architect` after `task.completed`             |
+| Test coverage        | any         | `tester`                                                                   |
+| Documentation update | any         | `docs`                                                                     |
+| Codebase exploration | any         | `repo-explorer`                                                            |
+| Code review          | any         | `reviewer`                                                                 |
+| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `implementer` → `tester`                |
+| Security review      | high        | `security-reviewer` → `reviewer`                                           |
 
 When uncertain about routing, escalate to `orchestrator`.
 
@@ -333,42 +329,9 @@ search, notification, migration) and falls back to a generic 4-task chain:
 
 When the orchestrator receives a GoalGraph, it delegates tasks in dependency
 order. A task is only routed after all its `depends_on` targets complete with
-status `done`. If a dependency is `blocked`, the dependent task remains `pending`.
-The orchestrator tracks the graph state in `.codeconductor/current-goal.yml`.
-Runtime delegation uses `cc orchestrate next` to emit CCEP envelopes from the
-product graph and goal state.
-
----
-
-### business-agent
-
-**Role:** Product Manager review — ROI, adoption, elimination risk. Does not
-write code.
-
-**Use when:** New high-impact features before architect/implementer routing.
-
-**Output:** `BusinessReviewOutput` JSON (`proceed` | `defer` | `reject`).
-
----
-
-### impact-analyst
-
-**Role:** Blast-radius analysis using `product-graph.json` and `cc impact`.
-
-**Use when:** Medium or high-risk tasks before implementation.
-
-**Output:** `ImpactReport` (endpoints, contracts, tests, flows affected).
-
----
-
-### continuous-architect
-
-**Role:** Updates ADRs, product graph metadata, and debt/risk nodes after tasks
-complete.
-
-**Use when:** `task.completed` event or post-merge documentation sync.
-
-**Does not:** Refactor production code.
+status `done`. If a dependency is `blocked`, the dependent task remains
+`pending`. The orchestrator tracks the graph state in
+`.codeconductor/current-goal.yml`.
 
 ---
 
@@ -394,7 +357,8 @@ definition, or the DDD→SDD→TDD pipeline is triggered.
 
 ### Parallel execution
 
-- Enable `/multitask` when delegating independent steps (e.g. `reviewer` + `docs`)
+- Enable `/multitask` when delegating independent steps (e.g. `reviewer` +
+  `docs`)
 - Use the Task tool with multiple subagents in a single turn for parallel work
 - In Plan mode, use "Build in Parallel" for independent plan steps
 
@@ -415,7 +379,8 @@ definition, or the DDD→SDD→TDD pipeline is triggered.
 - Use `/summarize` or `/compress` before re-delegating with large context
 - Start `/clear` when switching unrelated task types
 - Prefer subagent isolation over passing full conversation history
-- Only parallelize steps with no data dependencies — parallel subagents cost ~N× tokens
+- Only parallelize steps with no data dependencies — parallel subagents cost ~N×
+  tokens
 
 ### Loop Agent Mode (Intense Workflows)
 
@@ -425,8 +390,9 @@ definition, or the DDD→SDD→TDD pipeline is triggered.
 
 ## Skills
 
-When the active task touches stack-specific code, apply rules in `.cursor/skills/`.
-Invoke skills via `/skill-name` or let the agent auto-load scoped skills.
+When the active task touches stack-specific code, apply rules in
+`.cursor/skills/`. Invoke skills via `/skill-name` or let the agent auto-load
+scoped skills.
 
 Key skills: `security`, `django-orm`, `spring-boot-kotlin`, `nextjs-typescript`,
 `laravel-specialist`, `openspec`, `evaluation`, `multi-agent-orchestration`.
@@ -500,6 +466,17 @@ docs | test **Risk:** low | medium | high **Scope:** [files or modules affected]
 
 ---
 
+## Local Development Execution Rule
+
+Do NOT use `npx cc-codeconductor` for local testing. Use `bun run dev` instead
+to test all current flow before publishing version v1.0.0 to npm.
+
+| Production (`npx`)                       | Local development (`bun run dev`) |
+| ---------------------------------------- | --------------------------------- |
+| `npx cc-codeconductor seo audit --url …` | `bun run dev seo audit --url …`   |
+| `npx cc-codeconductor goal "…"`          | `bun run dev goal "…"`            |
+| `npx cc-codeconductor ccep parse …`      | `bun run dev ccep parse …`        |
+
 ## Project-Specific Notes
 
 This section is manually maintained. Add project-specific conventions,
@@ -528,13 +505,26 @@ exceptions, or context here.
 
 ## graphify
 
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+This project has a knowledge graph at graphify-out/ with god nodes, community
+structure, and cross-file relationships.
 
-When the user types `/graphify`, invoke the `skill` tool with `skill: "graphify"` before doing anything else.
+When the user types `/graphify`, invoke the `skill` tool with
+`skill: "graphify"` before doing anything else.
 
 Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+
+- For codebase questions, first run `graphify query "<question>"` when
+  graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for
+  relationships and `graphify explain "<concept>"` for focused concepts. These
+  return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw
+  grep output.
+- Dirty graphify-out/ files are expected after hooks or incremental updates;
+  dirty graph files are not a reason to skip graphify. Only skip graphify if the
+  task is about stale or incorrect graph output, or the user explicitly says not
+  to use it.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of
+  raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when
+  query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current
+  (AST-only, no API cost).

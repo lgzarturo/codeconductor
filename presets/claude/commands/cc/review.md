@@ -122,5 +122,16 @@ If no CRITICAL findings exist:
 
 ## Completion
 
-Deliver the complete Review Report. Never summarize or omit findings. Every
-finding must include a location and an actionable description.
+Deliver the complete Review Report. Never summarize or omit findings.
+
+---
+
+## Step 5 — Scorecard and outcome
+
+```bash
+npx cc-codeconductor scorecard create --from-diff --agent reviewer
+npx cc-codeconductor scorecard record --verdict PASS|REVISE|REJECT --score <weighted>
+npx cc-codeconductor scorecard regression
+```
+
+Map merge recommendation to scorecard verdict. Record outcome for trend tracking.

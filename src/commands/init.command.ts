@@ -111,13 +111,14 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
 
     const copiedPresets = await copyPresets(baseDir, presetsToCopy, force);
     const openspecCreated = await initOpenspecArtifacts(baseDir, force);
+    const evalCreated = await initEvaluationArtifacts(baseDir, force);
 
     return {
       code: 0,
       data: {
         success: true,
         command: 'init',
-        created: ['.codeconductor/config.yml', ...copiedPresets, ...openspecCreated],
+        created: ['.codeconductor/config.yml', ...copiedPresets, ...openspecCreated, ...evalCreated],
         ...(profile
           ? {
               detected: {
@@ -241,6 +242,42 @@ async function initOpenspecArtifacts(baseDir: string, force: boolean): Promise<s
     );
     await writeFile(stateDest, initialState, 'utf-8');
     created.push('.codeconductor/openspec-state.json');
+  }
+
+  return created;
+}
+
+/**
+ * Create evaluation directory stubs for scorecard / outcome tracking.
+ */
+async function initEvaluationArtifacts(baseDir: string, force: boolean): Promise<string[]> {
+  if (baseDir === homedir()) return [];
+
+  const created: string[] = [];
+  const evalDir = resolve(baseDir, '.codeconductor', 'evaluation');
+  await mkdir(evalDir, { recursive: true });
+  await mkdir(resolve(evalDir, 'scorecards'), { recursive: true });
+
+  const indexPath = resolve(evalDir, 'index.json');
+  if (force || !(await fileExists(indexPath))) {
+    await writeFile(indexPath, JSON.stringify({ version: 1 }, null, 2), 'utf-8');
+    created.push('.codeconductor/evaluation/index.json');
+  }
+
+  const outcomesPath = resolve(evalDir, 'outcomes.jsonl');
+  if (force || !(await fileExists(outcomesPath))) {
+    await writeFile(outcomesPath, '', 'utf-8');
+    created.push('.codeconductor/evaluation/outcomes.jsonl');
+  }
+
+  const profileDest = resolve(evalDir, 'execution-profile.yml');
+  const profileTemplate = resolve(ROOT_PRESETS_DIR, 'templates', 'execution-profile.yml');
+  if (force || !(await fileExists(profileDest))) {
+    if (await fileExists(profileTemplate)) {
+      const content = await readFile(profileTemplate, 'utf-8');
+      await writeFile(profileDest, content, 'utf-8');
+      created.push('.codeconductor/evaluation/execution-profile.yml');
+    }
   }
 
   return created;

@@ -1,0 +1,10 @@
+checks:
+  - id: tests_pass
+    command: npm test
+    required: false
+  - id: doctor_config
+    command: npx cc-codeconductor doctor
+    required: false
+  - id: no_scope_creep
+    type: diff_scope
+    required: false

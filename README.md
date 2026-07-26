@@ -536,7 +536,7 @@ codeconductor/
 | **v0.2.0** | **CLI: init, detect, install, doctor, update — shipped** ✅ |
 | v0.3.0     | Next.js, FastAPI, generic presets, monorepo support         |
 | **v0.4.0** | **Workflow Loop Core, stack-specific presets, 9 specialized skills, confidence thresholds + compliance veto in council consensus, goal orchestration, memory compression — shipped** ✅ |
-| v0.5.0     | Scorecard CLI, task outcome tracking, prompt regression     |
+| v0.5.0     | Scorecard CLI, task outcome tracking, prompt regression — shipped ✅ |
 | v1.0.0     | Stable contracts, stable routing, documented evaluation     |
 
 See [ROADMAP.md](ROADMAP.md) for details.

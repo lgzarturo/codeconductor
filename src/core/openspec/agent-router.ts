@@ -19,3 +19,11 @@ const PHASE_ROUTES: Record<OpenspecTaskCardPhaseInput, PhaseAgentRoute> = {
 export function routePhaseToAgent(phase: OpenspecTaskCardPhaseInput): PhaseAgentRoute {
   return PHASE_ROUTES[phase];
 }
+
+/**
+ * Extended route with resolved model (when available).
+ */
+export interface PhaseAgentRouteResolved extends PhaseAgentRoute {
+  model?: string;
+  subagentDelegate?: boolean;
+}

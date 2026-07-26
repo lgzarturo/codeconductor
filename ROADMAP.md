@@ -294,12 +294,12 @@ in v0.1.0.
 
 **Goal:** Measure agent quality over time.
 
-- [ ] Scorecard CLI
-- [ ] Task outcome tracking
-- [ ] Prompt version diff
-- [ ] Regression checklist
-- [ ] Model comparison template
-- [ ] Cost / quality matrix
+- [x] Scorecard CLI
+- [x] Task outcome tracking
+- [x] Prompt version diff
+- [x] Regression checklist
+- [x] Model comparison template
+- [x] Cost / quality matrix
 
 ---
 

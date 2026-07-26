@@ -121,6 +121,18 @@ retirement.
 
 ---
 
+## Diff via CLI
+
+Compare prompt contract versions without manual file diff:
+
+```bash
+npx cc-codeconductor scorecard prompt-diff 0.4.0 0.5.0 --agent architect
+```
+
+Output includes per-file line changes and a markdown summary.
+
+---
+
 ## Version Table
 
 | Version | Status           | Date       | Changes                                                                                                                       |

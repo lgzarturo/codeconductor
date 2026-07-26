@@ -12,6 +12,7 @@ import { installLspCommand, type InstallLspOptions } from '../commands/install-l
 import { debtHarvestCommand, type DebtHarvestOptions } from '../commands/debt-harvest.command';
 import { goalCommand, type GoalOptions } from '../commands/goal.command';
 import { openspecCommand, type OpenspecOptions } from '../commands/openspec.command';
+import { scorecardCommand, type ScorecardOptions } from '../commands/scorecard.command';
 import { helpCommand, type HelpOptions } from '../commands/help.command';
 import { seoAuditCommand } from '../commands/seo-audit.command';
 import { seoLlmsCommand } from '../commands/seo-llms.command';
@@ -221,6 +222,9 @@ Examples:
   npx cc-codeconductor openspec plan BC-001
   npx cc-codeconductor openspec status
   npx cc-codeconductor openspec next
+  npx cc-codeconductor scorecard create --task BC-001 --from-diff
+  npx cc-codeconductor scorecard models
+  npx cc-codeconductor scorecard aggregate
   npx cc-codeconductor help --target opencode
   npx cc-codeconductor help --target claude --output json
 
@@ -366,6 +370,59 @@ export async function routeCommand(
         projectRoot,
         output: flags.output,
       } as OpenspecOptions);
+    }
+
+    case 'scorecard':
+    case 'cc-scorecard': {
+      const validSubs = [
+        'create',
+        'show',
+        'record',
+        'list',
+        'aggregate',
+        'models',
+        'prompt-diff',
+        'regression',
+        'matrix',
+        'compare-models',
+      ];
+      let scorecardSub = subcommand && validSubs.includes(subcommand) ? subcommand : 'aggregate';
+      if (!subcommand || !validSubs.includes(subcommand)) {
+        scorecardSub = 'aggregate';
+      }
+
+      const modelsFilter =
+        typeof options.models === 'string'
+          ? options.models.split(',').map((s) => s.trim())
+          : undefined;
+
+      return scorecardCommand({
+        subcommand: scorecardSub,
+        projectRoot,
+        output: flags.output,
+        id: scorecardSub === 'show' ? args.rest?.[0] ?? (options.id as string) : (options.id as string),
+        taskId: (options.task as string) ?? options.item as string,
+        agent: options.agent as string,
+        model: options.model as string,
+        fromDiff: options['from-diff'] === true || options.fromDiff === true,
+        fromVersion:
+          scorecardSub === 'prompt-diff'
+            ? args.rest?.[0] ?? (options.from as string)
+            : (options.from as string),
+        toVersion:
+          scorecardSub === 'prompt-diff'
+            ? args.rest?.[1] ?? (options.to as string)
+            : (options.to as string),
+        profile: options.profile as string,
+        costUsd: options.cost ? parseFloat(String(options.cost)) : undefined,
+        tokens: options.tokens ? parseInt(String(options.tokens), 10) : undefined,
+        durationMs: options.duration ? parseInt(String(options.duration), 10) : undefined,
+        verdict: options.verdict as string,
+        weightedScore: options.score ? parseFloat(String(options.score)) : undefined,
+        source: options.source as string,
+        since: options.since as string,
+        modelsFilter,
+      } as ScorecardOptions);
     }
 
     case 'seo': {

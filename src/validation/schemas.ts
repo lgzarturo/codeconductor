@@ -467,6 +467,96 @@ export const OpenspecStateSchema = z.object({
   itemSnapshots: z.record(z.string(), z.string()).optional().default({}),
 });
 
+// ─── Evaluation / Scorecard Schemas ───────────────────────────────────────────
+
+export const ScorecardVerdictSchema = z.enum(['PASS', 'REVISE', 'REJECT']);
+
+export const ScorecardCriterionIdSchema = z.enum([
+  'acceptance',
+  'minimal_diff',
+  'tests',
+  'regressions',
+  'conventions',
+  'documentation',
+  'context_discipline',
+  'cc_gain',
+]);
+
+export const ScorecardCriterionSchema = z.object({
+  id: ScorecardCriterionIdSchema,
+  label: z.string(),
+  weight: z.number().min(0).max(1),
+  score: z.number().int().min(0).max(3),
+  notes: z.string().optional(),
+  autoSuggested: z.boolean().optional(),
+});
+
+export const ScorecardRecordSchema = z.object({
+  id: z.string(),
+  taskId: z.string(),
+  agent: z.string(),
+  model: z.string().optional(),
+  contractVersion: z.string(),
+  evaluator: z.string().optional(),
+  criteria: z.array(ScorecardCriterionSchema),
+  weightedScore: z.number(),
+  verdict: ScorecardVerdictSchema,
+  findings: z.array(z.string()).optional().default([]),
+  createdAt: z.string(),
+  backlogId: z.string().optional(),
+  source: z.enum(['openspec', 'review', 'manual', 'pipeline']).optional(),
+});
+
+export const TaskOutcomeSourceSchema = z.enum(['openspec', 'review', 'manual', 'pipeline']);
+
+export const TaskOutcomeStatusSchema = z.enum([
+  'phase_done',
+  'phase_failed',
+  'pass',
+  'revise',
+  'reject',
+]);
+
+export const TaskOutcomeSchema = z.object({
+  id: z.string(),
+  taskId: z.string(),
+  source: TaskOutcomeSourceSchema,
+  agent: z.string(),
+  model: z.string(),
+  contractVersion: z.string(),
+  timestamp: z.string(),
+  status: TaskOutcomeStatusSchema.optional(),
+  verdict: ScorecardVerdictSchema.optional(),
+  weightedScore: z.number().optional(),
+  taskCardId: z.string().optional(),
+  backlogId: z.string().optional(),
+  phase: z.string().optional(),
+  scorecardId: z.string().optional(),
+  tokensIn: z.number().optional(),
+  tokensOut: z.number().optional(),
+  costUsd: z.number().optional(),
+  durationMs: z.number().optional(),
+});
+
+export const EvaluationIndexSchema = z.object({
+  version: z.literal(1),
+  lastOutcomeId: z.string().optional(),
+});
+
+export const ExecutionProfileNameSchema = z.enum(['balanced', 'quality', 'economical']);
+
+export const ExecutionProfileSchema = z.object({
+  profile: ExecutionProfileNameSchema.default('balanced'),
+  target: z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor', 'agy']).optional(),
+  overrides: z.record(z.string(), z.string()).optional().default({}),
+  subagentPolicy: z
+    .object({
+      orchestrator: z.enum(['primary', 'delegate']).optional(),
+      testerReviewer: z.enum(['primary', 'delegate']).optional(),
+    })
+    .optional(),
+});
+
 // ─── Schema Type Exports ──────────────────────────────────────────────────────
 
 export type ContractTargetInput = z.infer<typeof ContractTargetSchema>;
@@ -489,6 +579,12 @@ export type BacklogDocumentInput = z.infer<typeof BacklogDocumentSchema>;
 export type OpenspecTaskCardPhaseInput = z.infer<typeof OpenspecTaskCardPhaseSchema>;
 export type OpenspecTaskCardInput = z.infer<typeof OpenspecTaskCardSchema>;
 export type OpenspecStateInput = z.infer<typeof OpenspecStateSchema>;
+export type ScorecardVerdictInput = z.infer<typeof ScorecardVerdictSchema>;
+export type ScorecardCriterionInput = z.infer<typeof ScorecardCriterionSchema>;
+export type ScorecardRecordInput = z.infer<typeof ScorecardRecordSchema>;
+export type TaskOutcomeInput = z.infer<typeof TaskOutcomeSchema>;
+export type EvaluationIndexInput = z.infer<typeof EvaluationIndexSchema>;
+export type ExecutionProfileInput = z.infer<typeof ExecutionProfileSchema>;
 
 // ─── Validate Helpers ─────────────────────────────────────────────────────────
 
@@ -567,5 +663,13 @@ export function validateBacklogDocument(data: unknown): BacklogDocumentInput {
  */
 export function validateOpenspecState(data: unknown): OpenspecStateInput {
   return OpenspecStateSchema.parse(data);
+}
+
+export function validateScorecardRecord(data: unknown): ScorecardRecordInput {
+  return ScorecardRecordSchema.parse(data);
+}
+
+export function validateTaskOutcome(data: unknown): TaskOutcomeInput {
+  return TaskOutcomeSchema.parse(data);
 }
 

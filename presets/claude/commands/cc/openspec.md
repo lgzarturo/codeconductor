@@ -71,7 +71,13 @@ Update BACKLOG item status to `PLANNED` (CLI does this automatically).
 
 ---
 
-## Step 4 — Execute loop
+## Step 4 — Model matrix and execute loop
+
+Before executing phases, show resolved models:
+
+```bash
+npx cc-codeconductor scorecard models
+```
 
 For each pending TaskCard, run:
 
@@ -102,6 +108,12 @@ Implementer: create a Git worktree before editing (`git worktree add ../<branch>
 
 ## Step 5 — Review gate
 
+Run regression when BACKLOG Global `Review required: yes`:
+
+```bash
+npx cc-codeconductor scorecard regression
+```
+
 The `reviewer` agent must verify:
 
 - All acceptance criteria from BACKLOG.md
@@ -115,13 +127,15 @@ If **approved**: proceed to Step 6.
 
 ---
 
-## Step 6 — Update backlog
+## Step 6 — Scorecard and update backlog
 
-1. Set item `Progress: 100%`, `Status: DONE`.
-2. Move item to `## Archive` section in BACKLOG.md.
-3. Run `npx cc-codeconductor openspec scan` to persist snapshots.
+1. `npx cc-codeconductor scorecard create --task <BC-id> --from-diff`
+2. Complete criteria; `scorecard record` with verdict and optional cost/tokens
+3. Set item `Progress: 100%`, `Status: DONE` if PASS
+4. Move item to `## Archive` in BACKLOG.md if DONE
+5. Run `npx cc-codeconductor openspec scan`
 
-Report completion: Task Cards executed, change folder path, review verdict, files changed.
+Report completion: Task Cards executed, scorecard verdict, change folder path, files changed.
 
 ---
 

@@ -579,6 +579,44 @@ npx cc-codeconductor openspec next --output json
 
 ---
 
+### `npx cc-codeconductor scorecard <subcommand>`
+
+Agent quality evaluation: scorecards, outcome tracking, regression checks, model matrix.
+
+**Subcommands:**
+
+| Subcommand | Description |
+|------------|-------------|
+| `create` | Create scorecard with optional `--from-diff` auto-signals |
+| `show <id>` | Display saved scorecard |
+| `record` | Append outcome to `outcomes.jsonl` |
+| `list` | List outcomes (`--agent`, `--model`, `--since`) |
+| `aggregate` | Pass rate and average scores |
+| `models` | Phase → agent → model table for OpenSpec |
+| `prompt-diff <from> <to>` | Diff prompt contracts between versions |
+| `regression` | Run regression checklist |
+| `matrix` | Generate cost/quality matrix |
+| `compare-models` | Model comparison report from outcomes |
+
+**Examples:**
+
+```bash
+npx cc-codeconductor scorecard create --task BC-001 --from-diff
+npx cc-codeconductor scorecard record --task BC-001 --verdict PASS --score 2.5 --cost 0.12 --tokens 45000
+npx cc-codeconductor scorecard models
+npx cc-codeconductor scorecard prompt-diff 0.4.0 0.5.0 --agent architect
+npx cc-codeconductor scorecard regression
+npx cc-codeconductor scorecard matrix --output json
+```
+
+**State files:**
+
+- `.codeconductor/evaluation/outcomes.jsonl`
+- `.codeconductor/evaluation/scorecards/*.json`
+- `.codeconductor/evaluation/execution-profile.yml`
+
+---
+
 ## Agent Commands (Claude / OpenCode)
 
 Agent commands are slash commands available inside Claude Code and OpenCode. They
@@ -668,6 +706,18 @@ processing.
 ```bash
 /cc:openspec
 /cc:openspec BC-001
+```
+
+---
+
+### `/cc:scorecard` / `/cc-scorecard [task-id]`
+
+Runs scorecard evaluation: create with auto-signals, regression checklist, record outcome, aggregate stats.
+
+**Available in**: Claude Code (`/cc:scorecard`), OpenCode (`/cc-scorecard`), AGY (`/cc-scorecard`).
+
+```bash
+/cc:scorecard BC-001
 ```
 
 ---

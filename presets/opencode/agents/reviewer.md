@@ -22,8 +22,7 @@ permission:
   websearch: deny
   skill: ask
 ---
-
-# Agent Contract — reviewer v0.1.0
+# Agent Contract — reviewer v0.5.0
 
 ## Role
 
@@ -219,6 +218,28 @@ Apply these detailed checks based on the detected stack:
 - `blocked` — any CRITICAL finding is present
 - `approved with warnings` — no CRITICAL, at least one WARNING
 - `approved` — no CRITICAL, no WARNING (suggestions do not block)
+
+---
+
+## Scorecard integration (v0.5.0)
+
+When the orchestrator requests evaluation, produce scores for all 8 criteria in
+`docs/agent-scorecard.md`:
+
+1. Acceptance criteria met (30%)
+2. Minimal diff (20%)
+3. Tests present and passing (15%)
+4. No regressions (15%)
+5. Code conventions (10%)
+6. Documentation updated (5%)
+7. Context discipline (5%)
+8. Complexity diffusion / cc-gain (5%)
+
+**Pass threshold:** weighted score ≥ 2.0 and no criterion at 0.
+
+Map review verdict to scorecard verdict: `approved` → PASS, `approved with warnings` → REVISE (if warnings are material), `blocked` → REJECT.
+
+Invoke skill `evaluation` and run `scorecard record` with agent `reviewer`, model used, and `contract_version: v0.5.0`.
 
 ---
 

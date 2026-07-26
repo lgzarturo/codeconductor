@@ -54,6 +54,8 @@ const CURSOR_AGENT_FILES = [
   ...ALL_AGENT_FILES,
   'complexity-auditor.md',
   'security-reviewer.md',
+  'goal-planner.md',
+  'contract-builder.md',
 ];
 
 const EXPECTED_ROLES = [
@@ -154,6 +156,16 @@ describe('ModelConfigSchema', () => {
     expect(result.success).toBe(true);
   });
 
+  test('config with grok provider passes validation', () => {
+    const result = ModelConfigSchema.safeParse({
+      target: 'cursor',
+      agents: {
+        architect: { cursor: 'claude-opus-5-thinking-high', grok: 'cursor-grok-4.5-high-fast' },
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
   test('config with gemini and cursor providers passes validation', () => {
     const result = ModelConfigSchema.safeParse({
       target: 'gemini',
@@ -237,9 +249,9 @@ describe('loadModelConfig', () => {
     expect(config.agents['complexity-auditor'].cursor).toBe('claude-sonnet-5-thinking-high');
   });
 
-  test('cursor config has all agent roles including security and complexity', async () => {
+  test('cursor config has all agent roles including security, complexity, goal-planner, contract-builder', async () => {
     const config = await loadModelConfig('cursor');
-    for (const role of [...EXPECTED_ROLES, 'complexity-auditor', 'security-reviewer']) {
+    for (const role of [...EXPECTED_ROLES, 'complexity-auditor', 'security-reviewer', 'goal-planner', 'contract-builder']) {
       expect(config.agents[role]).toBeDefined();
       expect(typeof config.agents[role].cursor).toBe('string');
     }
@@ -256,11 +268,11 @@ describe('loadModelConfig', () => {
 
   test('each config has expected agent role count', async () => {
     const expectedCounts: Record<string, number> = {
-      opencode: 9,
-      claude: 9,
-      codex: 9,
-      gemini: 9,
-      cursor: 11,
+      opencode: 12,
+      claude: 12,
+      codex: 12,
+      gemini: 12,
+      cursor: 12,
     };
     for (const target of ['opencode', 'claude', 'codex', 'gemini', 'cursor'] as const) {
       const config = await loadModelConfig(target);
@@ -364,7 +376,7 @@ describe('copyFromManifest with modelConfig', () => {
   test('template entries are detected from opencode manifest', async () => {
     const manifest = await loadManifest('opencode');
     const templateEntries = manifest.entries.filter((e) => e.template === true);
-    // agents + README.md (locale placeholder injection) + prompts (v0.4.0)
+    // agents + README.md (locale placeholder injection) + prompts (v0.5.0)
     expect(templateEntries.length).toBe(3);
     expect(templateEntries.some((e) => e.src.includes('agents'))).toBe(true);
     expect(templateEntries.some((e) => e.src.includes('README.md'))).toBe(true);

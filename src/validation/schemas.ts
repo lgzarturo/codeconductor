@@ -149,6 +149,7 @@ export const ModelConfigSchema = z.object({
       gemini: z.string().optional(),
       cursor: z.string().optional(),
       agy: z.string().optional(),
+      grok: z.string().optional(),
     })
   ),
   tools: z.record(z.string(), ToolProviderNamesSchema).optional(),

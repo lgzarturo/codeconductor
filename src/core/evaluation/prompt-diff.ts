@@ -100,6 +100,12 @@ export async function diffPromptVersions(
   if (!fromDir) {
     fromDir = join(ROOT_PRESETS_DIR, 'opencode', 'prompts', fromV);
     toDir = join(ROOT_PRESETS_DIR, 'opencode', 'prompts', toV);
+  } else {
+    try {
+      await readFile(join(toDir, 'orchestrator.md'), 'utf-8');
+    } catch {
+      toDir = join(ROOT_PRESETS_DIR, 'opencode', 'prompts', toV);
+    }
   }
 
   const fromFiles = await listPromptFiles(fromDir);

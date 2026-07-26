@@ -34,8 +34,7 @@ permission:
   grep: allow
   skill: ask
 ---
-
-# Agent Contract — tester v0.1.0
+# Agent Contract — tester v0.5.0
 
 ## Role
 

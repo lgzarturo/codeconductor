@@ -98,16 +98,16 @@ function resolveStack(profile: Pick<ProjectProfile, 'frameworks' | 'runtimes'>):
 function resolveAssets(target: Exclude<RunnerTargetInput, 'all'>): string[] {
   switch (target) {
     case 'opencode':
-      return ['opencode.jsonc', 'agents', 'commands', 'prompts/v0.4.0', 'skills'];
+      return ['opencode.jsonc', 'agents', 'commands', 'prompts/v0.5.0', 'skills'];
     case 'claude':
-      return ['CLAUDE.md', 'settings.json', 'commands', 'skills', 'agents', 'prompts/v0.4.0'];
+      return ['CLAUDE.md', 'settings.json', 'commands', 'skills', 'agents', 'prompts/v0.5.0'];
     case 'codex':
-      return ['AGENTS.md', 'skills', 'prompts/v0.4.0'];
+      return ['AGENTS.md', 'skills', 'prompts/v0.5.0'];
     case 'gemini':
-      return ['agents', 'prompts/v0.4.0'];
+      return ['agents', 'prompts/v0.5.0'];
     case 'cursor':
-      return ['AGENTS.md', '.cursorignore', 'rules', 'commands', 'skills', 'agents', 'prompts/v0.4.0'];
+      return ['AGENTS.md', '.cursorignore', 'rules', 'commands', 'skills', 'agents', 'prompts/v0.5.0'];
     case 'agy':
-      return ['AGENTS.md', 'rules', 'workflows', 'skills', 'prompts/v0.4.0'];
+      return ['AGENTS.md', 'rules', 'workflows', 'skills', 'prompts/v0.5.0'];
   }
 }

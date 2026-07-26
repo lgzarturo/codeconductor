@@ -24,8 +24,7 @@ permission:
   webfetch: deny
   websearch: deny
 ---
-
-# Agent Contract — orchestrator v0.1.0
+# Agent Contract — orchestrator v0.5.0
 
 ## Role
 
@@ -80,11 +79,11 @@ receives. After routing, take this action based on the value:
 
 | Context scope  | Action                                                              |
 | -------------- | ------------------------------------------------------------------- |
-| `isolated`     | Include `/new` command in the delegation instruction to start fresh |
+| `isolated`     | Include `/clear` command in the delegation instruction to start fresh |
 | `continuation` | Include `Continue the existing conversation` — preserve context     |
 | `full`         | Include `Use full context` — include all prior conversation history |
 
-The `/new` command must be the FIRST instruction when `context_scope` is
+The `/clear` command must be the FIRST instruction when `context_scope` is
 `isolated`. This clears the agent's working memory for clean, focused execution.
 
 ---
@@ -129,6 +128,8 @@ regression.
 | Codebase question  | any         | `repo-explorer`                                                    |
 | Code review        | any         | `reviewer`                                                         |
 | Task unclear       | any         | `task-coach`                                                       |
+| Multi-step goal    | any         | `goal-planner` → [dependency-ordered agents]                       |
+| DDD→SDD→TDD        | any         | `contract-builder` → `architect` → `implementer` → `tester`        |
 
 ---
 
@@ -273,14 +274,51 @@ routes the agents through an iterative feedback loop:
 
 ---
 
-## Multi-Team / Teammate Delegation
+## Evaluation Gate (v0.5.0)
 
-When the preset target supports multi-team execution (e.g. Claude Code with
-`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` enabled):
-1. Spawn parallel teammates (`tester`, `reviewer`, etc.) to run verification and checks concurrently when possible.
-2. Assign the most cost-efficient models for secondary roles:
-   - Primary Orchestrator / Architect: `sonnet` / `pro` (maximum context / reasoning).
-   - Task Coach, Docs, Repo Explorer, Reviewer: `haiku` / `flash` (fast, cost-effective).
+After each agent completes a deliverable on **medium** or **high** risk tasks:
+
+1. Invoke skill `evaluation`
+2. Run `npx cc-codeconductor scorecard create --task <id> --agent <agent> --from-diff`
+3. Complete all 8 criteria per `docs/agent-scorecard.md` (weighted score ≥ 2.0, no criterion at 0)
+4. Optional before merge: `npx cc-codeconductor scorecard regression`
+5. Record outcome: `npx cc-codeconductor scorecard record --task <id> --verdict PASS|REVISE|REJECT --score <n>`
+6. Route on verdict: **REVISE** → prior agent with findings; **REJECT** → `task-coach`
+
+Include `contract_version: v0.5.0` in scorecard metadata.
+
+---
+
+## Goal Graph delegation
+
+When the human runs `codeconductor goal "<objective>"` or provides a GoalGraph:
+
+1. Route to `goal-planner` to produce the YAML task graph
+2. Delegate tasks in `depends_on` order — a task starts only after dependencies are `done`
+3. Track state in `.codeconductor/current-goal.yml`
+4. If a dependency is `blocked`, keep dependent tasks `pending`
+
+---
+
+## Target-Specific Orchestration
+
+### Cursor
+
+- Enable `/multitask` when delegating independent steps (e.g. `reviewer` + `docs`)
+- Use the Task tool with multiple subagents in a single turn for parallel work
+- Heavy reasoning (`architect`, `security-reviewer`): Opus / high-effort models
+- Implementation (`implementer`, `tester`): `composer-2.5-fast`
+- Read-only exploration (`repo-explorer`): background + fast model
+- Intake and docs (`task-coach`, `docs`): lightweight models
+- If primary model unavailable, fall back to Grok (`{{MODEL_GROK}}`)
+- Use `/summarize` or `/compress` before re-delegating with large context
+- Prefer subagent isolation over passing full conversation history
+
+### OpenCode / Claude / Codex / Gemini
+
+When multi-team execution is available (e.g. Claude Code agent teams):
+1. Spawn parallel teammates (`tester`, `reviewer`, etc.) for independent verification
+2. Assign cost-efficient models for secondary roles: `haiku` / `flash` for intake, docs, exploration
 
 ---
 

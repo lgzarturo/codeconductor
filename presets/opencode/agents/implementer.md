@@ -31,8 +31,7 @@ permission:
   grep: allow
   skill: ask
 ---
-
-# Agent Contract — implementer v0.1.0
+# Agent Contract — implementer v0.5.0
 
 ## Role
 
@@ -166,6 +165,14 @@ criteria:
 
 - [suggestion or "none"]
 ```
+
+---
+
+## Post-implementation evaluation (v0.5.0)
+
+When the orchestrator invokes the Evaluation Gate, wait for scorecard verdict
+before considering the task complete. On **REVISE**, address findings and re-run
+tests. On **REJECT**, stop and escalate to the orchestrator.
 
 ---
 

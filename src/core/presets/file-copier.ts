@@ -192,6 +192,7 @@ export function renderTemplate(content: string, modelConfig: ModelConfig, filePa
       .replace(/\{\{MODEL_CODEX\}\}/g, agentModels.codex ?? '')
       .replace(/\{\{MODEL_GEMINI\}\}/g, agentModels.gemini ?? '')
       .replace(/\{\{MODEL_CURSOR\}\}/g, agentModels.cursor ?? '')
+      .replace(/\{\{MODEL_GROK\}\}/g, agentModels.grok ?? '')
       .replace(new RegExp(LOCALE_PLACEHOLDER.replace(/[{}]/g, '\\$&'), 'g'), getLanguageInstruction(locale));
 
     // Render tool/permission frontmatter for targets that define it.
@@ -216,6 +217,7 @@ export function renderTemplate(content: string, modelConfig: ModelConfig, filePa
     'goal-planner',
     'complexity-auditor',
     'security-reviewer',
+    'contract-builder',
   ];
   let result = templatedContent;
 
@@ -235,7 +237,8 @@ export function renderTemplate(content: string, modelConfig: ModelConfig, filePa
           .replace(/\{\{MODEL_OPENCODE\}\}/g, agentModels.opencode ?? '')
           .replace(/\{\{MODEL_CODEX\}\}/g, agentModels.codex ?? '')
           .replace(/\{\{MODEL_GEMINI\}\}/g, agentModels.gemini ?? '')
-          .replace(/\{\{MODEL_CURSOR\}\}/g, agentModels.cursor ?? '');
+          .replace(/\{\{MODEL_CURSOR\}\}/g, agentModels.cursor ?? '')
+      .replace(/\{\{MODEL_GROK\}\}/g, agentModels.grok ?? '');
 
         result = result.replace(section, renderedSection);
       }

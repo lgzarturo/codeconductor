@@ -60,7 +60,9 @@ describe('cursor preset install', () => {
     expect(existsSync(join(TEST_DIR, '.cursor', 'commands', 'cc', 'feature.md'))).toBe(true);
     expect(existsSync(join(TEST_DIR, '.cursor', 'skills', 'security', 'SKILL.md'))).toBe(true);
     expect(existsSync(join(TEST_DIR, '.cursor', 'agents', 'security-reviewer.md'))).toBe(true);
-    expect(existsSync(join(TEST_DIR, '.cursor', 'prompts', 'v0.4.0', 'orchestrator.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.cursor', 'agents', 'goal-planner.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.cursor', 'agents', 'contract-builder.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.cursor', 'prompts', 'v0.5.0', 'orchestrator.md'))).toBe(true);
   });
 
   test('AGENTS.md contains Cursor orchestration section', async () => {
@@ -82,10 +84,10 @@ describe('cursor preset install', () => {
       join(TEST_DIR, '.cursor', 'agents', 'orchestrator.md'),
       'utf-8'
     );
-    expect(content).toContain('Cursor Subagent Orchestration');
+    expect(content).toContain('Target-Specific Orchestration');
     expect(content).toContain('/multitask');
     expect(content).toContain('security-reviewer');
-    expect(content).not.toContain('(Council)');
+    expect(content).toContain('Evaluation Gate (v0.5.0)');
   });
 
   test('repo-explorer runs as background subagent', async () => {

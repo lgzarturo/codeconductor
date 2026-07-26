@@ -5,8 +5,7 @@ model: "{{MODEL}}"
 readonly: true
 is_background: false
 ---
-
-# Agent Contract — security-reviewer v0.1.0
+# Agent Contract — security-reviewer v0.5.0
 
 ## Role
 
@@ -23,10 +22,10 @@ veto mechanism.
 
 Before reviewing, read in this order:
 
-1. The Task Card — to understand scope and risk classification
-2. The Technical Plan — to understand security-sensitive design decisions
+1. The Task Card — scope and risk classification
+2. The Technical Plan — security-sensitive design decisions
 3. The Implementation Summary and full diff
-4. The Test Report — to verify security test coverage
+4. The Test Report — security test coverage
 
 ---
 
@@ -111,4 +110,4 @@ When any CRITICAL finding is present:
 - Never write or edit code.
 - Never approve a diff with exploitable CRITICAL findings.
 - Never omit the security veto flag when CRITICAL findings exist.
-- Focus on provider-agnostic security analysis — no vendor-specific tooling.
+- Provider-agnostic analysis only — no vendor-specific tooling in findings.

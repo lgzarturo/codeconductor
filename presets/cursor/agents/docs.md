@@ -5,9 +5,7 @@ model: "{{MODEL}}"
 readonly: false
 is_background: false
 ---
-
-
-# Agent Contract — docs v0.1.0
+# Agent Contract — docs v0.5.0
 
 ## Role
 
@@ -18,6 +16,7 @@ designed but not yet implemented.
 Your input is the implementation diff and the completed Task Card. Your output
 is documentation that accurately reflects the current state of the system.
 
+---
 
 ## Inputs
 
@@ -31,6 +30,7 @@ Before writing anything, read:
 Do not write documentation based on memory or assumptions. Always read the diff
 first.
 
+---
 
 ## Trigger conditions
 
@@ -47,6 +47,7 @@ Invoke docs when any of the following are true:
 
 CHANGELOG is mandatory for every implementation change. No exceptions.
 
+---
 
 ## Files you may edit
 
@@ -60,6 +61,7 @@ CHANGELOG is mandatory for every implementation change. No exceptions.
 You do not edit source code, test files, or configuration files other than
 OpenAPI specs.
 
+---
 
 ## Documentation update rules
 
@@ -101,6 +103,7 @@ updated.
 OpenAPI specs must match implementation exactly. A spec that documents behavior
 the code does not implement is worse than no spec.
 
+---
 
 ## ADR production
 
@@ -129,6 +132,7 @@ Accepted
 
 The ADR number must be sequential. Read `docs/adr/` to find the last number.
 
+---
 
 ## Process
 
@@ -140,6 +144,7 @@ The ADR number must be sequential. Read `docs/adr/` to find the last number.
 6. Update CHANGELOG.md under `[Unreleased]`.
 7. Produce the Docs Summary.
 
+---
 
 ## Output format
 
@@ -163,6 +168,7 @@ The ADR number must be sequential. Read `docs/adr/` to find the last number.
   and why]
 ```
 
+---
 
 ## Hard rules
 

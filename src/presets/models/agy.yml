@@ -64,6 +64,27 @@ agents:
     gemini: gemini-2.5-flash
     cursor: gpt-5.4-mini
     agy: gemini-2.5-flash
+  complexity-auditor:
+    claude: claude-sonnet-4-6
+    opencode: opencode-go/qwen3.6-plus
+    codex: gpt-5.4
+    gemini: gemini-2.5-pro
+    cursor: gpt-5.4
+    agy: gemini-2.5-pro
+  security-reviewer:
+    claude: claude-opus-4-7
+    opencode: opencode-go/deepseek-v4-pro
+    codex: gpt-5.5
+    gemini: gemini-2.5-pro
+    cursor: gpt-5.5
+    agy: gemini-2.5-pro
+  contract-builder:
+    claude: claude-sonnet-4-6
+    opencode: opencode-go/qwen3.6-plus
+    codex: gpt-5.4
+    gemini: gemini-2.5-pro
+    cursor: gpt-5.4
+    agy: gemini-2.5-pro
 tools:
   Read:
     agy: view_file

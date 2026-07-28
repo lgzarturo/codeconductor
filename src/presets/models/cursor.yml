@@ -4,7 +4,7 @@
 target: cursor
 agents:
   architect:
-    claude: claude-opus-4-7
+    claude: claude-opus-4-8
     opencode: opencode-go/deepseek-v4-pro
     codex: gpt-5.5
     gemini: gemini-2.5-pro
@@ -46,7 +46,7 @@ agents:
     cursor: claude-sonnet-5-thinking-high
     grok: cursor-grok-4.5-high-fast
   security-reviewer:
-    claude: claude-opus-4-7
+    claude: claude-opus-4-8
     opencode: opencode-go/deepseek-v4-pro
     codex: gpt-5.5
     gemini: gemini-2.5-pro

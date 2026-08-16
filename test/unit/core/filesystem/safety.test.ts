@@ -38,7 +38,7 @@ describe('core/filesystem/safety', () => {
       const matches = scanForCredentials('cfg.env', content, PATTERNS);
       expect(matches).toHaveLength(1);
       expect(matches[0]).toMatchObject({ filePath: 'cfg.env', line: 2 });
-      expect(matches[0]?.matched).toContain('API_KEY=abcdefgh12345');
+      expect(matches[0]?.matched).toBe('[REDACTED]');
     });
 
     test('edge case: ignores values shorter than 8 characters', () => {

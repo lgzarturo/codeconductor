@@ -14,7 +14,11 @@ import type {
   ManifestEntry,
   ModelConfig,
 } from '../../validation/schemas';
-import { mergeManagedBlock } from '../filesystem/safe-merger';
+import {
+  MANAGED_BEGIN_MARKER,
+  MANAGED_END_MARKER,
+  mergeManagedBlock,
+} from '../filesystem/safe-merger';
 import { detectComplementaryTools } from './complementary-detector';
 
 export type FileAction = 'written' | 'appended' | 'merged' | 'skipped' | 'error';
@@ -38,7 +42,17 @@ export async function listFilesRecursive(dir: string, base = dir): Promise<strin
       files.push(relative(base, full));
     }
   }
-  return files;
+  // readdir order is filesystem-dependent; sort so installs are reproducible.
+  return files.sort();
+}
+
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    await stat(path);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function resolveEntryFiles(
@@ -382,6 +396,10 @@ export async function applySingleFile(
     return { src: srcPath, dest: destPath, action: 'skipped', dryRun };
   }
 
+  if (strategy === 'overwrite' && !force && (await fileExists(destPath))) {
+    return { src: srcPath, dest: destPath, action: 'skipped', dryRun };
+  }
+
   let content: string;
   try {
     content = await readFile(srcPath, 'utf-8');
@@ -426,6 +444,15 @@ export async function applySingleFile(
       existing = await readFile(destPath, 'utf-8');
     } catch {
       /* no existing */
+    }
+    // A destination without markers is fully user-owned: mergeManagedBlock would
+    // return the incoming content verbatim, so only overwrite it under --force.
+    const markerless =
+      existing !== null &&
+      !existing.includes(MANAGED_BEGIN_MARKER) &&
+      !existing.includes(MANAGED_END_MARKER);
+    if (markerless && !force) {
+      return { src: srcPath, dest: destPath, action: 'skipped', dryRun };
     }
     try {
       const merged = mergeManagedBlock(existing, incomingContent);

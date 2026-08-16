@@ -31,7 +31,7 @@ function inferTargetFiles(task: GoalTaskInput, graph?: ProductGraphInput): strin
   return matched.slice(0, 10);
 }
 
-function inferEvidenceRequired(task: GoalTaskInput): string[] {
+export function inferEvidenceRequired(task: GoalTaskInput): string[] {
   const base = ['acceptance_criteria_met'];
   if (task.type === 'test' || task.risk !== 'low') {
     base.push('tests_passed');

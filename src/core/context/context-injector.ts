@@ -7,7 +7,7 @@
  */
 
 import { readFile, stat } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { resolveWithinRoot } from '../filesystem/path-containment';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -63,10 +63,10 @@ export async function injectScopedContext(
     }
 
     try {
-      const absPath = resolve(projectRoot, relPath);
-
       // W1: Path traversal guard — resolved path must stay within projectRoot
-      if (!absPath.startsWith(resolve(projectRoot))) {
+      const absPath = await resolveWithinRoot(projectRoot, relPath);
+
+      if (absPath === undefined) {
         continue;
       }
 
@@ -113,10 +113,10 @@ export async function loadDeferredFile(
   relPath: string,
 ): Promise<string | undefined> {
   try {
-    const absPath = resolve(projectRoot, relPath);
-
     // Path traversal guard — resolved path must stay within projectRoot
-    if (!absPath.startsWith(resolve(projectRoot))) {
+    const absPath = await resolveWithinRoot(projectRoot, relPath);
+
+    if (absPath === undefined) {
       return undefined;
     }
 

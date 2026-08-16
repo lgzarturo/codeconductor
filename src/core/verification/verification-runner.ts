@@ -1,18 +1,139 @@
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import type { GoalGraphInput, ProductGraphInput } from '../../validation/schemas';
-import { EvidenceSchema, type EvidenceInput } from '../../validation/schemas';
+import { dirname, join, resolve } from 'node:path';
+import type { GoalGraphInput } from '../../validation/schemas';
+import {
+  EvidenceSchema,
+  ImplementerTestsSchema,
+  ReviewerOutputSchema,
+  type EvidenceInput,
+} from '../../validation/schemas';
 import { loadConfig } from '../config/config-loader';
+import { runCompileCheck } from '../compilation/compile-checker';
 import { err, ok, type Result } from '../../utils/result';
 import { evidenceDir } from '../product-graph/paths';
 import { appendEvent } from '../memory/episodic-store';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, writeFile } from 'node:fs/promises';
 
 export interface VerificationCheck {
   name: string;
   passed: boolean;
   message: string;
+}
+
+/**
+ * Evidence stored for a task. `invalid` counts files that could not be read or
+ * did not match EvidenceSchema — they make verification and gating fail closed
+ * instead of being silently skipped.
+ */
+interface TaskEvidence {
+  records: EvidenceInput[];
+  invalid: number;
+}
+
+/**
+ * Whether an evidence record proves a successful outcome.
+ *
+ * The payload must match the shape the producing agent emits — the tests
+ * section of `ImplementerOutputSchema` for a test run, `ReviewerOutputSchema`
+ * for a review — so a bare `passed` flag cannot stand in for a real result.
+ */
+function isPassingEvidence(ev: EvidenceInput): boolean {
+  switch (ev.type) {
+    case 'verification':
+      return ev.data?.passed === true;
+    case 'test': {
+      const tests = ImplementerTestsSchema.safeParse(ev.data);
+      return tests.success && tests.data.result === 'passed';
+    }
+    case 'review': {
+      const review = ReviewerOutputSchema.safeParse(ev.data);
+      return review.success && review.data.status === 'pass' && review.data.verdict !== 'blocked';
+    }
+    default:
+      return false;
+  }
+}
+
+/**
+ * Resolve the file backing an evidence record. Ids are derived from task ids,
+ * which are user input, so the name is reduced to a single safe segment and
+ * the result is confirmed to stay inside the evidence directory. The record
+ * itself keeps its raw id and `relatedTask`.
+ */
+function evidenceFilePath(evDir: string, id: string): Result<string, Error> {
+  const path = resolve(evDir, `${id.replace(/[^A-Za-z0-9_-]/g, '_')}.json`);
+  if (dirname(path) !== resolve(evDir)) {
+    return err(new Error(`Refusing to write evidence for "${id}" outside ${evDir}`));
+  }
+  return ok(path);
+}
+
+async function collectTaskEvidence(
+  projectRoot: string,
+  taskId: string,
+): Promise<Result<TaskEvidence, Error>> {
+  const evDir = evidenceDir(projectRoot);
+  const records: EvidenceInput[] = [];
+  let invalid = 0;
+
+  if (!existsSync(evDir)) return ok({ records, invalid });
+
+  let files: string[];
+  try {
+    files = await readdir(evDir);
+  } catch (e) {
+    return err(e instanceof Error ? e : new Error(String(e)));
+  }
+
+  for (const file of files) {
+    if (!file.endsWith('.json')) continue;
+    try {
+      const raw = await readFile(join(evDir, file), 'utf-8');
+      const ev = EvidenceSchema.parse(JSON.parse(raw));
+      if (ev.relatedTask === taskId) records.push(ev);
+    } catch {
+      invalid++;
+    }
+  }
+
+  return ok({ records, invalid });
+}
+
+/**
+ * Check that ids handed to a completion really name evidence of this task.
+ *
+ * Every id must resolve to a stored record that parses as `EvidenceSchema`,
+ * carries that exact id, is related to this task and records a passing result —
+ * and at least one cited id must be a passing `verification` record, so
+ * supporting test/review evidence alone cannot stand in for verification.
+ */
+export async function validateEvidenceIds(
+  projectRoot: string,
+  taskId: string,
+  evidenceIds: string[],
+): Promise<Result<void, Error>> {
+  const collected = await collectTaskEvidence(projectRoot, taskId);
+  if (!collected.success) return collected;
+
+  const owned = new Map(collected.data.records.map((ev) => [ev.id, ev]));
+  let hasPassingVerification = false;
+  for (const id of evidenceIds) {
+    const record = owned.get(id);
+    if (!record) {
+      return err(new Error(`Evidence "${id}" is not a record of task ${taskId}`));
+    }
+    if (!isPassingEvidence(record)) {
+      return err(new Error(`Evidence "${id}" does not record a passing result`));
+    }
+    if (record.type === 'verification') hasPassingVerification = true;
+  }
+
+  if (!hasPassingVerification) {
+    return err(new Error(`Task ${taskId} requires at least one passing verification evidence`));
+  }
+
+  return ok(undefined);
 }
 
 export async function runVerification(
@@ -29,7 +150,8 @@ export async function runVerification(
   } else {
     const { loadGoal } = await import('../goal/goal-state');
     const g = await loadGoal(projectRoot);
-    if (g.success) task = g.data.tasks.find((t) => t.id === taskId);
+    if (!g.success) return g;
+    task = g.data.tasks.find((t) => t.id === taskId);
   }
 
   if (!task) {
@@ -47,53 +169,76 @@ export async function runVerification(
         : 'No acceptance criteria defined',
   });
 
-  // Test command from config
+  // Compile check from config — a config that cannot be read is never a pass
   const configResult = await loadConfig(projectRoot);
-  if (configResult.success && configResult.data.safety.compileCheck?.enabled) {
-    const cmd = configResult.data.safety.compileCheck.command;
+  if (!configResult.success) {
     checks.push({
-      name: 'compile_check_configured',
-      passed: !!cmd,
-      message: cmd ? `Compile check: ${cmd}` : 'Compile check enabled but no command',
+      name: 'config_loaded',
+      passed: false,
+      message: `Cannot load config: ${configResult.error.message}`,
     });
   } else {
-    checks.push({
-      name: 'compile_check_configured',
-      passed: true,
-      message: 'Compile check not required or not configured',
-    });
+    const compileCheck = configResult.data.safety.compileCheck;
+    if (!compileCheck?.enabled) {
+      checks.push({
+        name: 'compile_check',
+        passed: true,
+        message: 'Compile check not enabled',
+      });
+    } else if (!compileCheck.command) {
+      checks.push({
+        name: 'compile_check',
+        passed: false,
+        message: 'Compile check enabled but no command configured',
+      });
+    } else {
+      const compile = await runCompileCheck({
+        command: compileCheck.command,
+        cwd: projectRoot,
+        timeoutMs: compileCheck.timeoutMs,
+      });
+      checks.push({
+        name: 'compile_check',
+        passed: compile.success && !compile.timedOut,
+        message: compile.timedOut
+          ? `Compile check timed out: ${compileCheck.command}`
+          : compile.success
+            ? `Compile check passed: ${compileCheck.command}`
+            : `Compile check failed (exit ${compile.exitCode}): ${compileCheck.command}`,
+      });
+    }
   }
 
   // Evidence files for task
   const evDir = evidenceDir(projectRoot);
-  let evidenceFound = 0;
-  if (existsSync(evDir)) {
-    const { readdir } = await import('node:fs/promises');
-    const files = await readdir(evDir);
-    for (const file of files) {
-      if (!file.endsWith('.json')) continue;
-      try {
-        const raw = await readFile(join(evDir, file), 'utf-8');
-        const ev = EvidenceSchema.parse(JSON.parse(raw));
-        if (ev.relatedTask === taskId) {
-          evidenceFound++;
-          evidenceIds.push(ev.id);
-        }
-      } catch {
-        // skip invalid
-      }
-    }
-  }
+  const collected = await collectTaskEvidence(projectRoot, taskId);
+  if (!collected.success) return collected;
+
+  checks.push({
+    name: 'evidence_readable',
+    passed: collected.data.invalid === 0,
+    message:
+      collected.data.invalid === 0
+        ? 'All evidence records are readable'
+        : `${collected.data.invalid} unreadable evidence record(s)`,
+  });
+
+  // Verification records are written by this runner, so counting them would let
+  // a previous run vouch for the next one. Only external, passing evidence counts.
+  const supporting = collected.data.records.filter(
+    (ev) => ev.type !== 'verification' && isPassingEvidence(ev),
+  );
+  evidenceIds.push(...supporting.map((ev) => ev.id));
 
   checks.push({
     name: 'evidence_present',
-    passed: evidenceFound > 0 || task.risk === 'low',
+    passed: supporting.length > 0 || task.risk === 'low',
     message:
-      evidenceFound > 0
-        ? `${evidenceFound} evidence record(s) for task`
+      supporting.length > 0
+        ? `${supporting.length} passing evidence record(s) for task`
         : task.risk === 'low'
           ? 'Low risk task — evidence optional'
-          : 'No evidence records found for task',
+          : 'No passing evidence records found for task',
   });
 
   const passed = checks.every((c) => c.passed);
@@ -106,58 +251,66 @@ export async function runVerification(
     relatedTask: taskId,
     confidence: passed ? 0.9 : 0.3,
     summary: passed ? 'Verification passed' : 'Verification failed',
-    data: { checks },
+    data: { passed, checks },
   };
 
-  await mkdir(evDir, { recursive: true });
-  await writeFile(join(evDir, `${evidence.id}.json`), JSON.stringify(evidence, null, 2), 'utf-8');
-  evidenceIds.push(evidence.id);
+  const evidencePath = evidenceFilePath(evDir, evidence.id);
+  if (!evidencePath.success) return evidencePath;
 
-  await appendEvent(projectRoot, {
+  try {
+    await mkdir(evDir, { recursive: true });
+    await writeFile(evidencePath.data, JSON.stringify(evidence, null, 2), 'utf-8');
+  } catch (e) {
+    return err(e instanceof Error ? e : new Error(String(e)));
+  }
+  if (passed) evidenceIds.push(evidence.id);
+
+  const event = await appendEvent(projectRoot, {
     type: 'verification.completed',
     timestamp: new Date().toISOString(),
     payload: { taskId, passed, evidenceId: evidence.id },
   });
+  if (!event.success) return event;
 
   return ok({ passed, checks, evidenceIds });
 }
 
+/**
+ * Decide whether a task may be completed.
+ *
+ * A requirement is only satisfied by evidence of the matching type whose
+ * payload proves success. Unknown requirements, missing evidence and
+ * unreadable evidence all block completion.
+ */
 export async function gateTaskCompletion(
   projectRoot: string,
   taskId: string,
   evidenceRequired: string[],
+  evidenceIds?: string[],
 ): Promise<Result<boolean, Error>> {
-  const evDir = evidenceDir(projectRoot);
-  const foundTypes = new Set<string>();
+  const collected = await collectTaskEvidence(projectRoot, taskId);
+  if (!collected.success) return collected;
+  if (collected.data.invalid > 0) return ok(false);
 
-  if (existsSync(evDir)) {
-    const { readdir } = await import('node:fs/promises');
-    const files = await readdir(evDir);
-    for (const file of files) {
-      if (!file.endsWith('.json')) continue;
-      try {
-        const raw = await readFile(join(evDir, file), 'utf-8');
-        const ev = EvidenceSchema.parse(JSON.parse(raw));
-        if (ev.relatedTask === taskId) {
-          foundTypes.add(ev.type);
-        }
-      } catch {
-        // skip
-      }
-    }
-  }
+  const cited = evidenceIds ? new Set(evidenceIds) : undefined;
+  const hasPassing = (type: string): boolean =>
+    collected.data.records.some(
+      (ev) => (!cited || cited.has(ev.id)) && ev.type === type && isPassingEvidence(ev),
+    );
 
   for (const req of evidenceRequired) {
-    const normalized = req.replace(/_passed$/, '').replace(/_met$/, '');
-    if (!foundTypes.has('verification') && req.includes('acceptance')) {
-      // acceptance checked via verify
-      continue;
-    }
-    if (req === 'tests_passed' && !foundTypes.has('verification') && !foundTypes.has('test')) {
-      return ok(false);
-    }
-    if (req === 'review_approved' && !foundTypes.has('review')) {
-      return ok(false);
+    switch (req) {
+      case 'acceptance_criteria_met':
+        if (!hasPassing('verification')) return ok(false);
+        break;
+      case 'tests_passed':
+        if (!hasPassing('test')) return ok(false);
+        break;
+      case 'review_approved':
+        if (!hasPassing('review')) return ok(false);
+        break;
+      default:
+        return ok(false);
     }
   }
 

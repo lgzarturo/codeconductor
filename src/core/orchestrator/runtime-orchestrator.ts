@@ -2,9 +2,10 @@ import type {
   CanonicalTaskCardInput,
   GoalGraphInput,
   GoalTaskInput,
+  OperationalStateInput,
   ProductGraphInput,
 } from '../../validation/schemas';
-import { enrichGoalWithProduct } from '../planner/product-planner';
+import { enrichGoalWithProduct, inferEvidenceRequired } from '../planner/product-planner';
 import { loadGoal, writeGoal } from '../goal/goal-state';
 import { loadGraph } from '../product-graph/graph-store';
 import { appendEvent } from '../memory/episodic-store';
@@ -14,8 +15,34 @@ import {
   saveOperationalState,
   setActiveTask,
 } from '../memory/operational-state';
+import {
+  gateTaskCompletion,
+  validateEvidenceIds,
+} from '../verification/verification-runner';
 import { err, ok, type Result } from '../../utils/result';
 import type { CommandEnvelopeInput } from '../../validation/schemas';
+
+/**
+ * Undo a task status change and restore the operational state captured before
+ * it. Used when a later step fails, so a task is never left half-transitioned.
+ * The original failure is returned, annotated when the undo itself fails.
+ */
+async function rollbackTaskStatus(
+  projectRoot: string,
+  graph: GoalGraphInput,
+  task: GoalTaskInput,
+  previousStatus: GoalTaskInput['status'],
+  previousState: OperationalStateInput,
+  cause: Error,
+): Promise<Result<never, Error>> {
+  task.status = previousStatus;
+  const write = await writeGoal(projectRoot, graph);
+  const restored = write.success ? await saveOperationalState(projectRoot, previousState) : write;
+
+  return restored.success
+    ? err(cause)
+    : err(new Error(`${cause.message} (rollback failed: ${restored.error.message})`));
+}
 
 export function getReadyTasks(graph: GoalGraphInput): GoalTaskInput[] {
   const done = new Set(graph.tasks.filter((t) => t.status === 'done').map((t) => t.id));
@@ -136,17 +163,46 @@ export async function startTask(
 
   const task = goalResult.data.tasks.find((t) => t.id === taskId);
   if (!task) return err(new Error(`Task ${taskId} not found`));
+  if (task.status !== 'pending') {
+    return err(new Error(`Task ${taskId} is ${task.status}, expected pending`));
+  }
+
+  const stateBefore = await loadOperationalState(projectRoot);
+  if (!stateBefore.success) return stateBefore;
+  const previousState = stateBefore.data;
+  const previousStatus = task.status;
 
   task.status = 'in-progress';
   const write = await writeGoal(projectRoot, goalResult.data);
   if (!write.success) return write;
 
-  await setActiveTask(projectRoot, taskId, agent);
-  await appendEvent(projectRoot, {
+  const active = await setActiveTask(projectRoot, taskId, agent);
+  if (!active.success) {
+    return rollbackTaskStatus(
+      projectRoot,
+      goalResult.data,
+      task,
+      previousStatus,
+      previousState,
+      active.error,
+    );
+  }
+
+  const event = await appendEvent(projectRoot, {
     type: 'task.started',
     timestamp: new Date().toISOString(),
     payload: { taskId, agent },
   });
+  if (!event.success) {
+    return rollbackTaskStatus(
+      projectRoot,
+      goalResult.data,
+      task,
+      previousStatus,
+      previousState,
+      event.error,
+    );
+  }
 
   return ok(undefined);
 }
@@ -161,22 +217,73 @@ export async function completeTask(
 
   const task = goalResult.data.tasks.find((t) => t.id === taskId);
   if (!task) return err(new Error(`Task ${taskId} not found`));
+  if (task.status !== 'in-progress') {
+    return err(new Error(`Task ${taskId} is ${task.status}, expected in-progress`));
+  }
+
+  const done = new Set(goalResult.data.tasks.filter((t) => t.status === 'done').map((t) => t.id));
+  const unmet = (task.depends_on ?? []).filter((d) => !done.has(d));
+  if (unmet.length > 0) {
+    return err(new Error(`Task ${taskId} has unmet dependencies: ${unmet.join(', ')}`));
+  }
+
+  const activeState = await loadOperationalState(projectRoot);
+  if (!activeState.success) return activeState;
+  if (!activeState.data.activeTaskIds.includes(taskId)) {
+    return err(new Error(`Task ${taskId} is not active. Start it before completing it.`));
+  }
+
+  if (!evidenceIds || evidenceIds.length === 0) {
+    return err(new Error(`Task ${taskId} cannot be completed without verification evidence`));
+  }
+
+  const evidence = await validateEvidenceIds(projectRoot, taskId, evidenceIds);
+  if (!evidence.success) return evidence;
+
+  const gate = await gateTaskCompletion(
+    projectRoot,
+    taskId,
+    inferEvidenceRequired(task),
+    evidenceIds,
+  );
+  if (!gate.success) return gate;
+  if (!gate.data) {
+    return err(new Error(`Task ${taskId} does not satisfy its completion evidence requirements`));
+  }
+
+  const previousState = activeState.data;
+  const previousStatus = task.status;
 
   task.status = 'done';
   const write = await writeGoal(projectRoot, goalResult.data);
   if (!write.success) return write;
 
-  await clearActiveTask(projectRoot, taskId);
-  await appendEvent(projectRoot, {
+  const cleared = await clearActiveTask(projectRoot, taskId);
+  if (!cleared.success) {
+    return rollbackTaskStatus(
+      projectRoot,
+      goalResult.data,
+      task,
+      previousStatus,
+      previousState,
+      cleared.error,
+    );
+  }
+
+  const event = await appendEvent(projectRoot, {
     type: 'task.completed',
     timestamp: new Date().toISOString(),
-    payload: { taskId, evidenceIds: evidenceIds ?? [] },
+    payload: { taskId, evidenceIds },
   });
-
-  const op = await loadOperationalState(projectRoot);
-  if (op.success) {
-    op.data.activeAgents = [];
-    await saveOperationalState(projectRoot, op.data);
+  if (!event.success) {
+    return rollbackTaskStatus(
+      projectRoot,
+      goalResult.data,
+      task,
+      previousStatus,
+      previousState,
+      event.error,
+    );
   }
 
   return ok(undefined);

@@ -1,12 +1,14 @@
-import { writeFile, mkdir } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import {
+  resolveOutputWithinRoot,
+  writeContainedFile,
+} from '../core/filesystem/path-containment';
 import { generateLlmsTxtFromSitemap, generateLlmsTxtFromUrl } from '../domain/seo/llms-generator';
 import type { SeoLlmsOptions } from '../domain/seo/seo-types';
 
 export async function seoLlmsCommand(
   options: SeoLlmsOptions
 ): Promise<{ code: number; data?: unknown }> {
-  const { url, sitemap, output, delay } = options;
+  const { url, sitemap, output, delay, force } = options;
 
   if (!url && !sitemap) {
     return {
@@ -15,6 +17,21 @@ export async function seoLlmsCommand(
         success: false,
         command: 'seo llms',
         errors: ['Either --url or --sitemap is required'],
+      },
+    };
+  }
+
+  // Rejected before any network work so an escaping path costs nothing.
+  if (
+    output !== undefined &&
+    (await resolveOutputWithinRoot(options.projectRoot, output)) === undefined
+  ) {
+    return {
+      code: 1,
+      data: {
+        success: false,
+        command: 'seo llms',
+        errors: [`Invalid --output path: ${output}. It must be relative to the project root.`],
       },
     };
   }
@@ -31,12 +48,12 @@ export async function seoLlmsCommand(
 
     process.stderr.write('\r' + ' '.repeat(80) + '\r');
 
-    const outputPath = output
-      ? resolve(options.projectRoot, output)
-      : resolve(options.projectRoot, 'llms.txt');
-
-    await mkdir(dirname(outputPath), { recursive: true });
-    await writeFile(outputPath, result.content, 'utf-8');
+    const outputPath = await writeContainedFile(
+      options.projectRoot,
+      output ?? 'llms.txt',
+      result.content,
+      { force },
+    );
 
     process.stderr.write(`Generated: ${outputPath} (${result.entries.length} entries)\n`);
 

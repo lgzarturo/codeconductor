@@ -32,6 +32,7 @@ import {
   validateTaskOutcome,
   validateWorkflowProfile,
 } from '../../../src/validation/schemas';
+import { councilConsensus } from '../../../src/domain/council/council-consensus';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -252,6 +253,99 @@ describe('validation/schemas', () => {
     test('validateMemoryPointer defaults tags to an empty array', () => {
       const pointer = validateMemoryPointer(memoryPointer) as { tags: string[] };
       expect(pointer.tags).toEqual([]);
+    });
+  });
+
+  describe('council consensus schema round-trips', () => {
+    test('validateConsensusConfig preserves compliance veto and unanimous roster settings', () => {
+      const input = {
+        algorithm: 'unanimous' as const,
+        allowSecurityVeto: true,
+        allowComplianceVeto: false,
+        expectedAgentIds: ['architect', 'security', 'compliance'],
+      };
+
+      expect(validateConsensusConfig(input)).toEqual(input);
+    });
+
+    test('validateConsensusConfig rejects an empty expected roster', () => {
+      expect(() => validateConsensusConfig({
+        algorithm: 'unanimous',
+        allowSecurityVeto: true,
+        expectedAgentIds: [],
+      })).toThrow();
+    });
+
+    test('validateConsensusConfig rejects blank agent IDs in the expected roster', () => {
+      expect(() => validateConsensusConfig({
+        algorithm: 'unanimous',
+        allowSecurityVeto: true,
+        expectedAgentIds: ['architect', '   '],
+      })).toThrow();
+    });
+
+    test('validateConsensusConfig rejects duplicate roster aliases after trim and case folding', () => {
+      expect(() => validateConsensusConfig({
+        algorithm: 'unanimous',
+        allowSecurityVeto: true,
+        expectedAgentIds: ['architect', ' Architect '],
+      })).toThrow();
+    });
+
+    test('validateCouncilVerdictInput rejects a blank agent ID', () => {
+      expect(() => validateCouncilVerdictInput({
+        ...councilVerdictInput,
+        agentId: '   ',
+      })).toThrow();
+    });
+
+    test('validated compliance veto survives consensus and verdict validation', () => {
+      const approved = {
+        ...councilVerdictInput,
+        agentId: 'architect',
+      };
+      const compliance = {
+        ...councilVerdictInput,
+        agentId: 'compliance',
+        agentRole: 'compliance',
+        status: 'REJECTED' as const,
+        complianceVeto: true,
+      };
+      const config = validateConsensusConfig({
+        algorithm: 'majority',
+        allowSecurityVeto: true,
+        allowComplianceVeto: true,
+      });
+      const verdict = councilConsensus(
+        [validateCouncilVerdictInput(approved), validateCouncilVerdictInput(compliance)],
+        config,
+      );
+
+      expect(validateCouncilVerdict(verdict)).toMatchObject({
+        status: 'REJECTED',
+        complianceVetoApplied: true,
+        vetoByAgentId: 'compliance',
+      });
+    });
+
+    test('validated confidence survives consensus and verdict validation', () => {
+      const lowConfidence = {
+        ...councilVerdictInput,
+        confidence: 0.5,
+      };
+      const config = validateConsensusConfig({
+        algorithm: 'majority',
+        allowSecurityVeto: true,
+      });
+      const verdict = councilConsensus(
+        [validateCouncilVerdictInput(lowConfidence)],
+        config,
+      );
+
+      expect(validateCouncilVerdict(verdict)).toMatchObject({
+        status: 'ESCALATED',
+        averageConfidence: 0.5,
+      });
     });
   });
 });

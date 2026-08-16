@@ -63,7 +63,8 @@ Consensus is configured with `ConsensusConfig`:
 {
   algorithm: 'majority' | 'unanimous';
   allowSecurityVeto: boolean;
-  allowComplianceVeto?: boolean; // defaults to true
+  allowComplianceVeto?: boolean;      // defaults to true
+  expectedAgentIds?: readonly string[]; // roster required to vote under `unanimous`
 }
 ```
 
@@ -83,8 +84,14 @@ The default config is `{ algorithm: 'majority', allowSecurityVeto: true, allowCo
 3. **Confidence thresholds** → `ESCALATED` if **any** agent reports
    `confidence < 0.6`, or if the **average** confidence `< 0.7`.
 4. **Algorithm**:
-   - `majority`: `APPROVED` when `approvedCount > rejectedCount`.
-   - `unanimous`: `APPROVED` only when `rejectedCount === 0`.
+   - `majority`: `APPROVED` when `approvedCount > rejectedCount`; `ABSTAIN`
+     remains neutral and affects neither side.
+   - `unanimous`: `APPROVED` only when every required agent explicitly approved
+     exactly once. The required set is `expectedAgentIds` when configured,
+     otherwise the distinct agents that submitted a verdict. Missing,
+     duplicated, unexpected, abstaining, rejecting, or malformed verdicts (blank
+     `agentId`, unknown `status`) all → `ESCALATED`, with the reason in
+     `summary`. Silence is never approval.
 5. **No clear outcome** → `ESCALATED`.
 
 The result (`CouncilVerdict`) carries the tallies (`approvedCount`,
@@ -99,8 +106,9 @@ The result (`CouncilVerdict`) carries the tallies (`approvedCount`,
   veto outweighs any majority — the council cannot "outvote" a blocking risk.
 - **Low confidence escalates rather than guesses.** When the panel is unsure, the
   decision goes to a human instead of defaulting to approve or reject.
-- **`ABSTAIN` is neutral.** Abstentions count toward the total and the average
-  confidence but do not push the majority either way.
+- **`ABSTAIN` is neutral only under majority.** Abstentions count toward the
+  total and average confidence without pushing either side under `majority`,
+  but block approval under `unanimous`.
 
 This engine is invoked by the SDD pipeline at phase 7 (`docs/SDD.md`); a
 `REJECTED` or `ESCALATED` verdict stops the loop before changes land.

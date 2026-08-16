@@ -479,6 +479,19 @@ to test all current flow before publishing version v1.0.0 to npm.
 This section is manually maintained. Add project-specific conventions,
 exceptions, or context here.
 
+### Internal skills (not shipped)
+
+| Skill | Description | Path |
+| ----- | ----------- | ---- |
+| `cc-self-review` | Self-review del producto (seguridad, implementación, flujo, features, mental model). Solo este repo. | [SKILL.md](skills/cc-self-review/SKILL.md) |
+
+**Slash commands (Cursor, solo este proyecto):** `/cc-self-review` · `/cc:self-review`
+
+- Canonical skill: `skills/cc-self-review/` (fuera de `presets/` y del npm package)
+- Cursor stubs: `.cursor/commands/cc-self-review.md`, `.cursor/commands/cc/self-review.md`, `.cursor/skills/cc-self-review/`
+- **Never** copy into `presets/`, CCEP profiles, Conductor Agent routing, or `src/presets/`
+- If `install preset --target cursor` overwrites `.cursor/commands` or `.cursor/skills`, restore from `skills/cc-self-review/assets/commands/`
+
 ## Approach
 
 - Think before acting. Read existing files before writing code.

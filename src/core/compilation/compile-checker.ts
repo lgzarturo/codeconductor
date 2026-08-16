@@ -242,54 +242,70 @@ export async function runCompileCheck(
     };
   }
 
-  // Timeout guard
-  const timeoutId = setTimeout(() => {
-    timedOut = true;
-    try {
-      proc.kill();
-    } catch {
-      // Process may have already exited
-    }
-  }, timeoutMs);
-
-  try {
-    // proc.stdout / proc.stderr are ReadableStream when stdout/stderr is 'pipe'
+  // Reading both pipes to completion is what keeps the child from blocking on a
+  // full buffer, but it only settles once the child exits — so it is raced
+  // against the timeout instead of relying on a timer to interrupt it.
+  const collectOutput = (async () => {
     const stdoutStream = proc.stdout as ReadableStream<Uint8Array>;
     const stderrStream = proc.stderr as ReadableStream<Uint8Array>;
-    const [stdoutBytes, stderrBytes] = await Promise.all([
+    const [stdout, stderr] = await Promise.all([
       new Response(stdoutStream).text(),
       new Response(stderrStream).text(),
     ]);
+    return { stdout, stderr, exitCode: await proc.exited };
+  })();
+  collectOutput.catch(() => {
+    // Swallowed here so a post-timeout rejection is never unhandled.
+  });
 
-    const exitCode = await proc.exited;
-    clearTimeout(timeoutId);
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<'timeout'>((resolve) => {
+    timeoutId = setTimeout(() => resolve('timeout'), timeoutMs);
+  });
 
-    const durationMs = performance.now() - startTime;
-    const stderr = stderrBytes;
-    const stdout = stdoutBytes;
-    const errors = parseCompileErrors(stderr);
+  try {
+    const outcome = await Promise.race([collectOutput, timeout]);
+
+    if (outcome === 'timeout') {
+      timedOut = true;
+      try {
+        proc.kill('SIGKILL');
+      } catch {
+        // Process may have already exited
+      }
+      await proc.exited;
+
+      return {
+        success: false,
+        exitCode: proc.exitCode ?? -1,
+        stdout: '',
+        stderr: `Compile check timed out after ${timeoutMs}ms`,
+        errors: [],
+        durationMs: performance.now() - startTime,
+        timedOut,
+      };
+    }
 
     return {
-      success: exitCode === 0,
-      exitCode,
-      stdout,
-      stderr,
-      errors,
-      durationMs,
+      success: outcome.exitCode === 0,
+      exitCode: outcome.exitCode,
+      stdout: outcome.stdout,
+      stderr: outcome.stderr,
+      errors: parseCompileErrors(outcome.stderr),
+      durationMs: performance.now() - startTime,
       timedOut,
     };
   } catch (err) {
-    clearTimeout(timeoutId);
-    const durationMs = performance.now() - startTime;
-
     return {
       success: false,
       exitCode: -1,
       stdout: '',
       stderr: String(err),
       errors: [],
-      durationMs,
+      durationMs: performance.now() - startTime,
       timedOut,
     };
+  } finally {
+    clearTimeout(timeoutId);
   }
 }

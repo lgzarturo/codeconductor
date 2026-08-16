@@ -233,6 +233,71 @@ describe('goal-state: validation rejects malformed graphs', () => {
   });
 });
 
+describe('goal-state: loadGoal enforces DAG invariants', () => {
+  beforeEach(async () => {
+    await cleanup();
+  });
+
+  afterEach(async () => {
+    await cleanup();
+  });
+
+  async function writeRaw(tasksYaml: string) {
+    await mkdir(GOAL_DIR, { recursive: true });
+    await writeFile(
+      GOAL_FILE,
+      `objective: test\ncreated_at: "2025-01-01T00:00:00Z"\ntasks:\n${tasksYaml}`,
+      'utf-8',
+    );
+  }
+
+  function task(id: string, dependsOn: string[]): string {
+    const deps = dependsOn.map((d) => `"${d}"`).join(', ');
+    return `  - id: ${id}
+    title: ${id}
+    type: feature
+    risk: low
+    status: pending
+    depends_on: [${deps}]
+    acceptance_criteria: ["x"]
+`;
+  }
+
+  test('loadGoal rejects duplicate task IDs on disk', async () => {
+    await writeRaw(task('a', []) + task('a', []));
+
+    const result = await loadGoal(TEST_DIR);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.message).toMatch(/[Dd]uplicate/);
+  });
+
+  test('loadGoal rejects depends_on reference to unknown task on disk', async () => {
+    await writeRaw(task('a', ['ghost']));
+
+    const result = await loadGoal(TEST_DIR);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.message).toMatch(/unknown task/i);
+  });
+
+  test('loadGoal rejects a cycle on disk', async () => {
+    await writeRaw(task('a', ['b']) + task('b', ['a']));
+
+    const result = await loadGoal(TEST_DIR);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.message).toMatch(/[Cc]ycle/);
+  });
+
+  test('loadGoal accepts a valid DAG', async () => {
+    await writeRaw(task('a', []) + task('b', ['a']));
+
+    const result = await loadGoal(TEST_DIR);
+    expect(result.success).toBe(true);
+  });
+});
+
 describe('goal-state: YAML structure', () => {
   beforeEach(async () => {
     await cleanup();

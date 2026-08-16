@@ -89,6 +89,8 @@ export interface SeoAuditOptions {
   readonly output?: string;
   readonly followRedirects: boolean;
   readonly projectRoot: string;
+  /** Allow overwriting an existing output file. */
+  readonly force?: boolean;
 }
 
 export interface SeoLlmsOptions {
@@ -97,4 +99,6 @@ export interface SeoLlmsOptions {
   readonly output?: string;
   readonly delay: number;
   readonly projectRoot: string;
+  /** Allow overwriting an existing output file. */
+  readonly force?: boolean;
 }

@@ -44,6 +44,16 @@ describe('core/presets/file-copier', () => {
       const files = (await listFilesRecursive(dir)).sort();
       expect(files).toEqual(['a.txt', join('sub', 'b.txt')]);
     });
+
+    test('returns paths in lexicographic order regardless of creation order', async () => {
+      const dir = await tmp('list-order-');
+      await writeFile(join(dir, 'c.txt'), 'c');
+      await mkdir(join(dir, 'b'), { recursive: true });
+      await writeFile(join(dir, 'b', 'z.txt'), 'z');
+      await writeFile(join(dir, 'a.txt'), 'a');
+
+      expect(await listFilesRecursive(dir)).toEqual(['a.txt', join('b', 'z.txt'), 'c.txt']);
+    });
   });
 
   describe('mergeDeep', () => {
@@ -141,6 +151,26 @@ describe('core/presets/file-copier', () => {
       expect(await readFile(dest, 'utf-8')).toBe('hello');
     });
 
+    test('overwrite without force leaves an existing file intact', async () => {
+      const src = await srcFile('NEW');
+      const dir = await tmp('dst-');
+      const dest = join(dir, 'out.md');
+      await writeFile(dest, 'OLD');
+      const result = await applySingleFile(src, dest, 'overwrite', false, false, false, null, 'en');
+      expect(result.action).toBe('skipped');
+      expect(await readFile(dest, 'utf-8')).toBe('OLD');
+    });
+
+    test('overwrite with force replaces an existing file', async () => {
+      const src = await srcFile('NEW');
+      const dir = await tmp('dst-');
+      const dest = join(dir, 'out.md');
+      await writeFile(dest, 'OLD');
+      const result = await applySingleFile(src, dest, 'overwrite', true, false, false, null, 'en');
+      expect(result.action).toBe('written');
+      expect(await readFile(dest, 'utf-8')).toBe('NEW');
+    });
+
     test('dry-run reports the action but writes nothing', async () => {
       const src = await srcFile('hello');
       const dir = await tmp('dst-');
@@ -179,6 +209,50 @@ describe('core/presets/file-copier', () => {
       const result = await applySingleFile(src, dest, 'merge-managed', false, false, false, null, 'en');
       expect(result.action).toBe('written');
       expect(existsSync(dest)).toBe(true);
+    });
+
+    test('merge-managed replaces only the managed block of a marked file without force', async () => {
+      const src = await srcFile(`${MANAGED_BEGIN_MARKER}\nnew\n${MANAGED_END_MARKER}`);
+      const dir = await tmp('dst-');
+      const dest = join(dir, 'AGENTS.md');
+      await writeFile(dest, `head\n${MANAGED_BEGIN_MARKER}\nold\n${MANAGED_END_MARKER}\ntail`);
+      const result = await applySingleFile(src, dest, 'merge-managed', false, false, false, null, 'en');
+      expect(result.action).toBe('merged');
+      const content = await readFile(dest, 'utf-8');
+      expect(content).toBe(`head\n${MANAGED_BEGIN_MARKER}\nnew\n${MANAGED_END_MARKER}\ntail`);
+    });
+
+    test('merge-managed without force leaves a markerless file intact', async () => {
+      const src = await srcFile(`${MANAGED_BEGIN_MARKER}\nnew\n${MANAGED_END_MARKER}`);
+      const dir = await tmp('dst-');
+      const dest = join(dir, 'AGENTS.md');
+      await writeFile(dest, 'local only');
+      const result = await applySingleFile(src, dest, 'merge-managed', false, false, false, null, 'en');
+      expect(result.action).toBe('skipped');
+      expect(await readFile(dest, 'utf-8')).toBe('local only');
+    });
+
+    test('merge-managed with force replaces a markerless file with the incoming content', async () => {
+      const incoming = `${MANAGED_BEGIN_MARKER}\nnew\n${MANAGED_END_MARKER}`;
+      const src = await srcFile(incoming);
+      const dir = await tmp('dst-');
+      const dest = join(dir, 'AGENTS.md');
+      await writeFile(dest, 'local only');
+      const result = await applySingleFile(src, dest, 'merge-managed', true, false, false, null, 'en');
+      expect(result.action).toBe('written');
+      expect(await readFile(dest, 'utf-8')).toBe(incoming);
+    });
+
+    test('merge-managed reports an error for partial markers even with force', async () => {
+      const src = await srcFile(`${MANAGED_BEGIN_MARKER}\nnew\n${MANAGED_END_MARKER}`);
+      const dir = await tmp('dst-');
+      const dest = join(dir, 'AGENTS.md');
+      const broken = `head\n${MANAGED_BEGIN_MARKER}\nunterminated`;
+      await writeFile(dest, broken);
+      const result = await applySingleFile(src, dest, 'merge-managed', true, false, false, null, 'en');
+      expect(result.action).toBe('error');
+      expect(result.error).toContain('Managed merge failed');
+      expect(await readFile(dest, 'utf-8')).toBe(broken);
     });
 
     test('error case: an unreadable source is reported as an error', async () => {
@@ -240,6 +314,49 @@ describe('core/presets/file-copier', () => {
       );
       expect(results[0]?.action).toBe('written');
       expect(await readFile(join(base, 'file.md'), 'utf-8')).toBe('content');
+    });
+
+    test('directory entries produce results in lexicographic order', async () => {
+      const presets = await tmp('pre-');
+      await mkdir(join(presets, 'agents', 'nested'), { recursive: true });
+      await writeFile(join(presets, 'agents', 'c.md'), 'c');
+      await writeFile(join(presets, 'agents', 'nested', 'z.md'), 'z');
+      await writeFile(join(presets, 'agents', 'a.md'), 'a');
+      const base = await tmp('base-');
+
+      const results = await copyFromManifest(
+        { target: 'claude', entries: [{ src: 'agents', dest: 'agents', strategy: 'overwrite' }] },
+        presets,
+        base,
+        false,
+        false,
+        true,
+      );
+
+      expect(results.map((r) => r.dest)).toEqual([
+        join(base, 'agents', 'a.md'),
+        join(base, 'agents', 'c.md'),
+        join(base, 'agents', 'nested', 'z.md'),
+      ]);
+    });
+
+    test('a forced rerun produces the same results and the same content', async () => {
+      const presets = await tmp('pre-');
+      await mkdir(join(presets, 'agents'), { recursive: true });
+      await writeFile(join(presets, 'agents', 'a.md'), 'a');
+      await writeFile(join(presets, 'agents', 'b.md'), 'b');
+      const base = await tmp('base-');
+      const manifest = {
+        target: 'claude' as const,
+        entries: [{ src: 'agents', dest: 'agents', strategy: 'overwrite' as const }],
+      };
+
+      const first = await copyFromManifest(manifest, presets, base, false, false, true);
+      const second = await copyFromManifest(manifest, presets, base, false, false, true);
+
+      expect(second).toEqual(first);
+      expect(second.every((r) => r.action === 'written')).toBe(true);
+      expect(await readFile(join(base, 'agents', 'a.md'), 'utf-8')).toBe('a');
     });
   });
 });

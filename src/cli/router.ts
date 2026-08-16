@@ -542,6 +542,7 @@ export async function routeCommand(
           output: options.output as string | undefined,
           followRedirects: options['follow-redirects'] === true,
           projectRoot,
+          force: flags.force,
         } as SeoAuditOptions);
       }
       if (subcommand === 'llms') {
@@ -551,6 +552,7 @@ export async function routeCommand(
           output: options.output as string | undefined,
           delay: options.delay ? parseInt(String(options.delay), 10) : 500,
           projectRoot,
+          force: flags.force,
         } as SeoLlmsOptions);
       }
       return {

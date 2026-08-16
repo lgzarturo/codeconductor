@@ -85,7 +85,7 @@ export async function loadGoal(
     const content = await readFile(filePath, 'utf-8');
     const data = parse(content);
     const validated = GoalGraphSchema.parse(data);
-    return ok(validated);
+    return validateGoalGraph(validated);
   } catch (e) {
     return err(e instanceof Error ? e : new Error(String(e)));
   }

@@ -1,5 +1,8 @@
-import { writeFile, mkdir } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { join } from 'node:path';
+import {
+  resolveOutputWithinRoot,
+  writeContainedFile,
+} from '../core/filesystem/path-containment';
 import { auditSitemap, auditUrl } from '../domain/seo/seo-auditor';
 import { formatCli, formatJson, formatMarkdown, computeExitCode } from '../domain/seo/report-formatter';
 import type { SeoAuditOptions } from '../domain/seo/seo-types';
@@ -7,7 +10,7 @@ import type { SeoAuditOptions } from '../domain/seo/seo-types';
 export async function seoAuditCommand(
   options: SeoAuditOptions
 ): Promise<{ code: number; data?: unknown }> {
-  const { url, sitemap, format, failOn, delay, output, followRedirects } = options;
+  const { url, sitemap, format, failOn, delay, output, followRedirects, force } = options;
 
   if (!url && !sitemap) {
     return {
@@ -16,6 +19,21 @@ export async function seoAuditCommand(
         success: false,
         command: 'seo audit',
         errors: ['Either --url or --sitemap is required'],
+      },
+    };
+  }
+
+  // Rejected before any network work so an escaping path costs nothing.
+  if (
+    output !== undefined &&
+    (await resolveOutputWithinRoot(options.projectRoot, output)) === undefined
+  ) {
+    return {
+      code: 1,
+      data: {
+        success: false,
+        command: 'seo audit',
+        errors: [`Invalid --output path: ${output}. It must be relative to the project root.`],
       },
     };
   }
@@ -47,16 +65,17 @@ export async function seoAuditCommand(
         formattedOutput = formatCli(report);
     }
 
+    let outputFile: string | undefined;
+
     if (output) {
-      const outputPath = resolve(options.projectRoot, output);
-      await mkdir(dirname(outputPath), { recursive: true });
-      await writeFile(outputPath, formattedOutput, 'utf-8');
+      outputFile = await writeContainedFile(options.projectRoot, output, formattedOutput, { force });
     } else if (format === 'markdown') {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      const defaultPath = resolve(options.projectRoot, 'seo-reports', `audit-report-${timestamp}.md`);
-      await mkdir(dirname(defaultPath), { recursive: true });
-      await writeFile(defaultPath, formattedOutput, 'utf-8');
-      process.stderr.write(`Report saved to: ${defaultPath}\n`);
+      const defaultPath = join('seo-reports', `audit-report-${timestamp}.md`);
+      outputFile = await writeContainedFile(options.projectRoot, defaultPath, formattedOutput, {
+        force,
+      });
+      process.stderr.write(`Report saved to: ${outputFile}\n`);
     }
 
     const exitCode = computeExitCode(report, failOn);
@@ -68,11 +87,7 @@ export async function seoAuditCommand(
         command: 'seo audit',
         report,
         output: formattedOutput,
-        outputFile: output
-          ? resolve(options.projectRoot, output)
-          : format === 'markdown'
-            ? resolve(options.projectRoot, 'seo-reports')
-            : undefined,
+        outputFile,
       },
     };
   } catch (error) {

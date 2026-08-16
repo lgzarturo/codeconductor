@@ -207,7 +207,7 @@ describe('loadModelConfig', () => {
 
   test('opencode config has architect models for all providers', async () => {
     const config = await loadModelConfig('opencode');
-    expect(config.agents.architect.claude).toBe('claude-opus-4-7');
+    expect(config.agents.architect.claude).toBe('claude-opus-4-8');
     expect(config.agents.architect.opencode).toBe('opencode-go/deepseek-v4-pro');
     expect(config.agents.architect.codex).toBe('gpt-5.5');
     expect(config.agents.architect.gemini).toBe('gemini-2.5-pro');
@@ -765,7 +765,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
       'utf-8'
     );
     // claude install: frontmatter has claude model for architect
-    expect(content).toContain('claude-opus-4-7');
+    expect(content).toContain('claude-opus-4-8');
     expect(content).not.toContain('{{MODEL}}');
     expect(content).not.toContain('{{MODEL_CLAUDE}}');
   });
@@ -832,7 +832,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     );
     expect(claudeContent).not.toContain('{{MODEL}}');
     expect(claudeContent).not.toContain('{{MODEL_');
-    expect(claudeContent).toContain('claude-opus-4-7');
+    expect(claudeContent).toContain('claude-opus-4-8');
 
     const codexContent = await readFile(join(TEST_DIR, '.codex', 'AGENTS.md'), 'utf-8');
     expect(codexContent).not.toContain('{{MODEL_');

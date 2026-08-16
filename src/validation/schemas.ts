@@ -257,10 +257,12 @@ export const CouncilFindingSchema = z.object({
  * Council verdict input schema — verdict from a single reviewer
  */
 export const CouncilVerdictInputSchema = z.object({
-  agentId: z.string(),
+  agentId: z.string().min(1).refine((id) => id.trim().length > 0),
   agentRole: z.string(),
   status: z.enum(['APPROVED', 'REJECTED', 'ABSTAIN']),
   securityVeto: z.boolean(),
+  complianceVeto: z.boolean().optional(),
+  confidence: z.number().min(0).max(1).optional(),
   findings: z.array(CouncilFindingSchema),
   summary: z.string(),
 });
@@ -271,6 +273,15 @@ export const CouncilVerdictInputSchema = z.object({
 export const ConsensusConfigSchema = z.object({
   algorithm: z.enum(['majority', 'unanimous']),
   allowSecurityVeto: z.boolean(),
+  allowComplianceVeto: z.boolean().optional(),
+  expectedAgentIds: z
+    .array(z.string().min(1).refine((id) => id.trim().length > 0))
+    .min(1)
+    .refine(
+      (ids) =>
+        new Set(ids.map((id) => id.trim().toLowerCase())).size === ids.length,
+    )
+    .optional(),
 });
 
 /**
@@ -283,7 +294,9 @@ export const CouncilVerdictSchema = z.object({
   rejectedCount: z.number(),
   abstainedCount: z.number(),
   vetoApplied: z.boolean(),
+  complianceVetoApplied: z.boolean().optional(),
   vetoByAgentId: z.string().optional(),
+  averageConfidence: z.number().min(0).max(1).optional(),
   findings: z.array(CouncilFindingSchema),
   summary: z.string(),
   individualVerdicts: z.array(CouncilVerdictInputSchema),
@@ -846,6 +859,12 @@ export const AgentOutputSchema = z.object({
   next_actions: z.array(z.string()).default([]),
 });
 
+export const ImplementerTestsSchema = z.object({
+  runner: z.string(),
+  result: z.enum(['passed', 'failed']),
+  failedTests: z.array(z.string()).optional(),
+});
+
 export const ImplementerOutputSchema = AgentOutputSchema.extend({
   status: z.enum(['success', 'failure', 'blocked']),
   filesChanged: z
@@ -856,13 +875,7 @@ export const ImplementerOutputSchema = AgentOutputSchema.extend({
       }),
     )
     .default([]),
-  tests: z
-    .object({
-      runner: z.string(),
-      result: z.enum(['passed', 'failed']),
-      failedTests: z.array(z.string()).optional(),
-    })
-    .optional(),
+  tests: ImplementerTestsSchema.optional(),
 });
 
 export const ReviewAxisSchema = z.enum([

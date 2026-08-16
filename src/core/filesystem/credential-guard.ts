@@ -4,19 +4,12 @@ import { POLICY_PATH } from '../presets/package-paths';
 import type { CodeConductorConfig } from '../config/codeconductor-config';
 
 /**
- * Default credential patterns used when config is not provided.
- * Matches common secret assignment patterns with values >= 8 chars.
+ * Default keyword patterns. Empty by design: built-in detection is handled by
+ * the high-confidence signatures in `safety.ts`, which match provider-specific
+ * credential shapes instead of generic keyword assignments. Keyword matching
+ * remains available as an opt-in via project `secretPatterns`.
  */
-export const DEFAULT_SECRET_PATTERNS = [
-  'password',
-  'secret',
-  'api_key',
-  'token',
-  'api[_-]?key',
-  'access[_-]?token',
-  'auth[_-]?token',
-  'private[_-]?key',
-];
+export const DEFAULT_SECRET_PATTERNS: string[] = [];
 
 /**
  * Load secret patterns from policy.yml.
@@ -54,11 +47,12 @@ function mergePatterns(...arrays: ReadonlyArray<readonly string[]>): string[] {
 }
 
 /**
- * Load credential patterns by merging sources in priority order:
+ * Load opt-in keyword patterns by merging sources in priority order:
  * 1. CodeConductorConfig.safety.secretPatterns (highest — user/project overrides)
  * 2. policy.yml secretPatterns (declarative policy)
- * 3. DEFAULT_SECRET_PATTERNS (built-in fallback)
+ * 3. DEFAULT_SECRET_PATTERNS (empty — see above)
  *
+ * These are additive to the always-on high-confidence signatures.
  * Note: policy.yml loading is async, so this function is async.
  */
 export async function loadCredentialPatterns(

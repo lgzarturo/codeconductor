@@ -45,6 +45,13 @@ describe('SEO CLI routing', () => {
     expect(parsed.options.output).toBe('custom-llms.txt');
   });
 
+  it('parses --force as a global flag alongside seo options', () => {
+    const parsed = parseArgs(['seo', 'audit', '--url', 'https://example.com', '--output', 'report.md', '--force']);
+
+    expect(parsed.flags.force).toBe(true);
+    expect(parsed.options.output).toBe('report.md');
+  });
+
   it('returns error for seo without subcommand', async () => {
     const parsed = parseArgs(['seo']);
     const result = await routeCommand(parsed, '/tmp');

@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
+import { evaluateConfirmationGate } from '../core/ccep/confirmation-gate';
 import { compilePrompt } from '../core/ccep/prompt-compiler';
 import { parseJsonInput, validateOutputForRole } from '../core/ccep/output-validator';
 import { parseCommand } from '../core/ccep/command-parser';
@@ -8,7 +9,11 @@ import {
   loadWorkflowProfile,
   resolveWorkflowPhase,
 } from '../core/ccep/workflow-profile-loader';
-import { validateExecutionContext, WorkflowCommandSchema } from '../validation/schemas';
+import {
+  validateExecutionContext,
+  validatePlannerOutput,
+  WorkflowCommandSchema,
+} from '../validation/schemas';
 import type { OutputMode } from '../utils/logger';
 
 export interface CcepOptions {
@@ -265,6 +270,81 @@ export async function ccepCommand(
       };
     }
 
+    case 'evaluate': {
+      const parsed = parseWorkflowCommand(command);
+      if (!parsed.ok) {
+        return {
+          code: 1,
+          data: { success: false, command: 'ccep evaluate', errors: [parsed.error] },
+        };
+      }
+
+      const payload = await readInputPayload(projectRoot, input, rest);
+      if (!payload.ok) {
+        return {
+          code: 1,
+          data: {
+            success: false,
+            command: 'ccep evaluate',
+            errors: [
+              payload.error.includes('Missing required')
+                ? 'Missing required planner --input (JSON or @file) for ConfirmationGate evaluation'
+                : payload.error,
+            ],
+          },
+        };
+      }
+
+      let planner;
+      try {
+        planner = validatePlannerOutput(payload.data);
+      } catch (err) {
+        return {
+          code: 1,
+          data: {
+            success: false,
+            command: 'ccep evaluate',
+            errors: [`Invalid planner output: ${String(err)}`],
+          },
+        };
+      }
+
+      let context;
+      try {
+        if (contextPath) {
+          const filePath = isAbsolute(contextPath)
+            ? contextPath
+            : resolve(projectRoot, contextPath);
+          const content = await readFile(filePath, 'utf-8');
+          context = validateExecutionContext(parseJsonInput(content));
+        } else {
+          const profile = loadWorkflowProfile(parsed.command, projectRoot);
+          const envelope = parseCommand(parsed.command, userRequest ?? '', projectRoot);
+          context = await resolveContext(envelope, profile, projectRoot);
+        }
+      } catch (err) {
+        return {
+          code: 1,
+          data: {
+            success: false,
+            command: 'ccep evaluate',
+            errors: [`Could not resolve execution context: ${String(err)}`],
+          },
+        };
+      }
+
+      const decision = evaluateConfirmationGate(context, planner);
+      return {
+        code: decision.stop ? 1 : 0,
+        data: {
+          success: !decision.stop,
+          command: 'ccep evaluate',
+          stop: decision.stop,
+          decision,
+        },
+      };
+    }
+
     default:
       return {
         code: 1,
@@ -272,7 +352,7 @@ export async function ccepCommand(
           success: false,
           command: 'ccep',
           errors: [
-            `Unknown subcommand: ${subcommand}. Use: parse, profile, resolve, compile, validate`,
+            `Unknown subcommand: ${subcommand}. Use: parse, profile, resolve, compile, validate, evaluate`,
           ],
         },
       };

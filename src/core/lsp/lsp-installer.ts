@@ -1,9 +1,14 @@
 import { execFile } from 'node:child_process';
-import { access, mkdir } from 'node:fs/promises';
-import { homedir } from 'node:os';
+import { access, mkdir, mkdtemp, rename, rm, writeFile } from 'node:fs/promises';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import type { LspDefinition, LspInstallResult, LspInstallReport, LspStatus } from '../../domain/lsp/lsp-definition';
+import {
+  assertBinaryArtifact,
+  assertSha256Hex,
+  resolveSafeArchiveEntry,
+} from './binary-integrity';
 
 const execFileAsync = promisify(execFile);
 
@@ -167,8 +172,11 @@ export class LspInstaller {
   }
 
   private async installBinary(def: LspDefinition): Promise<void> {
-    if (!def.binaryPlatforms) {
-      throw new Error(`No binary platforms defined for ${def.serverName}`);
+    if (!def.binaryPlatforms || Object.keys(def.binaryPlatforms).length === 0) {
+      throw new Error(
+        `No pinned binary platforms defined for ${def.serverName}. ` +
+          'Add a versioned https URL and sha256 before installing.',
+      );
     }
 
     const platformKey = `${process.platform}-${process.arch}`;
@@ -178,35 +186,83 @@ export class LspInstaller {
       throw new Error(`No binary available for platform: ${platformKey}`);
     }
 
-    // Ensure bin directory exists
-    await mkdir(this.lspBinDir, { recursive: true });
+    assertBinaryArtifact(binary);
 
+    await mkdir(this.lspBinDir, { recursive: true });
     const destPath = join(this.lspBinDir, def.binaryName);
 
-    // Check if already exists
     try {
       await access(destPath);
-      return; // Already installed
+      return;
     } catch {
-      // Not installed, proceed
+      // Not installed
     }
 
-    // Download and extract
-    const { execSync } = await import('node:child_process');
-    const isWindows = process.platform === 'win32';
-    const extractCmd = binary.url.endsWith('.zip')
-      ? `curl -L "${binary.url}" | tar -xz -C "${this.lspBinDir}"`
-      : `curl -L "${binary.url}" | tar -xz -C "${this.lspBinDir}"`;
+    const response = await fetch(binary.url, { redirect: 'follow' });
+    if (!response.ok) {
+      throw new Error(
+        `Failed to download ${def.serverName}: HTTP ${response.status} ${response.statusText}`,
+      );
+    }
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    assertSha256Hex(bytes, binary.sha256);
 
+    const workDir = await mkdtemp(join(tmpdir(), 'cc-lsp-'));
     try {
-      execSync(extractCmd, { timeout: 120000, stdio: 'pipe' });
+      const archiveName = binary.url.endsWith('.zip') ? 'server.zip' : 'server.tar.gz';
+      const archivePath = join(workDir, archiveName);
+      await writeFile(archivePath, bytes);
 
-      // Make executable (non-Windows)
-      if (!isWindows) {
-        execSync(`chmod +x "${destPath}"`, { stdio: 'pipe' });
+      if (archiveName.endsWith('.zip')) {
+        throw new Error(
+          `Zip binary installs are not supported yet for ${def.serverName}; use a .tar.gz artifact`,
+        );
       }
-    } catch (error) {
-      throw new Error(`Failed to download ${def.serverName}: ${error instanceof Error ? error.message : String(error)}`);
+
+      const { stdout } = await execFileAsync('tar', ['-tzf', archivePath], {
+        timeout: 60000,
+        maxBuffer: 10 * 1024 * 1024,
+      });
+      const entries = stdout
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+      for (const entry of entries) {
+        resolveSafeArchiveEntry(workDir, entry);
+      }
+
+      await execFileAsync('tar', ['-xzf', archivePath, '-C', workDir], {
+        timeout: 120000,
+      });
+
+      // Prefer a discovered binary named like def.binaryName under the extract root.
+      const candidate = join(workDir, def.binaryName);
+      try {
+        await access(candidate);
+        await rename(candidate, destPath);
+      } catch {
+        // Walk one level of common layouts: */bin/<name> or */<name>
+        const { stdout: found } = await execFileAsync(
+          'find',
+          [workDir, '-type', 'f', '-name', def.binaryName],
+          { timeout: 30000 },
+        );
+        const first = found
+          .split('\n')
+          .map((l) => l.trim())
+          .find((l) => l.length > 0);
+        if (!first) {
+          throw new Error(`Extracted archive did not contain ${def.binaryName}`);
+        }
+        resolveSafeArchiveEntry(workDir, first.slice(workDir.length + 1) || def.binaryName);
+        await rename(first, destPath);
+      }
+
+      if (process.platform !== 'win32') {
+        await execFileAsync('chmod', ['+x', destPath], { timeout: 5000 });
+      }
+    } finally {
+      await rm(workDir, { recursive: true, force: true });
     }
   }
 }

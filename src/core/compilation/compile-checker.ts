@@ -228,6 +228,9 @@ export async function runCompileCheck(
       stdout: 'pipe',
       stderr: 'pipe',
       env: { ...process.env, NODE_NO_WARNINGS: '1' },
+      // On POSIX this creates a process group so timeout cleanup can terminate
+      // descendants as well as the direct child.
+      detached: process.platform !== 'win32',
     });
   } catch (err) {
     const durationMs = performance.now() - startTime;
@@ -269,9 +272,21 @@ export async function runCompileCheck(
     if (outcome === 'timeout') {
       timedOut = true;
       try {
-        proc.kill('SIGKILL');
+        if (process.platform === 'win32') {
+          const taskkill = Bun.spawn(
+            ['taskkill', '/PID', String(proc.pid), '/T', '/F'],
+            { stdout: 'ignore', stderr: 'ignore' },
+          );
+          await taskkill.exited;
+        } else {
+          process.kill(-proc.pid, 'SIGKILL');
+        }
       } catch {
-        // Process may have already exited
+        try {
+          proc.kill('SIGKILL');
+        } catch {
+          // Process may have already exited.
+        }
       }
       await proc.exited;
 

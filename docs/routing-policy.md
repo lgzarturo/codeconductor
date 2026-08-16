@@ -53,7 +53,7 @@ When multiple signals apply, take the highest risk level. Do not average.
 | Documentation update | any         | `docs`                                                          |
 | Codebase exploration | any         | `repo-explorer`                                                 |
 | Code review          | any         | `reviewer`                                                      |
-| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `implementer` → `tester`      |
+| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `tester` → `implementer`      |
 | Complexity audit only| any         | `complexity-auditor`                                            |
 
 Each arrow (`→`) represents a handoff. The next agent does not start until the

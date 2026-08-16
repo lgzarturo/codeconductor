@@ -17,8 +17,9 @@ Command: `pagespeed` (fixed for this workflow — do not infer from user text)
 1. Run: `npx cc-codeconductor ccep parse --command pagespeed "$ARGUMENTS" --output json`
 2. Run: `npx cc-codeconductor ccep resolve --command pagespeed "$ARGUMENTS" --output json`
 3. Run: `npx cc-codeconductor ccep profile pagespeed --output json`
-4. If the ConfirmationGate stops the flow, show questions or risks and wait for human input.
+4. After planner/intake JSON is available, run: `npx cc-codeconductor ccep evaluate --command pagespeed --input <planner.json> --output json`. If `stop` is true, show questions or risks and wait for human input.
 5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+   Canonical delivery order is test-before-implement whenever both phases apply.
 
 ---
 

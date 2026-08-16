@@ -45,7 +45,7 @@ describe('LSP Registry', () => {
       expect(kotlin!.language).toBe('kotlin');
       expect(kotlin!.packageManager).toBe('binary');
       expect(kotlin!.binaryName).toBe('kotlin-language-server');
-      expect(kotlin!.binaryPlatforms).toBeDefined();
+      expect(kotlin!.binaryPlatforms).toEqual({});
     });
   });
 

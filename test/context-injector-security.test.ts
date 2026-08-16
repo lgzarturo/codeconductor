@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, afterEach } from 'bun:test';
 import { mkdir, writeFile, rm, symlink } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { injectScopedContext, loadDeferredFile } from '../src/core/context/context-injector';
+import { readFileWithinRoot } from '../src/core/filesystem/path-containment';
 
 // ─── Test fixtures ───────────────────────────────────────────────────────────
 
@@ -171,6 +172,12 @@ describe('context-injector path containment — rejected paths', () => {
 // ─── Symlink / junction containment ──────────────────────────────────────────
 
 describe('context-injector path containment — links', () => {
+  it('reads through a validated file handle rather than a path-only check', async () => {
+    await writeFile(resolve(TEST_DIR, 'src/held.ts'), 'HELD', 'utf-8');
+
+    expect(await readFileWithinRoot(TEST_DIR, 'src/held.ts')).toBe('HELD');
+  });
+
   it('rejects a file symlink inside the root that targets an external file', async () => {
     await writeFile(resolve(OUTSIDE_DIR, 'target.ts'), 'LINKED SECRET', 'utf-8');
     const created = await trySymlink(

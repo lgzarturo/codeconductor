@@ -6,13 +6,54 @@
  * both root and candidate are canonicalized before the final decision.
  */
 
-import { mkdir, realpath, writeFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { lstat, mkdir, open, realpath, type FileHandle } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { validateWritePath } from './safety';
+
+/** Absent on Windows, where `0` leaves the flag a harmless no-op. */
+const O_NOFOLLOW = constants.O_NOFOLLOW ?? 0;
+
+/** Errno values an `O_NOFOLLOW` open reports when the leaf is a symlink. */
+const SYMLINK_OPEN_CODES: ReadonlySet<string> = new Set(['ELOOP', 'EMLINK', 'EFTYPE']);
+
+/**
+ * A contained write refused on its own terms — escaping, protected, symlinked,
+ * swapped, or already present. Callers map this to a controlled exit code
+ * instead of treating it as an unexpected failure.
+ */
+export class OutputPathError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'OutputPathError';
+  }
+}
 
 /** True when `target` is strictly inside `root`, comparing path segments. */
 export function isInside(root: string, target: string): boolean {
   const rel = relative(root, target);
   return rel !== '' && rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel);
+}
+
+/**
+ * True when `absolutePath` resolves under a protected project location
+ * (`.git`, `.env*`, `secrets`, …), including when reached through a directory
+ * symlink whose leaf name is innocent.
+ */
+function isProtectedUnderRoot(rootReal: string, absolutePath: string): boolean {
+  if (absolutePath === rootReal) {
+    return false;
+  }
+  const relFromRoot = relative(rootReal, absolutePath);
+  if (
+    relFromRoot === '' ||
+    relFromRoot === '..' ||
+    relFromRoot.startsWith(`..${sep}`) ||
+    isAbsolute(relFromRoot)
+  ) {
+    return true;
+  }
+  return !validateWritePath(relFromRoot);
 }
 
 /**
@@ -50,6 +91,50 @@ export async function resolveWithinRoot(
 }
 
 /**
+ * Read a relative file through a held descriptor after re-validating that the
+ * path still names the same contained regular file. This closes the gap between
+ * `realpath` validation and a later path-based read.
+ */
+export async function readFileWithinRoot(
+  projectRoot: string,
+  relPath: string,
+): Promise<string | undefined> {
+  const candidateReal = await resolveWithinRoot(projectRoot, relPath);
+  if (candidateReal === undefined) {
+    return undefined;
+  }
+
+  const rootReal = await realpath(resolve(projectRoot));
+  let handle: FileHandle | undefined;
+  try {
+    handle = await open(candidateReal, constants.O_RDONLY | O_NOFOLLOW);
+    const fdStat = await handle.stat();
+    if (!fdStat.isFile()) {
+      return undefined;
+    }
+
+    const currentReal = await realpath(candidateReal);
+    if (!isInside(rootReal, currentReal)) {
+      return undefined;
+    }
+    const pathStat = await lstat(candidateReal);
+    if (
+      pathStat.isSymbolicLink() ||
+      pathStat.dev !== fdStat.dev ||
+      pathStat.ino !== fdStat.ino
+    ) {
+      return undefined;
+    }
+
+    return await handle.readFile('utf-8');
+  } catch {
+    return undefined;
+  } finally {
+    await handle?.close().catch(() => undefined);
+  }
+}
+
+/**
  * Canonicalize the deepest existing ancestor of `target`, keeping the segments
  * that do not exist yet.
  */
@@ -83,7 +168,11 @@ async function canonicalizeExistingPrefix(
  * existing ancestor: that ancestor must resolve inside the root, which blocks
  * writes through a symlinked parent while still allowing new nested paths.
  *
- * @returns The canonical absolute path, or undefined when it escapes the root.
+ * Existing leaf symlinks are rejected even when their target is inside the
+ * root — writes must target a regular path, never a link.
+ *
+ * @returns The canonical absolute path, or undefined when it escapes the root
+ *          or canonicalizes onto a protected location such as `.git`.
  */
 export async function resolveOutputWithinRoot(
   projectRoot: string,
@@ -100,33 +189,137 @@ export async function resolveOutputWithinRoot(
     return undefined;
   }
 
+  try {
+    const leaf = await lstat(candidate);
+    if (leaf.isSymbolicLink()) {
+      return undefined;
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      throw error;
+    }
+  }
+
   const rootReal = await realpath(rootAbs);
   const { base, pending } = await canonicalizeExistingPrefix(candidate);
 
-  // The target already exists: `base` is its canonical path, with symlinks
-  // resolved, so an escaping link is caught here.
+  // The target already exists: `base` is its canonical path.
   if (pending.length === 0) {
-    return isInside(rootReal, base) ? base : undefined;
+    if (!isInside(rootReal, base) || isProtectedUnderRoot(rootReal, base)) {
+      return undefined;
+    }
+    return base;
   }
 
   if (base !== rootReal && !isInside(rootReal, base)) {
     return undefined;
   }
+  if (isProtectedUnderRoot(rootReal, base)) {
+    return undefined;
+  }
 
   const canonical = join(base, ...pending);
-  return isInside(rootReal, canonical) ? canonical : undefined;
+  if (!isInside(rootReal, canonical) || isProtectedUnderRoot(rootReal, canonical)) {
+    return undefined;
+  }
+  return canonical;
+}
+
+/**
+ * Prove the open descriptor is a regular file that still lives inside the root.
+ *
+ * The descriptor is already pinned to one inode, so nothing swapped in after
+ * the open can redirect the bytes; what remains is to show that the inode we
+ * hold is the one the contained path names. Canonicalizing the path re-reads
+ * every parent, so a directory replaced between resolution and open shows up
+ * either as an escaping canonical path or as a device/inode mismatch — and in
+ * both cases the write is abandoned before it starts.
+ */
+async function assertContainedRegularHandle(
+  handle: FileHandle,
+  rootReal: string,
+  outputPath: string,
+  relPath: string,
+): Promise<string> {
+  const fdStat = await handle.stat();
+  if (!fdStat.isFile()) {
+    throw new OutputPathError(`Output path is not a regular file: ${relPath}`);
+  }
+
+  const openedReal = await realpath(outputPath);
+  if (!isInside(rootReal, openedReal)) {
+    throw new OutputPathError(`Output path escapes the project root: ${relPath}`);
+  }
+  if (isProtectedUnderRoot(rootReal, openedReal)) {
+    throw new OutputPathError(`Output path is protected: ${relPath}`);
+  }
+
+  const pathStat = await lstat(outputPath);
+  if (pathStat.isSymbolicLink()) {
+    throw new OutputPathError(`Output path is a symlink: ${relPath}`);
+  }
+  if (pathStat.dev !== fdStat.dev || pathStat.ino !== fdStat.ino) {
+    throw new OutputPathError(`Output path changed during write: ${relPath}`);
+  }
+
+  return openedReal;
+}
+
+/**
+ * Acquire a write handle on the leaf without following a symlink and without
+ * truncating, so the descriptor can be validated before anything is destroyed.
+ *
+ * Without `force` a single exclusive create is both the creation and the
+ * existence check, and it is atomic against a concurrent creator. With `force`
+ * an existing file is preferred and created only when absent; losing either
+ * side of that race is expected, so the fallbacks cover both directions and
+ * terminate after one round trip.
+ *
+ * `O_NOFOLLOW` only guards the leaf — Node exposes no `openat`-style API for
+ * walking parents descriptor by descriptor, so parent swaps are caught after
+ * the fact by the identity check rather than prevented here.
+ */
+async function openOutputHandle(outputPath: string, force: boolean): Promise<FileHandle> {
+  const exclusiveCreate =
+    constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | O_NOFOLLOW;
+
+  if (!force) {
+    return await open(outputPath, exclusiveCreate);
+  }
+
+  const openExisting = constants.O_WRONLY | O_NOFOLLOW;
+
+  try {
+    return await open(outputPath, openExisting);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      throw error;
+    }
+  }
+
+  try {
+    return await open(outputPath, exclusiveCreate);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+      throw error;
+    }
+  }
+
+  return await open(outputPath, openExisting);
 }
 
 /**
  * Write `content` to a relative path confined to the project root.
  *
- * The parent directory is canonicalized again after it is created, closing the
- * window between resolution and write. Without `force` the file is created
- * exclusively, so an existing file is never truncated — not even by a file
- * planted after resolution.
+ * The leaf is opened with `O_NOFOLLOW` and without `O_TRUNC`, and — when it has
+ * to be created — with `O_EXCL`. Nothing is destroyed until the held descriptor
+ * has been shown to be a regular file that the contained path still names, at
+ * which point the truncate and the write both go through that descriptor.
+ * Symlink leaves are rejected even when their target is inside the root.
  *
  * @returns The canonical absolute path that was written.
- * @throws When the path escapes the root, or when it exists and force is unset.
+ * @throws {OutputPathError} When the path escapes the root, is protected, is a
+ *         symlink, changes underfoot, or exists while force is unset.
  */
 export async function writeContainedFile(
   projectRoot: string,
@@ -134,37 +327,167 @@ export async function writeContainedFile(
   content: string,
   options?: { readonly force?: boolean },
 ): Promise<string> {
-  const target = await resolveOutputWithinRoot(projectRoot, relPath);
-
-  if (target === undefined) {
-    throw new Error(`Output path escapes the project root: ${relPath}`);
+  if (relPath === '' || isAbsolute(relPath)) {
+    throw new OutputPathError(`Output path escapes the project root: ${relPath}`);
+  }
+  if (!validateWritePath(relPath)) {
+    throw new OutputPathError(`Output path is protected: ${relPath}`);
   }
 
-  const parent = dirname(target);
-  await mkdir(parent, { recursive: true });
+  const force = options?.force === true;
+  const rootAbs = resolve(projectRoot);
+  const candidate = resolve(rootAbs, relPath);
 
-  const rootReal = await realpath(resolve(projectRoot));
-  const parentReal = await realpath(parent);
+  if (!isInside(rootAbs, candidate)) {
+    throw new OutputPathError(`Output path escapes the project root: ${relPath}`);
+  }
+
+  const rootReal = await realpath(rootAbs);
+  const parentLexical = dirname(candidate);
+
+  // Reject before mkdir: a directory symlink into `.git`/`secrets` must not
+  // cause nested directories to be created under the protected target.
+  const { base: existingParent } = await canonicalizeExistingPrefix(parentLexical);
+  if (
+    (existingParent !== rootReal && !isInside(rootReal, existingParent)) ||
+    isProtectedUnderRoot(rootReal, existingParent)
+  ) {
+    throw new OutputPathError(
+      isProtectedUnderRoot(rootReal, existingParent)
+        ? `Output path is protected: ${relPath}`
+        : `Output path escapes the project root: ${relPath}`,
+    );
+  }
+
+  await mkdir(parentLexical, { recursive: true });
+
+  const parentReal = await realpath(parentLexical);
 
   if (parentReal !== rootReal && !isInside(rootReal, parentReal)) {
-    throw new Error(`Output path escapes the project root: ${relPath}`);
+    throw new OutputPathError(`Output path escapes the project root: ${relPath}`);
+  }
+  if (isProtectedUnderRoot(rootReal, parentReal)) {
+    throw new OutputPathError(`Output path is protected: ${relPath}`);
   }
 
-  const outputPath = join(parentReal, basename(target));
+  const outputPath = join(parentReal, basename(candidate));
+  if (!isInside(rootReal, outputPath)) {
+    throw new OutputPathError(`Output path escapes the project root: ${relPath}`);
+  }
+  if (isProtectedUnderRoot(rootReal, outputPath)) {
+    throw new OutputPathError(`Output path is protected: ${relPath}`);
+  }
 
+  // Advisory only: it reports the common cases with a precise message and on
+  // platforms without O_NOFOLLOW it is the sole symlink check. It settles
+  // nothing on its own — every verdict here is re-established on the open
+  // descriptor below, which is what the write actually relies on.
   try {
-    await writeFile(outputPath, content, {
-      encoding: 'utf-8',
-      flag: options?.force === true ? 'w' : 'wx',
-    });
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
-      throw new Error(
+    const existing = await lstat(outputPath);
+    if (existing.isSymbolicLink()) {
+      throw new OutputPathError(`Output path is a symlink: ${relPath}`);
+    }
+    if (!existing.isFile()) {
+      throw new OutputPathError(`Output path is not a regular file: ${relPath}`);
+    }
+    if (!force) {
+      throw new OutputPathError(
         `Output file already exists: ${outputPath}. Re-run with --force to overwrite.`,
       );
     }
-    throw error;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      throw error;
+    }
   }
 
-  return outputPath;
+  let handle: FileHandle | undefined;
+  try {
+    handle = await openOutputHandle(outputPath, force);
+    const openedReal = await assertContainedRegularHandle(
+      handle,
+      rootReal,
+      outputPath,
+      relPath,
+    );
+    // The descriptor is only now known to be a contained regular file, so the
+    // destructive half of the write happens last and goes through the handle —
+    // never through the path, which may already mean something else.
+    await handle.truncate(0);
+    await handle.write(content, 0, 'utf-8');
+    return openedReal;
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === 'EEXIST') {
+      throw new OutputPathError(
+        `Output file already exists: ${outputPath}. Re-run with --force to overwrite.`,
+      );
+    }
+    if (code !== undefined && SYMLINK_OPEN_CODES.has(code)) {
+      throw new OutputPathError(`Output path is a symlink: ${relPath}`);
+    }
+    throw error;
+  } finally {
+    await handle?.close().catch(() => undefined);
+  }
+}
+
+/**
+ * Preflight an SEO/output write before any network work.
+ *
+ * Returns a human-readable error when the path is absolute, escapes, is
+ * protected, is a symlink, or already exists without force. `undefined` means
+ * the write is allowed to proceed.
+ */
+export async function preflightContainedOutput(
+  projectRoot: string,
+  relPath: string,
+  options?: { readonly force?: boolean },
+): Promise<string | undefined> {
+  if (relPath === '' || isAbsolute(relPath)) {
+    return `Invalid --output path: ${relPath}. It must be relative to the project root.`;
+  }
+  if (!validateWritePath(relPath)) {
+    return `Output path is protected: ${relPath}`;
+  }
+
+  const resolved = await resolveOutputWithinRoot(projectRoot, relPath);
+  if (resolved === undefined) {
+    // Distinguish protected canonical destinations (e.g. symlink → `.git`)
+    // from ordinary escapes when the lexical name looked innocent.
+    try {
+      const rootReal = await realpath(resolve(projectRoot));
+      const candidate = resolve(rootReal, relPath);
+      const { base, pending } = await canonicalizeExistingPrefix(candidate);
+      const canonical = pending.length === 0 ? base : join(base, ...pending);
+      if (isInside(rootReal, canonical) && isProtectedUnderRoot(rootReal, canonical)) {
+        return `Output path is protected: ${relPath}`;
+      }
+      if (isProtectedUnderRoot(rootReal, base)) {
+        return `Output path is protected: ${relPath}`;
+      }
+    } catch {
+      // Fall through to the generic escape message.
+    }
+    return `Invalid --output path: ${relPath}. It must be relative to the project root.`;
+  }
+
+  const rootReal = await realpath(resolve(projectRoot));
+  if (isProtectedUnderRoot(rootReal, resolved)) {
+    return `Output path is protected: ${relPath}`;
+  }
+
+  if (options?.force === true) {
+    return undefined;
+  }
+
+  try {
+    await lstat(resolved);
+    return `Output file already exists: ${resolved}. Re-run with --force to overwrite.`;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return undefined;
+    }
+    throw error;
+  }
 }

@@ -91,15 +91,23 @@ export async function isWritable(dir: string): Promise<boolean> {
   }
 }
 
+/** Escape every regex metacharacter so a keyword is matched as literal text. */
+function regexEscape(literal: string): string {
+  return literal.replace(/[.*+?^${}()|[\]\\/-]/g, '\\$&');
+}
+
 /**
  * Build regex patterns from config secretPatterns.
  * Each pattern is matched as: <keyword>\s*[:=]\s*[^\s]{8,}
  *
  * Legacy keyword matching — only applied to patterns a project opts into.
+ * Keywords are plain strings, not regexes: they are escaped before
+ * interpolation, so metacharacters cannot alter the shape of the match, make
+ * the pattern uncompilable, or introduce catastrophic backtracking.
  */
 function buildCredentialRegexes(patterns: ReadonlyArray<string>): RegExp[] {
   return patterns.map(
-    (keyword) => new RegExp(`(?:${keyword})\\s*[:=]\\s*[^\\s]{8,}`, 'i')
+    (keyword) => new RegExp(`(?:${regexEscape(keyword)})\\s*[:=]\\s*[^\\s]{8,}`, 'i')
   );
 }
 

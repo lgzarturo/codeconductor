@@ -7,6 +7,7 @@ export interface HelpOptions {
   readonly projectRoot: string;
   readonly target?: string;
   readonly output: OutputMode;
+  readonly command?: 'cc-help';
 }
 
 interface PresetInventory {
@@ -139,7 +140,7 @@ export async function helpCommand(
         code: 0,
         data: {
           success: true,
-          command: 'help',
+          command: options.command ?? 'cc-help',
           inventory,
           defaultTarget,
         },
@@ -150,7 +151,7 @@ export async function helpCommand(
       code: 0,
       data: {
         success: true,
-        command: 'help',
+        command: options.command ?? 'cc-help',
         message: renderHuman(inventory, defaultTarget),
         inventory,
       },
@@ -160,7 +161,7 @@ export async function helpCommand(
       code: 1,
       data: {
         success: false,
-        command: 'help',
+        command: options.command ?? 'cc-help',
         errors: [String(error)],
       },
     };

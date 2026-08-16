@@ -1,4 +1,5 @@
-import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { lstat, mkdir, open, readdir, readFile, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import {
@@ -29,6 +30,40 @@ export interface FileCopyResult {
   action: FileAction;
   dryRun?: boolean;
   error?: string;
+}
+
+const O_NOFOLLOW = constants.O_NOFOLLOW ?? 0;
+
+async function writeDestinationNoFollow(destPath: string, content: string): Promise<void> {
+  let handle: Awaited<ReturnType<typeof open>> | undefined;
+  try {
+    handle = await open(
+      destPath,
+      constants.O_WRONLY | constants.O_CREAT | O_NOFOLLOW,
+    );
+    const fdStat = await handle.stat();
+    const pathStat = await lstat(destPath);
+    if (pathStat.isSymbolicLink()) {
+      throw new Error(`Destination is a symlink: ${destPath}`);
+    }
+    if (
+      !fdStat.isFile() ||
+      pathStat.dev !== fdStat.dev ||
+      pathStat.ino !== fdStat.ino
+    ) {
+      throw new Error(`Destination changed during write: ${destPath}`);
+    }
+    await handle.truncate(0);
+    await handle.write(content, 0, 'utf-8');
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === 'ELOOP' || code === 'EMLINK' || code === 'EFTYPE') {
+      throw new Error(`Destination is a symlink: ${destPath}`);
+    }
+    throw error;
+  } finally {
+    await handle?.close().catch(() => undefined);
+  }
 }
 
 export async function listFilesRecursive(dir: string, base = dir): Promise<string[]> {
@@ -396,6 +431,21 @@ export async function applySingleFile(
     return { src: srcPath, dest: destPath, action: 'skipped', dryRun };
   }
 
+  try {
+    if ((await lstat(destPath)).isSymbolicLink()) {
+      return {
+        src: srcPath,
+        dest: destPath,
+        action: 'error',
+        error: `Destination is a symlink: ${destPath}`,
+      };
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      return { src: srcPath, dest: destPath, action: 'error', error: String(error) };
+    }
+  }
+
   if (strategy === 'overwrite' && !force && (await fileExists(destPath))) {
     return { src: srcPath, dest: destPath, action: 'skipped', dryRun };
   }
@@ -469,7 +519,7 @@ export async function applySingleFile(
 
   try {
     await mkdir(dirname(destPath), { recursive: true });
-    await writeFile(destPath, finalContent, 'utf-8');
+    await writeDestinationNoFollow(destPath, finalContent);
     return { src: srcPath, dest: destPath, action };
   } catch (e) {
     return { src: srcPath, dest: destPath, action: 'error', error: String(e) };

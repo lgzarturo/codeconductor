@@ -19,12 +19,14 @@ phases:
     agent: architect
     outputSchema: technical-plan
     stopGate: approval
+  - id: test
+    agent: tester
+    dependsOn:
+      - design
   - id: implement
     agent: implementer
     dependsOn:
-      - design
-  - id: test
-    agent: tester
+      - test
   - id: review
     agent: reviewer
   - id: docs
@@ -35,8 +37,8 @@ routing:
   default:
     - intake
     - design
-    - implement
     - test
+    - implement
     - review
     - docs
 confirmationGate:

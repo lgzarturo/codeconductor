@@ -114,7 +114,7 @@ When multiple signals apply, take the highest risk level. Do not average.
 | Codebase exploration | any         | `repo-explorer`                                     |
 | Code review          | any         | `reviewer`                                          |
 | Security review      | high        | `security-reviewer` → `reviewer`                    |
-| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `implementer` → `tester` |
+| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `tester` → `implementer` |
 
 ---
 

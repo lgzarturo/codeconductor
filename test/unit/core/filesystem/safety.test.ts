@@ -53,8 +53,9 @@ describe('core/filesystem/safety', () => {
       expect(matches.map((m) => m.line)).toEqual([1, 2]);
     });
 
-    test('no patterns means no matches', () => {
-      expect(scanForCredentials('f', 'API_KEY=abcdefgh12345', [])).toHaveLength(0);
+    test('empty custom patterns still apply high-confidence signatures', () => {
+      expect(scanForCredentials('f', 'token=ghp_SjFfZ22D3xmS8Okei21GhbjxE5u3QwbcySbM', []))
+        .toHaveLength(1);
     });
   });
 

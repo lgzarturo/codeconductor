@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
+import { parse as yamlParse } from 'yaml';
 import { CredentialGuardError } from '../src/cli/errors';
 import { loadCredentialPatterns } from '../src/core/filesystem/credential-guard';
 import {
@@ -363,6 +364,31 @@ describe('custom secretPatterns remain opt-in legacy matching', () => {
     expect(matches).toHaveLength(1);
     expect(matches[0].matched).toBe('[REDACTED]');
     expect(JSON.stringify(matches)).not.toContain('dummyvalue123');
+  });
+
+  test('treats plus as literal keyword text and not as a regex quantifier', () => {
+    expect(scanForCredentials('f.ts', 'a+=abcdefgh12345', ['a+'])).toHaveLength(1);
+    expect(scanForCredentials('f.ts', 'aaaa=abcdefgh12345', ['a+'])).toHaveLength(0);
+  });
+
+  test('accepts an unmatched parenthesis as a literal keyword without throwing', () => {
+    expect(scanForCredentials('f.ts', '(=abcdefgh12345', ['('])).toHaveLength(1);
+  });
+});
+
+describe('tracked policy secretPatterns parity', () => {
+  test('root and installed preset policies define identical secretPatterns', async () => {
+    const rootPolicy = yamlParse(
+      await readFile(resolve(import.meta.dir, '..', 'policy.yml'), 'utf-8')
+    ) as { secretPatterns?: unknown };
+    const presetPolicy = yamlParse(
+      await readFile(
+        resolve(import.meta.dir, '..', '.codeconductor', 'presets', 'policy.yml'),
+        'utf-8'
+      )
+    ) as { secretPatterns?: unknown };
+
+    expect(presetPolicy.secretPatterns).toEqual(rootPolicy.secretPatterns);
   });
 });
 

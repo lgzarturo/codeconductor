@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -169,6 +169,36 @@ describe('core/presets/file-copier', () => {
       const result = await applySingleFile(src, dest, 'overwrite', true, false, false, null, 'en');
       expect(result.action).toBe('written');
       expect(await readFile(dest, 'utf-8')).toBe('NEW');
+    });
+
+    test('force overwrite rejects a destination symlink and preserves its target', async () => {
+      const src = await srcFile('PWNED');
+      const dir = await tmp('dst-');
+      const target = join(dir, 'target.md');
+      const dest = join(dir, 'out.md');
+      await writeFile(target, 'ORIGINAL');
+      try {
+        await symlink(target, dest, 'file');
+      } catch (error) {
+        const code = (error as NodeJS.ErrnoException).code;
+        if (code === 'EPERM' || code === 'EACCES') return;
+        throw error;
+      }
+
+      const result = await applySingleFile(
+        src,
+        dest,
+        'overwrite',
+        true,
+        false,
+        false,
+        null,
+        'en',
+      );
+
+      expect(result.action).toBe('error');
+      expect(result.error).toMatch(/symlink/i);
+      expect(await readFile(target, 'utf-8')).toBe('ORIGINAL');
     });
 
     test('dry-run reports the action but writes nothing', async () => {

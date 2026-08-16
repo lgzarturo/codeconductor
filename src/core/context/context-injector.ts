@@ -6,8 +6,7 @@
  * defers the rest.
  */
 
-import { readFile, stat } from 'node:fs/promises';
-import { resolveWithinRoot } from '../filesystem/path-containment';
+import { readFileWithinRoot } from '../filesystem/path-containment';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -63,20 +62,8 @@ export async function injectScopedContext(
     }
 
     try {
-      // W1: Path traversal guard — resolved path must stay within projectRoot
-      const absPath = await resolveWithinRoot(projectRoot, relPath);
-
-      if (absPath === undefined) {
-        continue;
-      }
-
-      const fileInfo = await stat(absPath);
-
-      if (!fileInfo.isFile()) {
-        continue;
-      }
-
-      const content = await readFile(absPath, 'utf-8');
+      const content = await readFileWithinRoot(projectRoot, relPath);
+      if (content === undefined) continue;
       const byteLen = Buffer.byteLength(content, 'utf-8');
 
       // W3: Stop loading when maxContextBytes is exceeded
@@ -113,14 +100,7 @@ export async function loadDeferredFile(
   relPath: string,
 ): Promise<string | undefined> {
   try {
-    // Path traversal guard — resolved path must stay within projectRoot
-    const absPath = await resolveWithinRoot(projectRoot, relPath);
-
-    if (absPath === undefined) {
-      return undefined;
-    }
-
-    return await readFile(absPath, 'utf-8');
+    return await readFileWithinRoot(projectRoot, relPath);
   } catch {
     return undefined;
   }

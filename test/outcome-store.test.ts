@@ -106,4 +106,77 @@ describe('outcome-store', () => {
     expect(agg.byModel['model-a'].count).toBe(2);
     expect(agg.byModel['model-a'].avgCost).toBeCloseTo(0.15);
   });
+
+  test('optional averages divide only by outcomes that report each metric', () => {
+    const base = {
+      source: 'review' as const,
+      agent: 'reviewer',
+      model: 'model-a',
+      contractVersion: '0.5.0',
+      verdict: 'PASS' as const,
+    };
+    const agg = aggregateOutcomes([
+      {
+        ...base,
+        id: 'metric-1',
+        taskId: 'T1',
+        timestamp: '2026-01-01T00:00:00Z',
+        weightedScore: 3,
+        costUsd: 0.3,
+        tokensIn: 100,
+        tokensOut: 50,
+      },
+      {
+        ...base,
+        id: 'metric-2',
+        taskId: 'T2',
+        timestamp: '2026-01-02T00:00:00Z',
+      },
+      {
+        ...base,
+        id: 'metric-3',
+        taskId: 'T3',
+        timestamp: '2026-01-03T00:00:00Z',
+        weightedScore: 1,
+        tokensIn: 200,
+      },
+    ]);
+
+    expect(agg.byAgent.reviewer.count).toBe(3);
+    expect(agg.byAgent.reviewer.avgScore).toBe(2);
+    expect(agg.byModel['model-a'].avgScore).toBe(2);
+    expect(agg.byModel['model-a'].avgCost).toBe(0.3);
+    expect(agg.byModel['model-a'].avgTokens).toBe(175);
+  });
+
+  test('reported zero token counts still participate in the denominator', () => {
+    const agg = aggregateOutcomes([
+      {
+        id: 'tok-0',
+        taskId: 'T1',
+        source: 'review',
+        agent: 'reviewer',
+        model: 'model-a',
+        contractVersion: '0.5.0',
+        timestamp: '2026-01-01T00:00:00Z',
+        verdict: 'PASS',
+        tokensIn: 0,
+        tokensOut: 0,
+      },
+      {
+        id: 'tok-100',
+        taskId: 'T2',
+        source: 'review',
+        agent: 'reviewer',
+        model: 'model-a',
+        contractVersion: '0.5.0',
+        timestamp: '2026-01-02T00:00:00Z',
+        verdict: 'PASS',
+        tokensIn: 100,
+        tokensOut: 0,
+      },
+    ]);
+
+    expect(agg.byModel['model-a'].avgTokens).toBe(50);
+  });
 });

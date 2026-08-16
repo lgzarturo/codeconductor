@@ -152,7 +152,8 @@ describe('LspInstaller Domain Types', () => {
         versionFlag: '--version',
         binaryPlatforms: {
           'linux-x64': {
-            url: 'https://example.com/server-linux-x64.tar.gz',
+            url: 'https://example.com/releases/download/1.0.0/server-linux-x64.tar.gz',
+            sha256: '0'.repeat(64),
           },
         },
       };
@@ -162,6 +163,7 @@ describe('LspInstaller Domain Types', () => {
       expect(def.packageManager).toBe('binary');
       expect(def.binaryPlatforms).toBeDefined();
       expect(def.binaryPlatforms!['linux-x64'].url).toContain('https://');
+      expect(def.binaryPlatforms!['linux-x64'].sha256).toHaveLength(64);
     });
   });
 });

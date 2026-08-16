@@ -70,13 +70,17 @@ npx cc-codeconductor ccep profile council --output json
 
 # Resolve full execution context
 npx cc-codeconductor ccep resolve --command feature "Add CRUD" --output json
+
+# Evaluate ConfirmationGate against planner JSON (stop => exit code 1)
+npx cc-codeconductor ccep evaluate --command feature --input @planner.json --output json
 ```
 
 ## Slash command bootstrap
 
 Every preset command includes **Step 0 — CCEP Bootstrap** before workflow-specific
-steps. The bootstrap runs the CLI calls above and blocks delegation until the
-ConfirmationGate allows progress.
+steps. The bootstrap runs the CLI calls above and blocks delegation until
+`ccep evaluate` reports that ConfirmationGate allows progress. Workflows that
+include both `test` and `implement` phases use **test-before-implement** order.
 
 ## Schemas
 

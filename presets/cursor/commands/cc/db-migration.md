@@ -15,8 +15,9 @@ Command: `db-migration` (fixed for this workflow — do not infer from user text
 1. Run: `npx cc-codeconductor ccep parse --command db-migration "$ARGUMENTS" --output json`
 2. Run: `npx cc-codeconductor ccep resolve --command db-migration "$ARGUMENTS" --output json`
 3. Run: `npx cc-codeconductor ccep profile db-migration --output json`
-4. If the ConfirmationGate stops the flow, show questions or risks and wait for human input.
+4. After planner/intake JSON is available, run: `npx cc-codeconductor ccep evaluate --command db-migration --input <planner.json> --output json`. If `stop` is true, show questions or risks and wait for human input.
 5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+   Canonical delivery order is test-before-implement whenever both phases apply.
 
 ---
 
@@ -43,22 +44,22 @@ rollback/forward-fix notes, and test approach.
 
 ---
 
-## Step 3 — Implementation (Implementer role)
-
-Invoke the `implementer` subagent via the Task tool.
-
-Keep model and migration changes together, avoid unrelated refactors, and
-preserve the deployment order specified by architect.
-
----
-
-## Step 4 — Migration Tests (Tester role)
+## Step 3 — Migration Tests (Tester role)
 
 Invoke the `tester` subagent via the Task tool.
 
 Cover migration-sensitive behavior where the stack supports it, including
 existing-data edge cases and rollback/forward-fix notes when automated rollback
 tests are not practical.
+
+---
+
+## Step 4 — Implementation (Implementer role)
+
+Invoke the `implementer` subagent via the Task tool.
+
+Keep model and migration changes together, avoid unrelated refactors, and
+preserve the deployment order specified by architect.
 
 ---
 

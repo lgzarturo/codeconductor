@@ -1,4 +1,5 @@
 import packageJson from '../../package.json';
+import { z } from 'zod';
 import { detectCommand, type DetectOptions } from '../commands/detect.command';
 import { doctorCommand, type DoctorOptions } from '../commands/doctor.command';
 import { initCommand, type InitOptions } from '../commands/init.command';
@@ -41,12 +42,19 @@ export interface CliArgs {
     output: OutputMode;
   };
   rest?: string[];
+  validationErrors?: string[];
 }
+
+const OutputModeSchema = z.enum(['json', 'human']);
+const SeoFormatSchema = z.enum(['cli', 'json', 'markdown']);
+const SeoFailOnSchema = z.enum(['error', 'warning', 'never']);
+const NonNegativeIntegerSchema = z.coerce.number().int().nonnegative();
 
 /**
  * Parse command from args
  */
 export function parseArgs(args: string[]): CliArgs {
+  const commandAcceptsOutputPath = args[0] === 'seo';
   const flags = {
     help: false,
     version: false,
@@ -56,6 +64,7 @@ export function parseArgs(args: string[]): CliArgs {
   };
 
   const options: Record<string, unknown> = {};
+  const validationErrors: string[] = [];
 
   // First pass: collect flags
   const remaining: string[] = [];
@@ -73,8 +82,13 @@ export function parseArgs(args: string[]): CliArgs {
       remaining.push(arg);
     } else if (arg.startsWith('--output=') || arg.startsWith('-o=')) {
       const value = arg.split('=')[1];
-      if (value === 'json' || value === 'human') {
-        flags.output = value;
+      const parsed = OutputModeSchema.safeParse(value);
+      if (parsed.success) {
+        flags.output = parsed.data;
+      } else if (commandAcceptsOutputPath) {
+        remaining.push(arg);
+      } else {
+        validationErrors.push(`Invalid --output: ${value}. Expected json or human.`);
       }
     } else {
       remaining.push(arg);
@@ -85,10 +99,17 @@ export function parseArgs(args: string[]): CliArgs {
   for (let i = 0; i < remaining.length; i++) {
     if ((remaining[i] === '--output' || remaining[i] === '-o') && remaining[i + 1]) {
       const value = remaining[i + 1];
-      if (value === 'json' || value === 'human') {
-        flags.output = value;
+      const parsed = OutputModeSchema.safeParse(value);
+      if (parsed.success) {
+        flags.output = parsed.data;
         remaining.splice(i, 2);
         i--;
+      } else if (!commandAcceptsOutputPath) {
+        validationErrors.push(`Invalid --output: ${value}. Expected json or human.`);
+        remaining.splice(i, 2);
+        i--;
+      } else {
+        // SEO also owns --output as a report path; leave it for option parsing.
       }
     }
   }
@@ -132,7 +153,14 @@ export function parseArgs(args: string[]): CliArgs {
     }
   }
 
-  return { command, subcommand, options, flags, rest };
+  return {
+    command,
+    subcommand,
+    options,
+    flags,
+    rest,
+    validationErrors: validationErrors.length > 0 ? validationErrors : undefined,
+  };
 }
 
 /**
@@ -160,7 +188,8 @@ Commands:
   seo llms                Generate llms.txt from a URL or sitemap
   doctor                  Validate configuration and generated files
   update                  Update installed presets
-  help / cc-help          Show preset inventory (skills, subagents, commands)
+  help                    Show general CLI usage and command list
+  cc-help                 Show preset inventory (skills, subagents, commands)
   debt-harvest / harvest  Scan source files for deferred debt items
   goal / cc-goal          Plan goal into task graph with dependencies
   ingest                  Ingest repo knowledge into product graph
@@ -168,6 +197,9 @@ Commands:
   orchestrate             Runtime orchestrator for goal execution
   impact                  Analyze change impact on product graph
   verify                  Verify task completion with evidence
+  ccep                    Compile and evaluate CCEP workflow contracts
+  openspec                Validate and execute OpenSpec backlog workflows
+  scorecard               Record and aggregate evaluation outcomes
 
 Options:
   --help, -h              Show this help message
@@ -186,14 +218,16 @@ Stack-specific presets (v0.4.0, registered in preset-registry):
   laravel-tall            Laravel, Blade, Livewire, Alpine.js
   python-data-api         Python, FastAPI, Django, uv
   Listed programmatically via listPresets() in src/core/presets/preset-registry.ts.
-  Stack detection wires matching specialized skills automatically when
-  init/detect identifies the stack.
+  Detection wires matching specialized skills onto the generic target workflow.
+  Full stack-specific asset pruning/replacement is not implemented yet.
 
-Workflow Loop Core (v0.4.0):
+Workflow Loop Core (v0.4.0, experimental):
   runWorkflowPipeline() in src/core/pipeline/workflow-loop.ts runs the
-  8-phase loop (intake -> structure -> design -> test -> implement ->
-  validate -> council -> compact) with wall-clock, files-modified and
-  lines-changed guardrails and STOP gates after Design and Council.
+  experimental 8-phase loop (intake -> structure -> design -> test ->
+  implement -> validate -> council -> compact) with wall-clock,
+  files-modified and lines-changed guardrails and STOP gates after Design
+  and Council. It is library-only today — not a shipped CLI runtime; prefer
+  CCEP profiles and slash-command workflows for production orchestration.
 
 Council consensus v0.4.0:
   Per-agent confidence thresholds (< 0.6 or average < 0.7 escalate)
@@ -232,6 +266,7 @@ Examples:
   npx cc-codeconductor ccep parse --command fix "login fails"
   npx cc-codeconductor ccep profile council --output json
   npx cc-codeconductor ccep resolve --command feature "Add CRUD"
+  npx cc-codeconductor ccep evaluate --command feature --input @planner.json
   npx cc-codeconductor openspec validate
   npx cc-codeconductor openspec scan
   npx cc-codeconductor openspec plan BC-001
@@ -240,8 +275,9 @@ Examples:
   npx cc-codeconductor scorecard create --task BC-001 --from-diff
   npx cc-codeconductor scorecard models
   npx cc-codeconductor scorecard aggregate
-  npx cc-codeconductor help --target opencode
-  npx cc-codeconductor help --target claude --output json
+  npx cc-codeconductor help
+  npx cc-codeconductor cc-help --target opencode
+  npx cc-codeconductor cc-help --target claude --output json
 
 Docs: https://github.com/lgzarturo/codeconductor/tree/main/docs
   docs/v0.4.0-release-notes.md   v0.4.0 feature breakdown
@@ -249,6 +285,62 @@ Docs: https://github.com/lgzarturo/codeconductor/tree/main/docs
   docs/prompt-versioning.md      Agent contract versions
   docs/usage-cli.md              Detailed CLI reference
 `;
+}
+
+function cliContractError(command: string, errors: string[]) {
+  return {
+    code: 1,
+    data: {
+      success: false,
+      command,
+      errors,
+    },
+  };
+}
+
+function unknownSubcommand(command: string, subcommand: string, valid: readonly string[]) {
+  return cliContractError(command, [
+    `Unknown subcommand for ${command}: ${subcommand}. Use: ${valid.join(', ')}`,
+  ]);
+}
+
+function parseSeoOptions(options: Record<string, unknown>):
+  | {
+      readonly success: true;
+      readonly format?: z.infer<typeof SeoFormatSchema>;
+      readonly failOn?: z.infer<typeof SeoFailOnSchema>;
+      readonly delay?: number;
+    }
+  | { readonly success: false; readonly errors: string[] } {
+  const errors: string[] = [];
+  const format = options.format === undefined
+    ? undefined
+    : SeoFormatSchema.safeParse(options.format);
+  const failOn = options['fail-on'] === undefined
+    ? undefined
+    : SeoFailOnSchema.safeParse(options['fail-on']);
+  const delay = options.delay === undefined
+    ? undefined
+    : NonNegativeIntegerSchema.safeParse(options.delay);
+
+  if (format && !format.success) {
+    errors.push('Invalid --format. Expected cli, json, or markdown.');
+  }
+  if (failOn && !failOn.success) {
+    errors.push('Invalid --fail-on. Expected error, warning, or never.');
+  }
+  if (delay && !delay.success) {
+    errors.push('Invalid --delay. Expected a non-negative integer.');
+  }
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+  return {
+    success: true,
+    format: format?.data,
+    failOn: failOn?.data,
+    delay: delay?.data,
+  };
 }
 
 /**
@@ -259,6 +351,10 @@ export async function routeCommand(
   projectRoot: string
 ): Promise<{ code: number; data?: unknown }> {
   const { command, subcommand, options, flags } = args;
+
+  if (args.validationErrors?.length) {
+    return cliContractError(command, args.validationErrors);
+  }
 
   switch (command) {
     case 'init':
@@ -280,6 +376,16 @@ export async function routeCommand(
     case 'install': {
       const isGlobal = options.global === true || options.global === 'true';
       const VALID_TARGETS = ['opencode', 'claude', 'codex', 'gemini', 'cursor', 'agy', 'all'];
+      const VALID_INSTALL_SUBCOMMANDS = ['council', 'preset', 'lsp', ...VALID_TARGETS];
+
+      if (subcommand && !VALID_INSTALL_SUBCOMMANDS.includes(subcommand)) {
+        return unknownSubcommand('install', subcommand, VALID_INSTALL_SUBCOMMANDS);
+      }
+      if (typeof options.target === 'string' && !VALID_TARGETS.includes(options.target)) {
+        return cliContractError('install', [
+          `Invalid --target: ${options.target}. Expected one of: ${VALID_TARGETS.join(', ')}`,
+        ]);
+      }
 
       // If subcommand is a runner name (not a preset name), treat it as --target
       let resolvedSubcommand = subcommand;
@@ -340,11 +446,21 @@ export async function routeCommand(
       } as UpdateOptions);
 
     case 'help':
+      return {
+        code: 0,
+        data: {
+          success: true,
+          command: 'help',
+          help: getHelp(),
+        },
+      };
+
     case 'cc-help':
       return helpCommand({
         projectRoot,
         target: options.target as string | undefined,
         output: flags.output,
+        command: 'cc-help',
       } as HelpOptions);
 
     case 'debt-harvest':
@@ -374,6 +490,9 @@ export async function routeCommand(
     case 'product':
     case 'cc-product': {
       const validSubs = ['graph', 'query', 'path', 'timeline', 'memory', 'decisions', 'insights', 'export'];
+      if (subcommand && !validSubs.includes(subcommand)) {
+        return unknownSubcommand(command, subcommand, validSubs);
+      }
       const productSub = subcommand && validSubs.includes(subcommand) ? subcommand : 'graph';
       const queryText = productSub === 'query' ? args.rest?.join(' ') : undefined;
       const pathFrom = productSub === 'path' ? args.rest?.[0] : undefined;
@@ -393,6 +512,9 @@ export async function routeCommand(
     case 'orchestrate':
     case 'cc-orchestrate': {
       const validSubs = ['status', 'next', 'run', 'cycle'];
+      if (subcommand && !validSubs.includes(subcommand)) {
+        return unknownSubcommand(command, subcommand, validSubs);
+      }
       const orchSub = subcommand && validSubs.includes(subcommand) ? subcommand : 'status';
       return orchestrateCommand({
         subcommand: orchSub,
@@ -425,19 +547,24 @@ export async function routeCommand(
       } as VerifyOptions);
 
     case 'ccep': {
-      const validSubs = ['parse', 'profile', 'resolve', 'compile', 'validate'];
+      const validSubs = ['parse', 'profile', 'resolve', 'compile', 'validate', 'evaluate'];
+      if (subcommand && !validSubs.includes(subcommand)) {
+        return unknownSubcommand('ccep', subcommand, validSubs);
+      }
       const ccepSub = subcommand && validSubs.includes(subcommand) ? subcommand : 'parse';
       const workflowCommand = (options.command as string) || undefined;
       const requestParts = args.rest ?? [];
       const userRequest =
         ccepSub === 'profile' && !workflowCommand
           ? requestParts[0]
-          : ['compile', 'resolve', 'parse'].includes(ccepSub)
+          : ['compile', 'resolve', 'parse', 'evaluate'].includes(ccepSub)
             ? requestParts.join(' ').trim()
             : requestParts.join(' ').trim();
 
       const validateRest =
-        ccepSub === 'validate' && !options.input ? requestParts : undefined;
+        (ccepSub === 'validate' || ccepSub === 'evaluate') && !options.input
+          ? requestParts
+          : undefined;
 
       return ccepCommand({
         subcommand: ccepSub,
@@ -467,7 +594,7 @@ export async function routeCommand(
         openspecSub = 'plan';
         itemId = subcommand;
       } else if (subcommand) {
-        openspecSub = subcommand;
+        return unknownSubcommand(command, subcommand, validSubs);
       }
 
       return openspecCommand({
@@ -492,6 +619,9 @@ export async function routeCommand(
         'matrix',
         'compare-models',
       ];
+      if (subcommand && !validSubs.includes(subcommand)) {
+        return unknownSubcommand(command, subcommand, validSubs);
+      }
       let scorecardSub = subcommand && validSubs.includes(subcommand) ? subcommand : 'aggregate';
       if (!subcommand || !validSubs.includes(subcommand)) {
         scorecardSub = 'aggregate';
@@ -532,13 +662,17 @@ export async function routeCommand(
     }
 
     case 'seo': {
+      const seoOptions = parseSeoOptions(options);
+      if (!seoOptions.success) {
+        return cliContractError('seo', seoOptions.errors);
+      }
       if (subcommand === 'audit') {
         return seoAuditCommand({
           url: options.url as string | undefined,
           sitemap: options.sitemap as string | undefined,
-          format: (options.format as SeoAuditOptions['format']) ?? (flags.output === 'json' ? 'json' : 'cli'),
-          failOn: (options['fail-on'] as SeoAuditOptions['failOn']) ?? 'error',
-          delay: options.delay ? parseInt(String(options.delay), 10) : 500,
+          format: seoOptions.format ?? (flags.output === 'json' ? 'json' : 'cli'),
+          failOn: seoOptions.failOn ?? 'error',
+          delay: seoOptions.delay ?? 500,
           output: options.output as string | undefined,
           followRedirects: options['follow-redirects'] === true,
           projectRoot,
@@ -550,7 +684,7 @@ export async function routeCommand(
           url: options.url as string | undefined,
           sitemap: options.sitemap as string | undefined,
           output: options.output as string | undefined,
-          delay: options.delay ? parseInt(String(options.delay), 10) : 500,
+          delay: seoOptions.delay ?? 500,
           projectRoot,
           force: flags.force,
         } as SeoLlmsOptions);

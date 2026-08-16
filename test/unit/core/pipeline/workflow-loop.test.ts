@@ -55,6 +55,25 @@ describe('core/pipeline/workflow-loop', () => {
     expect(result.technicalPlan).toEqual(PLAN);
   });
 
+  test('unanimous council escalates when a configured agent is missing', async () => {
+    const result = await runWorkflowPipeline('do the thing', {
+      callbacks: makeCallbacks({
+        runCouncilReview: async () => [approvingVerdicts[0]!],
+      }),
+      councilConfig: {
+        algorithm: 'unanimous',
+        allowSecurityVeto: true,
+        allowComplianceVeto: true,
+        expectedAgentIds: ['a1', 'a2'],
+      },
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.phase).toBe('COUNCIL');
+    expect(result.verdict?.status).toBe('ESCALATED');
+    expect(result.verdict?.summary).toMatch(/missing/i);
+  });
+
   test('INTAKE failure short-circuits the pipeline', async () => {
     const result = await run({ runIntake: async () => { throw new Error('intake boom'); } });
     expect(result.success).toBe(false);

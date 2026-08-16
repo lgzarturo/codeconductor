@@ -34,16 +34,6 @@ function extractAllBlocks(xml: string, tag: string): string[] {
   return blocks;
 }
 
-function parseUrlEntries(xml: string): SitemapEntry[] {
-  const urlBlocks = extractAllBlocks(xml, 'url');
-  return urlBlocks.map((block) => ({
-    url: extractTag(block, 'loc') ?? '',
-    lastmod: extractTag(block, 'lastmod'),
-    changefreq: extractTag(block, 'changefreq'),
-    priority: extractTag(block, 'priority'),
-  })).filter((entry) => entry.url.length > 0);
-}
-
 function parseSitemapLocs(xml: string): string[] {
   const sitemapBlocks = extractAllBlocks(xml, 'sitemap');
   if (sitemapBlocks.length > MAX_CHILD_SITEMAPS) {
@@ -106,6 +96,34 @@ interface CrawlBudget {
   urlRecords: number;
 }
 
+/**
+ * Parse and charge URL records in one scan. Duplicates and entries without
+ * `<loc>` still consume budget before materialization.
+ */
+function parseUrlEntries(xml: string, budget: CrawlBudget): SitemapEntry[] {
+  const regex = /<url[^>]*>([\s\S]*?)<\/url>/gi;
+  const entries: SitemapEntry[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(xml)) !== null) {
+    budget.urlRecords += 1;
+    if (budget.urlRecords > MAX_URL_RECORDS) {
+      throw new SitemapLimitError(
+        `Sitemap crawl exceeds the maximum of ${MAX_URL_RECORDS} urls`,
+      );
+    }
+    const block = match[1] ?? '';
+    const url = extractTag(block, 'loc') ?? '';
+    if (url.length === 0) continue;
+    entries.push({
+      url,
+      lastmod: extractTag(block, 'lastmod'),
+      changefreq: extractTag(block, 'changefreq'),
+      priority: extractTag(block, 'priority'),
+    });
+  }
+  return entries;
+}
+
 interface CrawlContext {
   readonly maxDepth: number;
   readonly requestDelay: number;
@@ -119,23 +137,6 @@ function chargeChildSitemaps(count: number, budget: CrawlBudget): void {
     throw new SitemapLimitError(
       `Sitemap crawl exceeds the maximum of ${MAX_CHILD_SITEMAPS} child sitemaps (reached ${budget.childSitemaps})`
     );
-  }
-}
-
-/**
- * Charges every `<url>` record — duplicates included — against the crawl budget
- * before any entry is materialised, and stops scanning at the first record over
- * the limit.
- */
-function chargeUrlRecords(xml: string, budget: CrawlBudget): void {
-  const regex = /<url[^>]*>[\s\S]*?<\/url>/gi;
-  while (regex.exec(xml) !== null) {
-    budget.urlRecords += 1;
-    if (budget.urlRecords > MAX_URL_RECORDS) {
-      throw new SitemapLimitError(
-        `Sitemap crawl exceeds the maximum of ${MAX_URL_RECORDS} urls`
-      );
-    }
   }
 }
 
@@ -212,9 +213,7 @@ async function parseSitemapRecursive(
     };
   }
 
-  chargeUrlRecords(xml, budget);
-
-  const entries = parseUrlEntries(xml);
+  const entries = parseUrlEntries(xml, budget);
   const deduped = deduplicateEntries(entries);
   const filtered = domain ? filterSameDomain(deduped, domain) : deduped;
 
@@ -237,9 +236,7 @@ export function parseSitemapXml(xml: string): SitemapParseResult {
     };
   }
 
-  chargeUrlRecords(xml, { childSitemaps: 0, urlRecords: 0 });
-
-  const entries = parseUrlEntries(xml);
+  const entries = parseUrlEntries(xml, { childSitemaps: 0, urlRecords: 0 });
   return {
     entries: deduplicateEntries(entries),
     type: 'urlset',

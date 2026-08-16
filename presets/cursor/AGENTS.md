@@ -84,7 +84,7 @@ introduces maintenance burden, supply-chain risk, and version conflicts.
 | Documentation update | any         | `docs`                                                      |
 | Codebase exploration | any         | `repo-explorer`                                             |
 | Code review          | any         | `reviewer`                                                  |
-| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `implementer` → `tester` |
+| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `tester` → `implementer` |
 | Security review      | high        | `security-reviewer` → `reviewer`                            |
 
 When uncertain about routing, escalate to `orchestrator`.

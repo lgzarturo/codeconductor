@@ -320,10 +320,27 @@ npx cc-codeconductor update --force
 
 ### `npx cc-codeconductor help`
 
+Shows general CLI usage and the command list (same text as `--help`).
+
+This is **not** an alias of `cc-help`.
+
+**Exit codes:**
+
+- `0` — Success
+
+**Examples:**
+
+```bash
+npx cc-codeconductor help
+npx cc-codeconductor --help
+```
+
+---
+
+### `npx cc-codeconductor cc-help`
+
 Shows the preset inventory for the active or specified target — listing skills,
 subagents, commands, and workflows available in `presets/<target>/`.
-
-**Aliases:** `cc-help`
 
 **Options:**
 
@@ -340,16 +357,13 @@ subagents, commands, and workflows available in `presets/<target>/`.
 
 ```bash
 # Show inventory for the active target
-npx cc-codeconductor help
+npx cc-codeconductor cc-help
 
 # Show inventory for a specific target
-npx cc-codeconductor help --target claude
+npx cc-codeconductor cc-help --target claude
 
 # JSON output for scripting
-npx cc-codeconductor help --output json
-
-# Using the alias
-npx cc-codeconductor cc-help
+npx cc-codeconductor cc-help --output json
 ```
 
 **JSON output shape:**
@@ -357,7 +371,7 @@ npx cc-codeconductor cc-help
 ```json
 {
   "success": true,
-  "command": "help",
+  "command": "cc-help",
   "inventory": {
     "target": "opencode",
     "skills": ["graphify", "skill-creator"],

@@ -110,7 +110,7 @@ regression.
 | Code review        | any         | `reviewer`                                                         |
 | Task unclear       | any         | `task-coach`                                                       |
 | Multi-step goal    | any         | `goal-planner` → [dependency-ordered agents]                       |
-| DDD→SDD→TDD        | any         | `contract-builder` → `architect` → `implementer` → `tester`        |
+| DDD→SDD→TDD        | any         | `contract-builder` → `architect` → `tester` → `implementer`        |
 
 ---
 

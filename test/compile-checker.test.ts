@@ -215,4 +215,32 @@ describe('runCompileCheck', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0].code).toBe('TS2322');
   });
+
+  it('kills descendants when a compile check times out', async () => {
+    const sentinel = join(testDir, 'descendant-survived.txt');
+    const childPath = join(testDir, 'descendant.mjs');
+    const parentPath = join(testDir, 'parent.mjs');
+    await writeFile(
+      childPath,
+      `import { writeFile } from 'node:fs/promises';
+await new Promise((resolve) => setTimeout(resolve, 400));
+await writeFile(${JSON.stringify(sentinel)}, 'survived');`,
+    );
+    await writeFile(
+      parentPath,
+      `import { spawn } from 'node:child_process';
+spawn(process.execPath, [${JSON.stringify(childPath)}], { stdio: 'ignore' });
+await new Promise(() => {});`,
+    );
+
+    const result = await runCompileCheck({
+      command: [process.execPath, parentPath],
+      cwd: testDir,
+      timeoutMs: 80,
+    });
+    expect(result.timedOut).toBe(true);
+
+    await Bun.sleep(600);
+    expect(await Bun.file(sentinel).exists()).toBe(false);
+  }, 5000);
 });

@@ -5,6 +5,11 @@ This document tracks the planned evolution of CodeConductor.
 Versions are sequential and intentionally constrained. Each release must be
 usable before the next begins.
 
+**Published package:** `0.5.0`. Later sections describe repository work and
+targets, not proof of publication. See
+[docs/current-status.md](docs/current-status.md) for the canonical status
+matrix.
+
 ---
 
 ## v0.1.0 — OpenCode + Claude Baseline

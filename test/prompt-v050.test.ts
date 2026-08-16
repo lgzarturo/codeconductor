@@ -83,7 +83,7 @@ describe('prompt contracts v0.5.0', () => {
     ).text();
     expect(content).toMatch(/^###\s+contract-builder/m);
     expect(content).toMatch(
-      /\|\s*DDD[→\-]>?SDD[→\-]>?TDD[^|]*\|[^|]*\|[^|]*contract-builder[^|]*architect[^|]*implementer[^|]*tester/i
+      /\|\s*DDD[→\-]>?SDD[→\-]>?TDD[^|]*\|[^|]*\|[^|]*contract-builder[^|]*architect[^|]*tester[^|]*implementer/i
     );
   });
 

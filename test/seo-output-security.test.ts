@@ -134,6 +134,49 @@ describe('SEO output containment — rejected paths', () => {
     await expect(writeContainedFile(TEST_DIR, 'report.md', 'PWNED', { force: true })).rejects.toThrow();
     expect(await readFile(resolve(OUTSIDE_DIR, 'target.md'), 'utf-8')).toBe('ORIGINAL');
   });
+
+  it('rejects an existing output file that is a symlink inside the root even with force', async () => {
+    const target = resolve(TEST_DIR, 'target.md');
+    await writeFile(target, 'ORIGINAL', 'utf-8');
+    const created = await trySymlink(target, resolve(TEST_DIR, 'report.md'), 'file');
+    if (!created) return;
+
+    await expect(
+      writeContainedFile(TEST_DIR, 'report.md', 'PWNED', { force: true }),
+    ).rejects.toThrow(/symlink|output/i);
+    expect(await readFile(target, 'utf-8')).toBe('ORIGINAL');
+  });
+
+  it('rejects writing through a directory symlink into .git even with force', async () => {
+    const gitDir = resolve(TEST_DIR, '.git');
+    await mkdir(gitDir, { recursive: true });
+    await writeFile(resolve(gitDir, 'HEAD'), 'ref: refs/heads/main', 'utf-8');
+    const created = await trySymlink(gitDir, resolve(TEST_DIR, 'evil'), 'junction');
+    if (!created) return;
+
+    expect(await resolveOutputWithinRoot(TEST_DIR, 'evil/config')).toBeUndefined();
+    await expect(
+      writeContainedFile(TEST_DIR, 'evil/config', 'PWNED', { force: true }),
+    ).rejects.toThrow(/protected|output/i);
+    expect(await readFile(resolve(gitDir, 'HEAD'), 'utf-8')).toBe('ref: refs/heads/main');
+    expect(
+      await readFile(resolve(gitDir, 'config'), 'utf-8').catch(() => undefined),
+    ).toBeUndefined();
+  });
+
+  it('rejects writing through a directory symlink into secrets even with force', async () => {
+    const secretsDir = resolve(TEST_DIR, 'secrets');
+    await mkdir(secretsDir, { recursive: true });
+    await writeFile(resolve(secretsDir, 'token'), 'ORIGINAL', 'utf-8');
+    const created = await trySymlink(secretsDir, resolve(TEST_DIR, 'alias'), 'junction');
+    if (!created) return;
+
+    expect(await resolveOutputWithinRoot(TEST_DIR, 'alias/token')).toBeUndefined();
+    await expect(
+      writeContainedFile(TEST_DIR, 'alias/token', 'PWNED', { force: true }),
+    ).rejects.toThrow(/protected|output/i);
+    expect(await readFile(resolve(secretsDir, 'token'), 'utf-8')).toBe('ORIGINAL');
+  });
 });
 
 // ─── Allowed output paths ────────────────────────────────────────────────────
@@ -315,5 +358,93 @@ describe('SEO commands reject escaping --output before doing any work', () => {
     expect(
       await readFile(resolve(OUTSIDE_DIR, 'report.md'), 'utf-8').catch(() => undefined),
     ).toBeUndefined();
+  });
+});
+
+describe('SEO commands preflight protected and existing outputs before network work', () => {
+  const invalidUrl = 'not-a-valid-url';
+  const protectedOutputs = ['.env', '.git/seo-report.md', 'secrets/seo-report.md'] as const;
+
+  for (const output of protectedOutputs) {
+    it(`seo audit rejects protected output ${output} even with force`, async () => {
+      const result = await seoAuditCommand({
+        url: invalidUrl,
+        format: 'markdown',
+        failOn: 'error',
+        delay: 0,
+        output,
+        followRedirects: false,
+        projectRoot: TEST_DIR,
+        force: true,
+      });
+
+      expect(result.code).toBe(1);
+      expect((result.data as { errors: string[] }).errors.join(' ')).toMatch(/output|protected/i);
+    });
+
+    it(`seo llms rejects protected output ${output} even with force`, async () => {
+      const result = await seoLlmsCommand({
+        url: invalidUrl,
+        output,
+        delay: 0,
+        projectRoot: TEST_DIR,
+        force: true,
+      });
+
+      expect(result.code).toBe(1);
+      expect((result.data as { errors: string[] }).errors.join(' ')).toMatch(/output|protected/i);
+    });
+  }
+
+  it('seo audit rejects an existing output without force before URL processing', async () => {
+    await writeFile(resolve(TEST_DIR, 'existing.md'), 'ORIGINAL', 'utf-8');
+
+    const result = await seoAuditCommand({
+      url: invalidUrl,
+      format: 'markdown',
+      failOn: 'error',
+      delay: 0,
+      output: 'existing.md',
+      followRedirects: false,
+      projectRoot: TEST_DIR,
+    });
+
+    expect(result.code).toBe(1);
+    expect(await readFile(resolve(TEST_DIR, 'existing.md'), 'utf-8')).toBe('ORIGINAL');
+  });
+
+  it('seo llms rejects an existing output without force before URL processing', async () => {
+    await writeFile(resolve(TEST_DIR, 'existing.txt'), 'ORIGINAL', 'utf-8');
+
+    const result = await seoLlmsCommand({
+      url: invalidUrl,
+      output: 'existing.txt',
+      delay: 0,
+      projectRoot: TEST_DIR,
+    });
+
+    expect(result.code).toBe(1);
+    expect(await readFile(resolve(TEST_DIR, 'existing.txt'), 'utf-8')).toBe('ORIGINAL');
+  });
+
+  it('seo audit rejects a directory symlink into .git before network work', async () => {
+    const gitDir = resolve(TEST_DIR, '.git');
+    await mkdir(gitDir, { recursive: true });
+    const created = await trySymlink(gitDir, resolve(TEST_DIR, 'evil'), 'junction');
+    if (!created) return;
+
+    const result = await seoAuditCommand({
+      url: invalidUrl,
+      format: 'markdown',
+      failOn: 'error',
+      delay: 0,
+      output: 'evil/seo-report.md',
+      followRedirects: false,
+      projectRoot: TEST_DIR,
+      force: true,
+    });
+
+    expect(result.code).toBe(1);
+    expect((result.data as { errors: string[] }).errors.join(' ')).toMatch(/output|protected/i);
   });
 });

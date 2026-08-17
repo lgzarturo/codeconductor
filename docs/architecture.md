@@ -3,15 +3,14 @@
 ## Purpose
 
 CodeConductor installs reproducible AI-assisted engineering workflows into
-software projects.
+software projects. The published package version is defined by `package.json`;
+see [current-status.md](current-status.md) for the canonical shipped/planned
+matrix.
 
-It is not a prompt collection. In v0.1.x, it is a documentation-first preset
-framework: teams manually install versioned agent contracts, routing rules,
-skills, and policy templates into the repository.
-
-The CLI configurator is planned. Once implemented, it will detect the stack,
-resolve the matching preset, and write a structured, idempotent set of agent
-contracts, routing rules, and skill definitions into the repository.
+It is not a prompt collection. The CLI installs versioned agent contracts,
+routing rules, skills, policy templates, and workflow commands into a target
+repository. Product OS modules also exist in the repository, but remain
+implemented-unreleased until a package version that includes them is published.
 
 The output is commitable, reviewable, and reproducible — identical on any
 machine, for any team member, across time.
@@ -20,8 +19,9 @@ machine, for any team member, across time.
 
 ## Core Pipeline
 
-**Status:** Planned for the CLI runtime. Manual preset installation is the
-implemented v0.1.x path.
+**Status:** The scan/classify/render pipeline is implemented by the CLI.
+The separate 8-phase multi-agent workflow loop remains an experimental,
+library-only API.
 
 ```text
 scan → classify → resolve preset → render → merge → validate

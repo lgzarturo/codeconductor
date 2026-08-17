@@ -133,14 +133,28 @@ describe('councilConsensus — security veto override', () => {
 // ─── Unanimous Algorithm ───────────────────────────────────────────────────────
 
 describe('councilConsensus — unanimous algorithm', () => {
-  test('APPROVED when all approve', () => {
+  test('APPROVED when all approve and the roster is complete', () => {
+    const verdicts = [
+      makeVerdict('architect', 'APPROVED'),
+      makeVerdict('security', 'APPROVED'),
+      makeVerdict('devil', 'APPROVED'),
+    ];
+    const result = councilConsensus(verdicts, {
+      ...UNANIMOUS_CONFIG,
+      expectedAgentIds: ['architect', 'security', 'devil'],
+    });
+    expect(result.status).toBe('APPROVED');
+  });
+
+  test('ESCALATED when all approve but no roster is configured', () => {
     const verdicts = [
       makeVerdict('architect', 'APPROVED'),
       makeVerdict('security', 'APPROVED'),
       makeVerdict('devil', 'APPROVED'),
     ];
     const result = councilConsensus(verdicts, UNANIMOUS_CONFIG);
-    expect(result.status).toBe('APPROVED');
+    expect(result.status).toBe('ESCALATED');
+    expect(result.summary).toContain('roster');
   });
 
   test('REJECTED when one rejects (not unanimous)', () => {

@@ -36,8 +36,9 @@ contracts, task cards, and risk-based routing.
 >   a sitemap.xml with rate limiting and SSRF prevention
 > - `npx cc-codeconductor seo llms --sitemap <url>` — generates a `llms.txt` file
 >   for AI-search readiness from sitemap content
-> - `npx cc-codeconductor help` (alias: `cc-help`) — shows preset inventory
->   (skills, subagents, commands) for the active or specified target
+> - `npx cc-codeconductor help` / `--help` — general CLI usage and command list
+> - `npx cc-codeconductor cc-help` — preset inventory (skills, subagents,
+>   commands) for the active or specified target
 > - `npx cc-codeconductor debt-harvest` (alias: `harvest`) — scans source files
 >   for `// defer` comments and writes `.codeconductor/debt-ledger.md`
 > - `npx cc-codeconductor goal "<objective>"` (alias: `cc-goal`) — decomposes an
@@ -61,11 +62,11 @@ contracts, task cards, and risk-based routing.
 >   `jpa-nplusone-detector`, `spring-auth-auditor`, `livewire-alpine-bridge`,
 >   `fastapi-pydantic-strict`, `tdd-mutation-tester`, `auth-token-inspector` —
 >   loaded automatically by the matching preset.
-> - **Workflow Loop Core (v0.4.0)** — 8-phase pipeline
+> - **Workflow Loop Core (v0.4.0, experimental)** — library-only 8-phase pipeline
 >   (`intake → structure → design → test → implement → validate → council →
 >   compact`) with operational guardrails (wall-clock timeout, max files
 >   modified, max lines changed) and human-in-the-loop STOP gates after Design
->   and Council Verdict.
+>   and Council Verdict. Prefer CCEP slash-command workflows for production.
 > - **Council consensus v0.4.0** — agent confidence thresholds
 >   (`< 0.6` per-agent or `< 0.7` average escalates) and a `complianceVeto`
 >   channel that overrides majority the same way `securityVeto` does.
@@ -171,7 +172,7 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 - Provider-agnostic `AgentContract` abstraction with target renderers for Claude, OpenCode, Codex, and Agy
 - Council consensus engine (`councilConsensus()`) for multi-agent governance with majority/unanimous algorithms, security veto, **compliance veto**, and **agent confidence thresholds** (v0.4.0)
 - Phase 5 runtime modules — scoped context injection, TDD history compaction, concise inter-agent messaging, and token budget enforcement in the compile-fix loop
-- **Workflow Loop Core (v0.4.0)** — 8-phase pipeline (`runWorkflowPipeline`) with wall-clock / files-modified / lines-changed guardrails and STOP gates at Design and Council Verdict
+- **Workflow Loop Core (v0.4.0, experimental)** — 8-phase pipeline (`runWorkflowPipeline`) with wall-clock / files-modified / lines-changed guardrails and STOP gates at Design and Council Verdict (library-only; not a shipped CLI runtime)
 - **Stack-specific presets (v0.4.0)** — `ts-next-drizzle`, `spring-kotlin-jpa`, `laravel-tall`, `python-data-api`
 - **9 specialized skills (v0.4.0)** — drizzle-schema-architect, tailwind-responsive-auditor, seo-analytics-injector, jpa-nplusone-detector, spring-auth-auditor, livewire-alpine-bridge, fastapi-pydantic-strict, tdd-mutation-tester, auth-token-inspector
 - **Goal orchestration (v0.4.0)** — `goal` planner + `goal-state` writer feed the orchestrator's dependency-order delegation loop
@@ -295,7 +296,12 @@ const next = getPreset('ts-next-drizzle');
 ```
 
 `init` / `detect` identifies the stack from the project and wires the
-matching specialized skills automatically when you run `install preset`.
+matching specialized skills onto the **generic** target workflow when you run
+`install preset`. Full stack-specific asset pruning/replacement (swapping the
+entire agent/command tree for a stack pack) is **not implemented yet** — the
+registry and skill wiring are real; treat claims of a full stack install swap
+as aspirational until that lands.
+
 The full set of assets for a stack-specific preset is in
 `presets/<preset-name>/agents/` — copy them manually if you need to apply a
 preset by name.
@@ -350,17 +356,19 @@ npx cc-codeconductor update --global
 
 Smart updates all currently installed target presets, council configurations, and skills (from `skills-lock.json`), preserving user edits outside managed blocks. Also validates that `AGENTS.md` and `CLAUDE.md` do not exceed the 40KB size limit.
 
-#### `help` — show preset inventory
+#### `help` / `cc-help` — distinct help contracts
 
 ```bash
-npx cc-codeconductor help                    # show inventory for active target
-npx cc-codeconductor help --target claude    # show inventory for specific target
-npx cc-codeconductor cc-help                 # alias
-npx cc-codeconductor help --output json      # machine-readable output
+npx cc-codeconductor help                    # general CLI usage
+npx cc-codeconductor --help                  # same general usage text
+npx cc-codeconductor cc-help                 # preset inventory for active target
+npx cc-codeconductor cc-help --target claude # inventory for a specific target
+npx cc-codeconductor cc-help --output json   # machine-readable inventory
 ```
 
-Lists the skills, subagents, commands, and workflows available in the active
-preset. Reads from `presets/<target>/` in the project root.
+`help` prints the CLI command list. `cc-help` lists skills, subagents,
+commands, and workflows for the active preset (or a specified `--target`).
+Reads inventory from `presets/<target>/` in the project root.
 
 #### `debt-harvest` — collect deferred debt items
 
@@ -534,13 +542,17 @@ codeconductor/
 
 ## Roadmap
 
+Current package status and the distinction between shipped,
+implemented-unreleased, experimental, and planned capabilities are tracked in
+[docs/current-status.md](docs/current-status.md).
+
 | Version    | Focus                                                       |
 | ---------- | ----------------------------------------------------------- |
 | **v0.2.0** | **CLI: init, detect, install, doctor, update — shipped** ✅ |
 | v0.3.0     | Next.js, FastAPI, generic presets, monorepo support         |
 | **v0.4.0** | **Workflow Loop Core, stack-specific presets, 9 specialized skills, confidence thresholds + compliance veto in council consensus, goal orchestration, memory compression — shipped** ✅ |
 | v0.5.0     | Scorecard CLI, prompt contracts v0.5.0 (Evaluation gate, 3 new agents, Grok fallback) — shipped ✅ |
-| v1.0.0     | Stable contracts, stable routing, documented evaluation     |
+| v1.0.0     | Product OS modules implemented in repository; release remains unpublished while package version is `0.5.0` |
 
 See [ROADMAP.md](ROADMAP.md) for details.
 

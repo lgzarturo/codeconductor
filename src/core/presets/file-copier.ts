@@ -1,6 +1,6 @@
-import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { lstat, readdir, readFile, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { dirname, join, relative, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import {
   getLanguageInstruction,
   LOCALE_PLACEHOLDER,
@@ -19,6 +19,7 @@ import {
   MANAGED_END_MARKER,
   mergeManagedBlock,
 } from '../filesystem/safe-merger';
+import { writeContainedFile } from '../filesystem/path-containment';
 import { detectComplementaryTools } from './complementary-detector';
 
 export type FileAction = 'written' | 'appended' | 'merged' | 'skipped' | 'error';
@@ -390,10 +391,27 @@ export async function applySingleFile(
   dryRun: boolean,
   isTemplate: boolean,
   modelConfig: ModelConfig | null,
-  locale: string
+  locale: string,
+  /** Containment root for the final write. Required for any non-dry-run write. */
+  baseDir?: string
 ): Promise<FileCopyResult> {
   if (strategy === 'skip') {
     return { src: srcPath, dest: destPath, action: 'skipped', dryRun };
+  }
+
+  try {
+    if ((await lstat(destPath)).isSymbolicLink()) {
+      return {
+        src: srcPath,
+        dest: destPath,
+        action: 'error',
+        error: `Destination is a symlink: ${destPath}`,
+      };
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      return { src: srcPath, dest: destPath, action: 'error', error: String(error) };
+    }
   }
 
   if (strategy === 'overwrite' && !force && (await fileExists(destPath))) {
@@ -467,9 +485,22 @@ export async function applySingleFile(
     return { src: srcPath, dest: destPath, action, dryRun: true };
   }
 
+  if (baseDir === undefined) {
+    return {
+      src: srcPath,
+      dest: destPath,
+      action: 'error',
+      error: 'baseDir is required for contained writes',
+    };
+  }
+
   try {
-    await mkdir(dirname(destPath), { recursive: true });
-    await writeFile(destPath, finalContent, 'utf-8');
+    // The install target is the containment root: a junction planted inside it
+    // must not redirect a preset file outside, and `.git`/`secrets` stay
+    // off-limits even when a manifest names them.
+    await writeContainedFile(baseDir, relative(baseDir, destPath), finalContent, {
+      force: true,
+    });
     return { src: srcPath, dest: destPath, action };
   } catch (e) {
     return { src: srcPath, dest: destPath, action: 'error', error: String(e) };
@@ -507,7 +538,17 @@ export async function copyFromManifest(
 
     for (const { src, dest } of files) {
       results.push(
-        await applySingleFile(src, dest, strategy, force, dryRun, isTemplate, modelConfig, locale)
+        await applySingleFile(
+          src,
+          dest,
+          strategy,
+          force,
+          dryRun,
+          isTemplate,
+          modelConfig,
+          locale,
+          resolvedBaseDir
+        )
       );
     }
   }

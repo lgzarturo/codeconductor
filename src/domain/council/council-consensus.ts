@@ -29,7 +29,10 @@ export interface ConsensusConfig {
   readonly algorithm: 'majority' | 'unanimous';
   readonly allowSecurityVeto: boolean;
   readonly allowComplianceVeto?: boolean;
-  /** Roster expected to vote under the unanimous algorithm. Ignored by majority. */
+  /**
+   * Roster expected to vote under the unanimous algorithm, which cannot approve
+   * without it. Ignored by majority.
+   */
   readonly expectedAgentIds?: readonly string[];
 }
 
@@ -110,20 +113,22 @@ function unanimousFailure(
     return `duplicate verdicts from ${[...duplicates].join(', ')}`;
   }
 
-  if (expectedAgentIds !== undefined) {
-    const missing = expectedAgentIds.filter(
-      (id) => !seen.has(canonicalAgentId(id)),
-    );
-    if (missing.length > 0) {
-      return `missing verdicts from ${missing.join(', ')}`;
-    }
-    const expected = new Set(expectedAgentIds.map(canonicalAgentId));
-    const unexpected = verdicts
-      .filter((v) => !expected.has(canonicalAgentId(v.agentId)))
-      .map((v) => v.agentId);
-    if (unexpected.length > 0) {
-      return `unexpected verdicts from ${unexpected.join(', ')}`;
-    }
+  // Unanimity is only meaningful against a declared roster: without one, an
+  // agent that was never asked is indistinguishable from one that approved.
+  if (expectedAgentIds === undefined) {
+    return 'missing expected agent roster';
+  }
+
+  const missing = expectedAgentIds.filter((id) => !seen.has(canonicalAgentId(id)));
+  if (missing.length > 0) {
+    return `missing verdicts from ${missing.join(', ')}`;
+  }
+  const expected = new Set(expectedAgentIds.map(canonicalAgentId));
+  const unexpected = verdicts
+    .filter((v) => !expected.has(canonicalAgentId(v.agentId)))
+    .map((v) => v.agentId);
+  if (unexpected.length > 0) {
+    return `unexpected verdicts from ${unexpected.join(', ')}`;
   }
 
   const nonApproving = verdicts.filter((v) => v.status !== 'APPROVED').length;
@@ -142,10 +147,11 @@ function unanimousFailure(
  *  - Compliance veto (complianceVeto=true + REJECTED) overrides majority → REJECTED
  *  - confidence check: if any agent's confidence < 0.6, or average confidence < 0.7 → ESCALATED
  *  - majority: APPROVED if approvedCount > rejectedCount
- *  - unanimous: APPROVED only if every required agent approved exactly once —
- *    missing, duplicate, unexpected, abstaining or invalid verdicts → ESCALATED.
- *    The required set is `config.expectedAgentIds` when provided, otherwise the
- *    distinct agents that submitted a verdict.
+ *  - unanimous: APPROVED only if every agent in `config.expectedAgentIds`
+ *    approved exactly once — missing, duplicate, unexpected, abstaining or
+ *    invalid verdicts → ESCALATED. The roster is mandatory: without it there is
+ *    no way to tell a silenced agent from an approving one, so a unanimous
+ *    config that omits it always escalates.
  *  - No majority and no veto → ESCALATED
  *  - Empty input → ESCALATED
  */

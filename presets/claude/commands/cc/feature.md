@@ -17,8 +17,9 @@ Command: `feature` (fixed for this workflow — do not infer from user text)
 1. Run: `npx cc-codeconductor ccep parse --command feature "$ARGUMENTS" --output json`
 2. Run: `npx cc-codeconductor ccep resolve --command feature "$ARGUMENTS" --output json`
 3. Run: `npx cc-codeconductor ccep profile feature --output json`
-4. If the ConfirmationGate stops the flow, show questions or risks and wait for human input.
+4. After planner/intake JSON is available, run: `npx cc-codeconductor ccep evaluate --command feature --input <planner.json> --output json`. If `stop` is true, show questions or risks and wait for human input.
 5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+   Canonical delivery order is test-before-implement whenever both phases apply.
 
 ---
 
@@ -55,7 +56,20 @@ not proceed to implementation until the plan is approved.**
 
 ---
 
-## Step 3 — Implementation (Implementer role)
+## Step 3 — Test coverage (Tester role)
+
+Adopt the **Tester** role as defined in `CLAUDE.md`.
+
+Use the Implementation Summary and the Task Card.
+
+1. Write or extend failing tests for the new behavior before implementation (RED).
+2. Ensure all acceptance criteria from the Task Card have at least one test.
+3. Run the full test suite and confirm it passes.
+4. Produce a Test Report: test files added or modified, cases covered.
+
+---
+
+## Step 4 — Implementation (Implementer role)
 
 Adopt the **Implementer** role as defined in `CLAUDE.md`.
 
@@ -64,22 +78,9 @@ Implementer creates a Git Worktree before touching any file; all edits happen in
 
 1. Read the Technical Plan before touching any file.
 2. Apply the minimal diff — only what the plan specifies.
-3. Run the project test suite after implementation.
+3. Run the project test suite and make the previously written failing tests pass.
 4. Produce an Implementation Summary: what changed, which files, how to verify
    locally.
-
----
-
-## Step 4 — Test coverage (Tester role)
-
-Adopt the **Tester** role as defined in `CLAUDE.md`.
-
-Use the Implementation Summary and the Task Card.
-
-1. Write or extend tests to cover the new behavior.
-2. Ensure all acceptance criteria from the Task Card have at least one test.
-3. Run the full test suite and confirm it passes.
-4. Produce a Test Report: test files added or modified, cases covered.
 
 ---
 

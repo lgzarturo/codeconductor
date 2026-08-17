@@ -47,7 +47,7 @@ Read the risk field from the Task Card and follow the corresponding route.
 Applies when: the bug is isolated to a single component, existing tests cover
 the affected code, and no public API or shared state is involved.
 
-Route: `task-coach` → `implementer` → `tester`
+Route: `task-coach` → `tester` → `implementer`
 
 Proceed directly to Step 3a.
 
@@ -56,7 +56,7 @@ Proceed directly to Step 3a.
 Applies when: the bug touches shared state, a public API, auth or payment paths,
 database writes, or the root cause is not yet understood.
 
-Route: `task-coach` → `architect` → `implementer` → `tester` → `reviewer`
+Route: `task-coach` → `architect` → `tester` → `implementer` → `reviewer`
 
 Invoke `architect` before implementation. architect must:
 

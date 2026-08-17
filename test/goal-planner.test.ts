@@ -113,7 +113,7 @@ describe('goal-planner', () => {
     }
   });
 
-  test('AC3: auth template produces Database → API Contract → Implementation → Tests chain', () => {
+  test('AC3: auth template produces Database → API Contract → Tests → Implementation chain', () => {
     const graph = planGoal('Create a login system');
     const tasks = graph.tasks;
 
@@ -127,22 +127,64 @@ describe('goal-planner', () => {
     const apiTitle = tasks[1].title.toLowerCase();
     expect(apiTitle).toMatch(/api|contract|endpoint/);
 
-    // The third must be the implementation
-    expect(tasks[2].id).toBe('auth-impl');
-    const implTitle = tasks[2].title.toLowerCase();
-    expect(implTitle).toMatch(/implement/);
-
-    // The fourth must be tests
-    expect(tasks[3].id).toBe('auth-tests');
-    const testsTitle = tasks[3].title.toLowerCase();
+    // The third must be the tests, which are written against the contract
+    expect(tasks[2].id).toBe('auth-tests');
+    const testsTitle = tasks[2].title.toLowerCase();
     expect(testsTitle).toMatch(/test/);
-    expect(tasks[3].type).toBe('test');
+    expect(tasks[2].type).toBe('test');
+
+    // The fourth must be the implementation that makes those tests pass
+    expect(tasks[3].id).toBe('auth-impl');
+    const implTitle = tasks[3].title.toLowerCase();
+    expect(implTitle).toMatch(/implement/);
 
     // The chain order must be strictly linear
     expect(tasks[0].depends_on).toEqual([]);
     expect(tasks[1].depends_on).toEqual(['auth-schema']);
     expect(tasks[2].depends_on).toEqual(['auth-api']);
-    expect(tasks[3].depends_on).toEqual(['auth-impl']);
+    expect(tasks[3].depends_on).toEqual(['auth-tests']);
+  });
+
+  describe('every template defines tests before production implementation', () => {
+    const expectedOrders = [
+      ['auth', 'Create a login system', ['auth-schema', 'auth-api', 'auth-tests', 'auth-impl']],
+      ['crud', 'Build a CRUD resource', ['crud-model', 'crud-tests', 'crud-service', 'crud-api']],
+      [
+        'search',
+        'Add full-text search',
+        ['search-schema', 'search-tests', 'search-service', 'search-api'],
+      ],
+      [
+        'notification',
+        'Send email notifications',
+        ['notif-model', 'notif-tests', 'notif-service', 'notif-api'],
+      ],
+      [
+        'migration',
+        'Run a database migration to add a column',
+        ['migrate-tests', 'migrate-script', 'migrate-model', 'migrate-dal'],
+      ],
+      ['generic', 'Tidy up the build system', ['plan-scope', 'plan-design', 'plan-tests', 'plan-impl']],
+    ] as const;
+
+    for (const [label, objective, order] of expectedOrders) {
+      test(`${label} template orders tasks ${order.join(' → ')}`, () => {
+        const tasks = planGoal(objective).tasks;
+
+        expect(tasks.map((t) => t.id)).toEqual([...order]);
+
+        const testIdx = tasks.findIndex((t) => t.type === 'test');
+        expect(testIdx, `${label} must contain a test task`).toBeGreaterThanOrEqual(0);
+        expect(
+          testIdx,
+          `${label} must not leave tests for last`,
+        ).toBeLessThan(tasks.length - 1);
+
+        // The dependency edges, not just the listing order, must enforce it: the
+        // task after the tests has to wait for them.
+        expect(tasks[testIdx + 1]!.depends_on).toContain(tasks[testIdx]!.id);
+      });
+    }
   });
 
   test('partial keyword "login" matches auth template', () => {

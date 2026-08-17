@@ -26,8 +26,8 @@ describe('ccep workflow profiles', () => {
     expect(profile.phases.map((p) => p.id)).toEqual([
       'intake',
       'design',
-      'implement',
       'test',
+      'implement',
       'review',
       'docs',
     ]);

@@ -146,35 +146,47 @@ export function aggregateOutcomes(outcomes: TaskOutcomeInput[]): {
 
   const byAgent: Record<string, { count: number; avgScore: number }> = {};
   const byModel: Record<string, { count: number; avgScore: number; avgCost?: number; avgTokens?: number }> = {};
+  const agentScoreCounts: Record<string, number> = {};
+  const modelScoreCounts: Record<string, number> = {};
+  const modelCostCounts: Record<string, number> = {};
+  const modelTokenCounts: Record<string, number> = {};
 
   for (const o of outcomes) {
     if (!byAgent[o.agent]) byAgent[o.agent] = { count: 0, avgScore: 0 };
     byAgent[o.agent].count++;
     if (o.weightedScore !== undefined) {
       byAgent[o.agent].avgScore += o.weightedScore;
+      agentScoreCounts[o.agent] = (agentScoreCounts[o.agent] ?? 0) + 1;
     }
 
     if (!byModel[o.model]) byModel[o.model] = { count: 0, avgScore: 0 };
     byModel[o.model].count++;
-    if (o.weightedScore !== undefined) byModel[o.model].avgScore += o.weightedScore;
+    if (o.weightedScore !== undefined) {
+      byModel[o.model].avgScore += o.weightedScore;
+      modelScoreCounts[o.model] = (modelScoreCounts[o.model] ?? 0) + 1;
+    }
     if (o.costUsd !== undefined) {
       byModel[o.model].avgCost = (byModel[o.model].avgCost ?? 0) + o.costUsd;
+      modelCostCounts[o.model] = (modelCostCounts[o.model] ?? 0) + 1;
     }
-    const tokens = (o.tokensIn ?? 0) + (o.tokensOut ?? 0);
-    if (tokens > 0) {
+    if (o.tokensIn !== undefined || o.tokensOut !== undefined) {
+      const tokens = (o.tokensIn ?? 0) + (o.tokensOut ?? 0);
       byModel[o.model].avgTokens = (byModel[o.model].avgTokens ?? 0) + tokens;
+      modelTokenCounts[o.model] = (modelTokenCounts[o.model] ?? 0) + 1;
     }
   }
 
   for (const agent of Object.keys(byAgent)) {
     const entry = byAgent[agent];
-    entry.avgScore = entry.count > 0 ? entry.avgScore / entry.count : 0;
+    const scoreCount = agentScoreCounts[agent] ?? 0;
+    entry.avgScore = scoreCount > 0 ? entry.avgScore / scoreCount : 0;
   }
   for (const model of Object.keys(byModel)) {
     const entry = byModel[model];
-    entry.avgScore = entry.count > 0 ? entry.avgScore / entry.count : 0;
-    if (entry.avgCost !== undefined) entry.avgCost /= entry.count;
-    if (entry.avgTokens !== undefined) entry.avgTokens /= entry.count;
+    const scoreCount = modelScoreCounts[model] ?? 0;
+    entry.avgScore = scoreCount > 0 ? entry.avgScore / scoreCount : 0;
+    if (entry.avgCost !== undefined) entry.avgCost /= modelCostCounts[model]!;
+    if (entry.avgTokens !== undefined) entry.avgTokens /= modelTokenCounts[model]!;
   }
 
   return {

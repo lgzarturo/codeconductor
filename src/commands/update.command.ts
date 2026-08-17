@@ -185,25 +185,23 @@ export async function updateCommand(
 
             if (installer) {
               const generatedFiles = await installer.generate();
-              const resolvedFiles = generatedFiles.map((f) => {
-                let targetPath = f.path;
-                let targetBase = basePath;
-
-                if ((targetName === 'agy' || targetName === 'gemini') && isGlobal) {
-                  targetBase = resolve(homedir(), '.gemini', 'config');
-                  targetPath = targetPath.replace(/^\.agents\/?/, '');
-                }
-
-                return {
-                  ...f,
-                  path: resolve(targetBase, targetPath),
-                };
-              });
+              const isAgyGlobal =
+                (targetName === 'agy' || targetName === 'gemini') && isGlobal;
+              const targetBase = isAgyGlobal
+                ? resolve(homedir(), '.gemini', 'config')
+                : basePath;
+              const resolvedFiles = generatedFiles.map((f) => ({
+                ...f,
+                path: resolve(
+                  targetBase,
+                  isAgyGlobal ? f.path.replace(/^\.agents\/?/, '') : f.path
+                ),
+              }));
 
               // Filter to files that actually need updates
               const filesToWrite = resolvedFiles.filter((f) => t.files.includes(f.path));
               if (filesToWrite.length > 0) {
-                const writeResults = await writeGeneratedFiles(filesToWrite, { dryRun: false, force: true, config });
+                const writeResults = await writeGeneratedFiles(filesToWrite, { dryRun: false, force: true, config, projectRoot: targetBase });
                 for (const wr of writeResults) {
                   if (wr.success) {
                     updated.push(wr.path);

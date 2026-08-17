@@ -2,9 +2,11 @@ import { constants } from 'node:fs';
 import { access } from 'node:fs/promises';
 
 /**
- * Protected paths that should not be modified
+ * Protected names that should not be modified. Matched per path segment, so
+ * `.env.local` and `credentials.json` are covered by their base name while
+ * lookalikes such as `environment` or `mycredentials` are not.
  */
-const PROTECTED_PATHS = ['.git', '.env', '.env.local', '.env.production', 'secrets', 'credentials'];
+const PROTECTED_PATHS = ['.git', '.env', 'secrets', 'credentials'];
 
 /**
  * A credential pattern match in file content.
@@ -68,8 +70,12 @@ export async function fileExists(dir: string, filename: string): Promise<boolean
  * Check if path is protected
  */
 export function isProtectedPath(path: string): boolean {
-  const normalized = path.toLowerCase();
-  return PROTECTED_PATHS.some((p) => normalized.includes(p.toLowerCase()));
+  const segments = path.toLowerCase().replace(/\\/g, '/').split('/');
+  return segments.some((segment) =>
+    PROTECTED_PATHS.some(
+      (protectedName) => segment === protectedName || segment.startsWith(`${protectedName}.`)
+    )
+  );
 }
 
 /**
@@ -91,15 +97,23 @@ export async function isWritable(dir: string): Promise<boolean> {
   }
 }
 
+/** Escape every regex metacharacter so a keyword is matched as literal text. */
+function regexEscape(literal: string): string {
+  return literal.replace(/[.*+?^${}()|[\]\\/-]/g, '\\$&');
+}
+
 /**
  * Build regex patterns from config secretPatterns.
  * Each pattern is matched as: <keyword>\s*[:=]\s*[^\s]{8,}
  *
  * Legacy keyword matching — only applied to patterns a project opts into.
+ * Keywords are plain strings, not regexes: they are escaped before
+ * interpolation, so metacharacters cannot alter the shape of the match, make
+ * the pattern uncompilable, or introduce catastrophic backtracking.
  */
 function buildCredentialRegexes(patterns: ReadonlyArray<string>): RegExp[] {
   return patterns.map(
-    (keyword) => new RegExp(`(?:${keyword})\\s*[:=]\\s*[^\\s]{8,}`, 'i')
+    (keyword) => new RegExp(`(?:${regexEscape(keyword)})\\s*[:=]\\s*[^\\s]{8,}`, 'i')
   );
 }
 

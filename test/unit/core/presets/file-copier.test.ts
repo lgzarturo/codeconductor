@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -137,8 +137,27 @@ describe('core/presets/file-copier', () => {
     test("skip strategy reports 'skipped' without touching the FS", async () => {
       const dir = await tmp('dst-');
       const dest = join(dir, 'out.md');
-      const result = await applySingleFile('any', dest, 'skip', false, false, false, null, 'en');
+      const result = await applySingleFile('any', dest, 'skip', false, false, false, null, 'en', dir);
       expect(result.action).toBe('skipped');
+      expect(existsSync(dest)).toBe(false);
+    });
+
+    test('rejects writes when baseDir is omitted', async () => {
+      const src = await srcFile('hello');
+      const dir = await tmp('dst-');
+      const dest = join(dir, 'out.md');
+      const result = await applySingleFile(
+        src,
+        dest,
+        'overwrite',
+        false,
+        false,
+        false,
+        null,
+        'en',
+      );
+      expect(result.action).toBe('error');
+      expect(result.error).toMatch(/baseDir is required/i);
       expect(existsSync(dest)).toBe(false);
     });
 
@@ -146,7 +165,7 @@ describe('core/presets/file-copier', () => {
       const src = await srcFile('hello');
       const dir = await tmp('dst-');
       const dest = join(dir, 'nested', 'out.md');
-      const result = await applySingleFile(src, dest, 'overwrite', false, false, false, null, 'en');
+      const result = await applySingleFile(src, dest, 'overwrite', false, false, false, null, 'en', dir);
       expect(result.action).toBe('written');
       expect(await readFile(dest, 'utf-8')).toBe('hello');
     });
@@ -156,7 +175,7 @@ describe('core/presets/file-copier', () => {
       const dir = await tmp('dst-');
       const dest = join(dir, 'out.md');
       await writeFile(dest, 'OLD');
-      const result = await applySingleFile(src, dest, 'overwrite', false, false, false, null, 'en');
+      const result = await applySingleFile(src, dest, 'overwrite', false, false, false, null, 'en', dir);
       expect(result.action).toBe('skipped');
       expect(await readFile(dest, 'utf-8')).toBe('OLD');
     });
@@ -166,16 +185,47 @@ describe('core/presets/file-copier', () => {
       const dir = await tmp('dst-');
       const dest = join(dir, 'out.md');
       await writeFile(dest, 'OLD');
-      const result = await applySingleFile(src, dest, 'overwrite', true, false, false, null, 'en');
+      const result = await applySingleFile(src, dest, 'overwrite', true, false, false, null, 'en', dir);
       expect(result.action).toBe('written');
       expect(await readFile(dest, 'utf-8')).toBe('NEW');
+    });
+
+    test('force overwrite rejects a destination symlink and preserves its target', async () => {
+      const src = await srcFile('PWNED');
+      const dir = await tmp('dst-');
+      const target = join(dir, 'target.md');
+      const dest = join(dir, 'out.md');
+      await writeFile(target, 'ORIGINAL');
+      try {
+        await symlink(target, dest, 'file');
+      } catch (error) {
+        const code = (error as NodeJS.ErrnoException).code;
+        if (code === 'EPERM' || code === 'EACCES') return;
+        throw error;
+      }
+
+      const result = await applySingleFile(
+        src,
+        dest,
+        'overwrite',
+        true,
+        false,
+        false,
+        null,
+        'en',
+        dir,
+      );
+
+      expect(result.action).toBe('error');
+      expect(result.error).toMatch(/symlink/i);
+      expect(await readFile(target, 'utf-8')).toBe('ORIGINAL');
     });
 
     test('dry-run reports the action but writes nothing', async () => {
       const src = await srcFile('hello');
       const dir = await tmp('dst-');
       const dest = join(dir, 'out.md');
-      const result = await applySingleFile(src, dest, 'overwrite', false, true, false, null, 'en');
+      const result = await applySingleFile(src, dest, 'overwrite', false, true, false, null, 'en', dir);
       expect(result.dryRun).toBe(true);
       expect(existsSync(dest)).toBe(false);
     });
@@ -185,7 +235,7 @@ describe('core/presets/file-copier', () => {
       const dir = await tmp('dst-');
       const dest = join(dir, 'out.md');
       await writeFile(dest, 'OLD');
-      const result = await applySingleFile(src, dest, 'append', false, false, false, null, 'en');
+      const result = await applySingleFile(src, dest, 'append', false, false, false, null, 'en', dir);
       expect(result.action).toBe('appended');
       const content = await readFile(dest, 'utf-8');
       expect(content).toContain('OLD');
@@ -197,7 +247,7 @@ describe('core/presets/file-copier', () => {
       const dir = await tmp('dst-');
       const dest = join(dir, 'out.json');
       await writeFile(dest, '{"a":1}');
-      const result = await applySingleFile(src, dest, 'merge-json', false, false, false, null, 'en');
+      const result = await applySingleFile(src, dest, 'merge-json', false, false, false, null, 'en', dir);
       expect(result.action).toBe('merged');
       expect(JSON.parse(await readFile(dest, 'utf-8'))).toEqual({ a: 1, b: 2 });
     });
@@ -206,7 +256,7 @@ describe('core/presets/file-copier', () => {
       const src = await srcFile(`${MANAGED_BEGIN_MARKER}\nbody\n${MANAGED_END_MARKER}`);
       const dir = await tmp('dst-');
       const dest = join(dir, 'AGENTS.md');
-      const result = await applySingleFile(src, dest, 'merge-managed', false, false, false, null, 'en');
+      const result = await applySingleFile(src, dest, 'merge-managed', false, false, false, null, 'en', dir);
       expect(result.action).toBe('written');
       expect(existsSync(dest)).toBe(true);
     });
@@ -216,7 +266,7 @@ describe('core/presets/file-copier', () => {
       const dir = await tmp('dst-');
       const dest = join(dir, 'AGENTS.md');
       await writeFile(dest, `head\n${MANAGED_BEGIN_MARKER}\nold\n${MANAGED_END_MARKER}\ntail`);
-      const result = await applySingleFile(src, dest, 'merge-managed', false, false, false, null, 'en');
+      const result = await applySingleFile(src, dest, 'merge-managed', false, false, false, null, 'en', dir);
       expect(result.action).toBe('merged');
       const content = await readFile(dest, 'utf-8');
       expect(content).toBe(`head\n${MANAGED_BEGIN_MARKER}\nnew\n${MANAGED_END_MARKER}\ntail`);
@@ -227,7 +277,7 @@ describe('core/presets/file-copier', () => {
       const dir = await tmp('dst-');
       const dest = join(dir, 'AGENTS.md');
       await writeFile(dest, 'local only');
-      const result = await applySingleFile(src, dest, 'merge-managed', false, false, false, null, 'en');
+      const result = await applySingleFile(src, dest, 'merge-managed', false, false, false, null, 'en', dir);
       expect(result.action).toBe('skipped');
       expect(await readFile(dest, 'utf-8')).toBe('local only');
     });
@@ -238,7 +288,7 @@ describe('core/presets/file-copier', () => {
       const dir = await tmp('dst-');
       const dest = join(dir, 'AGENTS.md');
       await writeFile(dest, 'local only');
-      const result = await applySingleFile(src, dest, 'merge-managed', true, false, false, null, 'en');
+      const result = await applySingleFile(src, dest, 'merge-managed', true, false, false, null, 'en', dir);
       expect(result.action).toBe('written');
       expect(await readFile(dest, 'utf-8')).toBe(incoming);
     });
@@ -249,7 +299,7 @@ describe('core/presets/file-copier', () => {
       const dest = join(dir, 'AGENTS.md');
       const broken = `head\n${MANAGED_BEGIN_MARKER}\nunterminated`;
       await writeFile(dest, broken);
-      const result = await applySingleFile(src, dest, 'merge-managed', true, false, false, null, 'en');
+      const result = await applySingleFile(src, dest, 'merge-managed', true, false, false, null, 'en', dir);
       expect(result.action).toBe('error');
       expect(result.error).toContain('Managed merge failed');
       expect(await readFile(dest, 'utf-8')).toBe(broken);
@@ -266,6 +316,7 @@ describe('core/presets/file-copier', () => {
         false,
         null,
         'en',
+        dir,
       );
       expect(result.action).toBe('error');
       expect(result.error).toContain('Cannot read source');
@@ -276,7 +327,7 @@ describe('core/presets/file-copier', () => {
       const dir = await tmp('dst-');
       const dest = join(dir, 'out.json');
       await writeFile(dest, '{}');
-      const result = await applySingleFile(src, dest, 'merge-json', false, false, false, null, 'en');
+      const result = await applySingleFile(src, dest, 'merge-json', false, false, false, null, 'en', dir);
       expect(result.action).toBe('error');
       expect(result.error).toContain('JSON merge failed');
     });
@@ -338,6 +389,56 @@ describe('core/presets/file-copier', () => {
         join(base, 'agents', 'c.md'),
         join(base, 'agents', 'nested', 'z.md'),
       ]);
+    });
+
+    test('refuses to write through a directory junction that escapes the base directory', async () => {
+      const presets = await tmp('pre-');
+      await writeFile(join(presets, 'file.md'), 'content');
+      const base = await tmp('base-');
+      const outside = await tmp('outside-');
+      try {
+        await symlink(outside, join(base, 'linkdir'), 'junction');
+      } catch (error) {
+        const code = (error as NodeJS.ErrnoException).code;
+        if (code === 'EPERM' || code === 'EACCES') return;
+        throw error;
+      }
+
+      const results = await copyFromManifest(
+        {
+          target: 'claude',
+          entries: [{ src: 'file.md', dest: 'linkdir/file.md', strategy: 'overwrite' }],
+        },
+        presets,
+        base,
+        false,
+        false,
+        true,
+      );
+
+      expect(results[0]?.action).toBe('error');
+      expect(existsSync(join(outside, 'file.md'))).toBe(false);
+    });
+
+    test('refuses to write into a protected destination segment', async () => {
+      const presets = await tmp('pre-');
+      await writeFile(join(presets, 'file.md'), 'content');
+      const base = await tmp('base-');
+
+      const results = await copyFromManifest(
+        {
+          target: 'claude',
+          entries: [{ src: 'file.md', dest: '.git/hooks/pre-commit', strategy: 'overwrite' }],
+        },
+        presets,
+        base,
+        false,
+        false,
+        true,
+      );
+
+      expect(results[0]?.action).toBe('error');
+      expect(existsSync(join(base, '.git', 'hooks', 'pre-commit'))).toBe(false);
     });
 
     test('a forced rerun produces the same results and the same content', async () => {

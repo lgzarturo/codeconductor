@@ -41,25 +41,12 @@ const LSP_DEFINITIONS: readonly LspDefinition[] = [
     packageManager: 'binary',
     package: 'kotlin-language-server',
     binaryName: 'kotlin-language-server',
-    installCmd: 'Download from GitHub releases',
+    installCmd:
+      'Pinned https download with sha256 (see binaryPlatforms). Unpinned /latest/ URLs are rejected.',
     versionFlag: '--version',
-    binaryPlatforms: {
-      'linux-x64': {
-        url: 'https://github.com/fwcd/kotlin-language-server/releases/latest/download/server-linux-x64.tar.gz',
-      },
-      'linux-arm64': {
-        url: 'https://github.com/fwcd/kotlin-language-server/releases/latest/download/server-linux-arm64.tar.gz',
-      },
-      'darwin-x64': {
-        url: 'https://github.com/fwcd/kotlin-language-server/releases/latest/download/server-macos-x64.tar.gz',
-      },
-      'darwin-arm64': {
-        url: 'https://github.com/fwcd/kotlin-language-server/releases/latest/download/server-macos-arm64.tar.gz',
-      },
-      'win32-x64': {
-        url: 'https://github.com/fwcd/kotlin-language-server/releases/latest/download/server-windows-x64.zip',
-      },
-    },
+    // Binary platforms intentionally empty until a concrete release URL + sha256
+    // are recorded. Fail closed rather than downloading mutable /latest/ assets.
+    binaryPlatforms: {},
   },
 ];
 

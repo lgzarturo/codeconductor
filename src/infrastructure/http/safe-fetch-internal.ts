@@ -157,7 +157,7 @@ function addressFamily(address: string): 4 | 6 | undefined {
   return undefined;
 }
 
-function isLoopbackAddress(address: string): boolean {
+export function isLoopbackAddress(address: string): boolean {
   const ipv4 = parseIpv4(address);
   if (ipv4 !== undefined) return ipv4 >>> 24 === 127;
   const groups = parseIpv6(address);

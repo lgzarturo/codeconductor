@@ -11,17 +11,19 @@ phases:
   - id: design
     agent: architect
     outputSchema: technical-plan
-  - id: implement
-    agent: implementer
   - id: test
     agent: tester
+  - id: implement
+    agent: implementer
+    dependsOn:
+      - test
   - id: review
     agent: reviewer
 routing:
   default:
     - design
-    - implement
     - test
+    - implement
     - review
 confirmationGate:
   stopOnHighRisk: true

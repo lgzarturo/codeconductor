@@ -2,8 +2,10 @@
 
 ## Purpose
 
-This document defines the planned CodeConductor CLI contract before
-implementation. The CLI is not implemented in v0.1.x.
+This document originated as the pre-implementation CLI contract. The CLI is now
+implemented; current shipped status is tracked in
+[current-status.md](current-status.md). Sections labelled “Planned behavior”
+are historical design intent unless covered by current command tests.
 
 ## Commands
 

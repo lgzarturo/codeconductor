@@ -270,19 +270,26 @@ export const CouncilVerdictInputSchema = z.object({
 /**
  * Consensus config schema
  */
-export const ConsensusConfigSchema = z.object({
-  algorithm: z.enum(['majority', 'unanimous']),
-  allowSecurityVeto: z.boolean(),
-  allowComplianceVeto: z.boolean().optional(),
-  expectedAgentIds: z
-    .array(z.string().min(1).refine((id) => id.trim().length > 0))
-    .min(1)
-    .refine(
-      (ids) =>
-        new Set(ids.map((id) => id.trim().toLowerCase())).size === ids.length,
-    )
-    .optional(),
-});
+export const ConsensusConfigSchema = z
+  .object({
+    algorithm: z.enum(['majority', 'unanimous']),
+    allowSecurityVeto: z.boolean(),
+    allowComplianceVeto: z.boolean().optional(),
+    expectedAgentIds: z
+      .array(z.string().min(1).refine((id) => id.trim().length > 0))
+      .min(1)
+      .refine(
+        (ids) =>
+          new Set(ids.map((id) => id.trim().toLowerCase())).size === ids.length,
+      )
+      .optional(),
+  })
+  // The unanimous algorithm cannot approve without a roster, so a config that
+  // omits one is rejected at the edge rather than escalating every review.
+  .refine((config) => config.algorithm !== 'unanimous' || config.expectedAgentIds !== undefined, {
+    message: 'unanimous consensus requires a non-empty expectedAgentIds roster',
+    path: ['expectedAgentIds'],
+  });
 
 /**
  * Council verdict schema — the final output of the consensus engine

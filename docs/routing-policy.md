@@ -42,13 +42,13 @@ When multiple signals apply, take the highest risk level. Do not average.
 
 | Task Type            | Risk        | Agent Sequence                                                  |
 | -------------------- | ----------- | --------------------------------------------------------------- |
-| New feature design   | any         | `architect` → `implementer`                                     |
-| Bug fix              | low         | `implementer`                                                   |
-| Bug fix              | medium–high | `task-coach` → `implementer` → `tester`                         |
+| New feature design   | any         | `architect` → `tester` → `implementer`                          |
+| Bug fix              | low         | `tester` → `implementer`                                        |
+| Bug fix              | medium–high | `task-coach` → `tester` → `implementer`                         |
 | Refactor             | low         | `implementer`                                                   |
 | Refactor             | medium–high | `architect` → `implementer` → `complexity-auditor` → `reviewer`  |
 | API change           | any         | `architect` → `implementer` → `complexity-auditor` → `reviewer`  |
-| Database migration   | any         | `architect` → `implementer` → `tester` → `complexity-auditor` → `reviewer` |
+| Database migration   | any         | `architect` → `tester` → `implementer` → `complexity-auditor` → `reviewer` |
 | Test coverage        | any         | `tester`                                                        |
 | Documentation update | any         | `docs`                                                          |
 | Codebase exploration | any         | `repo-explorer`                                                 |

@@ -114,15 +114,15 @@ regression.
 
 | Task type          | Risk        | Route                                                              |
 | ------------------ | ----------- | ------------------------------------------------------------------ |
-| New feature        | high        | `architect` → `implementer` → `tester` → `security-reviewer` → `reviewer` |
-| New feature        | low-medium  | `architect` → `implementer` → `tester` → `reviewer`                |
+| New feature        | high        | `architect` → `tester` → `implementer` → `security-reviewer` → `reviewer` |
+| New feature        | low-medium  | `architect` → `tester` → `implementer` → `reviewer`                |
 | Performance Opt    | medium      | `task-coach` → `implementer` → `reviewer`                           |
-| Bug fix            | low         | `implementer` → `tester`                                           |
-| Bug fix            | medium–high | `task-coach` → `architect` → `implementer` → `tester` → `reviewer` |
+| Bug fix            | low         | `tester` → `implementer`                                           |
+| Bug fix            | medium–high | `task-coach` → `architect` → `tester` → `implementer` → `reviewer` |
 | Refactor           | low         | `architect` → `implementer`                                        |
 | Refactor           | medium–high | `architect` → `implementer` → `reviewer`                           |
 | API change         | any         | `architect` → `implementer` → `reviewer`                           |
-| Database migration | any         | `architect` → `implementer` → `tester` → `reviewer`                |
+| Database migration | any         | `architect` → `tester` → `implementer` → `reviewer`                |
 | Test coverage      | any         | `tester`                                                           |
 | Documentation      | any         | `docs`                                                             |
 | Codebase question  | any         | `repo-explorer`                                                    |

@@ -311,6 +311,12 @@ async function openOutputHandle(outputPath: string, force: boolean): Promise<Fil
 /**
  * Write `content` to a relative path confined to the project root.
  *
+ * `resolveOutputWithinRoot` is the only authority on whether the destination is
+ * allowed; it runs once before the parents are created and again afterwards, so
+ * a parent swapped for an escaping link mid-mkdir is caught. What remains here
+ * is the descriptor identity check, which closes the window between that second
+ * resolution and the open.
+ *
  * The leaf is opened with `O_NOFOLLOW` and without `O_TRUNC`, and — when it has
  * to be created — with `O_EXCL`. Nothing is destroyed until the held descriptor
  * has been shown to be a regular file that the contained path still names, at
@@ -327,79 +333,25 @@ export async function writeContainedFile(
   content: string,
   options?: { readonly force?: boolean },
 ): Promise<string> {
-  if (relPath === '' || isAbsolute(relPath)) {
-    throw new OutputPathError(`Output path escapes the project root: ${relPath}`);
-  }
-  if (!validateWritePath(relPath)) {
-    throw new OutputPathError(`Output path is protected: ${relPath}`);
-  }
-
   const force = options?.force === true;
-  const rootAbs = resolve(projectRoot);
-  const candidate = resolve(rootAbs, relPath);
 
-  if (!isInside(rootAbs, candidate)) {
-    throw new OutputPathError(`Output path escapes the project root: ${relPath}`);
+  // Before mkdir: a directory symlink into `.git`/`secrets` must not cause
+  // nested directories to be created under the protected target.
+  const resolved = await resolveOutputWithinRoot(projectRoot, relPath);
+  if (resolved === undefined) {
+    throw new OutputPathError(`Output path is not an allowed destination: ${relPath}`);
   }
 
-  const rootReal = await realpath(rootAbs);
-  const parentLexical = dirname(candidate);
+  await mkdir(dirname(resolved), { recursive: true });
 
-  // Reject before mkdir: a directory symlink into `.git`/`secrets` must not
-  // cause nested directories to be created under the protected target.
-  const { base: existingParent } = await canonicalizeExistingPrefix(parentLexical);
-  if (
-    (existingParent !== rootReal && !isInside(rootReal, existingParent)) ||
-    isProtectedUnderRoot(rootReal, existingParent)
-  ) {
-    throw new OutputPathError(
-      isProtectedUnderRoot(rootReal, existingParent)
-        ? `Output path is protected: ${relPath}`
-        : `Output path escapes the project root: ${relPath}`,
-    );
+  // Re-resolve: a parent swapped for an escaping link while the directories
+  // were being created must not be written through.
+  const outputPath = await resolveOutputWithinRoot(projectRoot, relPath);
+  if (outputPath === undefined) {
+    throw new OutputPathError(`Output path is not an allowed destination: ${relPath}`);
   }
 
-  await mkdir(parentLexical, { recursive: true });
-
-  const parentReal = await realpath(parentLexical);
-
-  if (parentReal !== rootReal && !isInside(rootReal, parentReal)) {
-    throw new OutputPathError(`Output path escapes the project root: ${relPath}`);
-  }
-  if (isProtectedUnderRoot(rootReal, parentReal)) {
-    throw new OutputPathError(`Output path is protected: ${relPath}`);
-  }
-
-  const outputPath = join(parentReal, basename(candidate));
-  if (!isInside(rootReal, outputPath)) {
-    throw new OutputPathError(`Output path escapes the project root: ${relPath}`);
-  }
-  if (isProtectedUnderRoot(rootReal, outputPath)) {
-    throw new OutputPathError(`Output path is protected: ${relPath}`);
-  }
-
-  // Advisory only: it reports the common cases with a precise message and on
-  // platforms without O_NOFOLLOW it is the sole symlink check. It settles
-  // nothing on its own — every verdict here is re-established on the open
-  // descriptor below, which is what the write actually relies on.
-  try {
-    const existing = await lstat(outputPath);
-    if (existing.isSymbolicLink()) {
-      throw new OutputPathError(`Output path is a symlink: ${relPath}`);
-    }
-    if (!existing.isFile()) {
-      throw new OutputPathError(`Output path is not a regular file: ${relPath}`);
-    }
-    if (!force) {
-      throw new OutputPathError(
-        `Output file already exists: ${outputPath}. Re-run with --force to overwrite.`,
-      );
-    }
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-      throw error;
-    }
-  }
+  const rootReal = await realpath(resolve(projectRoot));
 
   let handle: FileHandle | undefined;
   try {
@@ -425,6 +377,9 @@ export async function writeContainedFile(
     }
     if (code !== undefined && SYMLINK_OPEN_CODES.has(code)) {
       throw new OutputPathError(`Output path is a symlink: ${relPath}`);
+    }
+    if (code === 'EISDIR') {
+      throw new OutputPathError(`Output path is not a regular file: ${relPath}`);
     }
     throw error;
   } finally {
@@ -453,28 +408,7 @@ export async function preflightContainedOutput(
 
   const resolved = await resolveOutputWithinRoot(projectRoot, relPath);
   if (resolved === undefined) {
-    // Distinguish protected canonical destinations (e.g. symlink → `.git`)
-    // from ordinary escapes when the lexical name looked innocent.
-    try {
-      const rootReal = await realpath(resolve(projectRoot));
-      const candidate = resolve(rootReal, relPath);
-      const { base, pending } = await canonicalizeExistingPrefix(candidate);
-      const canonical = pending.length === 0 ? base : join(base, ...pending);
-      if (isInside(rootReal, canonical) && isProtectedUnderRoot(rootReal, canonical)) {
-        return `Output path is protected: ${relPath}`;
-      }
-      if (isProtectedUnderRoot(rootReal, base)) {
-        return `Output path is protected: ${relPath}`;
-      }
-    } catch {
-      // Fall through to the generic escape message.
-    }
     return `Invalid --output path: ${relPath}. It must be relative to the project root.`;
-  }
-
-  const rootReal = await realpath(resolve(projectRoot));
-  if (isProtectedUnderRoot(rootReal, resolved)) {
-    return `Output path is protected: ${relPath}`;
   }
 
   if (options?.force === true) {

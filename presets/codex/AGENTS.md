@@ -102,13 +102,13 @@ When multiple signals apply, take the highest risk level. Do not average.
 
 | Task Type            | Risk        | Route                                               |
 | -------------------- | ----------- | --------------------------------------------------- |
-| New feature design   | any         | `architect` → `implementer`                         |
-| Bug fix              | low         | `implementer`                                       |
-| Bug fix              | medium–high | `task-coach` → `implementer` → `tester`             |
+| New feature design   | any         | `architect` → `tester` → `implementer`              |
+| Bug fix              | low         | `tester` → `implementer`                            |
+| Bug fix              | medium–high | `task-coach` → `tester` → `implementer`             |
 | Refactor             | low         | `implementer`                                       |
 | Refactor             | medium–high | `architect` → `implementer` → `reviewer`            |
 | API change           | any         | `architect` → `implementer` → `reviewer`            |
-| Database migration   | any         | `architect` → `implementer` → `tester` → `reviewer` |
+| Database migration   | any         | `architect` → `tester` → `implementer` → `reviewer` |
 | Test coverage        | any         | `tester`                                            |
 | Documentation update | any         | `docs`                                              |
 | Codebase exploration | any         | `repo-explorer`                                     |
@@ -868,7 +868,7 @@ needs a multi-step plan before delegation.
 
 The planner matches objective keywords against built-in templates (auth, crud,
 search, notification, migration) and falls back to a generic 4-task chain:
-`task-coach → architect → implementer → tester`.
+`task-coach → architect → tester → implementer`.
 
 **Dependency order delegation (orchestrator):**
 

@@ -67,12 +67,21 @@ describe('Boundary Security — protected path blocking', () => {
       createGeneratedFile(join(TEST_DIR, '.env'), 'DB_HOST=localhost'),
     ];
 
-    const results = await writeGeneratedFiles(files, { force: false, dryRun: false });
+    const results = await writeGeneratedFiles(files, { force: false, dryRun: false, projectRoot: TEST_DIR });
 
     expect(results.length).toBe(1);
     expect(results[0].success).toBe(false);
     expect(results[0].error).toBe('Protected path');
     await expect(readFile(join(TEST_DIR, '.env'), 'utf-8')).rejects.toThrow();
+  });
+
+  test('omitting projectRoot fails closed without writing', async () => {
+    const dest = join(TEST_DIR, 'no-root.txt');
+    const files = [createGeneratedFile(dest, 'hello')];
+    const results = await writeGeneratedFiles(files, { force: false, dryRun: false });
+    expect(results[0]?.success).toBe(false);
+    expect(results[0]?.error).toMatch(/projectRoot is required/i);
+    await expect(readFile(dest, 'utf-8')).rejects.toThrow();
   });
 
   test('.aws/credentials path is protected and write is rejected', async () => {
@@ -85,7 +94,7 @@ describe('Boundary Security — protected path blocking', () => {
       ),
     ];
 
-    const results = await writeGeneratedFiles(files, { force: false, dryRun: false });
+    const results = await writeGeneratedFiles(files, { force: false, dryRun: false, projectRoot: TEST_DIR });
 
     expect(results.length).toBe(1);
     expect(results[0].success).toBe(false);
@@ -105,7 +114,7 @@ describe('Boundary Security — batch rejection', () => {
     ];
 
     await expect(
-      writeGeneratedFiles(files, { force: false, dryRun: false })
+      writeGeneratedFiles(files, { force: false, dryRun: false, projectRoot: TEST_DIR })
     ).rejects.toThrow(CredentialGuardError);
 
     // None of the 3 files should exist
@@ -125,7 +134,7 @@ describe('Boundary Security — force flag does not bypass credentials', () => {
     ];
 
     await expect(
-      writeGeneratedFiles(files, { force: true, dryRun: false })
+      writeGeneratedFiles(files, { force: true, dryRun: false, projectRoot: TEST_DIR })
     ).rejects.toThrow(CredentialGuardError);
 
     await expect(readFile(join(TEST_DIR, 'forced.txt'), 'utf-8')).rejects.toThrow();

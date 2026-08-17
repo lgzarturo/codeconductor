@@ -481,7 +481,7 @@ chain. Writes the result to `.codeconductor/current-goal.yml`.
 
 1. Matches objective keywords against built-in templates (auth, crud, search,
    notification, migration)
-2. Falls back to generic 4-task chain: `task-coach → architect → implementer → tester`
+2. Falls back to generic 4-task chain: `task-coach → architect → tester → implementer`
 3. Validates the graph (unique IDs, valid `depends_on` references, no cycles)
 4. Writes `.codeconductor/current-goal.yml`
 5. Renders a dependency tree diagram (human output) or structured JSON

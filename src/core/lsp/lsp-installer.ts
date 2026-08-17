@@ -9,6 +9,7 @@ import {
   assertSha256Hex,
   resolveSafeArchiveEntry,
 } from './binary-integrity';
+import { downloadPinnedBinary } from './binary-downloader';
 
 const execFileAsync = promisify(execFile);
 
@@ -198,13 +199,14 @@ export class LspInstaller {
       // Not installed
     }
 
-    const response = await fetch(binary.url, { redirect: 'follow' });
-    if (!response.ok) {
+    let bytes: Uint8Array;
+    try {
+      bytes = await downloadPinnedBinary(binary.url);
+    } catch (error) {
       throw new Error(
-        `Failed to download ${def.serverName}: HTTP ${response.status} ${response.statusText}`,
+        `Failed to download ${def.serverName}: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
-    const bytes = new Uint8Array(await response.arrayBuffer());
     assertSha256Hex(bytes, binary.sha256);
 
     const workDir = await mkdtemp(join(tmpdir(), 'cc-lsp-'));

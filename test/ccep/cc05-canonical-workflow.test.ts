@@ -1,6 +1,7 @@
-import { describe, expect, test } from 'bun:test';
-import { readFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { basename, join, resolve } from 'node:path';
 import { CCEP_COMMANDS } from '../../src/core/ccep/command-parser';
 import { evaluateConfirmationGate } from '../../src/core/ccep/confirmation-gate';
 import {
@@ -147,6 +148,257 @@ describe('CC-05 ccep evaluate ConfirmationGate', () => {
     const data = result.data as { success: boolean; errors: string[] };
     expect(data.success).toBe(false);
     expect(data.errors.join(' ')).toMatch(/input|planner/i);
+  });
+});
+
+describe('CC-05 ccep file inputs stay inside the project root', () => {
+  function planner(): PlannerOutputInput {
+    return {
+      status: 'success',
+      confidence: 0.9,
+      goal: 'Ship safely',
+      assumptions: [],
+      risks: [],
+      tasks: [],
+      questionsForUser: [],
+      needsConfirmation: false,
+    };
+  }
+
+  let root: string;
+  let outside: string;
+
+  beforeEach(async () => {
+    root = await mkdtemp(join(tmpdir(), 'cc-ccep-root-'));
+    outside = await mkdtemp(join(tmpdir(), 'cc-ccep-outside-'));
+    await writeFile(join(root, 'planner.json'), JSON.stringify(planner()), 'utf-8');
+    await writeFile(join(outside, 'planner.json'), JSON.stringify(planner()), 'utf-8');
+  });
+
+  afterEach(async () => {
+    await rm(root, { recursive: true, force: true });
+    await rm(outside, { recursive: true, force: true });
+  });
+
+  /** Only privilege errors are tolerated; anything else is a real defect. */
+  async function trySymlink(target: string, linkPath: string): Promise<boolean> {
+    try {
+      await symlink(target, linkPath, 'file');
+      return true;
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code === 'EPERM' || code === 'EACCES') return false;
+      throw error;
+    }
+  }
+
+  test('evaluate reads a contained @file payload', async () => {
+    const result = await ccepCommand({
+      subcommand: 'evaluate',
+      projectRoot: root,
+      output: 'json',
+      command: 'feature',
+      userRequest: 'Add loyalty benefits',
+      input: '@planner.json',
+    });
+
+    expect(result.code).toBe(0);
+    expect((result.data as { success: boolean }).success).toBe(true);
+  });
+
+  test('evaluate refuses an absolute @file payload', async () => {
+    const result = await ccepCommand({
+      subcommand: 'evaluate',
+      projectRoot: root,
+      output: 'json',
+      command: 'feature',
+      userRequest: 'Add loyalty benefits',
+      input: `@${join(outside, 'planner.json')}`,
+    });
+
+    expect(result.code).toBe(1);
+    expect((result.data as { errors: string[] }).errors.join(' ')).toMatch(/input file/i);
+  });
+
+  test('evaluate refuses a traversing @file payload', async () => {
+    const result = await ccepCommand({
+      subcommand: 'evaluate',
+      projectRoot: root,
+      output: 'json',
+      command: 'feature',
+      userRequest: 'Add loyalty benefits',
+      input: `@../${basename(outside)}/planner.json`,
+    });
+
+    expect(result.code).toBe(1);
+    expect((result.data as { errors: string[] }).errors.join(' ')).toMatch(/input file/i);
+  });
+
+  test('evaluate refuses an @file payload reached through a symlink', async () => {
+    const created = await trySymlink(join(outside, 'planner.json'), join(root, 'linked.json'));
+    if (!created) return;
+
+    const result = await ccepCommand({
+      subcommand: 'evaluate',
+      projectRoot: root,
+      output: 'json',
+      command: 'feature',
+      userRequest: 'Add loyalty benefits',
+      input: '@linked.json',
+    });
+
+    expect(result.code).toBe(1);
+    expect((result.data as { errors: string[] }).errors.join(' ')).toMatch(/input file/i);
+  });
+
+  test('evaluate refuses a directory as an @file payload', async () => {
+    const result = await ccepCommand({
+      subcommand: 'evaluate',
+      projectRoot: root,
+      output: 'json',
+      command: 'feature',
+      userRequest: 'Add loyalty benefits',
+      input: '@.',
+    });
+
+    expect(result.code).toBe(1);
+  });
+
+  test('validate refuses an absolute @file payload', async () => {
+    const result = await ccepCommand({
+      subcommand: 'validate',
+      projectRoot: root,
+      output: 'json',
+      command: 'feature',
+      input: `@${join(outside, 'planner.json')}`,
+    });
+
+    expect(result.code).toBe(1);
+    expect((result.data as { errors: string[] }).errors.join(' ')).toMatch(/input file/i);
+  });
+
+  test('inline JSON payloads are unaffected by containment', async () => {
+    const result = await ccepCommand({
+      subcommand: 'evaluate',
+      projectRoot: root,
+      output: 'json',
+      command: 'feature',
+      userRequest: 'Add loyalty benefits',
+      input: JSON.stringify(planner()),
+    });
+
+    expect(result.code).toBe(0);
+  });
+
+  describe('--context', () => {
+    /** A real resolved context, so compile/evaluate accept the fixture. */
+    async function writeContextFixture(dir: string, name: string): Promise<void> {
+      const resolved = await ccepCommand({
+        subcommand: 'resolve',
+        projectRoot: root,
+        output: 'json',
+        command: 'feature',
+        userRequest: 'Add loyalty benefits',
+      });
+      const { context } = resolved.data as { context: unknown };
+      await writeFile(join(dir, name), JSON.stringify(context), 'utf-8');
+    }
+
+    test('compile reads a contained --context file', async () => {
+      await writeContextFixture(root, 'context.json');
+
+      const result = await ccepCommand({
+        subcommand: 'compile',
+        projectRoot: root,
+        output: 'json',
+        command: 'feature',
+        phase: 'intake',
+        contextPath: 'context.json',
+      });
+
+      expect(result.code).toBe(0);
+    });
+
+    test('compile refuses an absolute --context path', async () => {
+      await writeContextFixture(outside, 'context.json');
+
+      const result = await ccepCommand({
+        subcommand: 'compile',
+        projectRoot: root,
+        output: 'json',
+        command: 'feature',
+        phase: 'intake',
+        contextPath: join(outside, 'context.json'),
+      });
+
+      expect(result.code).toBe(1);
+      expect((result.data as { errors: string[] }).errors.join(' ')).toMatch(/context/i);
+    });
+
+    test('compile refuses a traversing --context path', async () => {
+      await writeContextFixture(outside, 'context.json');
+
+      const result = await ccepCommand({
+        subcommand: 'compile',
+        projectRoot: root,
+        output: 'json',
+        command: 'feature',
+        phase: 'intake',
+        contextPath: `../${basename(outside)}/context.json`,
+      });
+
+      expect(result.code).toBe(1);
+      expect((result.data as { errors: string[] }).errors.join(' ')).toMatch(/context/i);
+    });
+
+    test('compile refuses a --context path reached through a symlink', async () => {
+      await writeContextFixture(outside, 'context.json');
+      const created = await trySymlink(join(outside, 'context.json'), join(root, 'linked.json'));
+      if (!created) return;
+
+      const result = await ccepCommand({
+        subcommand: 'compile',
+        projectRoot: root,
+        output: 'json',
+        command: 'feature',
+        phase: 'intake',
+        contextPath: 'linked.json',
+      });
+
+      expect(result.code).toBe(1);
+      expect((result.data as { errors: string[] }).errors.join(' ')).toMatch(/context/i);
+    });
+
+    test('evaluate refuses an absolute --context path', async () => {
+      await writeContextFixture(outside, 'context.json');
+
+      const result = await ccepCommand({
+        subcommand: 'evaluate',
+        projectRoot: root,
+        output: 'json',
+        command: 'feature',
+        input: JSON.stringify(planner()),
+        contextPath: join(outside, 'context.json'),
+      });
+
+      expect(result.code).toBe(1);
+      expect((result.data as { errors: string[] }).errors.join(' ')).toMatch(/context/i);
+    });
+
+    test('evaluate reads a contained --context file', async () => {
+      await writeContextFixture(root, 'context.json');
+
+      const result = await ccepCommand({
+        subcommand: 'evaluate',
+        projectRoot: root,
+        output: 'json',
+        command: 'feature',
+        input: JSON.stringify(planner()),
+        contextPath: 'context.json',
+      });
+
+      expect(result.code).toBe(0);
+    });
   });
 });
 

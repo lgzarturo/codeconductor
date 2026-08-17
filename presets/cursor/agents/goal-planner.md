@@ -36,7 +36,7 @@ Match objective keywords against built-in templates (in order):
 | migration, schema, database | migration |
 | (no match) | generic 4-task chain |
 
-**Generic fallback chain:** `task-coach` → `architect` → `implementer` → `tester`
+**Generic fallback chain:** `task-coach` → `architect` → `tester` → `implementer`
 
 Each task must include: `id`, `title`, `type`, `risk`, `status: pending`,
 `context_scope`, `depends_on`, `acceptance_criteria` (≥ 1 each).

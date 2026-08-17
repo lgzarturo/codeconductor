@@ -1,7 +1,6 @@
-import { constants } from 'node:fs';
-import { lstat, mkdir, open, readdir, readFile, stat } from 'node:fs/promises';
+import { lstat, readdir, readFile, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { dirname, join, relative, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import {
   getLanguageInstruction,
   LOCALE_PLACEHOLDER,
@@ -20,6 +19,7 @@ import {
   MANAGED_END_MARKER,
   mergeManagedBlock,
 } from '../filesystem/safe-merger';
+import { writeContainedFile } from '../filesystem/path-containment';
 import { detectComplementaryTools } from './complementary-detector';
 
 export type FileAction = 'written' | 'appended' | 'merged' | 'skipped' | 'error';
@@ -30,40 +30,6 @@ export interface FileCopyResult {
   action: FileAction;
   dryRun?: boolean;
   error?: string;
-}
-
-const O_NOFOLLOW = constants.O_NOFOLLOW ?? 0;
-
-async function writeDestinationNoFollow(destPath: string, content: string): Promise<void> {
-  let handle: Awaited<ReturnType<typeof open>> | undefined;
-  try {
-    handle = await open(
-      destPath,
-      constants.O_WRONLY | constants.O_CREAT | O_NOFOLLOW,
-    );
-    const fdStat = await handle.stat();
-    const pathStat = await lstat(destPath);
-    if (pathStat.isSymbolicLink()) {
-      throw new Error(`Destination is a symlink: ${destPath}`);
-    }
-    if (
-      !fdStat.isFile() ||
-      pathStat.dev !== fdStat.dev ||
-      pathStat.ino !== fdStat.ino
-    ) {
-      throw new Error(`Destination changed during write: ${destPath}`);
-    }
-    await handle.truncate(0);
-    await handle.write(content, 0, 'utf-8');
-  } catch (error) {
-    const code = (error as NodeJS.ErrnoException).code;
-    if (code === 'ELOOP' || code === 'EMLINK' || code === 'EFTYPE') {
-      throw new Error(`Destination is a symlink: ${destPath}`);
-    }
-    throw error;
-  } finally {
-    await handle?.close().catch(() => undefined);
-  }
 }
 
 export async function listFilesRecursive(dir: string, base = dir): Promise<string[]> {
@@ -425,7 +391,9 @@ export async function applySingleFile(
   dryRun: boolean,
   isTemplate: boolean,
   modelConfig: ModelConfig | null,
-  locale: string
+  locale: string,
+  /** Containment root for the final write. Required for any non-dry-run write. */
+  baseDir?: string
 ): Promise<FileCopyResult> {
   if (strategy === 'skip') {
     return { src: srcPath, dest: destPath, action: 'skipped', dryRun };
@@ -517,9 +485,22 @@ export async function applySingleFile(
     return { src: srcPath, dest: destPath, action, dryRun: true };
   }
 
+  if (baseDir === undefined) {
+    return {
+      src: srcPath,
+      dest: destPath,
+      action: 'error',
+      error: 'baseDir is required for contained writes',
+    };
+  }
+
   try {
-    await mkdir(dirname(destPath), { recursive: true });
-    await writeDestinationNoFollow(destPath, finalContent);
+    // The install target is the containment root: a junction planted inside it
+    // must not redirect a preset file outside, and `.git`/`secrets` stay
+    // off-limits even when a manifest names them.
+    await writeContainedFile(baseDir, relative(baseDir, destPath), finalContent, {
+      force: true,
+    });
     return { src: srcPath, dest: destPath, action };
   } catch (e) {
     return { src: srcPath, dest: destPath, action: 'error', error: String(e) };
@@ -557,7 +538,17 @@ export async function copyFromManifest(
 
     for (const { src, dest } of files) {
       results.push(
-        await applySingleFile(src, dest, strategy, force, dryRun, isTemplate, modelConfig, locale)
+        await applySingleFile(
+          src,
+          dest,
+          strategy,
+          force,
+          dryRun,
+          isTemplate,
+          modelConfig,
+          locale,
+          resolvedBaseDir
+        )
       );
     }
   }

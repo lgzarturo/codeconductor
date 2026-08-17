@@ -180,10 +180,24 @@ describe('ConsensusConfigSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  test('accepts unanimous config without veto', () => {
-    const input = { algorithm: 'unanimous', allowSecurityVeto: false };
+  test('accepts unanimous config without veto when a roster is declared', () => {
+    const input = {
+      algorithm: 'unanimous',
+      allowSecurityVeto: false,
+      expectedAgentIds: ['architect', 'security'],
+    };
     const result = ConsensusConfigSchema.safeParse(input);
     expect(result.success).toBe(true);
+  });
+
+  test('rejects unanimous config without an expected roster', () => {
+    const input = { algorithm: 'unanimous', allowSecurityVeto: false };
+    expect(ConsensusConfigSchema.safeParse(input).success).toBe(false);
+  });
+
+  test('accepts majority config without an expected roster', () => {
+    const input = { algorithm: 'majority', allowSecurityVeto: true };
+    expect(ConsensusConfigSchema.safeParse(input).success).toBe(true);
   });
 });
 

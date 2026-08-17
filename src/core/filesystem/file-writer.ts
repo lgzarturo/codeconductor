@@ -1,10 +1,11 @@
-import { access, mkdir, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { access } from 'node:fs/promises';
+import { relative } from 'node:path';
 import { CredentialGuardError, UnsafeOperationError, ValidationError } from '../../cli/errors';
 import { err, ok, type Result } from '../../utils/result';
 import type { CodeConductorConfig } from '../config/codeconductor-config';
 import type { FileWriteResult, GeneratedFile } from '../generation/generated-file';
 import { loadCredentialPatterns } from './credential-guard';
+import { writeContainedFile } from './path-containment';
 import { isProtectedPath, scanForCredentials, validateWritePath } from './safety';
 
 /**
@@ -15,6 +16,11 @@ export interface WriteOptions {
   readonly dryRun: boolean;
   /** CodeConductor config — used to load project-specific secret patterns. */
   readonly config?: CodeConductorConfig;
+  /**
+   * Containment root for the final write. Required for any non-dry-run write so a
+   * symlinked parent cannot redirect a generated file outside the install target.
+   */
+  readonly projectRoot?: string;
 }
 
 /**
@@ -75,13 +81,22 @@ export async function writeGeneratedFiles(
       }
     }
 
-    try {
-      // Ensure directory exists
-      const dir = dirname(file.path);
-      await mkdir(dir, { recursive: true });
+    if (options.projectRoot === undefined) {
+      results.push({
+        path: file.path,
+        success: false,
+        error: 'projectRoot is required for contained writes',
+      });
+      continue;
+    }
 
-      // Write file
-      await writeFile(file.path, file.content, 'utf-8');
+    try {
+      await writeContainedFile(
+        options.projectRoot,
+        relative(options.projectRoot, file.path),
+        file.content,
+        { force: true }
+      );
       results.push({
         path: file.path,
         success: true,

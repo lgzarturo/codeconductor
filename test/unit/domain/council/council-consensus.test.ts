@@ -108,14 +108,32 @@ describe('domain/council/council-consensus', () => {
     expect(v.averageConfidence).toBeCloseTo(0.65, 5);
   });
 
-  test('unanimous algorithm approves only with zero rejections', () => {
+  test('unanimous algorithm never approves without an expected roster', () => {
+    // Unanimity over "whoever happened to answer" is not unanimity: a silenced
+    // agent would otherwise be indistinguishable from an approving one.
     const config: ConsensusConfig = { algorithm: 'unanimous', allowSecurityVeto: true };
-    const approved = councilConsensus(
+    const v = councilConsensus(
       [verdict({ agentId: 'a1' }), verdict({ agentId: 'a2' })],
       config,
     );
-    expect(approved.status).toBe('APPROVED');
-    expect(approved.summary).toContain('unanimously');
+    expect(v.status).toBe('ESCALATED');
+    expect(v.summary).toContain('roster');
+  });
+
+  test('majority algorithm approves without an expected roster', () => {
+    const v = councilConsensus(
+      [verdict({ agentId: 'a1' }), verdict({ agentId: 'a2' })],
+      { algorithm: 'majority', allowSecurityVeto: true },
+    );
+    expect(v.status).toBe('APPROVED');
+  });
+
+  test('majority algorithm ignores a malformed expected roster', () => {
+    const v = councilConsensus(
+      [verdict({ agentId: 'a1' }), verdict({ agentId: 'a2' })],
+      { algorithm: 'majority', allowSecurityVeto: true, expectedAgentIds: [] },
+    );
+    expect(v.status).toBe('APPROVED');
   });
 
   test('unanimous algorithm escalates when any agent rejects', () => {

@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, afterEach } from 'bun:test';
 import { mkdir, readFile, realpath, rm, symlink, writeFile } from 'node:fs/promises';
 import { basename, resolve } from 'node:path';
 import {
+  OutputPathError,
   resolveOutputWithinRoot,
   writeContainedFile,
 } from '../src/core/filesystem/path-containment';
@@ -269,6 +270,39 @@ describe('SEO output containment — overwrite policy', () => {
       /already exists/i,
     );
     expect(await readFile(resolved!, 'utf-8')).toBe('PLANTED');
+  });
+});
+
+// ─── Policy authority parity ─────────────────────────────────────────────────
+
+describe('writeContainedFile defers every path verdict to resolveOutputWithinRoot', () => {
+  const refused = [
+    ['absolute path', () => resolve(OUTSIDE_DIR, 'report.md')],
+    ['traversal', () => `../${basename(OUTSIDE_DIR)}/report.md`],
+    ['empty path', () => ''],
+    ['protected .git', () => '.git/config'],
+    ['protected .env', () => '.env'],
+    ['protected .env.*', () => '.env.production'],
+    ['protected secrets', () => 'secrets/token'],
+  ] as const;
+
+  for (const [label, makePath] of refused) {
+    it(`refuses ${label} with an OutputPathError, matching the resolver`, async () => {
+      const relPath = makePath();
+
+      expect(await resolveOutputWithinRoot(TEST_DIR, relPath)).toBeUndefined();
+      await expect(
+        writeContainedFile(TEST_DIR, relPath, 'PWNED', { force: true }),
+      ).rejects.toBeInstanceOf(OutputPathError);
+    });
+  }
+
+  it('reports a contained directory as a refused output rather than a raw errno', async () => {
+    await mkdir(resolve(TEST_DIR, 'reports'), { recursive: true });
+
+    await expect(
+      writeContainedFile(TEST_DIR, 'reports', 'PWNED', { force: true }),
+    ).rejects.toBeInstanceOf(OutputPathError);
   });
 });
 

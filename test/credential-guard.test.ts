@@ -423,7 +423,7 @@ describe('no secret leakage in match output', () => {
     ];
 
     try {
-      await writeGeneratedFiles(files, { force: false, dryRun: false });
+      await writeGeneratedFiles(files, { force: false, dryRun: false, projectRoot: TEST_DIR });
       expect(true).toBe(false); // Should not reach
     } catch (e) {
       const err = e as CredentialGuardError;
@@ -442,7 +442,7 @@ describe('no secret leakage in match output', () => {
     let caught: unknown;
 
     try {
-      await writeGeneratedFiles(files, { force: false, dryRun: false });
+      await writeGeneratedFiles(files, { force: false, dryRun: false, projectRoot: TEST_DIR });
     } catch (e) {
       caught = e;
     }
@@ -462,7 +462,7 @@ describe('writeGeneratedFiles credential blocking', () => {
     ];
 
     await expect(
-      writeGeneratedFiles(files, { force: false, dryRun: false })
+      writeGeneratedFiles(files, { force: false, dryRun: false, projectRoot: TEST_DIR })
     ).rejects.toThrow(CredentialGuardError);
 
     // Neither file should have been written
@@ -476,7 +476,7 @@ describe('writeGeneratedFiles credential blocking', () => {
       createGeneratedFile(join(TEST_DIR, 'b.txt'), 'Goodbye world'),
     ];
 
-    const results = await writeGeneratedFiles(files, { force: false, dryRun: false });
+    const results = await writeGeneratedFiles(files, { force: false, dryRun: false, projectRoot: TEST_DIR });
     expect(results.every((r) => r.success)).toBe(true);
 
     expect(await readFile(join(TEST_DIR, 'a.txt'), 'utf-8')).toBe('Hello world');
@@ -491,7 +491,7 @@ describe('writeGeneratedFiles credential blocking', () => {
     ];
 
     await expect(
-      writeGeneratedFiles(files, { force: false, dryRun: false })
+      writeGeneratedFiles(files, { force: false, dryRun: false, projectRoot: TEST_DIR })
     ).rejects.toThrow(CredentialGuardError);
 
     // None of the 3 files should exist
@@ -506,7 +506,7 @@ describe('writeGeneratedFiles credential blocking', () => {
     ];
 
     await expect(
-      writeGeneratedFiles(files, { force: true, dryRun: false })
+      writeGeneratedFiles(files, { force: true, dryRun: false, projectRoot: TEST_DIR })
     ).rejects.toThrow(CredentialGuardError);
 
     await expect(readFile(join(TEST_DIR, 'forced.txt'), 'utf-8')).rejects.toThrow();
@@ -518,7 +518,7 @@ describe('writeGeneratedFiles credential blocking', () => {
     ];
 
     try {
-      await writeGeneratedFiles(files, { force: false, dryRun: false });
+      await writeGeneratedFiles(files, { force: false, dryRun: false, projectRoot: TEST_DIR });
       expect(true).toBe(false); // Should not reach
     } catch (e) {
       expect(e).toBeInstanceOf(CredentialGuardError);

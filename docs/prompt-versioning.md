@@ -141,7 +141,9 @@ Output includes per-file line changes and a markdown summary.
 | v0.2.0  | deprecated       | 2026-07-06 | Added `complexity-auditor` agent; routing policy updated to v0.2.0 with auditor in refactor/API/DB routes. Scorecard criterion #8 (cc-gain) added. |
 | v0.3.0  | deprecated       | 2026-07-08 | Added Next.js, FastAPI, generic presets, and monorepo support.                                                                 |
 | v0.4.0  | deprecated       | 2026-07-10 | Added stack-specific presets, 9 custom skills, parallel subagents, and updated risk-based routing policy.                    |
-| v0.5.0  | active           | 2026-07-25 | Evaluation gate (scorecard CLI integration), 3 new agents (security-reviewer, goal-planner, contract-builder), Cursor orchestration optimizations, Grok model fallback. |
+| v0.5.0  | deprecated       | 2026-07-25 | Evaluation gate (scorecard CLI integration), 3 new agents (security-reviewer, goal-planner, contract-builder), Cursor orchestration optimizations, Grok model fallback. |
+| v0.6.0  | deprecated       | 2026-07-26 | CCEP-1 draft: structured JSON output contracts for `planner`, `implementer`, `reviewer`. Interim version — folded into v1.0.0.                                          |
+| v1.0.0  | active           | 2026-08-21 | First stable, distributable set. CCEP-1 structured-output section on every contract; new `devil` (council) and `planner` contracts; orchestrator `council` workflow, workflow-commands table, and confirmation-gate section. Versions before v0.5.0 remain deprecated. |
 
 ---
 

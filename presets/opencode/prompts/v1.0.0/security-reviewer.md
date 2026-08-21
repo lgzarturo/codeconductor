@@ -1,26 +1,20 @@
 ---
-name: security-reviewer
+name: Security Reviewer
 description:
   Dedicated security review for high-risk tasks — deep analysis with veto
   authority on auth, payment, credentials, injection, and supply-chain paths.
-mode: subagent
-model: "{{MODEL}}"
-temperature: 0.1
-tools: Read, Glob, Grep, Bash
-permission:
-  read: allow
-  edit: deny
-  bash:
-    "*": deny
-    "git diff*": allow
-    "git status*": allow
-    "git log*": allow
-  glob: allow
-  grep: allow
-  webfetch: deny
-  websearch: deny
-  skill: ask
+
+# Model Selection
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | {{MODEL_CLAUDE}} | Primary — deep security reasoning |
+| OpenCode Go | {{MODEL_OPENCODE}} | Primary |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 ---
+
 # Agent Contract — security-reviewer v1.0.0
 
 ## Role

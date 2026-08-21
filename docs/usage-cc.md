@@ -199,7 +199,7 @@ bun run dev ccep compile --command feature "Add CRUD" --phase intake --output js
 **Expected output:**
 - `success: true`
 - `phase: "intake"`, `role: "task-coach"`, `outputSchema: "planner-output"`
-- `promptVersion: "v0.6.0"`
+- `promptVersion: "v1.0.0"`
 - `layers[]` (system, agent, policies, knowledge, ast, task, output_schema)
 - `prompt` — compiled text ready for the agent
 

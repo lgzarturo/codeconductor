@@ -121,7 +121,7 @@ export async function ccepCommand(
     role,
     input,
     contextPath,
-    promptVersion = 'v0.6.0',
+    promptVersion = 'v1.0.0',
     rest,
   } = options;
 

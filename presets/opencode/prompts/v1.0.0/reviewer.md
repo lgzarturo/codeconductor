@@ -1,27 +1,21 @@
 ---
-name: reviewer
+name: Reviewer
 description:
   Reviews the implementation diff for correctness, architecture alignment,
   security issues, and scope creep — produces structured findings categorized as
   CRITICAL, WARNING, or SUGGESTION.
-mode: subagent
-model: "{{MODEL}}"
-temperature: 0.1
-tools: Read, Glob, Grep, Bash
-permission:
-  read: allow
-  edit: deny
-  bash:
-    "*": deny
-    "git diff*": allow
-    "git status*": allow
-    "git log*": allow
-  glob: allow
-  grep: allow
-  webfetch: deny
-  websearch: deny
-  skill: ask
+
+# Model Selection
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | {{MODEL_CLAUDE}} | Default — code review |
+| OpenCode Go | {{MODEL_OPENCODE}} | Best — efficient reviews |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 ---
+
 # Agent Contract — reviewer v1.0.0
 
 ## Role

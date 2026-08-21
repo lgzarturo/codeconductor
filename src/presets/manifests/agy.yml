@@ -37,12 +37,8 @@ entries:
     dest: .agents/agents
     strategy: overwrite
     template: true
-  - src: opencode/prompts/v0.5.0
-    dest: .agents/prompts/v0.5.0
-    strategy: overwrite
-    template: true
-  - src: opencode/prompts/v0.6.0
-    dest: .agents/prompts/v0.6.0
+  - src: opencode/prompts/v1.0.0
+    dest: .agents/prompts/v1.0.0
     strategy: overwrite
     template: true
 

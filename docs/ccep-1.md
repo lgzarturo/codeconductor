@@ -97,9 +97,9 @@ Defined in `src/validation/schemas.ts`:
 | -------- | ------- |
 | Protocol | `ccep-1` |
 | Workflow profiles | `1` per command (YAML) |
-| Agent prompts | `v0.6.0` (structured JSON output; installed alongside `v0.5.0`) |
+| Agent prompts | `v1.0.0` (full contract set with CCEP-1 structured output) |
 
-Installed agent contracts (v0.6.0):
+Installed agent contracts (v1.0.0) with dedicated CCEP-1 schemas:
 
 - `planner.md` — `PlannerOutputSchema`
 - `implementer.md` — `ImplementerOutputSchema`
@@ -108,7 +108,7 @@ Installed agent contracts (v0.6.0):
 ## CLI compile and validate (v1.2)
 
 ```bash
-# Compile a phase prompt (defaults to promptVersion v0.6.0)
+# Compile a phase prompt (defaults to promptVersion v1.0.0)
 npx cc-codeconductor ccep compile --command feature --phase intake --role task-coach "Add CRUD" --output json
 
 # Validate agent JSON output against the phase schema

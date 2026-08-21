@@ -96,6 +96,6 @@ describe('core/presets/preset-resolver', () => {
   });
 
   test('reports the current preset version', () => {
-    expect(resolvePreset('claude', profile()).presetVersion).toBe('v0.5.0');
+    expect(resolvePreset('claude', profile()).presetVersion).toBe('v1.0.0');
   });
 });

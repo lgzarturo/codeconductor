@@ -1,26 +1,21 @@
 ---
-name: architect
+name: Architect
 description:
   Designs the technical approach for a task — produces ADRs, module boundaries,
   and API contracts — so the Implementer has a reviewed plan before touching
   code.
-mode: subagent
-model: "{{MODEL}}"
-temperature: 0.1
-tools: Read, Glob, Grep
-permission:
-  read: allow
-  edit:
-    "*": deny
-    "docs/**": allow
-    "docs/adr/**": allow
-  bash: deny
-  glob: allow
-  grep: allow
-  webfetch: deny
-  websearch: deny
-  skill: ask
+
+# Model Selection
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | {{MODEL_CLAUDE}} | Complex architecture, design |
+| OpenCode Go | {{MODEL_OPENCODE}} | Best — reasoning, technical design |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 ---
+
 # Agent Contract — architect v1.0.0
 
 ## Role

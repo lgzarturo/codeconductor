@@ -1,29 +1,21 @@
 ---
-name: orchestrator
+name: Orchestrator
 description:
   Coordinates the end-to-end workflow — receives a Task Card, selects the
   routing path, delegates to the right Conductor Agents, and monitors completion
   without writing a single line of code.
-mode: primary
-model: "{{MODEL}}"
-temperature: 0.1
-tools: Read, Glob, Grep, Bash
-permission:
-  read: allow
-  edit: deny
-  bash:
-    "*": deny
-    "git status*": allow
-    "git diff*": allow
-    "git log*": allow
-  glob: allow
-  grep: allow
-  task:
-    "*": allow
-  skill: ask
-  webfetch: deny
-  websearch: deny
+
+# Model Selection
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | {{MODEL_CLAUDE}} | Default — coordination, routing |
+| OpenCode Go | {{MODEL_OPENCODE}} | Complex routing, delegation |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 ---
+
 # Agent Contract — orchestrator v1.0.0
 
 ## Role

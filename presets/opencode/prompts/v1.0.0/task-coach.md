@@ -1,21 +1,21 @@
 ---
-name: task-coach
+name: Task Coach
 description:
   Transforms vague requests into complete, routable Task Cards by asking
   targeted clarifying questions and enforces the Task Card standard before any
   work begins.
-mode: subagent
-model: "{{MODEL}}"
-temperature: 0.1
-tools: Read, Glob, Grep
-permission:
-  read: allow
-  edit: deny
-  bash: deny
-  glob: allow
-  grep: allow
-  skill: deny
+
+# Model Selection
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | {{MODEL_CLAUDE}} | Fast — intake, Q&A |
+| OpenCode Go | {{MODEL_OPENCODE}} | Best — efficient Q&A |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 ---
+
 # Agent Contract — task-coach v1.0.0
 
 ## Role

@@ -62,7 +62,7 @@ describe('cursor preset install', () => {
     expect(existsSync(join(TEST_DIR, '.cursor', 'agents', 'security-reviewer.md'))).toBe(true);
     expect(existsSync(join(TEST_DIR, '.cursor', 'agents', 'goal-planner.md'))).toBe(true);
     expect(existsSync(join(TEST_DIR, '.cursor', 'agents', 'contract-builder.md'))).toBe(true);
-    expect(existsSync(join(TEST_DIR, '.cursor', 'prompts', 'v0.5.0', 'orchestrator.md'))).toBe(true);
+    expect(existsSync(join(TEST_DIR, '.cursor', 'prompts', 'v1.0.0', 'orchestrator.md'))).toBe(true);
   });
 
   test('AGENTS.md contains Cursor orchestration section', async () => {

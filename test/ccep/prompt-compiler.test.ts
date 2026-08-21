@@ -18,7 +18,7 @@ describe('ccep prompt-compiler', () => {
       role: phase.agent,
       phase: phase.id,
       context,
-      promptVersion: 'v0.6.0',
+      promptVersion: 'v1.0.0',
     });
 
     expect(compiled.layers).toHaveLength(7);
@@ -54,13 +54,13 @@ describe('ccep prompt-compiler', () => {
       role: 'task-coach',
       phase: 'intake',
       context: featureCtx,
-      promptVersion: 'v0.6.0',
+      promptVersion: 'v1.0.0',
     });
     const fixPrompt = compilePrompt({
       role: 'task-coach',
       phase: 'intake',
       context: fixCtx,
-      promptVersion: 'v0.6.0',
+      promptVersion: 'v1.0.0',
     });
 
     expect(featurePrompt.layers.find((l) => l.name === 'task')?.content).toContain('feature');
@@ -77,7 +77,7 @@ describe('ccep prompt-compiler', () => {
       role: 'task-coach',
       phase: 'deliberation',
       context,
-      promptVersion: 'v0.6.0',
+      promptVersion: 'v1.0.0',
     });
 
     const schemaLayer = compiled.layers.find((l) => l.name === 'output_schema');

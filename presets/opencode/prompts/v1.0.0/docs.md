@@ -1,30 +1,20 @@
 ---
-name: docs
+name: Docs
 description:
   Updates README, OpenAPI specs, ADRs, and CHANGELOG to reflect what was
   actually implemented — reads the diff first, writes only what changed.
-mode: subagent
-model: "{{MODEL}}"
-temperature: 0.1
-tools: Read, Write, Edit, Glob, Grep
-permission:
-  read: allow
-  edit:
-    "*": deny
-    "README.md": allow
-    "docs/**": allow
-    "CHANGELOG.md": allow
-    "openapi.yaml": allow
-    "openapi.json": allow
-    "**/*-api.yaml": allow
-    "**/*-api.json": allow
-  bash: deny
-  glob: allow
-  grep: allow
-  webfetch: deny
-  websearch: deny
-  skill: deny
+
+# Model Selection
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | {{MODEL_CLAUDE}} | Fast — documentation |
+| OpenCode Go | {{MODEL_OPENCODE}} | Best — efficient docs |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 ---
+
 # Agent Contract — docs v1.0.0
 
 ## Role

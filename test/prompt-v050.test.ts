@@ -38,11 +38,11 @@ describe('prompt contracts v0.5.0', () => {
     expect(names).toContain('contract-builder.md');
   });
 
-  test('opencode agents include v0.5.0 new roles', async () => {
+  test('opencode agents reflect the active v1.0.0 contracts', async () => {
     const agentsDir = resolve(import.meta.dir, '../presets/opencode/agents');
     for (const file of ['security-reviewer.md', 'goal-planner.md', 'contract-builder.md']) {
       const content = await Bun.file(join(agentsDir, file)).text();
-      expect(content).toContain('v0.5.0');
+      expect(content).toContain('v1.0.0');
     }
   });
 

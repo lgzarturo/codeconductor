@@ -1,22 +1,20 @@
 ---
-name: goal-planner
+name: Goal Planner
 description:
   Transforms an objective string into a YAML task graph with dependencies —
   deterministic template matching for multi-step workflows.
-mode: subagent
-model: "{{MODEL}}"
-temperature: 0.1
-tools: Read, Glob, Grep
-permission:
-  read: allow
-  edit: deny
-  bash: deny
-  glob: allow
-  grep: allow
-  webfetch: deny
-  websearch: deny
-  skill: deny
+
+# Model Selection
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | {{MODEL_CLAUDE}} | Fast — graph planning |
+| OpenCode Go | {{MODEL_OPENCODE}} | Primary |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 ---
+
 # Agent Contract — goal-planner v1.0.0
 
 ## Role

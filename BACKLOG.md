@@ -17,7 +17,7 @@ Formato validable por `cc openspec validate`. Análisis completo en
 ### BC-007 | Gate de grilling en el rol Task Coach
 
 - Priority: P2
-- Status: TODO
+- Status: PLANNED
 - Type: feature
 - Depends on: BC-002
 - Description: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mecánica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoyándose en el ConfirmationGate de cc ccep.

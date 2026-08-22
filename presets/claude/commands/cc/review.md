@@ -57,7 +57,33 @@ Show the diff summary (files changed, lines added/removed) before proceeding.
 
 Adopt the **Reviewer** role as defined in `CLAUDE.md`.
 
-Evaluate the diff against the following checklist:
+Execute two axes in **parallel** without reranking between them, via separate sub-agents:
+
+**Standards Axis** — Code smell detection against Fowler baseline with documented override:
+
+- Long Method
+- Large Class
+- Duplicated Code
+- Feature Envy
+- Shotgun Surgery
+- Primitive Obsession
+- Data Clumps
+- Switch Statements
+- Speculative Generality
+- Temporary Fields
+- Message Chains
+- Middle Man
+- Inappropriate Intimacy
+- Data Class
+- Comments-as-apology
+
+**Spec Axis** — Task Card, acceptance criteria, and scope validation:
+
+- Does the implementation match the stated intent from the Task Card?
+- Are all acceptance criteria addressed?
+- Are there changes outside the stated scope?
+
+**Combined sub-checks** (apply findings from both axes):
 
 **Correctness**
 
@@ -89,31 +115,45 @@ Evaluate the diff against the following checklist:
 - Are public interfaces documented?
 - Is CHANGELOG updated if behavior changed?
 
----
-
 ## Step 3 — Review Report
 
-Produce a structured Review Report with findings in three categories:
+Produce a structured Review Report combining findings from both Standards and Spec axes (executed in parallel without reranking):
 
 ```markdown
 ## Review Report
 
-### CRITICAL
-[Findings that must be fixed before merge — file:line, description, suggested resolution]
-
-### WARNING
-[Findings that should be resolved before merge — same format as CRITICAL]
-
-### SUGGESTION
-[Optional improvements — style, readability, future-proofing. These do not block merge.]
-
-### Summary
-- Files reviewed: N
-- Total findings: N (X critical, Y warnings, Z suggestions)
-- Merge recommendation: APPROVED | BLOCKED
-```
+**Task**: [objective from Task Card] **Verdict**: [approved | approved with warnings | blocked]
 
 ---
+
+### Standards Axis
+
+Findings from Fowler code smell baseline evaluation (with documented overrides applied).
+
+- [ ] [S1] [file:line] — [code smell type] | Override: [documented or N/A] | Required action: [change needed] (CRITICAL) or Recommended action: [change needed] (WARNING)
+
+_(none)_ if no code smell findings
+
+### Spec Axis
+
+Findings from Task Card, acceptance criteria, and scope alignment.
+
+- [ ] [Sp1] [criterion] — [description] | Evidence: [quote] | Required action: [change needed] (CRITICAL) or Recommended action: [change needed] (WARNING)
+
+_(none)_ if no spec findings
+
+### Combined Summary
+
+- Standards findings: [count] (X CRITICAL, Y WARNING, Z SUGGESTION)
+- Spec findings: [count] (X CRITICAL, Y WARNING, Z SUGGESTION)
+- **Combined Verdict**: [approved | approved with warnings | blocked]
+- **Verdict justification**: [one sentence explaining the combined decision]
+```
+
+Verdict mapping from parallel axes (no reranking):
+- If either axis has CRITICAL → verdict is `blocked`
+- Else if either axis has WARNING → verdict is `approved with warnings`
+- Else → verdict is `approved`
 
 ## Step 4 — Merge decision
 
@@ -140,10 +180,20 @@ Deliver the complete Review Report. Never summarize or omit findings.
 
 ## Step 5 — Scorecard and outcome
 
+Record the review outcome via scorecard with explicit verdict mapping:
+
 ```bash
 npx cc-codeconductor scorecard create --from-diff --agent reviewer
 npx cc-codeconductor scorecard record --verdict PASS|REVISE|REJECT --score <weighted>
 npx cc-codeconductor scorecard regression
 ```
 
-Map merge recommendation to scorecard verdict. Record outcome for trend tracking.
+**Verdict Mapping** (combined Standards + Spec axes):
+
+- `approved` → `npx cc-codeconductor scorecard record --verdict PASS`
+- `approved with warnings` → `npx cc-codeconductor scorecard record --verdict REVISE`
+- `blocked` → `npx cc-codeconductor scorecard record --verdict REJECT`
+
+Example: if the combined verdict is `blocked` (either axis found CRITICAL), record with `--verdict REJECT`.
+
+Map each review outcome for trend tracking and decision audit.

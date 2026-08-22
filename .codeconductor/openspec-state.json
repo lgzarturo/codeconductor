@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "activeItemId": "BC-003",
+  "taskCards": [
+    {
+      "id": "BC-003-discover",
+      "backlogId": "BC-003",
+      "phase": "discover",
+      "title": "BC-003: Discover scope and impact",
+      "prompt": "Backlog item BC-003 — Revisión de dos ejes en /cc:review",
+      "agent": "repo-explorer",
+      "modelHint": "repo-explorer",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Repo map identifies relevant files and impact radius"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "BC-003-design",
+      "backlogId": "BC-003",
+      "phase": "design",
+      "title": "BC-003: Technical design",
+      "prompt": "Backlog item BC-003 — Revisión de dos ejes en /cc:review",
+      "agent": "architect",
+      "modelHint": "architect",
+      "dependsOn": [
+        "BC-003-discover"
+      ],
+      "acceptanceCriteria": [
+        "Technical plan lists files affected and approach"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "BC-003-test",
+      "backlogId": "BC-003",
+      "phase": "test",
+      "title": "BC-003: Test coverage",
+      "prompt": "Backlog item BC-003 — Revisión de dos ejes en /cc:review",
+      "agent": "tester",
+      "modelHint": "tester",
+      "dependsOn": [
+        "BC-003-design"
+      ],
+      "acceptanceCriteria": [
+        "Test covers: /cc:review ejecuta los ejes Standards y Spec en sub-agentes separados",
+        "Test covers: El eje Standards aplica el baseline de code smells salvo override documentado del repo",
+        "Test covers: El verdicto se registra con `cc scorecard record --verdict PASS|REVISE|REJECT`"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "BC-003-implement",
+      "backlogId": "BC-003",
+      "phase": "implement",
+      "title": "BC-003: Implementation",
+      "prompt": "Backlog item BC-003 — Revisión de dos ejes en /cc:review",
+      "agent": "implementer",
+      "modelHint": "implementer",
+      "dependsOn": [
+        "BC-003-test"
+      ],
+      "acceptanceCriteria": [
+        "/cc:review ejecuta los ejes Standards y Spec en sub-agentes separados",
+        "El eje Standards aplica el baseline de code smells salvo override documentado del repo",
+        "El verdicto se registra con `cc scorecard record --verdict PASS|REVISE|REJECT`"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "BC-003-review",
+      "backlogId": "BC-003",
+      "phase": "review",
+      "title": "BC-003: Review and validation",
+      "prompt": "Backlog item BC-003 — Revisión de dos ejes en /cc:review",
+      "agent": "reviewer",
+      "modelHint": "reviewer",
+      "dependsOn": [
+        "BC-003-implement"
+      ],
+      "acceptanceCriteria": [
+        "All acceptance criteria verified",
+        "Tests pass",
+        "No scope creep beyond backlog item"
+      ],
+      "status": "done"
+    }
+  ],
+  "lastScanHash": "c08c65eabe3cecab",
+  "lastScanAt": "2026-08-22T01:06:12.889Z",
+  "changePaths": {
+    "BC-001": "openspec/changes/bc-001-r-brica-writing-for-agents-para-auditar-prompts-",
+    "BC-002": "openspec/changes/bc-002-context-md-como-glosario-de-dominio-y-criterios-",
+    "BC-003": "openspec/changes/bc-003-revisi-n-de-dos-ejes-en-cc-review"
+  },
+  "itemSnapshots": {
+    "BC-004": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Gate de loop rojo reproducible en /cc:fix\"}",
+    "BC-005": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"TDD por seams y checklist de anti-patrones en /cc:tdd-cycle\"}",
+    "BC-006": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Planificación tracer-bullet con aristas bloqueantes\"}",
+    "BC-007": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Gate de grilling en el rol Task Coach\"}",
+    "BC-008": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Secuencia expand-contract para refactors amplios en /cc:refactor\"}",
+    "BC-009": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Hook PreToolUse que bloquea git destructivo\"}",
+    "BC-010": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Gate pre-commit typecheck y test adaptado a Bun\"}",
+    "BC-011": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Comando /cc:handoff para traspaso entre sesiones\"}",
+    "BC-012": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Router /cc:ask que recomienda el slash command correcto\"}",
+    "BC-003": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Revisión de dos ejes en /cc:review\"}",
+    "BC-002": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"CONTEXT.md como glosario de dominio y criterios ADR\"}",
+    "BC-001": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Rúbrica writing-for-agents para auditar prompts de agentes\"}"
+  }
+}

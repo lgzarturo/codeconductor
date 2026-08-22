@@ -1,12 +1,14 @@
 /**
  * Tests for BC-006 — Tracer-bullet documentation in openspec.md
- * 
- * These tests verify that .claude/commands/cc/openspec.md documents:
+ *
+ * These tests verify that presets/claude/commands/cc/openspec.md (the
+ * versioned, canonical source — .claude/commands/cc is a gitignored local
+ * install copy and isn't guaranteed to exist in CI) documents:
  * 1. Tracer-bullet as a vertical slice that fits within a context window
  * 2. A quantitative heuristic for sizing (e.g., max acceptance criteria or phases per window)
  * 3. "Depends on" field as blocking edges between BC-NNN items
  * 4. Equivalence: BC-NNN = tracer-bullet = one or more TaskCards from `cc openspec plan`
- * 
+ *
  * The docstring for each test indicates which acceptance criterion it covers.
  */
 
@@ -15,7 +17,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const PROJECT_ROOT = process.cwd();
-const OPENSPEC_DOC_PATH = resolve(PROJECT_ROOT, '.claude', 'commands', 'cc', 'openspec.md');
+const OPENSPEC_DOC_PATH = resolve(PROJECT_ROOT, 'presets', 'claude', 'commands', 'cc', 'openspec.md');
 
 function readOpenspecDoc(): string {
   return readFileSync(OPENSPEC_DOC_PATH, 'utf-8');

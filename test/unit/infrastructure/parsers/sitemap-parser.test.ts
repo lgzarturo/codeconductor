@@ -113,7 +113,7 @@ describe('infrastructure/parsers/sitemap-parser', () => {
   describe('public API', () => {
     test('drops a cast third-arg fetchImpl bypass at runtime', async () => {
       const { fetchImpl, calls } = fakeFetcher({
-        'https://example.com/sitemap.xml': buildUrlset(1, 'public-'),
+        'https://localhost/sitemap.xml': buildUrlset(1, 'public-'),
       });
       const bypass = parseSitemap as unknown as (
         url: string,
@@ -121,7 +121,10 @@ describe('infrastructure/parsers/sitemap-parser', () => {
         internals?: object
       ) => ReturnType<typeof parseSitemap>;
 
-      await expect(bypass('https://example.com/sitemap.xml', {}, { fetchImpl })).rejects.toThrow();
+      // localhost is blocked by the SSRF guard synchronously, before any real
+      // network I/O — this keeps the assertion deterministic across
+      // environments instead of depending on a live call to a real host.
+      await expect(bypass('https://localhost/sitemap.xml', {}, { fetchImpl })).rejects.toThrow();
       expect(calls).toEqual([]);
     });
   });

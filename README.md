@@ -35,6 +35,9 @@ contracts, task cards, and risk-based routing.
 > - `npx cc-codeconductor scorecard …`
 > - Slash commands after `install preset` — prefer `/cc-iterative`, `/cc-triage`,
 >   `/cc-handoff`; `/cc-openspec` runs the OpenSpec loop
+> - `/cc-pagespeed --url <url>` — PageSpeed Insights / Core Web Vitals after
+>   `install preset`; `PAGESPEED_API_KEY` is optional but recommended for CrUX
+>   field data (see [docs/pagespeed-usage.md](docs/pagespeed-usage.md))
 > - Stack-specific skill selection (`ts-next-drizzle`, `spring-kotlin-jpa`,
 >   `laravel-tall`, `python-data-api`)
 > - Council consensus: confidence thresholds + `securityVeto` / `complianceVeto`

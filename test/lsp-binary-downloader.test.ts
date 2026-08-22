@@ -4,7 +4,6 @@ import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import {
   downloadPinnedBinaryWithInternals,
-  MAX_BINARY_BYTES,
   MAX_BINARY_REDIRECTS,
 } from '../src/core/lsp/binary-downloader-internal';
 import { downloadPinnedBinary } from '../src/core/lsp/binary-downloader';
@@ -80,8 +79,14 @@ beforeAll(async () => {
     }
 
     if (url === '/oversized-content-length') {
-      res.writeHead(200, { 'Content-Length': String(MAX_BINARY_BYTES + 1) });
-      res.end();
+      // Body is 11 bytes; the client cap is 10. Ending with a matching
+      // Content-Length lets Bun deliver headers (its http client is fetch-
+      // based and aborts on CL/body mismatch, or hangs if the body never
+      // arrives). The downloader must still refuse on the header, not after
+      // accumulating chunks.
+      const body = Buffer.alloc(11, 0x61);
+      res.writeHead(200, { 'Content-Length': String(body.length) });
+      res.end(body);
       return;
     }
 
@@ -193,7 +198,10 @@ describe('lsp binary downloader — rejected responses', () => {
 
   test('rejects an oversized Content-Length before reading the body', async () => {
     await expect(
-      downloadPinnedBinaryWithInternals(`${origin}/oversized-content-length`, local),
+      downloadPinnedBinaryWithInternals(`${origin}/oversized-content-length`, {
+        ...local,
+        maxBytes: 10,
+      }),
     ).rejects.toThrow(/exceeds/i);
   });
 

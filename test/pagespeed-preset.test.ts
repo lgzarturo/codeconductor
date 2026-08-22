@@ -226,12 +226,15 @@ describe('agent contract updates', () => {
 describe('documentation updates', () => {
   test('README.md mentions /cc-pagespeed command', () => {
     const content = readPreset('README.md');
-    expect(content).toContain('cc-pagespeed');
+    expect(content).toContain('/cc-pagespeed');
+    expect(content).toContain('install preset');
   });
 
   test('README.md documents PAGESPEED_API_KEY requirement', () => {
     const content = readPreset('README.md');
     expect(content).toContain('PAGESPEED_API_KEY');
+    expect(content).toMatch(/optional/i);
+    expect(content).toContain('docs/pagespeed-usage.md');
   });
 
   test('docs/cc-commands.md has cc-pagespeed section', () => {

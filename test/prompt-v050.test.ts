@@ -52,7 +52,7 @@ describe('prompt contracts v0.5.0', () => {
     const modelConfig = await loadModelConfig('cursor');
     const raw = await Bun.file(join(PROMPTS_V050, 'architect.md')).text();
     const rendered = renderTemplate(raw, modelConfig, 'architect.md');
-    expect(rendered).toContain('cursor-grok-4.5-high-fast');
+    expect(rendered).toContain('cursor-grok-4.6-high-fast');
     expect(rendered).not.toContain('{{MODEL_GROK}}');
   });
 

@@ -484,13 +484,14 @@ exceptions, or context here.
 | Skill | Description | Path |
 | ----- | ----------- | ---- |
 | `cc-self-review` | Self-review del producto (seguridad, implementación, flujo, features, mental model). Solo este repo. | [SKILL.md](skills/cc-self-review/SKILL.md) |
+| `cc-update-preset-models` | Refresca slugs de modelo en `src/presets/models/` y tests de install. Solo este repo. | [SKILL.md](skills/cc-update-preset-models/SKILL.md) |
 
-**Slash commands (Cursor, solo este proyecto):** `/cc-self-review` · `/cc:self-review`
+**Slash commands (Cursor, solo este proyecto):** `/cc-self-review` · `/cc:self-review` · `/cc-update-preset-models` · `/cc:update-preset-models`
 
-- Canonical skill: `skills/cc-self-review/` (fuera de `presets/` y del npm package)
-- Cursor stubs: `.cursor/commands/cc-self-review.md`, `.cursor/commands/cc/self-review.md`, `.cursor/skills/cc-self-review/`
+- Canonical skills: `skills/cc-self-review/`, `skills/cc-update-preset-models/` (fuera de `presets/` y del npm package)
+- Cursor stubs: `.cursor/commands/` y `.cursor/skills/` para cada una
 - **Never** copy into `presets/`, CCEP profiles, Conductor Agent routing, or `src/presets/`
-- If `install preset --target cursor` overwrites `.cursor/commands` or `.cursor/skills`, restore from `skills/cc-self-review/assets/commands/`
+- If `install preset --target cursor` overwrites `.cursor/commands` or `.cursor/skills`, restore from `skills/<name>/assets/commands/`
 
 ## Approach
 

@@ -207,29 +207,29 @@ describe('loadModelConfig', () => {
 
   test('opencode config has architect models for all providers', async () => {
     const config = await loadModelConfig('opencode');
-    expect(config.agents.architect.claude).toBe('claude-opus-4-8');
+    expect(config.agents.architect.claude).toBe('claude-opus-5');
     expect(config.agents.architect.opencode).toBe('opencode-go/deepseek-v4-pro');
-    expect(config.agents.architect.codex).toBe('gpt-5.5');
-    expect(config.agents.architect.gemini).toBe('gemini-2.5-pro');
-    expect(config.agents.architect.cursor).toBe('gpt-5.5');
+    expect(config.agents.architect.codex).toBe('gpt-5.6-sol');
+    expect(config.agents.architect.gemini).toBe('gemini-3.1-pro-preview');
+    expect(config.agents.architect.cursor).toBe('claude-opus-5-thinking-high');
   });
 
   test('claude config has implementer models for all providers', async () => {
     const config = await loadModelConfig('claude');
-    expect(config.agents.implementer.claude).toBe('claude-sonnet-4-6');
+    expect(config.agents.implementer.claude).toBe('claude-sonnet-5');
     expect(config.agents.implementer.opencode).toBe('opencode-go/mimo-v2.5-pro');
-    expect(config.agents.implementer.codex).toBe('gpt-5.3-codex');
-    expect(config.agents.implementer.gemini).toBe('gemini-2.5-flash');
-    expect(config.agents.implementer.cursor).toBe('gpt-5.3');
+    expect(config.agents.implementer.codex).toBe('gpt-5.6-terra');
+    expect(config.agents.implementer.gemini).toBe('gemini-3.7-flash');
+    expect(config.agents.implementer.cursor).toBe('composer-2.5-fast');
   });
 
   test('codex config has tester models for all providers', async () => {
     const config = await loadModelConfig('codex');
-    expect(config.agents.tester.claude).toBe('claude-sonnet-4-6');
-    expect(config.agents.tester.opencode).toBe('opencode-go/minimax-m2.7');
-    expect(config.agents.tester.codex).toBe('gpt-5.3-codex');
-    expect(config.agents.tester.gemini).toBe('gemini-2.5-flash');
-    expect(config.agents.tester.cursor).toBe('gpt-5.3');
+    expect(config.agents.tester.claude).toBe('claude-sonnet-5');
+    expect(config.agents.tester.opencode).toBe('opencode-go/minimax-m3');
+    expect(config.agents.tester.codex).toBe('gpt-5.6-terra');
+    expect(config.agents.tester.gemini).toBe('gemini-3.7-flash');
+    expect(config.agents.tester.cursor).toBe('composer-2.5-fast');
   });
 
   test('gemini config has all 8 agent roles', async () => {
@@ -254,7 +254,7 @@ describe('loadModelConfig', () => {
     for (const role of [...EXPECTED_ROLES, 'complexity-auditor', 'security-reviewer', 'goal-planner', 'contract-builder', 'planner', 'devil']) {
       expect(config.agents[role]).toBeDefined();
       expect(typeof config.agents[role].cursor).toBe('string');
-      expect(config.agents[role].grok).toBe('cursor-grok-4.5-high-fast');
+      expect(config.agents[role].grok).toBe('cursor-grok-4.6-high-fast');
     }
   });
 
@@ -459,7 +459,7 @@ describe('copyFromManifest with modelConfig', () => {
     for (const file of ['planner.md', 'devil.md']) {
       const content = await readFile(join(TEST_DIR, '.opencode', 'prompts', 'v1.0.0', file), 'utf-8');
       expect(content).not.toContain('{{MODEL');
-      expect(content).toContain('cursor-grok-4.5-high-fast');
+      expect(content).toContain('cursor-grok-4.6-high-fast');
     }
   });
 });
@@ -759,8 +759,8 @@ describe('End-to-end: CLI install preset renders model names', () => {
     await runCli(['install', 'preset', '--target=codex', '--force']);
 
     const content = await readFile(join(TEST_DIR, '.codex', 'AGENTS.md'), 'utf-8');
-    // codex install: only codex model names appear (e.g. gpt-5.5 for architect)
-    expect(content).toContain('gpt-5.5');
+    // codex install: only codex model names appear (e.g. gpt-5.6-sol for architect)
+    expect(content).toContain('gpt-5.6-sol');
     expect(content).not.toContain('{{MODEL_CODEX}}');
     expect(content).not.toContain('{{MODEL_CLAUDE}}');
     expect(content).not.toContain('{{MODEL_OPENCODE}}');
@@ -778,7 +778,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
       'utf-8'
     );
     // claude install: frontmatter has claude model for architect
-    expect(content).toContain('claude-opus-4-8');
+    expect(content).toContain('claude-opus-5');
     expect(content).not.toContain('{{MODEL}}');
     expect(content).not.toContain('{{MODEL_CLAUDE}}');
   });
@@ -811,7 +811,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
       join(TEST_DIR, '.gemini', 'agents', 'architect.md'),
       'utf-8'
     );
-    expect(content).toContain('gemini-2.5-pro');
+    expect(content).toContain('gemini-3.1-pro-preview');
     expect(content).not.toContain('{{MODEL}}');
   });
 
@@ -845,11 +845,11 @@ describe('End-to-end: CLI install preset renders model names', () => {
     );
     expect(claudeContent).not.toContain('{{MODEL}}');
     expect(claudeContent).not.toContain('{{MODEL_');
-    expect(claudeContent).toContain('claude-opus-4-8');
+    expect(claudeContent).toContain('claude-opus-5');
 
     const codexContent = await readFile(join(TEST_DIR, '.codex', 'AGENTS.md'), 'utf-8');
     expect(codexContent).not.toContain('{{MODEL_');
-    expect(codexContent).toContain('gpt-5.5');
+    expect(codexContent).toContain('gpt-5.6-sol');
 
     const geminiContent = await readFile(
       join(TEST_DIR, '.gemini', 'agents', 'architect.md'),
@@ -857,7 +857,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     );
     expect(geminiContent).not.toContain('{{MODEL}}');
     expect(geminiContent).not.toContain('{{MODEL_');
-    expect(geminiContent).toContain('gemini-2.5-pro');
+    expect(geminiContent).toContain('gemini-3.1-pro-preview');
 
     const cursorContent = await readFile(
       join(TEST_DIR, '.cursor', 'agents', 'architect.md'),
@@ -877,7 +877,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
       'utf-8'
     );
     // opencode install: frontmatter has opencode model for orchestrator
-    expect(content).toContain('deepseek-v4-pro');
+    expect(content).toContain('qwen3.7-plus');
     expect(content).not.toContain('{{MODEL}}');
   });
 

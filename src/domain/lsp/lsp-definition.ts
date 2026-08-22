@@ -49,5 +49,5 @@ export interface LspDefinition {
   readonly versionFlag: string;
   readonly npmDetect?: string;
   readonly pipDetect?: string;
-  readonly binaryPlatforms?: Record<string, { url: string; sha256?: string }>;
+  readonly binaryPlatforms?: Record<string, { url: string; sha256: string }>;
 }

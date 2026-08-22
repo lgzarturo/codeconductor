@@ -595,7 +595,7 @@ describe('CLI', () => {
 
     const { existsSync } = await import('node:fs');
     expect(
-      existsSync(join(CLI_ROOT, '.opencode', 'prompts', 'v0.5.0', 'orchestrator.md'))
+      existsSync(join(CLI_ROOT, '.opencode', 'prompts', 'v1.0.0', 'orchestrator.md'))
     ).toBe(true);
     expect(
       existsSync(join(CLI_ROOT, '.opencode', 'agents', 'contract-builder.md'))
@@ -646,7 +646,7 @@ describe('CLI', () => {
     expect(existsSync(join(CLI_ROOT, '.codex', 'skills', 'api-versioning', 'SKILL.md'))).toBe(
       true
     );
-    expect(existsSync(join(CLI_ROOT, '.codex', 'prompts', 'v0.5.0', 'orchestrator.md'))).toBe(
+    expect(existsSync(join(CLI_ROOT, '.codex', 'prompts', 'v1.0.0', 'orchestrator.md'))).toBe(
       true
     );
   });
@@ -692,17 +692,21 @@ describe('CLI', () => {
     expect(json.fileResults.length).toBeGreaterThan(0);
   });
 
-  test('install preset CLAUDE.md appends when already exists (local)', async () => {
+  test('install preset CLAUDE.md is preserved without --force and replaced with it', async () => {
     await runCli(['init', '--force']);
     // Pre-create CLAUDE.md
     await mkdir(join(CLI_ROOT, '.claude'), { recursive: true });
     await writeFile(join(CLI_ROOT, '.claude', 'CLAUDE.md'), '# Existing content\n');
 
-    // Local install without force → strategy=overwrite (overwrites)
+    // Local install without force → strategy=overwrite, but the existing file is kept
     const result = await runCli(['install', 'preset', '--target=claude']);
     expect(result.exitCode).toBe(0);
+    expect(await readFile(join(CLI_ROOT, '.claude', 'CLAUDE.md'), 'utf-8')).toContain(
+      '# Existing content'
+    );
 
-    // Local uses overwrite strategy, so old content is replaced
+    const forced = await runCli(['install', 'preset', '--target=claude', '--force']);
+    expect(forced.exitCode).toBe(0);
     const content = await readFile(join(CLI_ROOT, '.claude', 'CLAUDE.md'), 'utf-8');
     expect(content).not.toContain('# Existing content');
   });

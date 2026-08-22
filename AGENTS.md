@@ -44,15 +44,16 @@ Skipping any step is not an optimization. It is a defect.
 
 Do not build features, abstractions, or "flexibility" that is not explicitly
 requested. If the user asks for a function, write a function — not a class
-hierarchy. If they ask for a string, return a string — not a Result type with 15
-error codes. Every line you write must solve a problem that exists **now**.
+hierarchy. If they ask for a string, return a string — not a Result type
+with 15 error codes. Every line you write must solve a problem that exists
+**now**.
 
 ## Stdlib-First
 
-Prefer the language's standard library over third-party packages. Before adding
-a dependency, ask: "Does `node:fs`, `node:path`, `node:crypto`, or a built-in
-module solve this?" If yes, use it. Every external dependency introduces
-maintenance burden, supply-chain risk, and version conflicts.
+Prefer the language's standard library over third-party packages. Before
+adding a dependency, ask: "Does `node:fs`, `node:path`, `node:crypto`, or
+a built-in module solve this?" If yes, use it. Every external dependency
+introduces maintenance burden, supply-chain risk, and version conflicts.
 
 ## Routing Policy
 
@@ -70,21 +71,21 @@ maintenance burden, supply-chain risk, and version conflicts.
 
 ### Agent Routing Table
 
-| Task Type            | Risk        | Route To                                                                   |
-| -------------------- | ----------- | -------------------------------------------------------------------------- |
-| New feature design   | any         | `architect` → `implementer`                                                |
-| Bug fix              | low         | `implementer`                                                              |
-| Bug fix              | medium–high | `task-coach` → `implementer` → `tester`                                    |
-| Refactor             | low         | `implementer`                                                              |
-| Refactor             | medium–high | `architect` → `implementer` → `complexity-auditor` → `reviewer`            |
-| API change           | any         | `architect` → `implementer` → `complexity-auditor` → `reviewer`            |
-| Database migration   | any         | `architect` → `implementer` → `tester` → `complexity-auditor` → `reviewer` |
-| Test coverage        | any         | `tester`                                                                   |
-| Documentation update | any         | `docs`                                                                     |
-| Codebase exploration | any         | `repo-explorer`                                                            |
-| Code review          | any         | `reviewer`                                                                 |
-| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `implementer` → `tester`                |
-| Security review      | high        | `security-reviewer` → `reviewer`                                           |
+| Task Type            | Risk        | Route To                                                    |
+| -------------------- | ----------- | ----------------------------------------------------------- |
+| New feature design   | any         | `architect` → `tester` → `implementer`                      |
+| Bug fix              | low         | `tester` → `implementer`                                    |
+| Bug fix              | medium–high | `task-coach` → `tester` → `implementer`                     |
+| Refactor             | low         | `implementer`                                               |
+| Refactor             | medium–high | `architect` → `implementer` → `complexity-auditor` → `reviewer` |
+| API change           | any         | `architect` → `implementer` → `complexity-auditor` → `reviewer` |
+| Database migration   | any         | `architect` → `tester` → `implementer` → `complexity-auditor` → `reviewer` |
+| Test coverage        | any         | `tester`                                                    |
+| Documentation update | any         | `docs`                                                      |
+| Codebase exploration | any         | `repo-explorer`                                             |
+| Code review          | any         | `reviewer`                                                  |
+| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `tester` → `implementer` |
+| Security review      | high        | `security-reviewer` → `reviewer`                            |
 
 When uncertain about routing, escalate to `orchestrator`.
 
@@ -323,15 +324,14 @@ needs a multi-step plan before delegation.
 
 The planner matches objective keywords against built-in templates (auth, crud,
 search, notification, migration) and falls back to a generic 4-task chain:
-`task-coach → architect → implementer → tester`.
+`task-coach → architect → tester → implementer`.
 
 **Dependency order delegation (orchestrator):**
 
 When the orchestrator receives a GoalGraph, it delegates tasks in dependency
 order. A task is only routed after all its `depends_on` targets complete with
-status `done`. If a dependency is `blocked`, the dependent task remains
-`pending`. The orchestrator tracks the graph state in
-`.codeconductor/current-goal.yml`.
+status `done`. If a dependency is `blocked`, the dependent task remains `pending`.
+The orchestrator tracks the graph state in `.codeconductor/current-goal.yml`.
 
 ---
 
@@ -357,8 +357,7 @@ definition, or the DDD→SDD→TDD pipeline is triggered.
 
 ### Parallel execution
 
-- Enable `/multitask` when delegating independent steps (e.g. `reviewer` +
-  `docs`)
+- Enable `/multitask` when delegating independent steps (e.g. `reviewer` + `docs`)
 - Use the Task tool with multiple subagents in a single turn for parallel work
 - In Plan mode, use "Build in Parallel" for independent plan steps
 
@@ -379,8 +378,7 @@ definition, or the DDD→SDD→TDD pipeline is triggered.
 - Use `/summarize` or `/compress` before re-delegating with large context
 - Start `/clear` when switching unrelated task types
 - Prefer subagent isolation over passing full conversation history
-- Only parallelize steps with no data dependencies — parallel subagents cost ~N×
-  tokens
+- Only parallelize steps with no data dependencies — parallel subagents cost ~N× tokens
 
 ### Loop Agent Mode (Intense Workflows)
 
@@ -390,9 +388,8 @@ definition, or the DDD→SDD→TDD pipeline is triggered.
 
 ## Skills
 
-When the active task touches stack-specific code, apply rules in
-`.cursor/skills/`. Invoke skills via `/skill-name` or let the agent auto-load
-scoped skills.
+When the active task touches stack-specific code, apply rules in `.cursor/skills/`.
+Invoke skills via `/skill-name` or let the agent auto-load scoped skills.
 
 Key skills: `security`, `django-orm`, `spring-boot-kotlin`, `nextjs-typescript`,
 `laravel-specialist`, `openspec`, `evaluation`, `multi-agent-orchestration`.
@@ -481,6 +478,19 @@ to test all current flow before publishing version v1.0.0 to npm.
 
 This section is manually maintained. Add project-specific conventions,
 exceptions, or context here.
+
+### Internal skills (not shipped)
+
+| Skill | Description | Path |
+| ----- | ----------- | ---- |
+| `cc-self-review` | Self-review del producto (seguridad, implementación, flujo, features, mental model). Solo este repo. | [SKILL.md](skills/cc-self-review/SKILL.md) |
+
+**Slash commands (Cursor, solo este proyecto):** `/cc-self-review` · `/cc:self-review`
+
+- Canonical skill: `skills/cc-self-review/` (fuera de `presets/` y del npm package)
+- Cursor stubs: `.cursor/commands/cc-self-review.md`, `.cursor/commands/cc/self-review.md`, `.cursor/skills/cc-self-review/`
+- **Never** copy into `presets/`, CCEP profiles, Conductor Agent routing, or `src/presets/`
+- If `install preset --target cursor` overwrites `.cursor/commands` or `.cursor/skills`, restore from `skills/cc-self-review/assets/commands/`
 
 ## Approach
 

@@ -99,13 +99,13 @@ When multiple signals apply, take the highest risk level. Do not average.
 
 | Task Type            | Risk        | Route                                               |
 | -------------------- | ----------- | --------------------------------------------------- |
-| New feature design   | any         | `architect` → `implementer`                         |
-| Bug fix              | low         | `implementer`                                       |
-| Bug fix              | medium–high | `task-coach` → `implementer` → `tester`             |
+| New feature design   | any         | `architect` → `tester` → `implementer`              |
+| Bug fix              | low         | `tester` → `implementer`                            |
+| Bug fix              | medium–high | `task-coach` → `tester` → `implementer`             |
 | Refactor             | low         | `implementer`                                       |
 | Refactor             | medium–high | `architect` → `implementer` → `reviewer`            |
 | API change           | any         | `architect` → `implementer` → `reviewer`            |
-| Database migration   | any         | `architect` → `implementer` → `tester` → `reviewer` |
+| Database migration   | any         | `architect` → `tester` → `implementer` → `reviewer` |
 | Test coverage        | any         | `tester`                                            |
 | Documentation update | any         | `docs`                                              |
 | Codebase exploration | any         | `repo-explorer`                                     |
@@ -265,7 +265,7 @@ High-risk checkpoint: [yes | no — if yes, describe what triggers a stop]
 **Does not:** Write files. Execute commands. Make routing decisions.
 
 **Template matching:**
-The planner matches objective keywords against built-in templates (auth, crud, search, notification, migration) and falls back to a generic 4-task chain: task-coach → architect → implementer → tester.
+The planner matches objective keywords against built-in templates (auth, crud, search, notification, migration) and falls back to a generic 4-task chain: task-coach → architect → tester → implementer.
 
 **Dependency order delegation (orchestrator):**
 When the orchestrator receives a GoalGraph, it delegates tasks in dependency order. A task is only routed after all its `depends_on` targets complete with status `done`. If a dependency is `blocked`, the dependent task remains `pending`. The orchestrator tracks the graph state in `.codeconductor/current-goal.yml`.

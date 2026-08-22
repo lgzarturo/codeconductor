@@ -25,8 +25,9 @@ Command: `fix` (fixed for this workflow — do not infer from user text)
 1. Run: `npx cc-codeconductor ccep parse --command fix "$ARGUMENTS" --output json`
 2. Run: `npx cc-codeconductor ccep resolve --command fix "$ARGUMENTS" --output json`
 3. Run: `npx cc-codeconductor ccep profile fix --output json`
-4. If the ConfirmationGate stops the flow, show questions or risks and wait for human input.
+4. After planner/intake JSON is available, run: `npx cc-codeconductor ccep evaluate --command fix --input <planner.json> --output json`. If `stop` is true, show questions or risks and wait for human input.
 5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+   Canonical delivery order is test-before-implement whenever both phases apply.
 
 ---
 
@@ -57,16 +58,16 @@ Read the risk field from the Task Card and follow the corresponding route.
 Applies when: the bug is isolated to a single component, existing tests cover
 the affected code, and no public API or shared state is involved.
 
-Route: Task Coach → Implementer → Tester
+Route: Task Coach → Tester → Implementer
 
-Proceed directly to Step 3a.
+Proceed directly to Step 3 (tests), then Step 4a.
 
 ### Medium or high-risk route
 
 Applies when: the bug touches shared state, a public API, auth or payment paths,
 database writes, or the root cause is not yet understood.
 
-Route: Task Coach → Architect → Implementer → Tester → Reviewer
+Route: Task Coach → Architect → Tester → Implementer → Reviewer
 
 Invoke the `architect` subagent before implementation. Architect must:
 
@@ -80,19 +81,30 @@ before continuing.**
 
 ---
 
-## Step 3a — Implementation, low-risk (Implementer role)
+## Step 3 — Regression tests (Tester role)
+
+Invoke the `tester` subagent via the Task tool. Apply for all risk levels.
+
+1. Write a regression test that reproduces the original bug and confirm it fails
+   before any fix (RED).
+2. Verify that existing tests still pass.
+3. Produce a Test Report: test added, case covered.
+
+---
+
+## Step 4a — Implementation, low-risk (Implementer role)
 
 Invoke the `implementer` subagent via the Task tool. Use the Task Card.
 Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
 1. Locate the defect using the reproduction steps.
 2. Apply the minimal fix — no unrelated changes.
-3. Run the test suite.
+3. Run the suite and make the RED regression test pass.
 4. Produce an Implementation Summary: root cause, fix applied, files changed.
 
 ---
 
-## Step 3b — Implementation, medium/high-risk (Implementer role)
+## Step 4b — Implementation, medium/high-risk (Implementer role)
 
 Invoke the `implementer` subagent via the Task tool. Use the approved
 Technical Plan and the Task Card.
@@ -100,17 +112,6 @@ Implementer creates a Git Worktree before touching any file; all edits happen in
 
 Follow the plan exactly. Any deviation requires a new Technical Plan approval.
 After implementation, run the full test suite.
-
----
-
-## Step 4 — Regression tests (Tester role)
-
-Invoke the `tester` subagent via the Task tool. Apply for all risk levels.
-
-1. Write a regression test that reproduces the original bug (fails before the
-   fix, passes after).
-2. Verify that existing tests still pass.
-3. Produce a Test Report: test added, case covered.
 
 ---
 

@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "activeItemId": "BC-006",
+  "taskCards": [
+    {
+      "id": "BC-006-discover",
+      "backlogId": "BC-006",
+      "phase": "discover",
+      "title": "BC-006: Discover scope and impact",
+      "prompt": "Backlog item BC-006 — Planificación tracer-bullet con aristas bloqueantes\n\nDescription: Documentar y anclar la mecánica de to-tickets (rebanadas verticales tracer-bullet con aristas bloqueantes) sobre los items BC-NNN y el campo Depends on, en /cc:openspec y cc goal.\nScope: Guía de planificación y ajuste de .claude/commands/cc/openspec.md; se apoya en la validación de dependencias existente.\n\nMap repository structure, conventions, and impact radius for this change.",
+      "agent": "repo-explorer",
+      "modelHint": "repo-explorer",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Repo map identifies relevant files and impact radius"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "BC-006-design",
+      "backlogId": "BC-006",
+      "phase": "design",
+      "title": "BC-006: Technical design",
+      "prompt": "Backlog item BC-006 — Planificación tracer-bullet con aristas bloqueantes\n\nDescription: Documentar y anclar la mecánica de to-tickets (rebanadas verticales tracer-bullet con aristas bloqueantes) sobre los items BC-NNN y el campo Depends on, en /cc:openspec y cc goal.\nScope: Guía de planificación y ajuste de .claude/commands/cc/openspec.md; se apoya en la validación de dependencias existente.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
+      "agent": "architect",
+      "modelHint": "architect",
+      "dependsOn": [
+        "BC-006-discover"
+      ],
+      "acceptanceCriteria": [
+        "Technical plan lists files affected and approach"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "BC-006-test",
+      "backlogId": "BC-006",
+      "phase": "test",
+      "title": "BC-006: Test coverage",
+      "prompt": "Backlog item BC-006 — Planificación tracer-bullet con aristas bloqueantes\n\nDescription: Documentar y anclar la mecánica de to-tickets (rebanadas verticales tracer-bullet con aristas bloqueantes) sobre los items BC-NNN y el campo Depends on, en /cc:openspec y cc goal.\nScope: Guía de planificación y ajuste de .claude/commands/cc/openspec.md; se apoya en la validación de dependencias existente.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
+      "agent": "tester",
+      "modelHint": "tester",
+      "dependsOn": [
+        "BC-006-design"
+      ],
+      "acceptanceCriteria": [
+        "Test covers: La guía define tracer bullet como rebanada vertical demoable del tamaño de un contexto",
+        "Test covers: Las aristas bloqueantes se expresan como Depends on entre items BC-NNN",
+        "Test covers: `cc openspec validate` confirma ausencia de ciclos y dependencias desconocidas"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "BC-006-implement",
+      "backlogId": "BC-006",
+      "phase": "implement",
+      "title": "BC-006: Implementation",
+      "prompt": "Backlog item BC-006 — Planificación tracer-bullet con aristas bloqueantes\n\nDescription: Documentar y anclar la mecánica de to-tickets (rebanadas verticales tracer-bullet con aristas bloqueantes) sobre los items BC-NNN y el campo Depends on, en /cc:openspec y cc goal.\nScope: Guía de planificación y ajuste de .claude/commands/cc/openspec.md; se apoya en la validación de dependencias existente.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
+      "agent": "implementer",
+      "modelHint": "implementer",
+      "dependsOn": [
+        "BC-006-test"
+      ],
+      "acceptanceCriteria": [
+        "La guía define tracer bullet como rebanada vertical demoable del tamaño de un contexto",
+        "Las aristas bloqueantes se expresan como Depends on entre items BC-NNN",
+        "`cc openspec validate` confirma ausencia de ciclos y dependencias desconocidas"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "BC-006-review",
+      "backlogId": "BC-006",
+      "phase": "review",
+      "title": "BC-006: Review and validation",
+      "prompt": "Backlog item BC-006 — Planificación tracer-bullet con aristas bloqueantes\n\nDescription: Documentar y anclar la mecánica de to-tickets (rebanadas verticales tracer-bullet con aristas bloqueantes) sobre los items BC-NNN y el campo Depends on, en /cc:openspec y cc goal.\nScope: Guía de planificación y ajuste de .claude/commands/cc/openspec.md; se apoya en la validación de dependencias existente.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
+      "agent": "reviewer",
+      "modelHint": "reviewer",
+      "dependsOn": [
+        "BC-006-implement"
+      ],
+      "acceptanceCriteria": [
+        "All acceptance criteria verified",
+        "Tests pass",
+        "No scope creep beyond backlog item"
+      ],
+      "status": "done"
+    }
+  ],
+  "lastScanHash": "102cddcff33ead33",
+  "lastScanAt": "2026-08-22T02:44:07.929Z",
+  "changePaths": {
+    "BC-001": "openspec/changes/bc-001-r-brica-writing-for-agents-para-auditar-prompts-",
+    "BC-002": "openspec/changes/bc-002-context-md-como-glosario-de-dominio-y-criterios-",
+    "BC-003": "openspec/changes/bc-003-revisi-n-de-dos-ejes-en-cc-review",
+    "BC-004": "openspec/changes/bc-004-gate-de-loop-rojo-reproducible-en-cc-fix",
+    "BC-005": "openspec/changes/bc-005-tdd-por-seams-y-checklist-de-anti-patrones-en-cc",
+    "BC-006": "openspec/changes/bc-006-planificaci-n-tracer-bullet-con-aristas-bloquean"
+  },
+  "itemSnapshots": {
+    "BC-007": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Gate de grilling en el rol Task Coach\"}",
+    "BC-008": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Secuencia expand-contract para refactors amplios en /cc:refactor\"}",
+    "BC-009": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Hook PreToolUse que bloquea git destructivo\"}",
+    "BC-010": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Gate pre-commit typecheck y test adaptado a Bun\"}",
+    "BC-011": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Comando /cc:handoff para traspaso entre sesiones\"}",
+    "BC-012": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Router /cc:ask que recomienda el slash command correcto\"}",
+    "BC-006": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Planificación tracer-bullet con aristas bloqueantes\"}",
+    "BC-005": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"TDD por seams y checklist de anti-patrones en /cc:tdd-cycle\"}",
+    "BC-004": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Gate de loop rojo reproducible en /cc:fix\"}",
+    "BC-003": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Revisión de dos ejes en /cc:review\"}",
+    "BC-002": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"CONTEXT.md como glosario de dominio y criterios ADR\"}",
+    "BC-001": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Rúbrica writing-for-agents para auditar prompts de agentes\"}"
+  }
+}

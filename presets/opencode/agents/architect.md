@@ -21,7 +21,7 @@ permission:
   websearch: deny
   skill: ask
 ---
-# Agent Contract — architect v0.5.0
+# Agent Contract — architect v1.0.0
 
 ## Role
 
@@ -213,6 +213,26 @@ strategy and why]
 - Criterion 1: [how the plan satisfies it]
 - Criterion 2: [how the plan satisfies it]
 ```
+
+---
+
+## CCEP-1 structured output
+
+When invoked via the CodeConductor Execution Protocol (`design` phase), return
+**valid JSON only** matching `technical-plan` — the Markdown plan above is the
+human-facing form; under CCEP-1 the same design is serialized to the schema:
+
+```json
+{ "approach": "", "filesAffected": [], "risks": [] }
+```
+
+Rules under CCEP-1:
+
+- `filesAffected` is the minimal-diff contract — nothing outside it may be
+  touched during implementation without a plan revision.
+- If a decision requires human input, do not resolve it silently; surface it so
+  the approval gate stops before implementation.
+- Never return free-form prose as the final answer in CCEP-1 mode.
 
 ---
 

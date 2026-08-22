@@ -124,7 +124,7 @@ describe('CLI: ccep command (end-to-end)', () => {
     expect(json.layers).toHaveLength(7);
     expect(json.prompt).toContain('Planner');
     expect(json.outputSchema).toBe('planner-output');
-    expect(json.promptVersion).toBe('v0.6.0');
+    expect(json.promptVersion).toBe('v1.0.0');
   });
 
   test('ccep validate accepts valid implementer output', async () => {

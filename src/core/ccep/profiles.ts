@@ -14,12 +14,12 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     phases: [
       { id: 'intake', agent: 'task-coach', outputSchema: 'planner-output', stopGate: 'confirmation' },
       { id: 'design', agent: 'architect', outputSchema: 'technical-plan', stopGate: 'approval' },
-      { id: 'implement', agent: 'implementer', dependsOn: ['design'] },
-      { id: 'test', agent: 'tester' },
+      { id: 'test', agent: 'tester', dependsOn: ['design'] },
+      { id: 'implement', agent: 'implementer', dependsOn: ['test'] },
       { id: 'review', agent: 'reviewer' },
       { id: 'docs', agent: 'docs', parallelWith: ['review'] },
     ],
-    routing: { default: ['intake', 'design', 'implement', 'test', 'review', 'docs'] },
+    routing: { default: ['intake', 'design', 'test', 'implement', 'review', 'docs'] },
     confirmationGate: baseGate,
   },
   fix: {
@@ -38,18 +38,18 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     },
     phases: [
       { id: 'intake', agent: 'task-coach', outputSchema: 'fix-intake-output', stopGate: 'confirmation' },
-      { id: 'implement', agent: 'implementer' },
       { id: 'test', agent: 'tester' },
+      { id: 'implement', agent: 'implementer', dependsOn: ['test'] },
       { id: 'review', agent: 'reviewer' },
     ],
     routing: {
-      default: ['intake', 'implement', 'test'],
+      default: ['intake', 'test', 'implement'],
       riskRules: [
-        { when: { risk: 'low' }, then: ['implement', 'test'] },
-        { when: { risk: ['medium', 'high'] }, then: ['implement', 'test', 'review'] },
+        { when: { risk: 'low' }, then: ['test', 'implement'] },
+        { when: { risk: ['medium', 'high'] }, then: ['test', 'implement', 'review'] },
       ],
     },
-    confirmationGate: { stopOnHighRisk: true, stopOnQuestions: true },
+    confirmationGate: baseGate,
   },
   refactor: {
     id: 'refactor',
@@ -124,11 +124,11 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     taskCard: { type: 'feature', requiredFields: ['scope', 'risk', 'acceptanceCriteria'] },
     phases: [
       { id: 'design', agent: 'architect', outputSchema: 'technical-plan' },
-      { id: 'implement', agent: 'implementer' },
       { id: 'test', agent: 'tester' },
+      { id: 'implement', agent: 'implementer', dependsOn: ['test'] },
       { id: 'review', agent: 'reviewer' },
     ],
-    routing: { default: ['design', 'implement', 'test', 'review'] },
+    routing: { default: ['design', 'test', 'implement', 'review'] },
     confirmationGate: baseGate,
   },
   pagespeed: {
@@ -152,11 +152,11 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
       { id: 'validate-backlog', agent: 'orchestrator', type: 'cli-gate' },
       { id: 'discover', agent: 'repo-explorer' },
       { id: 'design', agent: 'architect' },
-      { id: 'implement', agent: 'implementer' },
       { id: 'test', agent: 'tester' },
+      { id: 'implement', agent: 'implementer', dependsOn: ['test'] },
       { id: 'review', agent: 'reviewer' },
     ],
-    routing: { default: ['validate-backlog', 'discover', 'design', 'implement', 'test', 'review'] },
+    routing: { default: ['validate-backlog', 'discover', 'design', 'test', 'implement', 'review'] },
     confirmationGate: baseGate,
   },
   scorecard: {

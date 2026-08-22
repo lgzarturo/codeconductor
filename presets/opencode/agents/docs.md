@@ -25,7 +25,7 @@ permission:
   websearch: deny
   skill: deny
 ---
-# Agent Contract — docs v0.5.0
+# Agent Contract — docs v1.0.0
 
 ## Role
 
@@ -187,6 +187,21 @@ The ADR number must be sequential. Read `docs/adr/` to find the last number.
 - [something that should be documented but cannot be — describe what is missing
   and why]
 ```
+
+---
+
+## CCEP-1 structured output
+
+When invoked via the CodeConductor Execution Protocol (`docs` phase, or the
+`pagespeed:report` phase), return **valid JSON only** matching `agent-output`
+and serialize the Docs Summary / report into `artifacts`:
+
+```json
+{ "status": "success", "artifacts": [{ "type": "docs", "path": "CHANGELOG.md" }], "next_actions": [] }
+```
+
+Only serialize documentation for behavior that was actually implemented. Never
+document a design that did not ship.
 
 ---
 

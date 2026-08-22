@@ -1,5 +1,5 @@
-import { readFile } from 'node:fs/promises';
-import { isAbsolute, resolve } from 'node:path';
+import { readFileWithinRoot } from '../core/filesystem/path-containment';
+import { evaluateConfirmationGate } from '../core/ccep/confirmation-gate';
 import { compilePrompt } from '../core/ccep/prompt-compiler';
 import { parseJsonInput, validateOutputForRole } from '../core/ccep/output-validator';
 import { parseCommand } from '../core/ccep/command-parser';
@@ -8,7 +8,11 @@ import {
   loadWorkflowProfile,
   resolveWorkflowPhase,
 } from '../core/ccep/workflow-profile-loader';
-import { validateExecutionContext, WorkflowCommandSchema } from '../validation/schemas';
+import {
+  validateExecutionContext,
+  validatePlannerOutput,
+  WorkflowCommandSchema,
+} from '../validation/schemas';
 import type { OutputMode } from '../utils/logger';
 
 export interface CcepOptions {
@@ -42,6 +46,29 @@ function parseWorkflowCommand(command: string | undefined): {
   return { ok: true, command: result.data };
 }
 
+function containedContextError(contextPath: string): string {
+  return (
+    `Could not read --context file: ${contextPath}. ` +
+    'It must be a regular file at a relative path inside the project root.'
+  );
+}
+
+/**
+ * Read a `--context` file confined to the project root. A missing, escaping or
+ * symlinked path is reported as absent rather than raised, so every caller
+ * fails closed with the same message.
+ */
+async function readContainedContext(
+  projectRoot: string,
+  contextPath: string,
+): Promise<string | undefined> {
+  try {
+    return await readFileWithinRoot(projectRoot, contextPath);
+  } catch {
+    return undefined;
+  }
+}
+
 async function readInputPayload(
   projectRoot: string,
   input?: string,
@@ -53,12 +80,25 @@ async function readInputPayload(
   }
 
   if (raw.startsWith('@')) {
-    const filePath = isAbsolute(raw.slice(1)) ? raw.slice(1) : resolve(projectRoot, raw.slice(1));
+    const relPath = raw.slice(1);
+    let content: string | undefined;
     try {
-      const content = await readFile(filePath, 'utf-8');
-      return { ok: true, data: parseJsonInput(content) };
+      content = await readFileWithinRoot(projectRoot, relPath);
     } catch (err) {
       return { ok: false, error: `Could not read input file: ${String(err)}` };
+    }
+    if (content === undefined) {
+      return {
+        ok: false,
+        error:
+          `Could not read input file: ${relPath}. ` +
+          'It must be a regular file at a relative path inside the project root.',
+      };
+    }
+    try {
+      return { ok: true, data: parseJsonInput(content) };
+    } catch (err) {
+      return { ok: false, error: `Invalid JSON input: ${String(err)}` };
     }
   }
 
@@ -81,7 +121,7 @@ export async function ccepCommand(
     role,
     input,
     contextPath,
-    promptVersion = 'v0.6.0',
+    promptVersion = 'v1.0.0',
     rest,
   } = options;
 
@@ -168,10 +208,17 @@ export async function ccepCommand(
       let context;
 
       if (contextPath) {
-        const filePath = isAbsolute(contextPath)
-          ? contextPath
-          : resolve(projectRoot, contextPath);
-        const content = await readFile(filePath, 'utf-8');
+        const content = await readContainedContext(projectRoot, contextPath);
+        if (content === undefined) {
+          return {
+            code: 1,
+            data: {
+              success: false,
+              command: 'ccep compile',
+              errors: [containedContextError(contextPath)],
+            },
+          };
+        }
         context = validateExecutionContext(parseJsonInput(content));
       } else {
         const envelope = parseCommand(parsed.command, userRequest ?? '', projectRoot);
@@ -265,6 +312,81 @@ export async function ccepCommand(
       };
     }
 
+    case 'evaluate': {
+      const parsed = parseWorkflowCommand(command);
+      if (!parsed.ok) {
+        return {
+          code: 1,
+          data: { success: false, command: 'ccep evaluate', errors: [parsed.error] },
+        };
+      }
+
+      const payload = await readInputPayload(projectRoot, input, rest);
+      if (!payload.ok) {
+        return {
+          code: 1,
+          data: {
+            success: false,
+            command: 'ccep evaluate',
+            errors: [
+              payload.error.includes('Missing required')
+                ? 'Missing required planner --input (JSON or @file) for ConfirmationGate evaluation'
+                : payload.error,
+            ],
+          },
+        };
+      }
+
+      let planner;
+      try {
+        planner = validatePlannerOutput(payload.data);
+      } catch (err) {
+        return {
+          code: 1,
+          data: {
+            success: false,
+            command: 'ccep evaluate',
+            errors: [`Invalid planner output: ${String(err)}`],
+          },
+        };
+      }
+
+      let context;
+      try {
+        if (contextPath) {
+          const content = await readContainedContext(projectRoot, contextPath);
+          if (content === undefined) {
+            throw new Error(containedContextError(contextPath));
+          }
+          context = validateExecutionContext(parseJsonInput(content));
+        } else {
+          const profile = loadWorkflowProfile(parsed.command, projectRoot);
+          const envelope = parseCommand(parsed.command, userRequest ?? '', projectRoot);
+          context = await resolveContext(envelope, profile, projectRoot);
+        }
+      } catch (err) {
+        return {
+          code: 1,
+          data: {
+            success: false,
+            command: 'ccep evaluate',
+            errors: [`Could not resolve execution context: ${String(err)}`],
+          },
+        };
+      }
+
+      const decision = evaluateConfirmationGate(context, planner);
+      return {
+        code: decision.stop ? 1 : 0,
+        data: {
+          success: !decision.stop,
+          command: 'ccep evaluate',
+          stop: decision.stop,
+          decision,
+        },
+      };
+    }
+
     default:
       return {
         code: 1,
@@ -272,7 +394,7 @@ export async function ccepCommand(
           success: false,
           command: 'ccep',
           errors: [
-            `Unknown subcommand: ${subcommand}. Use: parse, profile, resolve, compile, validate`,
+            `Unknown subcommand: ${subcommand}. Use: parse, profile, resolve, compile, validate, evaluate`,
           ],
         },
       };

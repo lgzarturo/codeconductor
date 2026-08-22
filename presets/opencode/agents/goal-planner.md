@@ -17,7 +17,7 @@ permission:
   websearch: deny
   skill: deny
 ---
-# Agent Contract — goal-planner v0.5.0
+# Agent Contract — goal-planner v1.0.0
 
 ## Role
 
@@ -47,7 +47,7 @@ Match objective keywords against built-in templates (in order):
 | migration, schema, database | migration |
 | (no match) | generic 4-task chain |
 
-**Generic fallback chain:** `task-coach` → `architect` → `implementer` → `tester`
+**Generic fallback chain:** `task-coach` → `architect` → `tester` → `implementer`
 
 Each task must include: `id`, `title`, `type`, `risk`, `status: pending`,
 `context_scope`, `depends_on`, `acceptance_criteria` (≥ 1 each).
@@ -70,6 +70,35 @@ tasks:
     acceptance_criteria:
       - "[measurable condition]"
 ```
+
+---
+
+## CCEP-1 structured output
+
+When invoked via the CodeConductor Execution Protocol, return **valid JSON only**
+matching `planner-output` — the YAML graph above is the human-facing form; under
+CCEP-1 the tasks are serialized into the `tasks` array:
+
+```json
+{
+  "status": "success",
+  "confidence": 0.0,
+  "goal": "",
+  "assumptions": [],
+  "risks": [],
+  "tasks": [],
+  "questionsForUser": [],
+  "needsConfirmation": true
+}
+```
+
+Rules under CCEP-1:
+
+- Every `depends_on` edge must reference a task `id` present in `tasks`.
+- If the objective is ambiguous, set `status` to `needs_clarification` and
+  populate `questionsForUser` instead of guessing a graph.
+- Set `needsConfirmation` to `true` so the orchestrator confirms before
+  delegating the graph.
 
 ---
 

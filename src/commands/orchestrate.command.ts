@@ -89,7 +89,10 @@ async function handleNext(
     return { code: 1, data: { success: false, command: 'orchestrate', errors: [next.error.message] } };
   }
 
-  await startTask(projectRoot, next.data.task.id, next.data.task.agentType);
+  const started = await startTask(projectRoot, next.data.task.id, next.data.task.agentType);
+  if (!started.success) {
+    return { code: 1, data: { success: false, command: 'orchestrate', errors: [started.error.message] } };
+  }
 
   if (output === 'json') {
     return {
@@ -146,28 +149,49 @@ async function handleRun(
   const graph = await loadGraph(projectRoot);
   const enriched = enrichGoalWithProduct(goal.data, graph.success ? graph.data : undefined);
   const enrichedTask = enriched.enrichedTasks.find((t) => t.id === taskId);
-  const card = enrichedTask
-    ? goalTaskToCanonicalCard(enrichedTask, enriched.objective)
-    : null;
+  if (!enrichedTask) {
+    return {
+      code: 1,
+      data: {
+        success: false,
+        command: 'orchestrate',
+        errors: [`Task ${taskId} not found in goal`],
+      },
+    };
+  }
+  const card = goalTaskToCanonicalCard(enrichedTask, enriched.objective);
 
-  if (card) {
-    const gate = await gateTaskCompletion(projectRoot, taskId, card.evidenceRequired);
-    if (gate.success && !gate.data) {
-      const verify = await runVerification(projectRoot, taskId, goal.data);
-      if (verify.success && !verify.data.passed) {
-        return {
-          code: 1,
-          data: {
-            success: false,
-            command: 'orchestrate',
-            errors: ['Verification failed. Run `cc verify --task ' + taskId + '`'],
-          },
-        };
-      }
-    }
+  const verify = await runVerification(projectRoot, taskId, goal.data);
+  if (!verify.success) {
+    return { code: 1, data: { success: false, command: 'orchestrate', errors: [verify.error.message] } };
+  }
+  if (!verify.data.passed) {
+    return {
+      code: 1,
+      data: {
+        success: false,
+        command: 'orchestrate',
+        errors: ['Verification failed. Run `cc verify --task ' + taskId + '`'],
+      },
+    };
   }
 
-  const result = await completeTask(projectRoot, taskId);
+  const gate = await gateTaskCompletion(projectRoot, taskId, card.evidenceRequired);
+  if (!gate.success) {
+    return { code: 1, data: { success: false, command: 'orchestrate', errors: [gate.error.message] } };
+  }
+  if (!gate.data) {
+    return {
+      code: 1,
+      data: {
+        success: false,
+        command: 'orchestrate',
+        errors: [`Completion gate blocked: missing evidence (${card.evidenceRequired.join(', ')})`],
+      },
+    };
+  }
+
+  const result = await completeTask(projectRoot, taskId, verify.data.evidenceIds);
   if (!result.success) {
     return { code: 1, data: { success: false, command: 'orchestrate', errors: [result.error.message] } };
   }

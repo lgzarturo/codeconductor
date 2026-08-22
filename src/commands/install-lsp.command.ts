@@ -107,7 +107,10 @@ export async function installLspCommand(
         path: resolve(baseDir, f.path),
       }));
 
-      const results = await writeGeneratedFiles(resolvedFiles, writeOptions);
+      const results = await writeGeneratedFiles(resolvedFiles, {
+        ...writeOptions,
+        projectRoot: baseDir,
+      });
 
       for (const result of results) {
         allConfigResults.push({

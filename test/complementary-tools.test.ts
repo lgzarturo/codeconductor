@@ -109,7 +109,8 @@ safety:
       false, // dryRun
       false, // isTemplate
       null, // modelConfig
-      'en'
+      'en',
+      TEST_DIR,
     );
     
     expect(result.action).toBe('written');
@@ -145,7 +146,8 @@ safety:
       false, // dryRun
       false, // isTemplate
       null, // modelConfig
-      'en'
+      'en',
+      TEST_DIR,
     );
     
     expect(result.action).toBe('written');

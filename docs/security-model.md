@@ -145,6 +145,26 @@ A future runtime must resolve real paths before enforcing policy. It must handle
 relative paths, symlinks, junctions, workspace escapes, case sensitivity, and
 platform-specific path behavior.
 
+## Output Containment
+
+Every file CodeConductor writes goes through `writeContainedFile`, which asks
+`resolveOutputWithinRoot` for the verdict — it is the only place the path policy
+is decided. The path is resolved once before the parent directories are created
+and again afterwards, because a parent swapped for an escaping link while
+`mkdir` ran would otherwise be written through. The leaf is then opened with
+`O_NOFOLLOW` and without `O_TRUNC`, and the open descriptor is checked to be a
+regular file whose device and inode still match the path that was approved.
+Truncation and the write happen through that descriptor, so a swap after the
+check cannot redirect the bytes.
+
+Residual limitation: `O_NOFOLLOW` guards the leaf only, and Node exposes no
+`openat`-style API for walking the parents one component at a time. Windows has
+no `O_NOFOLLOW` at all, so there the guarantee rests entirely on the `realpath`
+resolution plus the device/inode identity check on the open descriptor. A
+sufficiently precise swap of an intermediate directory between the final resolve
+and the open remains theoretically possible on Windows; it is detected by the
+identity check in every case observed, but it is not excluded by the kernel.
+
 ## Known Weaknesses
 
 - `policy.yml` is not compiled or enforced by CodeConductor today.

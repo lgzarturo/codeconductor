@@ -207,7 +207,7 @@ describe('loadModelConfig', () => {
 
   test('opencode config has architect models for all providers', async () => {
     const config = await loadModelConfig('opencode');
-    expect(config.agents.architect.claude).toBe('claude-opus-4-7');
+    expect(config.agents.architect.claude).toBe('claude-opus-4-8');
     expect(config.agents.architect.opencode).toBe('opencode-go/deepseek-v4-pro');
     expect(config.agents.architect.codex).toBe('gpt-5.5');
     expect(config.agents.architect.gemini).toBe('gemini-2.5-pro');
@@ -376,8 +376,8 @@ describe('copyFromManifest with modelConfig', () => {
   test('template entries are detected from opencode manifest', async () => {
     const manifest = await loadManifest('opencode');
     const templateEntries = manifest.entries.filter((e) => e.template === true);
-    // agents + README.md (locale placeholder injection) + prompts v0.5.0 + v0.6.0
-    expect(templateEntries.length).toBe(4);
+    // agents + README.md (locale placeholder injection) + prompts v1.0.0
+    expect(templateEntries.length).toBe(3);
     expect(templateEntries.some((e) => e.src.includes('agents'))).toBe(true);
     expect(templateEntries.some((e) => e.src.includes('README.md'))).toBe(true);
     expect(templateEntries.some((e) => e.src.includes('prompts'))).toBe(true);
@@ -536,15 +536,15 @@ describe('Manifest template flag', () => {
     }
   });
 
-  test('claude manifest has exactly 8 entries', async () => {
+  test('claude manifest has exactly 7 entries', async () => {
     const manifest = await loadManifest('claude');
-    expect(manifest.entries.length).toBe(8);
+    expect(manifest.entries.length).toBe(7);
   });
 
 
-  test('codex manifest has exactly 4 entries', async () => {
+  test('codex manifest has exactly 3 entries', async () => {
     const manifest = await loadManifest('codex');
-    expect(manifest.entries.length).toBe(4);
+    expect(manifest.entries.length).toBe(3);
   });
 });
 
@@ -765,7 +765,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
       'utf-8'
     );
     // claude install: frontmatter has claude model for architect
-    expect(content).toContain('claude-opus-4-7');
+    expect(content).toContain('claude-opus-4-8');
     expect(content).not.toContain('{{MODEL}}');
     expect(content).not.toContain('{{MODEL_CLAUDE}}');
   });
@@ -832,7 +832,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     );
     expect(claudeContent).not.toContain('{{MODEL}}');
     expect(claudeContent).not.toContain('{{MODEL_');
-    expect(claudeContent).toContain('claude-opus-4-7');
+    expect(claudeContent).toContain('claude-opus-4-8');
 
     const codexContent = await readFile(join(TEST_DIR, '.codex', 'AGENTS.md'), 'utf-8');
     expect(codexContent).not.toContain('{{MODEL_');

@@ -48,17 +48,15 @@ denyWrite:
   - "/var/**"
   - "~/**"
 
-# Credential patterns for secret detection.
-# These are merged with CodeConductorConfig.safety.secretPatterns at runtime.
-secretPatterns:
-  - password
-  - secret
-  - api_key
-  - token
-  - api[_-]?key
-  - access[_-]?token
-  - auth[_-]?token
-  - private[_-]?key
+# Optional keyword patterns for secret detection, merged with
+# CodeConductorConfig.safety.secretPatterns at runtime.
+#
+# Built-in detection does NOT rely on this list: high-confidence signatures
+# (AWS access key ids, AWS_SECRET_ACCESS_KEY values, GitHub PATs, PEM/OpenSSH
+# private key headers) are enforced in code and always active. Entries here add
+# legacy keyword matching (`<keyword> = <value of 8+ chars>`), which is prone to
+# false positives — add them only when a project needs them.
+secretPatterns: []
 
 targets:
   opencode:

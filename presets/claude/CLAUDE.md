@@ -384,6 +384,20 @@ contract tests. Does not write production code.
 - Cover three cases for every behavior: happy path, edge case, error case.
 - Test names must describe what is being tested and the expected outcome.
 
+**Anti-pattern checklist** — before declaring tests ready, verify none of
+these apply:
+
+- **Implementation-coupled** — the test asserts internal implementation
+  details (private state, call order, mock invocations) instead of observable
+  behavior. It breaks when the implementation is refactored even if the
+  behavior is unchanged.
+- **Tautological** — the test asserts something that cannot fail given the
+  test's own setup (e.g., asserting a value the test itself just hardcoded).
+  It always passes regardless of the code under test.
+- **Horizontal slicing** — the test spans multiple unrelated behaviors or
+  layers in one assertion block instead of a single vertical slice of one
+  behavior.
+
 **Test types:**
 
 | Type        | When to write                                            |
@@ -491,6 +505,56 @@ _(none)_ if no suggestions
 ### Summary
 
 - Critical: [count] | Warning: [count] | Suggestion: [count]
+- **Verdict justification**: [one sentence]
+```
+
+
+**Two-Axis Review Model (Standards + Spec)**
+
+The Reviewer role executes two independent, parallel sub-agents without reranking between them:
+
+1.
+
+_El modelo de dos ejes (Standards, Spec) es la estructura de ejecución de `/cc:review`; los review axes listados en la tabla anterior se aplican DENTRO de cada eje._ **Standards Axis** — Code smell detection against the Fowler baseline (Long Method, Large Class, Duplicated Code, Feature Envy, Shotgun Surgery, Primitive Obsession, Data Clumps, Switch Statements, Speculative Generality, Temporary Fields, Message Chains, Middle Man, Inappropriate Intimacy, Data Class, Comments-as-apology), with documented override allowed via repo standards documentation (e.g., CONTEXT.md or project norms).
+
+2. **Spec Axis** — Alignment with Task Card, acceptance criteria, and scope boundaries.
+
+Each axis produces findings independently. **No reranking** occurs between axes — each axis is evaluated in parallel and its findings remain independent. After parallel execution, a **combined verdict** integrates findings from both axes:
+
+- If either axis finds CRITICAL issues → verdict is `blocked`
+- Else if either axis finds WARNING → verdict is `approved with warnings`
+- Else → verdict is `approved`
+
+**Two-Axis Review Report format:**
+
+```markdown
+## Review Report
+
+**Task**: [objective from Task Card] **Verdict**: [approved | approved with warnings | blocked]
+
+---
+
+### Standards Axis
+
+Applies Fowler code smell baseline with documented overrides.
+
+- [ ] [S1] [file:line] — [code smell] | Override: [documented or N/A] | Required action: [what must change] (CRITICAL) or Recommended action: [what must change] (WARNING)
+
+_(none)_ if no findings
+
+### Spec Axis
+
+Validates Task Card, acceptance criteria, and scope alignment.
+
+- [ ] [Sp1] [criterion number] — [description] | Evidence: [quote] | Required action: [what must change] (CRITICAL) or Recommended action: [what must change] (WARNING)
+
+_(none)_ if no findings
+
+### Combined Summary
+
+- Standards findings: [count] (X CRITICAL, Y WARNING, Z SUGGESTION)
+- Spec findings: [count] (X CRITICAL, Y WARNING, Z SUGGESTION)
+- **Combined Verdict**: [approved | approved with warnings | blocked]
 - **Verdict justification**: [one sentence]
 ```
 

@@ -12,6 +12,18 @@ Orchestrate FIFO delivery from `BACKLOG.md`. CodeConductor owns planning; agents
 
 ---
 
+## Planning Principles — tracer bullet and blocking edges
+
+A **tracer bullet** is a vertical slice of work: one `BC-NNN` backlog item that goes discover → design → test → implement → review and produces a demoable result, sized to fit inside a single agent's context window without needing an intermediate `/clear`.
+
+**Quantitative heuristic**: a tracer bullet must fit within a maximum of 5 acceptance criteria and the 5 canonical phases (discover, design, test, implement, review) per context window. If an item needs more, split it into multiple `BC-NNN` items linked by `Depends on` instead of growing one tracer bullet past that budget.
+
+**Equivalence**: one `BC-NNN` item equals one tracer bullet equals one or more TaskCards. `cc openspec plan <BC-id>` generates the TaskCards (discover/design/test/implement/review) that implement that item's tracer bullet — each BC-NNN item corresponds to exactly one tracer bullet.
+
+**Blocking edges**: the `Depends on` field between `BC-NNN` items expresses a blocking dependency — an item cannot be selected in Step 2 until every item in its `Depends on` list is `DONE`. `Depends on` is the sole mechanism for sequencing tracer bullets; there is no separate edge syntax.
+
+---
+
 ## Step 0 — Validate (mandatory gate)
 
 Run:
@@ -35,8 +47,9 @@ Command: `openspec` (fixed for this workflow — do not infer from user text)
 1. Run: `npx cc-codeconductor ccep parse --command openspec "$ARGUMENTS" --output json`
 2. Run: `npx cc-codeconductor ccep resolve --command openspec "$ARGUMENTS" --output json`
 3. Run: `npx cc-codeconductor ccep profile openspec --output json`
-4. If the ConfirmationGate stops the flow, show questions or risks and wait for human input.
+4. After planner/intake JSON is available, run: `npx cc-codeconductor ccep evaluate --command openspec --input <planner.json> --output json`. If `stop` is true, show questions or risks and wait for human input.
 5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+   Canonical delivery order is test-before-implement whenever both phases apply.
 
 ---
 

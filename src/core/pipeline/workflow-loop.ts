@@ -1,6 +1,10 @@
 import { execSync } from 'node:child_process';
 import { councilConsensus } from '../../domain/council/council-consensus';
-import type { CouncilVerdictInput, CouncilVerdict } from '../../domain/council/council-consensus';
+import type {
+  ConsensusConfig,
+  CouncilVerdictInput,
+  CouncilVerdict,
+} from '../../domain/council/council-consensus';
 
 export interface TaskCard {
   title: string;
@@ -54,6 +58,7 @@ export interface PipelineConfig {
   maxFilesModified?: number;
   maxLinesChanged?: number;
   cwd?: string;
+  councilConfig?: ConsensusConfig;
   callbacks: PipelineCallbacks;
 }
 
@@ -103,7 +108,10 @@ function getLinesChangedCount(cwd?: string): number {
 }
 
 /**
- * Execute the 8-phase multi-agent workflow loop.
+ * Execute the experimental 8-phase multi-agent workflow loop.
+ *
+ * Library-only today — not wired as a shipped CLI runtime. Prefer CCEP
+ * profiles and slash-command workflows for production orchestration.
  */
 export async function runWorkflowPipeline(
   rawRequest: string,
@@ -290,7 +298,9 @@ export async function runWorkflowPipeline(
   let consensusVerdict: CouncilVerdict;
   try {
     const individualVerdicts = await callbacks.runCouncilReview(plan, validationReport);
-    consensusVerdict = councilConsensus(individualVerdicts);
+    consensusVerdict = config.councilConfig
+      ? councilConsensus(individualVerdicts, config.councilConfig)
+      : councilConsensus(individualVerdicts);
 
     if (consensusVerdict.status === 'REJECTED') {
       return {

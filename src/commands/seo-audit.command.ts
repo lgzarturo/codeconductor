@@ -1,5 +1,9 @@
-import { writeFile, mkdir } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { join } from 'node:path';
+import {
+  OutputPathError,
+  preflightContainedOutput,
+  writeContainedFile,
+} from '../core/filesystem/path-containment';
 import { auditSitemap, auditUrl } from '../domain/seo/seo-auditor';
 import { formatCli, formatJson, formatMarkdown, computeExitCode } from '../domain/seo/report-formatter';
 import type { SeoAuditOptions } from '../domain/seo/seo-types';
@@ -7,7 +11,7 @@ import type { SeoAuditOptions } from '../domain/seo/seo-types';
 export async function seoAuditCommand(
   options: SeoAuditOptions
 ): Promise<{ code: number; data?: unknown }> {
-  const { url, sitemap, format, failOn, delay, output, followRedirects } = options;
+  const { url, sitemap, format, failOn, delay, output, followRedirects, force } = options;
 
   if (!url && !sitemap) {
     return {
@@ -18,6 +22,34 @@ export async function seoAuditCommand(
         errors: ['Either --url or --sitemap is required'],
       },
     };
+  }
+
+  const defaultMarkdownPath =
+    output === undefined && format === 'markdown'
+      ? join(
+          'seo-reports',
+          `audit-report-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.md`,
+        )
+      : undefined;
+  const outputPathToWrite = output ?? defaultMarkdownPath;
+
+  // Rejected before any network work so a bad/protected/existing path costs nothing.
+  if (outputPathToWrite !== undefined) {
+    const preflightError = await preflightContainedOutput(
+      options.projectRoot,
+      outputPathToWrite,
+      { force },
+    );
+    if (preflightError !== undefined) {
+      return {
+        code: 1,
+        data: {
+          success: false,
+          command: 'seo audit',
+          errors: [preflightError],
+        },
+      };
+    }
   }
 
   try {
@@ -47,16 +79,18 @@ export async function seoAuditCommand(
         formattedOutput = formatCli(report);
     }
 
-    if (output) {
-      const outputPath = resolve(options.projectRoot, output);
-      await mkdir(dirname(outputPath), { recursive: true });
-      await writeFile(outputPath, formattedOutput, 'utf-8');
-    } else if (format === 'markdown') {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      const defaultPath = resolve(options.projectRoot, 'seo-reports', `audit-report-${timestamp}.md`);
-      await mkdir(dirname(defaultPath), { recursive: true });
-      await writeFile(defaultPath, formattedOutput, 'utf-8');
-      process.stderr.write(`Report saved to: ${defaultPath}\n`);
+    let outputFile: string | undefined;
+
+    if (outputPathToWrite !== undefined) {
+      outputFile = await writeContainedFile(
+        options.projectRoot,
+        outputPathToWrite,
+        formattedOutput,
+        { force },
+      );
+      if (defaultMarkdownPath !== undefined) {
+        process.stderr.write(`Report saved to: ${outputFile}\n`);
+      }
     }
 
     const exitCode = computeExitCode(report, failOn);
@@ -68,16 +102,15 @@ export async function seoAuditCommand(
         command: 'seo audit',
         report,
         output: formattedOutput,
-        outputFile: output
-          ? resolve(options.projectRoot, output)
-          : format === 'markdown'
-            ? resolve(options.projectRoot, 'seo-reports')
-            : undefined,
+        outputFile,
       },
     };
   } catch (error) {
+    // A refused output is a controlled outcome, not an audit failure: the
+    // preflight already returns 1, and a path that only went bad in the race
+    // window has to land on the same code.
     return {
-      code: 3,
+      code: error instanceof OutputPathError ? 1 : 3,
       data: {
         success: false,
         command: 'seo audit',

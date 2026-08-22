@@ -30,6 +30,22 @@ describe('core/filesystem/safety', () => {
     test('validateWritePath is the inverse of isProtectedPath', () => {
       expect(validateWritePath('.env')).toBe(false);
     });
+
+    test('matches protected names as whole path segments', () => {
+      expect(isProtectedPath('nested/.git/hooks/pre-commit')).toBe(true);
+      expect(isProtectedPath('a/b/secrets')).toBe(true);
+      expect(isProtectedPath('deep/credentials/aws.json')).toBe(true);
+      expect(isProtectedPath('.env.production')).toBe(true);
+      expect(isProtectedPath('nested\\.git\\config')).toBe(true);
+    });
+
+    test('allows benign names that merely contain a protected word', () => {
+      expect(isProtectedPath('src/mycredentials.ts')).toBe(false);
+      expect(isProtectedPath('docs/my.environment.md')).toBe(false);
+      expect(isProtectedPath('tools/.gitbook.md')).toBe(false);
+      expect(isProtectedPath('app/secretstore/keys.ts')).toBe(false);
+      expect(validateWritePath('docs/gitbook/intro.md')).toBe(true);
+    });
   });
 
   describe('scanForCredentials', () => {
@@ -38,7 +54,7 @@ describe('core/filesystem/safety', () => {
       const matches = scanForCredentials('cfg.env', content, PATTERNS);
       expect(matches).toHaveLength(1);
       expect(matches[0]).toMatchObject({ filePath: 'cfg.env', line: 2 });
-      expect(matches[0]?.matched).toContain('API_KEY=abcdefgh12345');
+      expect(matches[0]?.matched).toBe('[REDACTED]');
     });
 
     test('edge case: ignores values shorter than 8 characters', () => {
@@ -53,8 +69,9 @@ describe('core/filesystem/safety', () => {
       expect(matches.map((m) => m.line)).toEqual([1, 2]);
     });
 
-    test('no patterns means no matches', () => {
-      expect(scanForCredentials('f', 'API_KEY=abcdefgh12345', [])).toHaveLength(0);
+    test('empty custom patterns still apply high-confidence signatures', () => {
+      expect(scanForCredentials('f', 'token=ghp_SjFfZ22D3xmS8Okei21GhbjxE5u3QwbcySbM', []))
+        .toHaveLength(1);
     });
   });
 

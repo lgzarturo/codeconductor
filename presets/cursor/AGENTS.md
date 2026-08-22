@@ -73,18 +73,18 @@ introduces maintenance burden, supply-chain risk, and version conflicts.
 
 | Task Type            | Risk        | Route To                                                    |
 | -------------------- | ----------- | ----------------------------------------------------------- |
-| New feature design   | any         | `architect` → `implementer`                                 |
-| Bug fix              | low         | `implementer`                                               |
-| Bug fix              | medium–high | `task-coach` → `implementer` → `tester`                     |
+| New feature design   | any         | `architect` → `tester` → `implementer`                      |
+| Bug fix              | low         | `tester` → `implementer`                                    |
+| Bug fix              | medium–high | `task-coach` → `tester` → `implementer`                     |
 | Refactor             | low         | `implementer`                                               |
 | Refactor             | medium–high | `architect` → `implementer` → `complexity-auditor` → `reviewer` |
 | API change           | any         | `architect` → `implementer` → `complexity-auditor` → `reviewer` |
-| Database migration   | any         | `architect` → `implementer` → `tester` → `complexity-auditor` → `reviewer` |
+| Database migration   | any         | `architect` → `tester` → `implementer` → `complexity-auditor` → `reviewer` |
 | Test coverage        | any         | `tester`                                                    |
 | Documentation update | any         | `docs`                                                      |
 | Codebase exploration | any         | `repo-explorer`                                             |
 | Code review          | any         | `reviewer`                                                  |
-| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `implementer` → `tester` |
+| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `tester` → `implementer` |
 | Security review      | high        | `security-reviewer` → `reviewer`                            |
 
 When uncertain about routing, escalate to `orchestrator`.
@@ -324,7 +324,7 @@ needs a multi-step plan before delegation.
 
 The planner matches objective keywords against built-in templates (auth, crud,
 search, notification, migration) and falls back to a generic 4-task chain:
-`task-coach → architect → implementer → tester`.
+`task-coach → architect → tester → implementer`.
 
 **Dependency order delegation (orchestrator):**
 

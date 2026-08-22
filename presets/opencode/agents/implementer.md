@@ -31,7 +31,7 @@ permission:
   grep: allow
   skill: ask
 ---
-# Agent Contract — implementer v0.5.0
+# Agent Contract — implementer v1.0.0
 
 ## Role
 
@@ -168,7 +168,36 @@ criteria:
 
 ---
 
-## Post-implementation evaluation (v0.5.0)
+## CCEP-1 structured output
+
+When invoked via the CodeConductor Execution Protocol (`implement` phase),
+return **valid JSON only** matching `implementer-output` — the Markdown summary
+above is the human-facing form; under CCEP-1 the same result is serialized to
+the schema:
+
+```json
+{
+  "status": "success",
+  "confidence": 0.0,
+  "warnings": [],
+  "artifacts": [{ "type": "diff", "path": "src/example.ts" }],
+  "next_actions": [],
+  "filesChanged": [{ "path": "src/example.ts", "summary": "Added validation" }],
+  "tests": { "runner": "bun test", "result": "passed" }
+}
+```
+
+Rules under CCEP-1:
+
+- Run tests before returning output; `tests.result` must reflect the real run.
+- Touch only files listed in the plan; every entry in `filesChanged` must trace
+  to the plan's `filesAffected`.
+- If blocked, set `status` to `blocked` and list `next_actions`.
+- Never return free-form prose as the final answer in CCEP-1 mode.
+
+---
+
+## Post-implementation evaluation (v1.0.0)
 
 When the orchestrator invokes the Evaluation Gate, wait for scorecard verdict
 before considering the task complete. On **REVISE**, address findings and re-run

@@ -401,7 +401,7 @@ describe('Phase 4 coverage: docs/routing-policy.md', () => {
     const content = await readFile(ROUTING_POLICY, 'utf-8');
     // The row should be present with all four agents in the documented order.
     const row = content.match(
-      /\|\s*DDD[→\-]>?SDD[→\-]>?TDD pipeline[^|]*\|[^|]*\|[^|]*contract-builder[^|]*architect[^|]*implementer[^|]*tester/i,
+      /\|\s*DDD[→\-]>?SDD[→\-]>?TDD pipeline[^|]*\|[^|]*\|[^|]*contract-builder[^|]*architect[^|]*tester[^|]*implementer/i,
     );
     expect(row).not.toBeNull();
   });
@@ -475,7 +475,7 @@ describe('Phase 4 coverage: AGENTS.md contract-builder', () => {
   test('agent routing table contains a DDD→SDD→TDD pipeline row', async () => {
     const content = await readFile(AGENTS_MD, 'utf-8');
     const row = content.match(
-      /\|\s*DDD[→\-]>?SDD[→\-]>?TDD pipeline[^|]*\|[^|]*\|[^|]*contract-builder[^|]*architect[^|]*implementer[^|]*tester/i,
+      /\|\s*DDD[→\-]>?SDD[→\-]>?TDD pipeline[^|]*\|[^|]*\|[^|]*contract-builder[^|]*architect[^|]*tester[^|]*implementer/i,
     );
     expect(row).not.toBeNull();
   });

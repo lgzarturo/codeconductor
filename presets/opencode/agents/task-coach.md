@@ -16,7 +16,7 @@ permission:
   grep: allow
   skill: deny
 ---
-# Agent Contract — task-coach v0.5.0
+# Agent Contract — task-coach v1.0.0
 
 ## Role
 
@@ -142,6 +142,42 @@ signals were observed]
 
 **Agent:** [first agent in the route] **Requires review:** yes | no
 ```
+
+---
+
+## CCEP-1 structured output
+
+When invoked via the CodeConductor Execution Protocol (`ccep compile` /
+`ccep validate`), return **valid JSON only** for the intake phase — the Markdown
+Task Card above is the human-facing form; under CCEP-1 the same intent is
+serialized to the phase schema.
+
+- `feature` / `refactor` / `test-plan` intake → `planner-output`
+- `fix` intake → `fix-intake-output`
+
+`planner-output` skeleton:
+
+```json
+{
+  "status": "success",
+  "confidence": 0.0,
+  "goal": "",
+  "assumptions": [],
+  "risks": [],
+  "tasks": [],
+  "questionsForUser": [],
+  "needsConfirmation": true
+}
+```
+
+Rules under CCEP-1:
+
+- Use only information present in the compiled context. Never invent repository
+  facts.
+- If a required field is missing, set `status` to `needs_clarification` and
+  populate `questionsForUser` instead of guessing.
+- Set `needsConfirmation` to `true` for medium/high risk so the confirmation
+  gate stops before implementation.
 
 ---
 

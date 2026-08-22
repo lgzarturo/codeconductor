@@ -29,6 +29,11 @@ export interface ConsensusConfig {
   readonly algorithm: 'majority' | 'unanimous';
   readonly allowSecurityVeto: boolean;
   readonly allowComplianceVeto?: boolean;
+  /**
+   * Roster expected to vote under the unanimous algorithm, which cannot approve
+   * without it. Ignored by majority.
+   */
+  readonly expectedAgentIds?: readonly string[];
 }
 
 /**
@@ -55,6 +60,85 @@ const DEFAULT_CONFIG: ConsensusConfig = {
   allowComplianceVeto: true,
 };
 
+const VALID_STATUSES: ReadonlySet<string> = new Set(['APPROVED', 'REJECTED', 'ABSTAIN']);
+
+function canonicalAgentId(agentId: string): string {
+  return agentId.trim().toLowerCase();
+}
+
+/**
+ * Reason why unanimity is not reached, or undefined when every required agent
+ * approved exactly once.
+ */
+function unanimousFailure(
+  verdicts: readonly CouncilVerdictInput[],
+  expectedAgentIds?: readonly string[],
+): string | undefined {
+  if (expectedAgentIds !== undefined) {
+    if (
+      expectedAgentIds.length === 0 ||
+      expectedAgentIds.some(
+        (id) => typeof id !== 'string' || canonicalAgentId(id) === '',
+      )
+    ) {
+      return 'invalid expected agent roster';
+    }
+
+    const canonicalExpected = expectedAgentIds.map(canonicalAgentId);
+    if (new Set(canonicalExpected).size !== canonicalExpected.length) {
+      return 'duplicate agent IDs in expected roster';
+    }
+  }
+
+  const invalidCount = verdicts.filter(
+    (v) =>
+      typeof v.agentId !== 'string' ||
+      v.agentId.trim() === '' ||
+      !VALID_STATUSES.has(v.status),
+  ).length;
+  if (invalidCount > 0) {
+    return `${invalidCount} invalid verdict(s) received`;
+  }
+
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  for (const v of verdicts) {
+    const canonicalId = canonicalAgentId(v.agentId);
+    if (seen.has(canonicalId)) {
+      duplicates.add(v.agentId);
+    }
+    seen.add(canonicalId);
+  }
+  if (duplicates.size > 0) {
+    return `duplicate verdicts from ${[...duplicates].join(', ')}`;
+  }
+
+  // Unanimity is only meaningful against a declared roster: without one, an
+  // agent that was never asked is indistinguishable from one that approved.
+  if (expectedAgentIds === undefined) {
+    return 'missing expected agent roster';
+  }
+
+  const missing = expectedAgentIds.filter((id) => !seen.has(canonicalAgentId(id)));
+  if (missing.length > 0) {
+    return `missing verdicts from ${missing.join(', ')}`;
+  }
+  const expected = new Set(expectedAgentIds.map(canonicalAgentId));
+  const unexpected = verdicts
+    .filter((v) => !expected.has(canonicalAgentId(v.agentId)))
+    .map((v) => v.agentId);
+  if (unexpected.length > 0) {
+    return `unexpected verdicts from ${unexpected.join(', ')}`;
+  }
+
+  const nonApproving = verdicts.filter((v) => v.status !== 'APPROVED').length;
+  if (nonApproving > 0) {
+    return `${nonApproving} agent(s) did not approve`;
+  }
+
+  return undefined;
+}
+
 /**
  * Compute council consensus from N verdicts.
  *
@@ -63,7 +147,11 @@ const DEFAULT_CONFIG: ConsensusConfig = {
  *  - Compliance veto (complianceVeto=true + REJECTED) overrides majority → REJECTED
  *  - confidence check: if any agent's confidence < 0.6, or average confidence < 0.7 → ESCALATED
  *  - majority: APPROVED if approvedCount > rejectedCount
- *  - unanimous: APPROVED only if rejectedCount === 0
+ *  - unanimous: APPROVED only if every agent in `config.expectedAgentIds`
+ *    approved exactly once — missing, duplicate, unexpected, abstaining or
+ *    invalid verdicts → ESCALATED. The roster is mandatory: without it there is
+ *    no way to tell a silenced agent from an approving one, so a unanimous
+ *    config that omits it always escalates.
  *  - No majority and no veto → ESCALATED
  *  - Empty input → ESCALATED
  */
@@ -198,7 +286,8 @@ export function councilConsensus(
 
   // Unanimous check
   if (config.algorithm === 'unanimous') {
-    if (rejectedCount === 0) {
+    const failure = unanimousFailure(verdicts, config.expectedAgentIds);
+    if (!failure) {
       return {
         status: 'APPROVED',
         totalAgents,
@@ -213,6 +302,20 @@ export function councilConsensus(
         individualVerdicts: verdicts,
       };
     }
+
+    return {
+      status: 'ESCALATED',
+      totalAgents,
+      approvedCount,
+      rejectedCount,
+      abstainedCount,
+      vetoApplied: false,
+      complianceVetoApplied: false,
+      averageConfidence,
+      findings: allFindings,
+      summary: `Unanimity not reached: ${failure} — escalated for human review.`,
+      individualVerdicts: verdicts,
+    };
   }
 
   // No clear majority or rejection → ESCALATED

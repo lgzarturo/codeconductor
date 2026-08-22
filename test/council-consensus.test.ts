@@ -133,14 +133,28 @@ describe('councilConsensus — security veto override', () => {
 // ─── Unanimous Algorithm ───────────────────────────────────────────────────────
 
 describe('councilConsensus — unanimous algorithm', () => {
-  test('APPROVED when all approve', () => {
+  test('APPROVED when all approve and the roster is complete', () => {
+    const verdicts = [
+      makeVerdict('architect', 'APPROVED'),
+      makeVerdict('security', 'APPROVED'),
+      makeVerdict('devil', 'APPROVED'),
+    ];
+    const result = councilConsensus(verdicts, {
+      ...UNANIMOUS_CONFIG,
+      expectedAgentIds: ['architect', 'security', 'devil'],
+    });
+    expect(result.status).toBe('APPROVED');
+  });
+
+  test('ESCALATED when all approve but no roster is configured', () => {
     const verdicts = [
       makeVerdict('architect', 'APPROVED'),
       makeVerdict('security', 'APPROVED'),
       makeVerdict('devil', 'APPROVED'),
     ];
     const result = councilConsensus(verdicts, UNANIMOUS_CONFIG);
-    expect(result.status).toBe('APPROVED');
+    expect(result.status).toBe('ESCALATED');
+    expect(result.summary).toContain('roster');
   });
 
   test('REJECTED when one rejects (not unanimous)', () => {
@@ -357,14 +371,14 @@ describe('councilConsensus — large reviewer count (N=5)', () => {
 // ─── Unanimous edge cases ─────────────────────────────────────────────────────
 
 describe('councilConsensus — unanimous edge cases', () => {
-  test('all ABSTAIN → APPROVED (rejectedCount === 0)', () => {
+  test('all ABSTAIN → ESCALATED (unanimity requires explicit approval)', () => {
     const verdicts = [
       makeVerdict('architect', 'ABSTAIN'),
       makeVerdict('security', 'ABSTAIN'),
       makeVerdict('product', 'ABSTAIN'),
     ];
     const result = councilConsensus(verdicts, UNANIMOUS_CONFIG);
-    expect(result.status).toBe('APPROVED');
+    expect(result.status).toBe('ESCALATED');
     expect(result.approvedCount).toBe(0);
     expect(result.rejectedCount).toBe(0);
     expect(result.abstainedCount).toBe(3);
@@ -379,13 +393,73 @@ describe('councilConsensus — unanimous edge cases', () => {
     expect(result.status).toBe('ESCALATED');
   });
 
-  test('unanimous: 1 approve + 1 abstain → APPROVED', () => {
+  test('unanimous: 1 approve + 1 abstain → ESCALATED', () => {
     const verdicts = [
       makeVerdict('architect', 'APPROVED'),
       makeVerdict('security', 'ABSTAIN'),
     ];
     const result = councilConsensus(verdicts, UNANIMOUS_CONFIG);
+    expect(result.status).toBe('ESCALATED');
+  });
+
+  test('unanimous: duplicate verdict from the same agent → ESCALATED', () => {
+    const verdicts = [
+      makeVerdict('architect', 'APPROVED'),
+      makeVerdict('architect', 'APPROVED'),
+    ];
+    const result = councilConsensus(verdicts, UNANIMOUS_CONFIG);
+    expect(result.status).toBe('ESCALATED');
+    expect(result.totalAgents).toBe(2);
+  });
+});
+
+// ─── Unanimous with expected roster ───────────────────────────────────────────
+
+describe('councilConsensus — unanimous with expectedAgentIds', () => {
+  const ROSTER_CONFIG: ConsensusConfig = {
+    algorithm: 'unanimous',
+    allowSecurityVeto: true,
+    expectedAgentIds: ['architect', 'security', 'product'],
+  };
+
+  test('every expected agent approves exactly once → APPROVED', () => {
+    const verdicts = [
+      makeVerdict('architect', 'APPROVED'),
+      makeVerdict('security', 'APPROVED'),
+      makeVerdict('product', 'APPROVED'),
+    ];
+    const result = councilConsensus(verdicts, ROSTER_CONFIG);
     expect(result.status).toBe('APPROVED');
+    expect(result.totalAgents).toBe(3);
+  });
+
+  test('silent agent (missing verdict) → ESCALATED', () => {
+    const verdicts = [
+      makeVerdict('architect', 'APPROVED'),
+      makeVerdict('security', 'APPROVED'),
+    ];
+    const result = councilConsensus(verdicts, ROSTER_CONFIG);
+    expect(result.status).toBe('ESCALATED');
+    expect(result.summary).toContain('product');
+  });
+
+  test('unexpected agent → ESCALATED', () => {
+    const verdicts = [
+      makeVerdict('architect', 'APPROVED'),
+      makeVerdict('security', 'APPROVED'),
+      makeVerdict('product', 'APPROVED'),
+      makeVerdict('devil', 'APPROVED'),
+    ];
+    const result = councilConsensus(verdicts, ROSTER_CONFIG);
+    expect(result.status).toBe('ESCALATED');
+    expect(result.summary).toContain('devil');
+  });
+
+  test('security veto with an incomplete roster still → REJECTED', () => {
+    const verdicts = [makeVetoVerdict('security')];
+    const result = councilConsensus(verdicts, ROSTER_CONFIG);
+    expect(result.status).toBe('REJECTED');
+    expect(result.vetoApplied).toBe(true);
   });
 });
 

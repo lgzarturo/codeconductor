@@ -1,12 +1,16 @@
-import { writeFile, mkdir } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import {
+  OutputPathError,
+  preflightContainedOutput,
+  writeContainedFile,
+} from '../core/filesystem/path-containment';
 import { generateLlmsTxtFromSitemap, generateLlmsTxtFromUrl } from '../domain/seo/llms-generator';
 import type { SeoLlmsOptions } from '../domain/seo/seo-types';
 
 export async function seoLlmsCommand(
   options: SeoLlmsOptions
 ): Promise<{ code: number; data?: unknown }> {
-  const { url, sitemap, output, delay } = options;
+  const { url, sitemap, output, delay, force } = options;
+  const outputPathToWrite = output ?? 'llms.txt';
 
   if (!url && !sitemap) {
     return {
@@ -15,6 +19,23 @@ export async function seoLlmsCommand(
         success: false,
         command: 'seo llms',
         errors: ['Either --url or --sitemap is required'],
+      },
+    };
+  }
+
+  // Rejected before any network work so a bad/protected/existing path costs nothing.
+  const preflightError = await preflightContainedOutput(
+    options.projectRoot,
+    outputPathToWrite,
+    { force },
+  );
+  if (preflightError !== undefined) {
+    return {
+      code: 1,
+      data: {
+        success: false,
+        command: 'seo llms',
+        errors: [preflightError],
       },
     };
   }
@@ -31,12 +52,12 @@ export async function seoLlmsCommand(
 
     process.stderr.write('\r' + ' '.repeat(80) + '\r');
 
-    const outputPath = output
-      ? resolve(options.projectRoot, output)
-      : resolve(options.projectRoot, 'llms.txt');
-
-    await mkdir(dirname(outputPath), { recursive: true });
-    await writeFile(outputPath, result.content, 'utf-8');
+    const outputPath = await writeContainedFile(
+      options.projectRoot,
+      outputPathToWrite,
+      result.content,
+      { force },
+    );
 
     process.stderr.write(`Generated: ${outputPath} (${result.entries.length} entries)\n`);
 
@@ -51,8 +72,11 @@ export async function seoLlmsCommand(
       },
     };
   } catch (error) {
+    // A refused output is a controlled outcome, not a generator failure: the
+    // preflight already returns 1, and a path that only went bad in the race
+    // window has to land on the same code.
     return {
-      code: 3,
+      code: error instanceof OutputPathError ? 1 : 3,
       data: {
         success: false,
         command: 'seo llms',

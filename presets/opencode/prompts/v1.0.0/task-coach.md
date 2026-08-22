@@ -5,15 +5,17 @@ description:
   targeted clarifying questions and enforces the Task Card standard before any
   work begins.
 
+effort: low
+
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | claude-haiku-4-5-20251001 | Fast — intake, Q&A |
-| OpenCode Go | opencode-go/kimi-k2.6 | Best — efficient Q&A |
-| Gemini | gemini-2.5-flash | Alternative |
-| Codex | gpt-5.4-mini | Alternative |
-| Cursor | claude-4.5-haiku-thinking | Primary |
-| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
+| Claude | {{MODEL_CLAUDE}} | Fast — intake, Q&A |
+| OpenCode Go | {{MODEL_OPENCODE}} | Best — efficient Q&A |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 ---
 
 # Agent Contract — task-coach v1.0.0

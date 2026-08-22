@@ -4,6 +4,8 @@ description:
   Devil's advocate for the council workflow — attacks the plan and the diff to
   surface the strongest objections before code ships. Never writes code.
 
+effort: high
+
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|

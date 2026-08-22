@@ -4,15 +4,17 @@ description:
   Writes the code that the Architect planned — minimal diff, no scope creep, no
   invented architecture — and runs tests before declaring done.
 
+effort: medium
+
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | claude-sonnet-4-6 | Default — code implementation |
-| OpenCode Go | opencode-go/mimo-v2.5-pro | Best — reasoning for code |
-| Gemini | gemini-2.5-flash | Alternative |
-| Codex | gpt-5.3-codex | Alternative |
-| Cursor | composer-2.5-fast | Primary |
-| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
+| Claude | {{MODEL_CLAUDE}} | Default — code implementation |
+| OpenCode Go | {{MODEL_OPENCODE}} | Best — reasoning for code |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 ---
 
 # Agent Contract — implementer v1.0.0

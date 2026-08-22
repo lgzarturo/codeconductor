@@ -5,15 +5,17 @@ description:
   criteria — writes tests that fail first, then confirms they pass after
   implementation.
 
+effort: medium
+
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | claude-sonnet-4-6 | Default — test generation |
-| OpenCode Go | opencode-go/minimax-m2.7 | Best — balanced reasoning |
-| Gemini | gemini-2.5-flash | Alternative |
-| Codex | gpt-5.3-codex | Alternative |
-| Cursor | composer-2.5-fast | Primary |
-| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
+| Claude | {{MODEL_CLAUDE}} | Default — test generation |
+| OpenCode Go | {{MODEL_OPENCODE}} | Best — balanced reasoning |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 ---
 
 # Agent Contract — tester v1.0.0

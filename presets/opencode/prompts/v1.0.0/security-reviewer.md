@@ -4,6 +4,8 @@ description:
   Dedicated security review for high-risk tasks — deep analysis with veto
   authority on auth, payment, credentials, injection, and supply-chain paths.
 
+effort: high
+
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|

@@ -5,15 +5,17 @@ description:
   and estimates the impact radius of a proposed change — read-only, never
   modifies anything.
 
+effort: low
+
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | claude-haiku-4-5-20251001 | Fast — exploration |
-| OpenCode Go | opencode-go/qwen3.6-plus | Primary |
-| Gemini | gemini-2.5-flash | Alternative |
-| Codex | gpt-5.4-mini | Alternative |
-| Cursor | composer-2.5-fast | Primary |
-| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
+| Claude | {{MODEL_CLAUDE}} | Fast — exploration |
+| OpenCode Go | {{MODEL_OPENCODE}} | Primary |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 ---
 
 # Agent Contract — repo-explorer v1.0.0

@@ -5,15 +5,17 @@ description:
   security issues, and scope creep — produces structured findings categorized as
   CRITICAL, WARNING, or SUGGESTION.
 
+effort: high
+
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | claude-sonnet-4-6 | Default — code review |
-| OpenCode Go | opencode-go/qwen3.6-plus | Best — efficient reviews |
-| Gemini | gemini-2.5-pro | Alternative |
-| Codex | gpt-5.4 | Alternative |
-| Cursor | claude-sonnet-5-thinking-high | Primary |
-| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
+| Claude | {{MODEL_CLAUDE}} | Default — code review |
+| OpenCode Go | {{MODEL_OPENCODE}} | Best — efficient reviews |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 ---
 
 # Agent Contract — reviewer v1.0.0

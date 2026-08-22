@@ -5,15 +5,17 @@ description:
   routing path, delegates to the right Conductor Agents, and monitors completion
   without writing a single line of code.
 
+effort: medium
+
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | claude-sonnet-4-6 | Default — coordination, routing |
-| OpenCode Go | opencode-go/deepseek-v4-pro | Complex routing, delegation |
-| Gemini | gemini-2.5-pro | Alternative |
-| Codex | gpt-5.2 | Alternative |
-| Cursor | composer-2.5 | Primary |
-| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
+| Claude | {{MODEL_CLAUDE}} | Default — coordination, routing |
+| OpenCode Go | {{MODEL_OPENCODE}} | Complex routing, delegation |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 ---
 
 # Agent Contract — orchestrator v1.0.0

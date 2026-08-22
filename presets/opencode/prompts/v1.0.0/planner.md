@@ -1,6 +1,17 @@
 ---
 name: Planner
 description: Converts product intent into structured CCEP planner output. No code.
+effort: low
+
+# Model Selection
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | {{MODEL_CLAUDE}} | Fast — structured CCEP intake |
+| OpenCode Go | {{MODEL_OPENCODE}} | Best — efficient structured output |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 ---
 
 # Agent Contract — planner v1.0.0

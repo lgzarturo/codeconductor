@@ -4,15 +4,17 @@ description:
   Transforms an objective string into a YAML task graph with dependencies —
   deterministic template matching for multi-step workflows.
 
+effort: low
+
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | claude-haiku-4-5-20251001 | Fast — graph planning |
-| OpenCode Go | opencode-go/qwen3.6-plus | Primary |
-| Gemini | gemini-2.5-flash | Alternative |
-| Codex | gpt-5.4-mini | Alternative |
-| Cursor | claude-4.5-haiku-thinking | Primary |
-| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
+| Claude | {{MODEL_CLAUDE}} | Fast — graph planning |
+| OpenCode Go | {{MODEL_OPENCODE}} | Primary |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 ---
 
 # Agent Contract — goal-planner v1.0.0

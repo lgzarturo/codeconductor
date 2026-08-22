@@ -17,7 +17,7 @@ Formato validable por `cc openspec validate`. Análisis completo en
 ### BC-006 | Planificación tracer-bullet con aristas bloqueantes
 
 - Priority: P1
-- Status: READY
+- Status: PLANNED
 - Type: feature
 - Depends on: none
 - Description: Documentar y anclar la mecánica de to-tickets (rebanadas verticales tracer-bullet con aristas bloqueantes) sobre los items BC-NNN y el campo Depends on, en /cc:openspec y cc goal.

@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "activeItemId": "BC-004",
+  "activeItemId": "BC-005",
   "taskCards": [
     {
-      "id": "BC-004-discover",
-      "backlogId": "BC-004",
+      "id": "BC-005-discover",
+      "backlogId": "BC-005",
       "phase": "discover",
-      "title": "BC-004: Discover scope and impact",
-      "prompt": "Backlog item BC-004 — Gate de loop rojo reproducible en /cc:fix\n\nDescription: Portar la fase 1 de diagnosing-bugs como gate obligatorio en /cc:fix; antes de hipotetizar hay que construir un comando tight y red-capable que maneje la ruta real del bug y afirme el síntoma exacto del usuario.\nScope: Actualizar .claude/commands/cc/fix.md para bloquear la implementación hasta tener el loop; anclar el loop como check de cc verify.\n\nMap repository structure, conventions, and impact radius for this change.",
+      "title": "BC-005: Discover scope and impact",
+      "prompt": "Backlog item BC-005 — TDD por seams y checklist de anti-patrones en /cc:tdd-cycle\n\nDescription: Portar la skill tdd para acordar los seams antes de escribir tests y añadir el checklist de anti-patrones (implementation-coupled, tautológico, horizontal slicing) al rol Tester.\nScope: Actualizar .claude/commands/cc/tdd-cycle.md y el contrato del rol Tester.\n\nMap repository structure, conventions, and impact radius for this change.",
       "agent": "repo-explorer",
       "modelHint": "repo-explorer",
       "dependsOn": [],
@@ -17,15 +17,15 @@
       "status": "done"
     },
     {
-      "id": "BC-004-design",
-      "backlogId": "BC-004",
+      "id": "BC-005-design",
+      "backlogId": "BC-005",
       "phase": "design",
-      "title": "BC-004: Technical design",
-      "prompt": "Backlog item BC-004 — Gate de loop rojo reproducible en /cc:fix\n\nDescription: Portar la fase 1 de diagnosing-bugs como gate obligatorio en /cc:fix; antes de hipotetizar hay que construir un comando tight y red-capable que maneje la ruta real del bug y afirme el síntoma exacto del usuario.\nScope: Actualizar .claude/commands/cc/fix.md para bloquear la implementación hasta tener el loop; anclar el loop como check de cc verify.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
+      "title": "BC-005: Technical design",
+      "prompt": "Backlog item BC-005 — TDD por seams y checklist de anti-patrones en /cc:tdd-cycle\n\nDescription: Portar la skill tdd para acordar los seams antes de escribir tests y añadir el checklist de anti-patrones (implementation-coupled, tautológico, horizontal slicing) al rol Tester.\nScope: Actualizar .claude/commands/cc/tdd-cycle.md y el contrato del rol Tester.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
       "agent": "architect",
       "modelHint": "architect",
       "dependsOn": [
-        "BC-004-discover"
+        "BC-005-discover"
       ],
       "acceptanceCriteria": [
         "Technical plan lists files affected and approach"
@@ -33,51 +33,51 @@
       "status": "done"
     },
     {
-      "id": "BC-004-test",
-      "backlogId": "BC-004",
+      "id": "BC-005-test",
+      "backlogId": "BC-005",
       "phase": "test",
-      "title": "BC-004: Test coverage",
-      "prompt": "Backlog item BC-004 — Gate de loop rojo reproducible en /cc:fix\n\nDescription: Portar la fase 1 de diagnosing-bugs como gate obligatorio en /cc:fix; antes de hipotetizar hay que construir un comando tight y red-capable que maneje la ruta real del bug y afirme el síntoma exacto del usuario.\nScope: Actualizar .claude/commands/cc/fix.md para bloquear la implementación hasta tener el loop; anclar el loop como check de cc verify.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
+      "title": "BC-005: Test coverage",
+      "prompt": "Backlog item BC-005 — TDD por seams y checklist de anti-patrones en /cc:tdd-cycle\n\nDescription: Portar la skill tdd para acordar los seams antes de escribir tests y añadir el checklist de anti-patrones (implementation-coupled, tautológico, horizontal slicing) al rol Tester.\nScope: Actualizar .claude/commands/cc/tdd-cycle.md y el contrato del rol Tester.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
       "agent": "tester",
       "modelHint": "tester",
       "dependsOn": [
-        "BC-004-design"
+        "BC-005-design"
       ],
       "acceptanceCriteria": [
-        "Test covers: /cc:fix exige un comando reproducible corrido al menos una vez antes de hipotetizar",
-        "Test covers: El loop documentado es determinista y afirma el síntoma exacto del usuario",
-        "Test covers: `cc verify --task <id>` refleja el loop rojo como evidencia de verificación"
+        "Test covers: El flujo acuerda explícitamente los seams antes de escribir cualquier test",
+        "Test covers: El rol Tester verifica los tres anti-patrones antes de declarar tests listos",
+        "Test covers: Cada ciclo respeta red-before-green con una sola rebanada vertical"
       ],
       "status": "done"
     },
     {
-      "id": "BC-004-implement",
-      "backlogId": "BC-004",
+      "id": "BC-005-implement",
+      "backlogId": "BC-005",
       "phase": "implement",
-      "title": "BC-004: Implementation",
-      "prompt": "Backlog item BC-004 — Gate de loop rojo reproducible en /cc:fix\n\nDescription: Portar la fase 1 de diagnosing-bugs como gate obligatorio en /cc:fix; antes de hipotetizar hay que construir un comando tight y red-capable que maneje la ruta real del bug y afirme el síntoma exacto del usuario.\nScope: Actualizar .claude/commands/cc/fix.md para bloquear la implementación hasta tener el loop; anclar el loop como check de cc verify.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
+      "title": "BC-005: Implementation",
+      "prompt": "Backlog item BC-005 — TDD por seams y checklist de anti-patrones en /cc:tdd-cycle\n\nDescription: Portar la skill tdd para acordar los seams antes de escribir tests y añadir el checklist de anti-patrones (implementation-coupled, tautológico, horizontal slicing) al rol Tester.\nScope: Actualizar .claude/commands/cc/tdd-cycle.md y el contrato del rol Tester.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
       "agent": "implementer",
       "modelHint": "implementer",
       "dependsOn": [
-        "BC-004-test"
+        "BC-005-test"
       ],
       "acceptanceCriteria": [
-        "/cc:fix exige un comando reproducible corrido al menos una vez antes de hipotetizar",
-        "El loop documentado es determinista y afirma el síntoma exacto del usuario",
-        "`cc verify --task <id>` refleja el loop rojo como evidencia de verificación"
+        "El flujo acuerda explícitamente los seams antes de escribir cualquier test",
+        "El rol Tester verifica los tres anti-patrones antes de declarar tests listos",
+        "Cada ciclo respeta red-before-green con una sola rebanada vertical"
       ],
       "status": "done"
     },
     {
-      "id": "BC-004-review",
-      "backlogId": "BC-004",
+      "id": "BC-005-review",
+      "backlogId": "BC-005",
       "phase": "review",
-      "title": "BC-004: Review and validation",
-      "prompt": "Backlog item BC-004 — Gate de loop rojo reproducible en /cc:fix\n\nDescription: Portar la fase 1 de diagnosing-bugs como gate obligatorio en /cc:fix; antes de hipotetizar hay que construir un comando tight y red-capable que maneje la ruta real del bug y afirme el síntoma exacto del usuario.\nScope: Actualizar .claude/commands/cc/fix.md para bloquear la implementación hasta tener el loop; anclar el loop como check de cc verify.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
+      "title": "BC-005: Review and validation",
+      "prompt": "Backlog item BC-005 — TDD por seams y checklist de anti-patrones en /cc:tdd-cycle\n\nDescription: Portar la skill tdd para acordar los seams antes de escribir tests y añadir el checklist de anti-patrones (implementation-coupled, tautológico, horizontal slicing) al rol Tester.\nScope: Actualizar .claude/commands/cc/tdd-cycle.md y el contrato del rol Tester.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
       "agent": "reviewer",
       "modelHint": "reviewer",
       "dependsOn": [
-        "BC-004-implement"
+        "BC-005-implement"
       ],
       "acceptanceCriteria": [
         "All acceptance criteria verified",
@@ -87,16 +87,16 @@
       "status": "done"
     }
   ],
-  "lastScanHash": "3935986c0b3162aa",
-  "lastScanAt": "2026-08-22T01:51:03.720Z",
+  "lastScanHash": "7f70acfc8b3c93c4",
+  "lastScanAt": "2026-08-22T02:12:15.144Z",
   "changePaths": {
     "BC-001": "openspec/changes/bc-001-r-brica-writing-for-agents-para-auditar-prompts-",
     "BC-002": "openspec/changes/bc-002-context-md-como-glosario-de-dominio-y-criterios-",
     "BC-003": "openspec/changes/bc-003-revisi-n-de-dos-ejes-en-cc-review",
-    "BC-004": "openspec/changes/bc-004-gate-de-loop-rojo-reproducible-en-cc-fix"
+    "BC-004": "openspec/changes/bc-004-gate-de-loop-rojo-reproducible-en-cc-fix",
+    "BC-005": "openspec/changes/bc-005-tdd-por-seams-y-checklist-de-anti-patrones-en-cc"
   },
   "itemSnapshots": {
-    "BC-005": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"TDD por seams y checklist de anti-patrones en /cc:tdd-cycle\"}",
     "BC-006": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Planificación tracer-bullet con aristas bloqueantes\"}",
     "BC-007": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Gate de grilling en el rol Task Coach\"}",
     "BC-008": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Secuencia expand-contract para refactors amplios en /cc:refactor\"}",
@@ -104,6 +104,7 @@
     "BC-010": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Gate pre-commit typecheck y test adaptado a Bun\"}",
     "BC-011": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Comando /cc:handoff para traspaso entre sesiones\"}",
     "BC-012": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Router /cc:ask que recomienda el slash command correcto\"}",
+    "BC-005": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"TDD por seams y checklist de anti-patrones en /cc:tdd-cycle\"}",
     "BC-004": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Gate de loop rojo reproducible en /cc:fix\"}",
     "BC-003": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Revisión de dos ejes en /cc:review\"}",
     "BC-002": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"CONTEXT.md como glosario de dominio y criterios ADR\"}",

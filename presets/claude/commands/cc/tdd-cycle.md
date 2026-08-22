@@ -43,13 +43,27 @@ non-negotiable:
 Do not write implementation code during RED. Do not refactor during GREEN.
 Mixing phases invalidates the cycle.
 
+Each cycle covers a single vertical slice of behavior — one cycle, one
+behavior — and follows red-before-green: RED must complete before GREEN
+starts.
+
 ---
 
 ## Phase 1 — RED (Tester role)
 
 Adopt the **Tester** role as defined in `CLAUDE.md`.
 
-### 1a — Scope clarification
+### 1a — Agree on the seam
+
+Before writing any test, identify and state the seam — the point where the
+behavior under test can be exercised and observed in isolation (a function
+boundary, an interface, an injectable dependency). Confirm the seam does not
+require reaching into implementation internals.
+
+If no seam exists yet (the code is not structured to allow isolated testing),
+say so and agree on the minimal seam to introduce before continuing.
+
+### 1b — Scope clarification
 
 Before writing any test, confirm:
 
@@ -60,7 +74,7 @@ Before writing any test, confirm:
 
 If the scope is ambiguous, ask one clarifying question and wait for the answer.
 
-### 1b — Write the failing test
+### 1c — Write the failing test
 
 Write a test that:
 
@@ -74,7 +88,19 @@ Write a test that:
 Do not write the implementation. Do not make the test pass by any means other
 than the implementation that will follow in Phase 2.
 
-### 1c — Run the test suite and confirm RED
+### 1d — Anti-pattern checklist
+
+Before declaring the test ready, verify none of these anti-patterns apply:
+
+- **Implementation-coupled** — asserts internal details instead of observable
+  behavior.
+- **Tautological** — cannot fail given the test's own setup.
+- **Horizontal slicing** — spans multiple unrelated behaviors instead of one
+  vertical slice.
+
+If any anti-pattern applies, rewrite the test before continuing.
+
+### 1e — Run the test suite and confirm RED
 
 Run the test suite. The new test must fail. Existing tests must pass.
 

@@ -14,20 +14,6 @@ Formato validable por `cc openspec validate`. Análisis completo en
 
 ## Items
 
-### BC-005 | TDD por seams y checklist de anti-patrones en /cc:tdd-cycle
-
-- Priority: P1
-- Status: TODO
-- Type: feature
-- Depends on: BC-002
-- Description: Portar la skill tdd para acordar los seams antes de escribir tests y añadir el checklist de anti-patrones (implementation-coupled, tautológico, horizontal slicing) al rol Tester.
-- Scope: Actualizar .claude/commands/cc/tdd-cycle.md y el contrato del rol Tester.
-- Out of scope: Cambiar el runner de tests del proyecto.
-- Acceptance:
-  - [ ] El flujo acuerda explícitamente los seams antes de escribir cualquier test
-  - [ ] El rol Tester verifica los tres anti-patrones antes de declarar tests listos
-  - [ ] Cada ciclo respeta red-before-green con una sola rebanada vertical
-
 ### BC-006 | Planificación tracer-bullet con aristas bloqueantes
 
 - Priority: P1
@@ -127,6 +113,22 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [ ] El catálogo de flujos permanece alineado con los comandos disponibles
 
 ## Archive
+
+### BC-005 | TDD por seams y checklist de anti-patrones en /cc:tdd-cycle
+
+- Priority: P1
+- Status: DONE
+- Type: feature
+- Depends on: BC-002
+- Description: Portar la skill tdd para acordar los seams antes de escribir tests y añadir el checklist de anti-patrones (implementation-coupled, tautológico, horizontal slicing) al rol Tester.
+- Scope: Actualizar .claude/commands/cc/tdd-cycle.md y el contrato del rol Tester.
+- Out of scope: Cambiar el runner de tests del proyecto.
+- Progress: 100
+- Reviewer: reviewer
+- Acceptance:
+  - [x] El flujo acuerda explícitamente los seams antes de escribir cualquier test
+  - [x] El rol Tester verifica los tres anti-patrones antes de declarar tests listos
+  - [x] Cada ciclo respeta red-before-green con una sola rebanada vertical
 
 ### BC-004 | Gate de loop rojo reproducible en /cc:fix
 

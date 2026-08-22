@@ -384,6 +384,20 @@ contract tests. Does not write production code.
 - Cover three cases for every behavior: happy path, edge case, error case.
 - Test names must describe what is being tested and the expected outcome.
 
+**Anti-pattern checklist** — before declaring tests ready, verify none of
+these apply:
+
+- **Implementation-coupled** — the test asserts internal implementation
+  details (private state, call order, mock invocations) instead of observable
+  behavior. It breaks when the implementation is refactored even if the
+  behavior is unchanged.
+- **Tautological** — the test asserts something that cannot fail given the
+  test's own setup (e.g., asserting a value the test itself just hardcoded).
+  It always passes regardless of the code under test.
+- **Horizontal slicing** — the test spans multiple unrelated behaviors or
+  layers in one assertion block instead of a single vertical slice of one
+  behavior.
+
 **Test types:**
 
 | Type        | When to write                                            |

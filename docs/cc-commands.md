@@ -662,6 +662,13 @@ After `install preset --target cursor`, the following commands are available in
 | `/cc-pagespeed` | PageSpeed audit |
 | `/cc-openspec` | OpenSpec backlog workflow |
 | `/cc-scorecard` | Agent scorecard evaluation |
+| `/cc-council` | Council-driven SDD/TDD/review |
+| `/cc-iterative` / `/cc:iterative` | Wayfinding, grilling, contracts, TDD, council, docs |
+| `/cc-explore` / `/cc:explore` | Repo map and next-command suggestion |
+| `/cc-triage` / `/cc:triage` | Classify request → destination workflow |
+| `/cc-prototype` / `/cc:prototype` | Disposable spike (isolated worktree) |
+| `/cc-handoff` / `/cc:handoff` | Compact session to `.codeconductor/` |
+| `/cc-clarify` / `/cc:clarify` | Re-explain last deliverable |
 
 Use `/multitask` before parallel steps (e.g. review + docs) for concurrent
 subagent execution.

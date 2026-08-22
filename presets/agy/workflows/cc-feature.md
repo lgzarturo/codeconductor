@@ -22,7 +22,16 @@ Command: `feature` (fixed for this workflow — do not infer from user text)
 
 ---
 
-## Step 1 — Task Card validation (task-coach)
+## Step 1 — Wayfinding (repo-explorer)
+
+If `graphify-out/graph.json` exists, run `graphify query "$ARGUMENTS"` (and
+`graphify path` / `graphify explain` when needed). Then invoke `repo-explorer`
+to map modules, conventions, and impact radius. Do not write code in this step.
+Record a Repo Map artifact before intake.
+
+---
+
+## Step 2 — Task Card validation (task-coach)
 
 Invoke `task-coach` with the feature description above.
 
@@ -39,7 +48,7 @@ continuing.**
 
 ---
 
-## Step 2 — Technical Plan (architect)
+## Step 3 — Technical Plan (architect)
 
 Invoke `architect` with the validated Task Card from Step 1.
 
@@ -57,7 +66,7 @@ not invoke implementer until the plan is approved.**
 
 ---
 
-## Step 3 — Test coverage (tester)
+## Step 4 — Test coverage (tester)
 
 Invoke `tester` with the Implementation Summary and the Task Card.
 
@@ -70,7 +79,7 @@ tester must:
 
 ---
 
-## Step 4 — Implementation (implementer)
+## Step 5 — Implementation (implementer)
 
 Invoke `implementer` with the approved Technical Plan and the Task Card.
 Implementer creates a Git Worktree before touching any file; all edits happen inside it.
@@ -85,7 +94,7 @@ implementer must:
 
 ---
 
-## Step 5 — Code review (reviewer)
+## Step 6 — Code review (reviewer)
 
 Invoke `reviewer` with the complete diff and the Task Card.
 
@@ -100,7 +109,7 @@ they are resolved and re-reviewed.
 
 ---
 
-## Step 6 — Documentation (docs)
+## Step 7 — Documentation (docs)
 
 Invoke `docs` only if any of the following changed:
 

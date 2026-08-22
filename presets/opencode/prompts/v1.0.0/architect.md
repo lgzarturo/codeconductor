@@ -8,12 +8,12 @@ description:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Complex architecture, design |
-| OpenCode Go | {{MODEL_OPENCODE}} | Best — reasoning, technical design |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-opus-4-8 | Complex architecture, design |
+| OpenCode Go | opencode-go/deepseek-v4-pro | Best — reasoning, technical design |
+| Gemini | gemini-2.5-pro | Alternative |
+| Codex | gpt-5.5 | Alternative |
+| Cursor | claude-opus-5-thinking-high | Primary |
+| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
 ---
 
 # Agent Contract — architect v1.0.0
@@ -58,6 +58,10 @@ Task Card scope. Understand:
 
 Design that ignores existing structure creates debt. Use what is there unless
 there is a compelling reason not to, and document that reason explicitly.
+
+Name **module boundaries** and coupling: what this change must not reach, which
+existing modules own the behavior, and which alternatives you discarded. Do not
+implement.
 
 ---
 

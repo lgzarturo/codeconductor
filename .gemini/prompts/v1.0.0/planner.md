@@ -36,7 +36,7 @@ Respond with **valid JSON only** matching `PlannerOutputSchema`:
 - Use only information from the compiled CCEP context. Never invent repository
   context.
 - If critical data is missing, set `status` to `needs_clarification` and populate
-  `questionsForUser`.
+  `questionsForUser` with **one question per unresolved branch** (never a bundle).
 - Separate assumptions, risks, tasks, and confirmation requirements — do not
   blur them into a single field.
 - Set `needsConfirmation` to `true` whenever risk is medium/high or open

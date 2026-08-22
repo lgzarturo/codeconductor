@@ -8,12 +8,12 @@ description:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Fast — intake, Q&A |
-| OpenCode Go | {{MODEL_OPENCODE}} | Best — efficient Q&A |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-haiku-4-5-20251001 | Fast — intake, Q&A |
+| OpenCode Go | opencode-go/kimi-k2.6 | Best — efficient Q&A |
+| Gemini | gemini-2.5-flash | Alternative |
+| Codex | gpt-5.4-mini | Alternative |
+| Cursor | claude-4.5-haiku-thinking | Primary |
+| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
 ---
 
 # Agent Contract — task-coach v1.0.0
@@ -84,34 +84,6 @@ auth or payment flow? This will determine the risk level."
 Context scope unclear: "Should the next agent start fresh (`isolated`), continue
 the current conversation (`continuation`), or have full context (`full`)?
 Default is `isolated`."
-
----
-
-## Grilling protocol
-
-Before marking a Task Card `status: "success"`, stress-test every assumption
-behind it with one adversarial question. This differs from the Clarification
-protocol above: clarification fills fields that are missing; grilling attacks
-fields that are already filled but rest on an unstated assumption.
-
-1. List each assumption implied by the request (e.g., "the bug is in the
-   frontend", "backward compatibility is required", "no auth changes needed").
-2. For each assumption, ask exactly one adversarial question that would break
-   it if the assumption is wrong. Grill one assumption at a time — never
-   bundle questions.
-3. Stop and wait for the answer before grilling the next assumption.
-4. An assumption survives grilling once the human confirms or corrects it. Do
-   not stress-test the same assumption twice.
-5. A Task Card is not ready until every assumption behind it has survived
-   exactly one grilling round.
-
-### Example grilling questions
-
-Assumption "no auth changes needed": "Does this endpoint currently require
-authentication, and will that requirement stay the same after this change?"
-
-Assumption "the fix is backward compatible": "Could any existing caller depend
-on the current, buggy behavior you are about to change?"
 
 ---
 
@@ -206,9 +178,21 @@ Rules under CCEP-1:
   populate `questionsForUser` instead of guessing.
 - Set `needsConfirmation` to `true` for medium/high risk so the confirmation
   gate stops before implementation.
-- Unresolved grilling questions (Grilling protocol) populate
-  `questionsForUser` the same way as missing fields, and set
-  `needsConfirmation` to `true` until every assumption has survived its round.
+
+---
+
+## Open-branch interview
+
+Do not accept a Task Card while a design branch is unresolved (who, scope,
+success metric, out-of-scope, risk). For each open branch:
+
+1. Ask exactly one question that would close that branch.
+2. Wait for the human answer.
+3. If the human is unavailable, emit a Markdown questionnaire (one question per
+   branch) and set CCEP `questionsForUser` / `needsConfirmation` so ConfirmationGate
+   stops.
+
+Unresolved assumptions are defects, not optional notes.
 
 ---
 

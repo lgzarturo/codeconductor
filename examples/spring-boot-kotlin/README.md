@@ -69,6 +69,7 @@ Key concepts illustrated:
 | `technical-plan.md`         | `architect` agent   | Design decisions before implementation            |
 | `implementation-summary.md` | `implementer` agent | Code written, tests run, deviations noted         |
 | `review-report.md`          | `reviewer` agent    | Findings, checklist, verdict                      |
+| `handoff.md`                | `docs` (`/cc:handoff`) | Compact session so another agent can resume    |
 
 `README.md` (this file) is documentation, not a CodeConductor artifact.
 

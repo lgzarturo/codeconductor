@@ -12,6 +12,7 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
       requiredFields: ['title', 'type', 'risk', 'scope', 'context', 'acceptanceCriteria'],
     },
     phases: [
+      { id: 'wayfinding', agent: 'repo-explorer', outputSchema: 'agent-output' },
       { id: 'intake', agent: 'task-coach', outputSchema: 'planner-output', stopGate: 'confirmation' },
       { id: 'design', agent: 'architect', outputSchema: 'technical-plan', stopGate: 'approval' },
       { id: 'test', agent: 'tester', dependsOn: ['design'] },
@@ -19,7 +20,7 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
       { id: 'review', agent: 'reviewer' },
       { id: 'docs', agent: 'docs', parallelWith: ['review'] },
     ],
-    routing: { default: ['intake', 'design', 'test', 'implement', 'review', 'docs'] },
+    routing: { default: ['wayfinding', 'intake', 'design', 'test', 'implement', 'review', 'docs'] },
     confirmationGate: baseGate,
   },
   fix: {
@@ -37,16 +38,17 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
       ],
     },
     phases: [
+      { id: 'wayfinding', agent: 'repo-explorer', outputSchema: 'agent-output' },
       { id: 'intake', agent: 'task-coach', outputSchema: 'fix-intake-output', stopGate: 'confirmation' },
       { id: 'test', agent: 'tester' },
       { id: 'implement', agent: 'implementer', dependsOn: ['test'] },
       { id: 'review', agent: 'reviewer' },
     ],
     routing: {
-      default: ['intake', 'test', 'implement'],
+      default: ['wayfinding', 'intake', 'test', 'implement'],
       riskRules: [
-        { when: { risk: 'low' }, then: ['test', 'implement'] },
-        { when: { risk: ['medium', 'high'] }, then: ['test', 'implement', 'review'] },
+        { when: { risk: 'low' }, then: ['wayfinding', 'test', 'implement'] },
+        { when: { risk: ['medium', 'high'] }, then: ['wayfinding', 'test', 'implement', 'review'] },
       ],
     },
     confirmationGate: baseGate,
@@ -176,6 +178,7 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     version: 1,
     command: 'council',
     phases: [
+      { id: 'wayfinding', agent: 'repo-explorer', outputSchema: 'agent-output' },
       {
         id: 'deliberation',
         agents: ['task-coach', 'architect', 'devil'],
@@ -191,7 +194,102 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
         outputSchema: 'council-verdict',
       },
     ],
-    routing: { default: ['deliberation', 'tdd', 'implement', 'council-review'] },
+    routing: { default: ['wayfinding', 'deliberation', 'tdd', 'implement', 'council-review'] },
     confirmationGate: baseGate,
+  },
+  iterative: {
+    id: 'iterative',
+    version: 1,
+    command: 'iterative',
+    taskCard: {
+      type: 'feature',
+      requiredFields: ['title', 'type', 'risk', 'scope', 'context', 'acceptanceCriteria'],
+    },
+    phases: [
+      { id: 'wayfinding', agent: 'repo-explorer', outputSchema: 'agent-output' },
+      { id: 'intake', agent: 'task-coach', outputSchema: 'planner-output', stopGate: 'confirmation' },
+      { id: 'contract', agent: 'contract-builder', outputSchema: 'api-contract' },
+      { id: 'design', agent: 'architect', outputSchema: 'technical-plan', stopGate: 'approval' },
+      { id: 'test', agent: 'tester', dependsOn: ['design'] },
+      { id: 'implement', agent: 'implementer', dependsOn: ['test'] },
+      { id: 'council-review', skill: 'council', outputSchema: 'council-verdict' },
+      { id: 'docs', agent: 'docs' },
+    ],
+    routing: {
+      default: [
+        'wayfinding',
+        'intake',
+        'contract',
+        'design',
+        'test',
+        'implement',
+        'council-review',
+        'docs',
+      ],
+    },
+    confirmationGate: baseGate,
+  },
+  explore: {
+    id: 'explore',
+    version: 1,
+    command: 'explore',
+    intakeSchema: 'explore-query',
+    phases: [
+      { id: 'map', agent: 'repo-explorer', outputSchema: 'agent-output' },
+      { id: 'suggest-next', agent: 'orchestrator', outputSchema: 'agent-output' },
+    ],
+    routing: { default: ['map', 'suggest-next'] },
+    confirmationGate: { stopOnHighRisk: false, stopOnQuestions: false },
+  },
+  triage: {
+    id: 'triage',
+    version: 1,
+    command: 'triage',
+    taskCard: {
+      type: 'feature',
+      requiredFields: ['title', 'type', 'risk', 'scope'],
+    },
+    phases: [
+      { id: 'classify', agent: 'task-coach', outputSchema: 'planner-output', stopGate: 'confirmation' },
+    ],
+    routing: { default: ['classify'] },
+    confirmationGate: baseGate,
+  },
+  prototype: {
+    id: 'prototype',
+    version: 1,
+    command: 'prototype',
+    taskCard: {
+      type: 'feature',
+      requiredFields: ['title', 'scope', 'acceptanceCriteria'],
+    },
+    phases: [
+      { id: 'bounds', agent: 'architect', outputSchema: 'technical-plan', stopGate: 'approval' },
+      { id: 'spike', agent: 'implementer' },
+    ],
+    routing: { default: ['bounds', 'spike'] },
+    confirmationGate: baseGate,
+  },
+  handoff: {
+    id: 'handoff',
+    version: 1,
+    command: 'handoff',
+    intakeSchema: 'handoff-session',
+    phases: [
+      { id: 'compact', agent: 'docs', outputSchema: 'agent-output' },
+    ],
+    routing: { default: ['compact'] },
+    confirmationGate: { stopOnHighRisk: false, stopOnQuestions: false },
+  },
+  clarify: {
+    id: 'clarify',
+    version: 1,
+    command: 'clarify',
+    intakeSchema: 'clarify-deliverable',
+    phases: [
+      { id: 're-explain', agent: 'task-coach', outputSchema: 'planner-output' },
+    ],
+    routing: { default: ['re-explain'] },
+    confirmationGate: { stopOnHighRisk: false, stopOnQuestions: true },
   },
 };

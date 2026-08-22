@@ -11,6 +11,9 @@ taskCard:
     - context
     - acceptanceCriteria
 phases:
+  - id: wayfinding
+    agent: repo-explorer
+    outputSchema: agent-output
   - id: intake
     agent: task-coach
     outputSchema: planner-output
@@ -35,6 +38,7 @@ phases:
       - review
 routing:
   default:
+    - wayfinding
     - intake
     - design
     - test

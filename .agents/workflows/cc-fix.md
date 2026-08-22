@@ -32,7 +32,16 @@ Command: `fix` (fixed for this workflow — do not infer from user text)
 
 ---
 
-## Step 1 — Task Card validation (task-coach)
+## Step 1 — Wayfinding (repo-explorer)
+
+If `graphify-out/graph.json` exists, run `graphify query "$ARGUMENTS"` (and
+`graphify path` / `graphify explain` when needed). Then invoke `repo-explorer`
+to map modules, conventions, and impact radius. Do not write code in this step.
+Record a Repo Map artifact before intake.
+
+---
+
+## Step 2 — Task Card validation (task-coach)
 
 Invoke `task-coach` with the bug description above.
 
@@ -47,11 +56,14 @@ If reproduction steps are missing, task-coach must ask for them before
 classifying risk. A bug without a reproduction path cannot be classified
 reliably.
 
+Capture evidence before tests: reproduction, logs or stack traces, and one
+falsifiable hypothesis of the root cause. Do not patch without that evidence.
+
 **STOP here. Show the Task Card and wait for human confirmation.**
 
 ---
 
-## Step 2 — Route by risk
+## Step 3 — Route by risk
 
 Read the risk field from the Task Card and follow the corresponding route.
 
@@ -83,7 +95,7 @@ before continuing.**
 
 ---
 
-## Step 3 — Regression tests (tester)
+## Step 4 — Regression tests (tester)
 
 Invoke `tester` for all risk levels.
 
@@ -96,7 +108,7 @@ tester must:
 
 ---
 
-## Step 4a — Implementation, low-risk (implementer)
+## Step 5a — Implementation, low-risk (implementer)
 
 Invoke `implementer` with the Task Card.
 Implementer creates a Git Worktree before touching any file; all edits happen inside it.
@@ -110,7 +122,7 @@ implementer must:
 
 ---
 
-## Step 4b — Implementation, medium/high-risk (implementer)
+## Step 5b — Implementation, medium/high-risk (implementer)
 
 Invoke `implementer` with the approved Technical Plan and the Task Card.
 Implementer creates a Git Worktree before touching any file; all edits happen inside it.
@@ -120,7 +132,7 @@ Plan approval. After implementation, run the full test suite.
 
 ---
 
-## Step 5 — Review (reviewer) — medium/high-risk only
+## Step 6 — Review (reviewer) — medium/high-risk only
 
 Invoke `reviewer` with the diff and Task Card.
 

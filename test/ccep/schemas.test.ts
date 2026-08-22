@@ -8,7 +8,7 @@ import {
 } from '../../src/validation/schemas';
 
 describe('ccep schemas', () => {
-  test('WorkflowCommandSchema accepts all 12 slash commands', () => {
+  test('WorkflowCommandSchema accepts all 18 slash commands', () => {
     const commands = [
       'feature',
       'fix',
@@ -22,6 +22,12 @@ describe('ccep schemas', () => {
       'openspec',
       'scorecard',
       'council',
+      'iterative',
+      'explore',
+      'triage',
+      'prototype',
+      'handoff',
+      'clarify',
     ];
 
     for (const command of commands) {

@@ -40,6 +40,7 @@ spec files only.
 
 Produce one or more of:
 
+- Domain notes: entities, invariants, and explicit non-goals (not only HTTP)
 - OpenAPI 3.x spec (`openapi.yaml` or `*-api.yaml`)
 - JSON Schema for request/response bodies
 - TypeScript interfaces for shared types

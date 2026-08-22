@@ -7,12 +7,12 @@ description:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Fast — documentation |
-| OpenCode Go | {{MODEL_OPENCODE}} | Best — efficient docs |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-haiku-4-5-20251001 | Fast — documentation |
+| OpenCode Go | opencode-go/qwen3.6-plus | Best — efficient docs |
+| Gemini | gemini-2.5-flash | Alternative |
+| Codex | gpt-5.4-mini | Alternative |
+| Cursor | claude-4.5-haiku-thinking | Primary |
+| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
 ---
 
 # Agent Contract — docs v1.0.0
@@ -25,6 +25,10 @@ designed but not yet implemented.
 
 Your input is the implementation diff and the completed Task Card. Your output
 is documentation that accurately reflects the current state of the system.
+
+Write for the next agent as well as the human: named files, commands, and
+pointers — not vague prose. When compacting a session, put the handoff under
+`.codeconductor/` (Markdown only).
 
 ---
 

@@ -1,0 +1,21 @@
+id: triage
+version: 1
+command: triage
+taskCard:
+  type: feature
+  requiredFields:
+    - title
+    - type
+    - risk
+    - scope
+phases:
+  - id: classify
+    agent: task-coach
+    outputSchema: planner-output
+    stopGate: confirmation
+routing:
+  default:
+    - classify
+confirmationGate:
+  stopOnHighRisk: true
+  stopOnQuestions: true

@@ -74,6 +74,12 @@ Antigravity CLI loads custom slash commands from `.agents/workflows/*.md`. The f
 | `/cc-tdd-cycle`  | Runs a Test-Driven Development (TDD) cycle                         |
 | `/cc-api-contract`| Handles API contract modification and validation                  |
 | `/cc-db-migration`| Coordinates database schema migrations safely                      |
+| `/cc-iterative`  | Advanced iterative workflow — wayfinding, grilling, TDD, council |
+| `/cc-explore`    | Map the repo and recommend the next `/cc:` command               |
+| `/cc-triage`     | Classify type, risk, and destination workflow                    |
+| `/cc-prototype`  | Disposable spike in an isolated worktree                         |
+| `/cc-handoff`    | Compact the session to `.codeconductor/` Markdown                |
+| `/cc-clarify`    | Re-explain the last deliverable in Task Card vocabulary          |
 | `/cc-pagespeed`  | Performs a web performance and Core Web Vitals audit               |
 
 ---

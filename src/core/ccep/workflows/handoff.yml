@@ -1,0 +1,14 @@
+id: handoff
+version: 1
+command: handoff
+intakeSchema: handoff-session
+phases:
+  - id: compact
+    agent: docs
+    outputSchema: agent-output
+routing:
+  default:
+    - compact
+confirmationGate:
+  stopOnHighRisk: false
+  stopOnQuestions: false

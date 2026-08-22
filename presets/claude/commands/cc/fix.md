@@ -31,7 +31,16 @@ Command: `fix` (fixed for this workflow — do not infer from user text)
 
 ---
 
-## Step 1 — Task Card validation (Task Coach role)
+## Step 1 — Wayfinding (repo-explorer)
+
+If `graphify-out/graph.json` exists, run `graphify query "$ARGUMENTS"` (and
+`graphify path` / `graphify explain` when needed). Then invoke `repo-explorer`
+to map modules, conventions, and impact radius. Do not write code in this step.
+Record a Repo Map artifact before intake.
+
+---
+
+## Step 2 — Task Card validation (Task Coach role)
 
 Adopt the **Task Coach** role as defined in `CLAUDE.md`.
 
@@ -45,11 +54,14 @@ Produce a Task Card that includes:
 If reproduction steps are missing, ask for them before classifying risk. A bug
 without a reproduction path cannot be classified reliably.
 
+Capture evidence before tests: reproduction, logs or stack traces, and one
+falsifiable hypothesis of the root cause. Do not patch without that evidence.
+
 **STOP here. Show the Task Card and wait for human confirmation.**
 
 ---
 
-## Step 1.5 — Red loop gate
+## Step 2.5 — Red loop gate
 
 Before hypothesizing about the root cause, produce a reproduction command:
 one deterministic, tight command that exercises the real bug path and asserts
@@ -61,7 +73,7 @@ Requirements:
   result.
 - The command's assertion must match the exact user-reported symptom (actual
   vs. expected from the Task Card), not a generic failure.
-- Run it at least once before continuing. Do not proceed to Step 2 until you
+- Run it at least once before continuing. Do not proceed to Step 3 until you
   have run it and it reproduces the bug (RED).
 
 Record the run as evidence so `cc verify` can see it: write a JSON file to
@@ -76,7 +88,7 @@ this evidence directly, no code changes required.
 
 ---
 
-## Step 2 — Route by risk
+## Step 3 — Route by risk
 
 Read the risk field from the Task Card and follow the corresponding route.
 
@@ -108,7 +120,7 @@ before continuing.**
 
 ---
 
-## Step 3 — Regression tests (Tester role)
+## Step 4 — Regression tests (Tester role)
 
 Adopt the **Tester** role as defined in `CLAUDE.md`. Apply for all risk levels.
 
@@ -119,7 +131,7 @@ Adopt the **Tester** role as defined in `CLAUDE.md`. Apply for all risk levels.
 
 ---
 
-## Step 4a — Implementation, low-risk (Implementer role)
+## Step 5a — Implementation, low-risk (Implementer role)
 
 Adopt the **Implementer** role as defined in `CLAUDE.md`. Use the Task Card.
 Implementer creates a Git Worktree before touching any file; all edits happen inside it.
@@ -131,7 +143,7 @@ Implementer creates a Git Worktree before touching any file; all edits happen in
 
 ---
 
-## Step 4b — Implementation, medium/high-risk (Implementer role)
+## Step 5b — Implementation, medium/high-risk (Implementer role)
 
 Adopt the **Implementer** role as defined in `CLAUDE.md`. Use the approved
 Technical Plan and the Task Card.
@@ -142,7 +154,7 @@ After implementation, run the full test suite.
 
 ---
 
-## Step 5 — Review (Reviewer role) — medium/high-risk only
+## Step 6 — Review (Reviewer role) — medium/high-risk only
 
 Adopt the **Reviewer** role as defined in `CLAUDE.md`. Use the diff and Task
 Card.

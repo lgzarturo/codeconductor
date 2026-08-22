@@ -102,6 +102,12 @@ imports, adapters/ contains Spring components"]
 ### Open Questions
 
 - [anything ambiguous about the structure that the Architect should address]
+
+### Next workflow
+
+Recommend one CodeConductor slash command for the next step (`/cc:feature`,
+`/cc:fix`, `/cc:refactor`, `/cc:review`, `/cc:triage`, …) with a one-sentence
+rationale. Do not start that workflow yourself.
 ```
 
 ## CCEP-1 structured output

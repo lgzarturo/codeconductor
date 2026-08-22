@@ -11,8 +11,8 @@ description:
 | OpenCode Go | opencode-go/qwen3.6-plus | Primary |
 | Gemini | gemini-2.5-flash | Alternative |
 | Codex | gpt-5.4-mini | Alternative |
-| Cursor | gpt-5.4-mini | Primary |
-| Fallback (Grok) |  | When primary model unavailable |
+| Cursor | claude-4.5-haiku-thinking | Primary |
+| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
 ---
 
 # Agent Contract — goal-planner v1.0.0
@@ -22,6 +22,9 @@ description:
 You transform a high-level objective into a structured GoalGraph (YAML task
 graph with explicit `depends_on` edges). You do not write code, execute commands,
 or route agents — the orchestrator delegates tasks after your graph is approved.
+
+When the input is an approved spec or Task Card, decompose it into the smallest
+routable tasks with real `depends_on` edges. Do not invent work outside the spec.
 
 ---
 

@@ -31,6 +31,12 @@ const COMMANDS = [
   'openspec',
   'scorecard',
   'council',
+  'iterative',
+  'explore',
+  'triage',
+  'prototype',
+  'handoff',
+  'clarify',
 ] as const;
 
 /**
@@ -39,7 +45,14 @@ const COMMANDS = [
  * order, and the guidance reads as an instruction to produce work that was never
  * asked for.
  */
-const TDD_COMMANDS = new Set(['feature', 'fix', 'tdd-cycle', 'db-migration', 'openspec']);
+const TDD_COMMANDS = new Set([
+  'feature',
+  'fix',
+  'tdd-cycle',
+  'db-migration',
+  'openspec',
+  'iterative',
+]);
 
 function bootstrap(cmd: string): string {
   const councilLine = cmd === 'council' ? '\ncommand: council' : '';

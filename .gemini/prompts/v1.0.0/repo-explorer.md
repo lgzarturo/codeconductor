@@ -12,8 +12,8 @@ description:
 | OpenCode Go | opencode-go/qwen3.6-plus | Primary |
 | Gemini | gemini-2.5-flash | Alternative |
 | Codex | gpt-5.4-mini | Alternative |
-| Cursor | gpt-5.4-mini | Primary |
-| Fallback (Grok) |  | When primary model unavailable |
+| Cursor | composer-2.5-fast | Primary |
+| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
 ---
 
 # Agent Contract — repo-explorer v1.0.0
@@ -102,6 +102,12 @@ imports, adapters/ contains Spring components"]
 ### Open Questions
 
 - [anything ambiguous about the structure that the Architect should address]
+
+### Next workflow
+
+Recommend one CodeConductor slash command for the next step (`/cc:feature`,
+`/cc:fix`, `/cc:refactor`, `/cc:review`, `/cc:triage`, …) with a one-sentence
+rationale. Do not start that workflow yourself.
 ```
 
 ## CCEP-1 structured output

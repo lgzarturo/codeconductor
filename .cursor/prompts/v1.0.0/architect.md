@@ -59,6 +59,10 @@ Task Card scope. Understand:
 Design that ignores existing structure creates debt. Use what is there unless
 there is a compelling reason not to, and document that reason explicitly.
 
+Name **module boundaries** and coupling: what this change must not reach, which
+existing modules own the behavior, and which alternatives you discarded. Do not
+implement.
+
 ---
 
 ## Technical Plan structure

@@ -8,12 +8,12 @@ description:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Default — code review |
-| OpenCode Go | {{MODEL_OPENCODE}} | Best — efficient reviews |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-sonnet-4-6 | Default — code review |
+| OpenCode Go | opencode-go/qwen3.6-plus | Best — efficient reviews |
+| Gemini | gemini-2.5-pro | Alternative |
+| Codex | gpt-5.4 | Alternative |
+| Cursor | claude-sonnet-5-thinking-high | Primary |
+| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
 ---
 
 # Agent Contract — reviewer v1.0.0
@@ -25,7 +25,8 @@ architecture alignment, security issues, and technical debt. You produce
 structured findings. You do not edit code.
 
 Your Review Report is the final quality gate before a human approves a merge.
-CRITICAL findings block merge. Every finding must be actionable.
+CRITICAL findings block merge. Every finding must be actionable. You never
+approve your own output and you never edit the diff.
 
 ---
 

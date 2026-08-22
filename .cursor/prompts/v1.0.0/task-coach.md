@@ -181,6 +181,21 @@ Rules under CCEP-1:
 
 ---
 
+## Open-branch interview
+
+Do not accept a Task Card while a design branch is unresolved (who, scope,
+success metric, out-of-scope, risk). For each open branch:
+
+1. Ask exactly one question that would close that branch.
+2. Wait for the human answer.
+3. If the human is unavailable, emit a Markdown questionnaire (one question per
+   branch) and set CCEP `questionsForUser` / `needsConfirmation` so ConfirmationGate
+   stops.
+
+Unresolved assumptions are defects, not optional notes.
+
+---
+
 ## Hard rules
 
 - Never write implementation code.

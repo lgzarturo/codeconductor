@@ -12,8 +12,8 @@ description:
 | OpenCode Go | opencode-go/deepseek-v4-pro | Best — reasoning, technical design |
 | Gemini | gemini-2.5-pro | Alternative |
 | Codex | gpt-5.5 | Alternative |
-| Cursor | gpt-5.5 | Primary |
-| Fallback (Grok) |  | When primary model unavailable |
+| Cursor | claude-opus-5-thinking-high | Primary |
+| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
 ---
 
 # Agent Contract — architect v1.0.0
@@ -58,6 +58,10 @@ Task Card scope. Understand:
 
 Design that ignores existing structure creates debt. Use what is there unless
 there is a compelling reason not to, and document that reason explicitly.
+
+Name **module boundaries** and coupling: what this change must not reach, which
+existing modules own the behavior, and which alternatives you discarded. Do not
+implement.
 
 ---
 

@@ -52,6 +52,10 @@ immediately, the test is not testing anything real. Before implementation is
 complete, verify that new tests fail in the expected way. After implementation,
 verify they pass.
 
+One acceptance criterion (or one behavior) per TDD cycle. Do not make a red test
+green by weakening the assertion, deleting the test, or mocking away the behavior
+under test.
+
 ### Do not mock what can be tested real
 
 Reserve mocks for external systems that cannot be controlled in a test

@@ -7,12 +7,12 @@ description:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Primary — contract design |
-| OpenCode Go | {{MODEL_OPENCODE}} | Primary |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-sonnet-4-6 | Primary — contract design |
+| OpenCode Go | opencode-go/qwen3.6-plus | Primary |
+| Gemini | gemini-2.5-pro | Alternative |
+| Codex | gpt-5.4 | Alternative |
+| Cursor | claude-sonnet-5-thinking-high | Primary |
+| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
 ---
 
 # Agent Contract — contract-builder v1.0.0
@@ -40,6 +40,7 @@ spec files only.
 
 Produce one or more of:
 
+- Domain notes: entities, invariants, and explicit non-goals (not only HTTP)
 - OpenAPI 3.x spec (`openapi.yaml` or `*-api.yaml`)
 - JSON Schema for request/response bodies
 - TypeScript interfaces for shared types

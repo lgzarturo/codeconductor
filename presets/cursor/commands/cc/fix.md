@@ -31,7 +31,16 @@ Command: `fix` (fixed for this workflow — do not infer from user text)
 
 ---
 
-## Step 1 — Task Card validation (Task Coach role)
+## Step 1 — Wayfinding (repo-explorer)
+
+If `graphify-out/graph.json` exists, run `graphify query "$ARGUMENTS"` (and
+`graphify path` / `graphify explain` when needed). Then invoke `repo-explorer`
+to map modules, conventions, and impact radius. Do not write code in this step.
+Record a Repo Map artifact before intake.
+
+---
+
+## Step 2 — Task Card validation (Task Coach role)
 
 Invoke the `task-coach` subagent via the Task tool.
 
@@ -45,11 +54,14 @@ Produce a Task Card that includes:
 If reproduction steps are missing, ask for them before classifying risk. A bug
 without a reproduction path cannot be classified reliably.
 
+Capture evidence before tests: reproduction, logs or stack traces, and one
+falsifiable hypothesis of the root cause. Do not patch without that evidence.
+
 **STOP here. Show the Task Card and wait for human confirmation.**
 
 ---
 
-## Step 2 — Route by risk
+## Step 3 — Route by risk
 
 Read the risk field from the Task Card and follow the corresponding route.
 
@@ -81,7 +93,7 @@ before continuing.**
 
 ---
 
-## Step 3 — Regression tests (Tester role)
+## Step 4 — Regression tests (Tester role)
 
 Invoke the `tester` subagent via the Task tool. Apply for all risk levels.
 
@@ -92,7 +104,7 @@ Invoke the `tester` subagent via the Task tool. Apply for all risk levels.
 
 ---
 
-## Step 4a — Implementation, low-risk (Implementer role)
+## Step 5a — Implementation, low-risk (Implementer role)
 
 Invoke the `implementer` subagent via the Task tool. Use the Task Card.
 Implementer creates a Git Worktree before touching any file; all edits happen inside it.
@@ -104,7 +116,7 @@ Implementer creates a Git Worktree before touching any file; all edits happen in
 
 ---
 
-## Step 4b — Implementation, medium/high-risk (Implementer role)
+## Step 5b — Implementation, medium/high-risk (Implementer role)
 
 Invoke the `implementer` subagent via the Task tool. Use the approved
 Technical Plan and the Task Card.
@@ -115,7 +127,7 @@ After implementation, run the full test suite.
 
 ---
 
-## Step 5 — Review (Reviewer role) — medium/high-risk only
+## Step 6 — Review (Reviewer role) — medium/high-risk only
 
 Invoke the `reviewer` subagent via the Task tool. Use the diff and Task
 Card.

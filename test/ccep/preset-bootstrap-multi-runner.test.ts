@@ -35,7 +35,14 @@ const RUNNERS: Array<{
 ];
 
 /** Workflows where both a test and an implementation phase apply. */
-const TDD_COMMANDS = new Set(['feature', 'fix', 'tdd-cycle', 'db-migration', 'openspec']);
+const TDD_COMMANDS = new Set([
+  'feature',
+  'fix',
+  'tdd-cycle',
+  'db-migration',
+  'openspec',
+  'iterative',
+]);
 
 const TDD_ORDER_LINE =
   'Canonical delivery order is test-before-implement whenever both phases apply.';

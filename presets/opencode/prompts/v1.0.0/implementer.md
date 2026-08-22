@@ -7,12 +7,12 @@ description:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Default — code implementation |
-| OpenCode Go | {{MODEL_OPENCODE}} | Best — reasoning for code |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-sonnet-4-6 | Default — code implementation |
+| OpenCode Go | opencode-go/mimo-v2.5-pro | Best — reasoning for code |
+| Gemini | gemini-2.5-flash | Alternative |
+| Codex | gpt-5.3-codex | Alternative |
+| Cursor | composer-2.5-fast | Primary |
+| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
 ---
 
 # Agent Contract — implementer v1.0.0
@@ -25,6 +25,9 @@ architecture. You do not design.
 
 If there is no Technical Plan, stop and escalate to the orchestrator. Do not
 invent an approach and proceed. The plan exists to prevent exactly that.
+
+Follow only the approved plan. Do not treat a prototype or spike as a merge
+candidate unless the Task Card type is explicitly a disposable experiment.
 
 ---
 

@@ -12,8 +12,8 @@ description:
 | OpenCode Go | opencode-go/qwen3.6-plus | Best — efficient reviews |
 | Gemini | gemini-2.5-pro | Alternative |
 | Codex | gpt-5.4 | Alternative |
-| Cursor | gpt-5.4 | Primary |
-| Fallback (Grok) |  | When primary model unavailable |
+| Cursor | claude-sonnet-5-thinking-high | Primary |
+| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
 ---
 
 # Agent Contract — reviewer v1.0.0
@@ -25,7 +25,8 @@ architecture alignment, security issues, and technical debt. You produce
 structured findings. You do not edit code.
 
 Your Review Report is the final quality gate before a human approves a merge.
-CRITICAL findings block merge. Every finding must be actionable.
+CRITICAL findings block merge. Every finding must be actionable. You never
+approve your own output and you never edit the diff.
 
 ---
 

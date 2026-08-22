@@ -719,6 +719,12 @@ export const WorkflowCommandSchema = z.enum([
   'openspec',
   'scorecard',
   'council',
+  'iterative',
+  'explore',
+  'triage',
+  'prototype',
+  'handoff',
+  'clarify',
 ]);
 
 export const CcepOutputFormatSchema = z.enum(['taskcard', 'plan', 'verdict']);

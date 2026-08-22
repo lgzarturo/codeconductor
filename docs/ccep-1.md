@@ -2,7 +2,7 @@
 
 CCEP-1 is a **cross-cutting execution protocol** shared by all CodeConductor slash
 commands. It does not replace specialized workflows (`/cc-feature`, `/cc-fix`,
-`/cc-council`, etc.). Each command keeps its own purpose and phases; CCEP
+`/cc-council`, `/cc-iterative`, etc.). Each command keeps its own purpose and phases; CCEP
 standardizes how intent becomes structured context before any agent runs.
 
 ## Design principles
@@ -58,6 +58,12 @@ Command-specific workflow phases (unchanged semantics)
 | `openspec` | openspec | Backlog delivery |
 | `scorecard` | scorecard | Agent evaluation |
 | `council` | council | Council verdict |
+| `iterative` | iterative | Wayfinding + contract + TDD + council |
+| `explore` | explore | Repo map + next command |
+| `triage` | triage | Type, risk, destination command |
+| `prototype` | prototype | Isolated spike (not merge) |
+| `handoff` | handoff | Session compact under `.codeconductor/` |
+| `clarify` | clarify | Restate last deliverable |
 
 ## CLI
 

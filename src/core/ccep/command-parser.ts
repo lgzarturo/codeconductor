@@ -28,6 +28,12 @@ const COMMAND_DEFAULTS: Record<
   openspec: { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'medium' },
   scorecard: { outputFormat: 'verdict', needConfirmation: false, riskThreshold: 'low' },
   council: { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'medium' },
+  iterative: { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'medium' },
+  explore: { outputFormat: 'plan', needConfirmation: false, riskThreshold: 'low' },
+  triage: { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'medium' },
+  prototype: { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'medium' },
+  handoff: { outputFormat: 'plan', needConfirmation: false, riskThreshold: 'low' },
+  clarify: { outputFormat: 'plan', needConfirmation: false, riskThreshold: 'low' },
 };
 
 function readProjectId(projectRoot: string): string {

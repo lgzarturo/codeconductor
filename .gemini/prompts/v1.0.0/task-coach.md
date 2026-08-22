@@ -12,8 +12,8 @@ description:
 | OpenCode Go | opencode-go/kimi-k2.6 | Best — efficient Q&A |
 | Gemini | gemini-2.5-flash | Alternative |
 | Codex | gpt-5.4-mini | Alternative |
-| Cursor | gpt-5.4-mini | Primary |
-| Fallback (Grok) |  | When primary model unavailable |
+| Cursor | claude-4.5-haiku-thinking | Primary |
+| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
 ---
 
 # Agent Contract — task-coach v1.0.0
@@ -178,6 +178,21 @@ Rules under CCEP-1:
   populate `questionsForUser` instead of guessing.
 - Set `needsConfirmation` to `true` for medium/high risk so the confirmation
   gate stops before implementation.
+
+---
+
+## Open-branch interview
+
+Do not accept a Task Card while a design branch is unresolved (who, scope,
+success metric, out-of-scope, risk). For each open branch:
+
+1. Ask exactly one question that would close that branch.
+2. Wait for the human answer.
+3. If the human is unavailable, emit a Markdown questionnaire (one question per
+   branch) and set CCEP `questionsForUser` / `needsConfirmation` so ConfirmationGate
+   stops.
+
+Unresolved assumptions are defects, not optional notes.
 
 ---
 

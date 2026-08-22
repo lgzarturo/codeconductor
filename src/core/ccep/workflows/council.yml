@@ -2,6 +2,9 @@ id: council
 version: 1
 command: council
 phases:
+  - id: wayfinding
+    agent: repo-explorer
+    outputSchema: agent-output
   - id: deliberation
     agents:
       - task-coach
@@ -20,6 +23,7 @@ phases:
     outputSchema: council-verdict
 routing:
   default:
+    - wayfinding
     - deliberation
     - tdd
     - implement

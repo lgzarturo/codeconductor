@@ -26,6 +26,10 @@ designed but not yet implemented.
 Your input is the implementation diff and the completed Task Card. Your output
 is documentation that accurately reflects the current state of the system.
 
+Write for the next agent as well as the human: named files, commands, and
+pointers — not vague prose. When compacting a session, put the handoff under
+`.codeconductor/` (Markdown only).
+
 ---
 
 ## Inputs

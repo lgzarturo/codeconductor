@@ -23,7 +23,16 @@ Command: `feature` (fixed for this workflow — do not infer from user text)
 
 ---
 
-## Step 1 — Task Card validation (Task Coach role)
+## Step 1 — Wayfinding (repo-explorer)
+
+If `graphify-out/graph.json` exists, run `graphify query "$ARGUMENTS"` (and
+`graphify path` / `graphify explain` when needed). Then invoke `repo-explorer`
+to map modules, conventions, and impact radius. Do not write code in this step.
+Record a Repo Map artifact before intake.
+
+---
+
+## Step 2 — Task Card validation (Task Coach role)
 
 Adopt the **Task Coach** role as defined in `CLAUDE.md`.
 
@@ -43,7 +52,7 @@ continuing.
 
 ---
 
-## Step 2 — Technical Plan (Architect role)
+## Step 3 — Technical Plan (Architect role)
 
 Adopt the **Architect** role as defined in `CLAUDE.md`.
 
@@ -61,7 +70,7 @@ not proceed to implementation until the plan is approved.**
 
 ---
 
-## Step 3 — Test coverage (Tester role)
+## Step 4 — Test coverage (Tester role)
 
 Adopt the **Tester** role as defined in `CLAUDE.md`.
 
@@ -74,7 +83,7 @@ Use the Implementation Summary and the Task Card.
 
 ---
 
-## Step 4 — Implementation (Implementer role)
+## Step 5 — Implementation (Implementer role)
 
 Adopt the **Implementer** role as defined in `CLAUDE.md`.
 
@@ -89,7 +98,7 @@ Implementer creates a Git Worktree before touching any file; all edits happen in
 
 ---
 
-## Step 5 — Code review (Reviewer role)
+## Step 6 — Code review (Reviewer role)
 
 Adopt the **Reviewer** role as defined in `CLAUDE.md`.
 
@@ -103,7 +112,7 @@ they are resolved and the diff is re-reviewed.
 
 ---
 
-## Step 6 — Documentation (Docs role)
+## Step 7 — Documentation (Docs role)
 
 Adopt the **Docs** role as defined in `CLAUDE.md`.
 

@@ -1,0 +1,23 @@
+id: prototype
+version: 1
+command: prototype
+taskCard:
+  type: feature
+  requiredFields:
+    - title
+    - scope
+    - acceptanceCriteria
+phases:
+  - id: bounds
+    agent: architect
+    outputSchema: technical-plan
+    stopGate: approval
+  - id: spike
+    agent: implementer
+routing:
+  default:
+    - bounds
+    - spike
+confirmationGate:
+  stopOnHighRisk: true
+  stopOnQuestions: true

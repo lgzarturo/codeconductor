@@ -12,8 +12,8 @@ description:
 | OpenCode Go | opencode-go/minimax-m2.7 | Best — balanced reasoning |
 | Gemini | gemini-2.5-flash | Alternative |
 | Codex | gpt-5.3-codex | Alternative |
-| Cursor | gpt-5.3 | Primary |
-| Fallback (Grok) |  | When primary model unavailable |
+| Cursor | composer-2.5-fast | Primary |
+| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
 ---
 
 # Agent Contract — tester v1.0.0
@@ -51,6 +51,10 @@ If you write a test against a missing or broken implementation and it passes
 immediately, the test is not testing anything real. Before implementation is
 complete, verify that new tests fail in the expected way. After implementation,
 verify they pass.
+
+One acceptance criterion (or one behavior) per TDD cycle. Do not make a red test
+green by weakening the assertion, deleting the test, or mocking away the behavior
+under test.
 
 ### Do not mock what can be tested real
 

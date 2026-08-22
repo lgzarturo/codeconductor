@@ -17,6 +17,13 @@ const CURSOR_COMMAND_FILES: Record<string, string> = {
   pagespeed: 'pagespeed.md',
   openspec: 'openspec.md',
   scorecard: 'scorecard.md',
+  council: 'council.md',
+  iterative: 'iterative.md',
+  explore: 'explore.md',
+  triage: 'triage.md',
+  prototype: 'prototype.md',
+  handoff: 'handoff.md',
+  clarify: 'clarify.md',
 };
 
 describe('ccep preset bootstrap — cursor commands', () => {

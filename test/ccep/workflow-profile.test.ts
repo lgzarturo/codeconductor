@@ -7,10 +7,10 @@ import {
 import { validateWorkflowProfile } from '../../src/validation/schemas';
 
 describe('ccep workflow profiles', () => {
-  test('registry contains a valid profile for each of the 12 commands', () => {
+  test('registry contains a valid profile for each of the 18 commands', () => {
     const profiles = loadAllWorkflowProfiles();
 
-    expect(profiles.size).toBe(12);
+    expect(profiles.size).toBe(18);
     for (const command of CCEP_COMMANDS) {
       expect(profiles.has(command)).toBe(true);
       const profile = profiles.get(command)!;
@@ -24,6 +24,7 @@ describe('ccep workflow profiles', () => {
 
     expect(profile.id).toBe('feature');
     expect(profile.phases.map((p) => p.id)).toEqual([
+      'wayfinding',
       'intake',
       'design',
       'test',
@@ -56,13 +57,30 @@ describe('ccep workflow profiles', () => {
     const profile = loadWorkflowProfile('council');
 
     expect(profile.phases.map((p) => p.id)).toEqual([
+      'wayfinding',
       'deliberation',
       'tdd',
       'implement',
       'council-review',
     ]);
-    expect(profile.phases[0]?.outputSchema).toBe('planner-output');
-    expect(profile.phases[3]?.outputSchema).toBe('council-verdict');
+    expect(profile.phases[1]?.outputSchema).toBe('planner-output');
+    expect(profile.phases[4]?.outputSchema).toBe('council-verdict');
+  });
+
+  test('iterative profile is wayfinding → intake → contract → design → TDD → council → docs', () => {
+    const profile = loadWorkflowProfile('iterative');
+
+    expect(profile.phases.map((p) => p.id)).toEqual([
+      'wayfinding',
+      'intake',
+      'contract',
+      'design',
+      'test',
+      'implement',
+      'council-review',
+      'docs',
+    ]);
+    expect(profile.confirmationGate.stopOnQuestions).toBe(true);
   });
 
   test('review profile uses review-target intake — not standard task card', () => {
@@ -86,5 +104,18 @@ describe('ccep workflow profiles', () => {
 
     expect(profile.phases[0]?.id).toBe('validate-backlog');
     expect(profile.phases.some((p) => p.agent === 'repo-explorer')).toBe(true);
+  });
+
+  test('explore profile is map then suggest-next', () => {
+    const profile = loadWorkflowProfile('explore');
+    expect(profile.phases.map((p) => p.id)).toEqual(['map', 'suggest-next']);
+    expect(profile.phases[0]?.agent).toBe('repo-explorer');
+  });
+
+  test('triage, prototype, handoff, and clarify profiles load', () => {
+    expect(loadWorkflowProfile('triage').phases[0]?.id).toBe('classify');
+    expect(loadWorkflowProfile('prototype').routing.default).toEqual(['bounds', 'spike']);
+    expect(loadWorkflowProfile('handoff').phases[0]?.agent).toBe('docs');
+    expect(loadWorkflowProfile('clarify').confirmationGate.stopOnQuestions).toBe(true);
   });
 });

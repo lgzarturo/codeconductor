@@ -12,7 +12,7 @@ describe('ccep prompt-compiler', () => {
     const envelope = parseCommand('feature', 'CRUD for loyalty benefits', PROJECT_ROOT);
     const profile = loadWorkflowProfile('feature');
     const context = await resolveContext(envelope, profile, PROJECT_ROOT);
-    const phase = profile.phases[0]!;
+    const phase = profile.phases.find((p) => p.id === 'intake')!;
 
     const compiled = compilePrompt({
       role: phase.agent,

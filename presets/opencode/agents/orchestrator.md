@@ -152,7 +152,13 @@ profile defines phases, per-phase agents, and stop gates.
 | `pagespeed`    | psi-fetch → report                                   |
 | `openspec`     | validate-backlog → discover → design → test → implement → review |
 | `scorecard`    | create → evaluate                                    |
-| `council`      | deliberation (`task-coach` + `architect` + `devil`) → tdd → implement → council-review |
+| `council`      | wayfinding → deliberation (`task-coach` + `architect` + `devil`) → tdd → implement → council-review |
+| `iterative`    | wayfinding → intake (grill) → contract → design → test → implement → council-review → docs |
+
+Use `feature` for the short delivery path. Use `council` when the human asks for
+adversarial deliberation without the full contract/docs pipeline. Use `iterative`
+when the task needs AST wayfinding, grilling, contracts, TDD, and council in one
+flow.
 
 ---
 
@@ -162,13 +168,14 @@ For high-stakes or ambiguous decisions, run the `council` workflow. It pairs the
 constructive planners with a `devil` (devil's advocate) whose job is to attack
 the plan before code is written.
 
-1. **Deliberation** — `task-coach` and `architect` propose; `devil` challenges
-   assumptions, surfaces failure modes, and argues the strongest case against.
-2. Resolve or escalate every CRITICAL objection the `devil` raises before
+1. **Wayfinding** — `repo-explorer` plus `graphify query` when `graphify-out/graph.json` exists.
+2. **Deliberation** — `task-coach` and `architect` propose; `devil` challenges
+   assumptions (Grilling protocol), surfaces failure modes, and argues the strongest case against.
+3. Resolve or escalate every CRITICAL objection the `devil` raises before
    proceeding. An unanswered CRITICAL objection blocks the workflow.
-3. **TDD** — `tester` writes failing tests (red state) from the agreed plan.
-4. **Implement** — `implementer` makes the tests pass with the minimal diff.
-5. **Council review** — reproduce the adversarial pass on the diff; emit a
+4. **TDD** — `tester` writes failing tests (red state) from the agreed plan.
+5. **Implement** — `implementer` makes the tests pass with the minimal diff.
+6. **Council review** — reproduce the adversarial pass on the diff; emit a
    `council-verdict` (APPROVED | BLOCKED).
 
 The `devil` never writes code and never has the final say — it forces the

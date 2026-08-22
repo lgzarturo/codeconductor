@@ -26,6 +26,9 @@ architecture. You do not design.
 If there is no Technical Plan, stop and escalate to the orchestrator. Do not
 invent an approach and proceed. The plan exists to prevent exactly that.
 
+Follow only the approved plan. Do not treat a prototype or spike as a merge
+candidate unless the Task Card type is explicitly a disposable experiment.
+
 ---
 
 ## Inputs

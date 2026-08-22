@@ -12,8 +12,8 @@ description:
 | OpenCode Go | opencode-go/deepseek-v4-pro | Complex routing, delegation |
 | Gemini | gemini-2.5-pro | Alternative |
 | Codex | gpt-5.2 | Alternative |
-| Cursor | gpt-5.2 | Primary |
-| Fallback (Grok) |  | When primary model unavailable |
+| Cursor | composer-2.5 | Primary |
+| Fallback (Grok) | cursor-grok-4.5-high-fast | When primary model unavailable |
 ---
 
 # Agent Contract — orchestrator v1.0.0
@@ -133,8 +133,8 @@ profile defines phases, per-phase agents, and stop gates.
 
 | Command        | Phases (default route)                                                     |
 | -------------- | ------------------------------------------------------------------------- |
-| `feature`      | intake → design → test → implement → review (+ docs) |
-| `fix`          | intake → test → implement (→ review on medium/high)  |
+| `feature`      | wayfinding → intake → design → test → implement → review (+ docs) |
+| `fix`          | wayfinding → intake → test → implement (→ review on medium/high)  |
 | `refactor`     | intake → design → implement → audit → review         |
 | `review`       | diff-collection → review                              |
 | `test-plan`    | intake → plan                                         |
@@ -144,7 +144,20 @@ profile defines phases, per-phase agents, and stop gates.
 | `pagespeed`    | psi-fetch → report                                   |
 | `openspec`     | validate-backlog → discover → design → test → implement → review |
 | `scorecard`    | create → evaluate                                    |
-| `council`      | deliberation (`task-coach` + `architect` + `devil`) → tdd → implement → council-review |
+| `council`      | wayfinding → deliberation (`task-coach` + `architect` + `devil`) → tdd → implement → council-review |
+| `iterative`    | wayfinding → intake (grill) → contract → design → test → implement → council-review → docs |
+| `explore`      | map → suggest-next                               |
+| `triage`       | classify                                         |
+| `prototype`    | bounds → spike (isolated worktree, not merge)    |
+| `handoff`      | compact                                          |
+| `clarify`      | re-explain                                       |
+
+Use `feature` for the short delivery path. Use `council` when the human asks for
+adversarial deliberation without the full contract/docs pipeline. Use `iterative`
+when the task needs AST wayfinding, grilling, contracts, TDD, and council in one
+flow. Use `triage` when the next slash command is unclear. If a previous
+deliverable did not land, run `clarify` and restate it in Task Card vocabulary
+before continuing.
 
 ---
 
@@ -154,13 +167,14 @@ For high-stakes or ambiguous decisions, run the `council` workflow. It pairs the
 constructive planners with a `devil` (devil's advocate) whose job is to attack
 the plan before code is written.
 
-1. **Deliberation** — `task-coach` and `architect` propose; `devil` challenges
-   assumptions, surfaces failure modes, and argues the strongest case against.
-2. Resolve or escalate every CRITICAL objection the `devil` raises before
+1. **Wayfinding** — `repo-explorer` plus `graphify query` when `graphify-out/graph.json` exists.
+2. **Deliberation** — `task-coach` and `architect` propose; `devil` challenges
+   assumptions (Grilling protocol), surfaces failure modes, and argues the strongest case against.
+3. Resolve or escalate every CRITICAL objection the `devil` raises before
    proceeding. An unanswered CRITICAL objection blocks the workflow.
-3. **TDD** — `tester` writes failing tests (red state) from the agreed plan.
-4. **Implement** — `implementer` makes the tests pass with the minimal diff.
-5. **Council review** — reproduce the adversarial pass on the diff; emit a
+4. **TDD** — `tester` writes failing tests (red state) from the agreed plan.
+5. **Implement** — `implementer` makes the tests pass with the minimal diff.
+6. **Council review** — reproduce the adversarial pass on the diff; emit a
    `council-verdict` (APPROVED | BLOCKED).
 
 The `devil` never writes code and never has the final say — it forces the
@@ -360,7 +374,7 @@ When the human runs `codeconductor goal "<objective>"` or provides a GoalGraph:
 - Implementation (`implementer`, `tester`): `composer-2.5-fast`
 - Read-only exploration (`repo-explorer`): background + fast model
 - Intake and docs (`task-coach`, `docs`): lightweight models
-- If primary model unavailable, fall back to Grok (``)
+- If primary model unavailable, fall back to Grok (`cursor-grok-4.5-high-fast`)
 - Use `/summarize` or `/compress` before re-delegating with large context
 - Prefer subagent isolation over passing full conversation history
 

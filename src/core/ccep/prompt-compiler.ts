@@ -116,7 +116,9 @@ export function compilePrompt(options: {
   readonly promptVersion: string;
 }): CompiledPrompt {
   const { role, phase, context, promptVersion } = options;
-  const schemaName = context.outputSchema;
+  const phaseDef = context.profile.phases.find((p) => p.id === phase);
+  const schemaName =
+    phaseDef?.outputSchema ?? context.outputSchema ?? 'agent-output';
   const schemaBody = OUTPUT_SCHEMAS[schemaName] ?? OUTPUT_SCHEMAS['agent-output'];
 
   const layers: PromptLayer[] = [

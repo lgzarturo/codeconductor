@@ -47,6 +47,7 @@ describe('CC-05 canonical test-before-implement', () => {
 
   test('feature, fix, db-migration, and openspec expose the TDD order explicitly', () => {
     expect(phaseIds('feature')).toEqual([
+      'wayfinding',
       'intake',
       'design',
       'test',
@@ -54,7 +55,7 @@ describe('CC-05 canonical test-before-implement', () => {
       'review',
       'docs',
     ]);
-    expect(phaseIds('fix')).toEqual(['intake', 'test', 'implement', 'review']);
+    expect(phaseIds('fix')).toEqual(['wayfinding', 'intake', 'test', 'implement', 'review']);
     expect(phaseIds('db-migration')).toEqual(['design', 'test', 'implement', 'review']);
     expect(phaseIds('openspec')).toEqual([
       'validate-backlog',
@@ -64,11 +65,21 @@ describe('CC-05 canonical test-before-implement', () => {
       'implement',
       'review',
     ]);
+    expect(phaseIds('iterative')).toEqual([
+      'wayfinding',
+      'intake',
+      'contract',
+      'design',
+      'test',
+      'implement',
+      'council-review',
+      'docs',
+    ]);
   });
 
   test('bundled YAML and TypeScript fallback stay in sync for TDD order', () => {
     const profiles = loadAllWorkflowProfiles();
-    for (const command of ['feature', 'fix', 'db-migration', 'openspec'] as const) {
+    for (const command of ['feature', 'fix', 'db-migration', 'openspec', 'iterative'] as const) {
       const ids = profiles.get(command)!.phases.map((p) => p.id);
       assertTestBeforeImplement(ids, `loaded ${command}`);
     }

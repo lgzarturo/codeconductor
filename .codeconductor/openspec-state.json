@@ -66,7 +66,7 @@
         "Un Task Card con preguntas abiertas detiene el flujo v\u00eda ConfirmationGate de ccep",
         "El Task Card final cubre los seis campos requeridos sin ambig\u00fcedad"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "BC-007-review",

@@ -3,3 +3,4 @@
 {"id":"out-mt3qt2ok-133i","taskId":"BC-005","source":"manual","agent":"reviewer","model":"unknown","contractVersion":"0.5.0","timestamp":"2026-08-22T02:12:02.900Z","status":"pass","verdict":"PASS","weightedScore":0.95,"backlogId":"BC-005"}
 {"id":"out-mt3ry0ag-w9eh","taskId":"BC-006","source":"review","agent":"reviewer","model":"unknown","contractVersion":"0.5.0","timestamp":"2026-08-22T02:43:52.696Z","status":"pass","verdict":"PASS","backlogId":"BC-006"}
 {"id":"out-mt3vtjbv-3s22","taskId":"BC-007","source":"manual","agent":"reviewer","model":"unknown","contractVersion":"0.5.0","timestamp":"2026-08-22T04:32:22.555Z","status":"pass","verdict":"PASS","backlogId":"BC-007"}
+{"id":"out-mt3zu4tm-sifz","taskId":"BC-008","source":"openspec","agent":"reviewer","model":"unknown","contractVersion":"0.5.0","timestamp":"2026-08-22T06:24:48.874Z","status":"pass","verdict":"PASS","backlogId":"BC-008"}

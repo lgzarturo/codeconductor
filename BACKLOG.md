@@ -14,20 +14,6 @@ Formato validable por `cc openspec validate`. Análisis completo en
 
 ## Items
 
-### BC-008 | Secuencia expand-contract para refactors amplios en /cc:refactor
-
-- Priority: P2
-- Status: PLANNED
-- Type: refactor
-- Depends on: BC-006
-- Description: Portar el caso wide-refactor de to-tickets como secuencia expand, migrate por lotes y contract para cambios cuyo blast radius rompe muchos call sites, usando cc impact para dimensionar el radio.
-- Scope: Actualizar .claude/commands/cc/refactor.md con la secuencia y su relación con Depends on.
-- Out of scope: Refactors verticales normales que sí caben en un tracer bullet.
-- Acceptance:
-  - [ ] /cc:refactor distingue refactor amplio de rebanada vertical por blast radius
-  - [ ] La secuencia expand-migrate-contract mantiene el árbol verde entre lotes
-  - [ ] `cc impact` cuantifica el blast radius antes de secuenciar los lotes
-
 ### BC-009 | Hook PreToolUse que bloquea git destructivo
 
 - Priority: P0
@@ -85,6 +71,22 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [ ] El catálogo de flujos permanece alineado con los comandos disponibles
 
 ## Archive
+
+### BC-008 | Secuencia expand-contract para refactors amplios en /cc:refactor
+
+- Priority: P2
+- Status: DONE
+- Type: refactor
+- Depends on: BC-006
+- Description: Portar el caso wide-refactor de to-tickets como secuencia expand, migrate por lotes y contract para cambios cuyo blast radius rompe muchos call sites, usando cc impact para dimensionar el radio.
+- Scope: Actualizar presets/claude/commands/cc/refactor.md (archivo fuente versionado; .claude/commands/cc/refactor.md es una copia local gitignored) con la secuencia y su relación con Depends on.
+- Out of scope: Refactors verticales normales que sí caben en un tracer bullet.
+- Progress: 100
+- Reviewer: reviewer
+- Acceptance:
+  - [x] /cc:refactor distingue refactor amplio de rebanada vertical por blast radius
+  - [x] La secuencia expand-migrate-contract mantiene el árbol verde entre lotes
+  - [x] `cc impact` cuantifica el blast radius antes de secuenciar los lotes
 
 ### BC-007 | Gate de grilling en el rol Task Coach
 

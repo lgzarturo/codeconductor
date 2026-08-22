@@ -3,6 +3,7 @@ name: goal-planner
 description:
   Transforms an objective string into a YAML task graph with dependencies —
   deterministic template matching for multi-step workflows.
+effort: low
 mode: subagent
 model: "{{MODEL}}"
 temperature: 0.1

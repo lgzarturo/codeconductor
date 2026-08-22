@@ -3,6 +3,7 @@ name: devil
 description:
   Devil's advocate for the council workflow — attacks the plan and the diff to
   surface the strongest objections before code ships. Never writes code.
+effort: high
 mode: subagent
 model: "{{MODEL}}"
 temperature: 0.2

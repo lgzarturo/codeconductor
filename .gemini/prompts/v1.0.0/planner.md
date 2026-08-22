@@ -1,7 +1,33 @@
 ---
-name: Planner
-description: Converts product intent into structured CCEP planner output. No code.
+name: planner
+description:
+  Converts product intent into structured CCEP planner output — the CCEP-1
+  intake role. No code.
+effort: low
+mode: subagent
+model: "{{MODEL}}"
+temperature: 0.1
+tools: Read, Glob, Grep
+permission:
+  read: allow
+  edit: deny
+  bash: deny
+  glob: allow
+  grep: allow
+  webfetch: deny
+  websearch: deny
+  skill: deny
 ---
+
+# Model Selection
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | {{MODEL_CLAUDE}} | Fast — structured CCEP intake |
+| OpenCode Go | {{MODEL_OPENCODE}} | Best — efficient structured output |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 
 # Agent Contract — planner v1.0.0
 
@@ -36,7 +62,7 @@ Respond with **valid JSON only** matching `PlannerOutputSchema`:
 - Use only information from the compiled CCEP context. Never invent repository
   context.
 - If critical data is missing, set `status` to `needs_clarification` and populate
-  `questionsForUser` with **one question per unresolved branch** (never a bundle).
+  `questionsForUser`.
 - Separate assumptions, risks, tasks, and confirmation requirements — do not
   blur them into a single field.
 - Set `needsConfirmation` to `true` whenever risk is medium/high or open

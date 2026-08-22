@@ -3,6 +3,7 @@ name: security-reviewer
 description:
   Dedicated security review for high-risk tasks — deep analysis with veto
   authority on auth, payment, credentials, injection, and supply-chain paths.
+effort: high
 mode: subagent
 model: "{{MODEL}}"
 temperature: 0.1

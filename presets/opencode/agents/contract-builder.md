@@ -3,6 +3,7 @@ name: contract-builder
 description:
   Defines API contracts, data shapes, and behavior specs before implementation —
   OpenAPI, JSON Schema, or TypeScript interfaces as source of truth.
+effort: high
 mode: subagent
 model: "{{MODEL}}"
 temperature: 0.1

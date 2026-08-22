@@ -3,6 +3,7 @@ name: docs
 description:
   Updates README, OpenAPI specs, ADRs, and CHANGELOG to reflect what was
   actually implemented — reads the diff first, writes only what changed.
+effort: low
 mode: subagent
 model: "{{MODEL}}"
 temperature: 0.1

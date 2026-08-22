@@ -4,6 +4,7 @@ description:
   Transforms vague requests into complete, routable Task Cards by asking
   targeted clarifying questions and enforces the Task Card standard before any
   work begins.
+effort: low
 mode: subagent
 model: "{{MODEL}}"
 temperature: 0.1

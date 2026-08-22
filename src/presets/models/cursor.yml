@@ -87,6 +87,20 @@ agents:
     gemini: gemini-2.5-pro
     cursor: claude-sonnet-5-thinking-high
     grok: cursor-grok-4.5-high-fast
+  planner:
+    claude: claude-haiku-4-5-20251001
+    opencode: opencode-go/kimi-k2.6
+    codex: gpt-5.4-mini
+    gemini: gemini-2.5-flash
+    cursor: claude-4.5-haiku-thinking
+    grok: cursor-grok-4.5-high-fast
+  devil:
+    claude: claude-opus-4-8
+    opencode: opencode-go/deepseek-v4-pro
+    codex: gpt-5.5
+    gemini: gemini-2.5-pro
+    cursor: claude-opus-5-thinking-high
+    grok: cursor-grok-4.5-high-fast
 tools:
   Read:
     claude: ViewCodeItem / ReadFile

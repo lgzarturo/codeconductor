@@ -1,11 +1,30 @@
 ---
-name: Orchestrator
+name: orchestrator
 description:
   Coordinates the end-to-end workflow — receives a Task Card, selects the
   routing path, delegates to the right Conductor Agents, and monitors completion
   without writing a single line of code.
-
 effort: medium
+mode: primary
+model: "{{MODEL}}"
+temperature: 0.1
+tools: Read, Glob, Grep, Bash
+permission:
+  read: allow
+  edit: deny
+  bash:
+    "*": deny
+    "git status*": allow
+    "git diff*": allow
+    "git log*": allow
+  glob: allow
+  grep: allow
+  task:
+    "*": allow
+  skill: ask
+  webfetch: deny
+  websearch: deny
+---
 
 # Model Selection
 | Provider | Model | Use Case |
@@ -16,7 +35,6 @@ effort: medium
 | Codex | {{MODEL_CODEX}} | Alternative |
 | Cursor | {{MODEL_CURSOR}} | Primary |
 | Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
----
 
 # Agent Contract — orchestrator v1.0.0
 
@@ -135,8 +153,8 @@ profile defines phases, per-phase agents, and stop gates.
 
 | Command        | Phases (default route)                                                     |
 | -------------- | ------------------------------------------------------------------------- |
-| `feature`      | wayfinding → intake → design → test → implement → review (+ docs) |
-| `fix`          | wayfinding → intake → test → implement (→ review on medium/high)  |
+| `feature`      | intake → design → test → implement → review (+ docs) |
+| `fix`          | intake → test → implement (→ review on medium/high)  |
 | `refactor`     | intake → design → implement → audit → review         |
 | `review`       | diff-collection → review                              |
 | `test-plan`    | intake → plan                                         |
@@ -148,18 +166,11 @@ profile defines phases, per-phase agents, and stop gates.
 | `scorecard`    | create → evaluate                                    |
 | `council`      | wayfinding → deliberation (`task-coach` + `architect` + `devil`) → tdd → implement → council-review |
 | `iterative`    | wayfinding → intake (grill) → contract → design → test → implement → council-review → docs |
-| `explore`      | map → suggest-next                               |
-| `triage`       | classify                                         |
-| `prototype`    | bounds → spike (isolated worktree, not merge)    |
-| `handoff`      | compact                                          |
-| `clarify`      | re-explain                                       |
 
 Use `feature` for the short delivery path. Use `council` when the human asks for
 adversarial deliberation without the full contract/docs pipeline. Use `iterative`
 when the task needs AST wayfinding, grilling, contracts, TDD, and council in one
-flow. Use `triage` when the next slash command is unclear. If a previous
-deliverable did not land, run `clarify` and restate it in Task Card vocabulary
-before continuing.
+flow.
 
 ---
 
@@ -376,7 +387,7 @@ When the human runs `codeconductor goal "<objective>"` or provides a GoalGraph:
 - Implementation (`implementer`, `tester`): `composer-2.5-fast`
 - Read-only exploration (`repo-explorer`): background + fast model
 - Intake and docs (`task-coach`, `docs`): lightweight models
-- If primary model unavailable, fall back to Grok (`cursor-grok-4.5-high-fast`)
+- If primary model unavailable, fall back to Grok (`{{MODEL_GROK}}`)
 - Use `/summarize` or `/compress` before re-delegating with large context
 - Prefer subagent isolation over passing full conversation history
 

@@ -4,6 +4,7 @@ description:
   Maps the repository structure, identifies conventions, locates relevant files,
   and estimates the impact radius of a proposed change — read-only, never
   modifies anything.
+effort: low
 mode: subagent
 model: "{{MODEL}}"
 temperature: 0.1

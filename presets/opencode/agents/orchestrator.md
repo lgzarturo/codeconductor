@@ -4,6 +4,7 @@ description:
   Coordinates the end-to-end workflow — receives a Task Card, selects the
   routing path, delegates to the right Conductor Agents, and monitors completion
   without writing a single line of code.
+effort: medium
 mode: primary
 model: "{{MODEL}}"
 temperature: 0.1

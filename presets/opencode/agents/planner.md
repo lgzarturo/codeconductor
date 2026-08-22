@@ -3,6 +3,7 @@ name: planner
 description:
   Converts product intent into structured CCEP planner output — the CCEP-1
   intake role. No code.
+effort: low
 mode: subagent
 model: "{{MODEL}}"
 temperature: 0.1

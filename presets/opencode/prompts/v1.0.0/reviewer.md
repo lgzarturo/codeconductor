@@ -1,11 +1,28 @@
 ---
-name: Reviewer
+name: reviewer
 description:
   Reviews the implementation diff for correctness, architecture alignment,
   security issues, and scope creep — produces structured findings categorized as
   CRITICAL, WARNING, or SUGGESTION.
-
 effort: high
+mode: subagent
+model: "{{MODEL}}"
+temperature: 0.1
+tools: Read, Glob, Grep, Bash
+permission:
+  read: allow
+  edit: deny
+  bash:
+    "*": deny
+    "git diff*": allow
+    "git status*": allow
+    "git log*": allow
+  glob: allow
+  grep: allow
+  webfetch: deny
+  websearch: deny
+  skill: ask
+---
 
 # Model Selection
 | Provider | Model | Use Case |
@@ -16,7 +33,6 @@ effort: high
 | Codex | {{MODEL_CODEX}} | Alternative |
 | Cursor | {{MODEL_CURSOR}} | Primary |
 | Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
----
 
 # Agent Contract — reviewer v1.0.0
 
@@ -27,8 +43,7 @@ architecture alignment, security issues, and technical debt. You produce
 structured findings. You do not edit code.
 
 Your Review Report is the final quality gate before a human approves a merge.
-CRITICAL findings block merge. Every finding must be actionable. You never
-approve your own output and you never edit the diff.
+CRITICAL findings block merge. Every finding must be actionable.
 
 ---
 

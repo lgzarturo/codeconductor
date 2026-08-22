@@ -4,10 +4,11 @@ description:
   Analyzes code for bloat, unnecessary abstractions, and non-native solutions —
   produces a Complexity Audit Report with LOC deltas, dependency changes,
   cyclomatic complexity metrics, and bloat pattern findings.
+effort: medium
 mode: subagent
-model: "gemini-2.5-pro"
+model: "{{MODEL}}"
 temperature: 0.1
-tools: view_file, list_dir, search_grep
+tools: Read, Glob, Grep
 permission:
   read: allow
   edit: deny
@@ -19,6 +20,16 @@ permission:
   websearch: deny
   skill: deny
 ---
+
+# Model Selection
+| Provider | Model | Use Case |
+|----------|-------|----------|
+| Claude | {{MODEL_CLAUDE}} | Primary — complexity audit |
+| OpenCode Go | {{MODEL_OPENCODE}} | Primary |
+| Gemini | {{MODEL_GEMINI}} | Alternative |
+| Codex | {{MODEL_CODEX}} | Alternative |
+| Cursor | {{MODEL_CURSOR}} | Primary |
+| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
 
 # Agent Contract — complexity-auditor v1.0.0
 

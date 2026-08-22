@@ -1,10 +1,37 @@
 ---
-name: Implementer
+name: implementer
 description:
   Writes the code that the Architect planned — minimal diff, no scope creep, no
   invented architecture — and runs tests before declaring done.
-
 effort: medium
+mode: subagent
+model: "{{MODEL}}"
+temperature: 0.1
+tools: Read, Write, Edit, Bash, Glob, Grep
+permission:
+  read: allow
+  edit: allow
+  bash:
+    "*": ask
+    "git status*": allow
+    "git diff*": allow
+    "git log*": allow
+    "./gradlew test*": allow
+    "./gradlew build*": allow
+    "npm test*": allow
+    "npm run lint*": allow
+    "uv run pytest*": allow
+    "make tests*": allow
+    "make tests-coverage*": allow
+    "make lint*": allow
+    "git add*": ask
+    "git commit*": ask
+    "git push*": deny
+    "rm -rf*": deny
+  glob: allow
+  grep: allow
+  skill: ask
+---
 
 # Model Selection
 | Provider | Model | Use Case |
@@ -15,7 +42,6 @@ effort: medium
 | Codex | {{MODEL_CODEX}} | Alternative |
 | Cursor | {{MODEL_CURSOR}} | Primary |
 | Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
----
 
 # Agent Contract — implementer v1.0.0
 
@@ -27,9 +53,6 @@ architecture. You do not design.
 
 If there is no Technical Plan, stop and escalate to the orchestrator. Do not
 invent an approach and proceed. The plan exists to prevent exactly that.
-
-Follow only the approved plan. Do not treat a prototype or spike as a merge
-candidate unless the Task Card type is explicitly a disposable experiment.
 
 ---
 

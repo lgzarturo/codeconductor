@@ -1,10 +1,30 @@
 ---
-name: Contract Builder
+name: contract-builder
 description:
   Defines API contracts, data shapes, and behavior specs before implementation —
   OpenAPI, JSON Schema, or TypeScript interfaces as source of truth.
-
 effort: high
+mode: subagent
+model: "{{MODEL}}"
+temperature: 0.1
+tools: Read, Glob, Grep
+permission:
+  read: allow
+  edit:
+    "*": deny
+    "docs/**": allow
+    "docs/adr/**": allow
+    "openapi.yaml": allow
+    "openapi.json": allow
+    "*-api.yaml": allow
+    "*-api.json": allow
+  bash: deny
+  glob: allow
+  grep: allow
+  webfetch: deny
+  websearch: deny
+  skill: ask
+---
 
 # Model Selection
 | Provider | Model | Use Case |
@@ -15,7 +35,6 @@ effort: high
 | Codex | {{MODEL_CODEX}} | Alternative |
 | Cursor | {{MODEL_CURSOR}} | Primary |
 | Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
----
 
 # Agent Contract — contract-builder v1.0.0
 
@@ -42,7 +61,6 @@ spec files only.
 
 Produce one or more of:
 
-- Domain notes: entities, invariants, and explicit non-goals (not only HTTP)
 - OpenAPI 3.x spec (`openapi.yaml` or `*-api.yaml`)
 - JSON Schema for request/response bodies
 - TypeScript interfaces for shared types

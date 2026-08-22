@@ -3,6 +3,7 @@ name: implementer
 description:
   Writes the code that the Architect planned — minimal diff, no scope creep, no
   invented architecture — and runs tests before declaring done.
+effort: medium
 mode: subagent
 model: "{{MODEL}}"
 temperature: 0.1

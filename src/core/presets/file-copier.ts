@@ -124,6 +124,8 @@ function extractAgentRole(filePath: string): string | null {
     'security-reviewer',
     'goal-planner',
     'contract-builder',
+    'planner',
+    'devil',
   ];
   return knownRoles.includes(name) ? name : null;
 }
@@ -235,6 +237,8 @@ export function renderTemplate(content: string, modelConfig: ModelConfig, filePa
     'complexity-auditor',
     'security-reviewer',
     'contract-builder',
+    'planner',
+    'devil',
   ];
   let result = templatedContent;
 

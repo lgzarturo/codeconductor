@@ -4,6 +4,7 @@ description:
   Reviews the implementation diff for correctness, architecture alignment,
   security issues, and scope creep — produces structured findings categorized as
   CRITICAL, WARNING, or SUGGESTION.
+effort: high
 mode: subagent
 model: "{{MODEL}}"
 temperature: 0.1

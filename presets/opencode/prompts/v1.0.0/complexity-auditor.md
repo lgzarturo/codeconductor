@@ -19,6 +19,7 @@ permission:
   webfetch: deny
   websearch: deny
   skill: deny
+---
 
 # Model Selection
 | Provider | Model | Use Case |
@@ -29,7 +30,6 @@ permission:
 | Codex | {{MODEL_CODEX}} | Alternative |
 | Cursor | {{MODEL_CURSOR}} | Primary |
 | Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
----
 
 # Agent Contract — complexity-auditor v1.0.0
 

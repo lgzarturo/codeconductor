@@ -249,11 +249,12 @@ describe('loadModelConfig', () => {
     expect(config.agents['complexity-auditor'].cursor).toBe('claude-sonnet-5-thinking-high');
   });
 
-  test('cursor config has all agent roles including security, complexity, goal-planner, contract-builder', async () => {
+  test('cursor config has all agent roles including security, complexity, goal-planner, contract-builder, planner, devil', async () => {
     const config = await loadModelConfig('cursor');
-    for (const role of [...EXPECTED_ROLES, 'complexity-auditor', 'security-reviewer', 'goal-planner', 'contract-builder']) {
+    for (const role of [...EXPECTED_ROLES, 'complexity-auditor', 'security-reviewer', 'goal-planner', 'contract-builder', 'planner', 'devil']) {
       expect(config.agents[role]).toBeDefined();
       expect(typeof config.agents[role].cursor).toBe('string');
+      expect(config.agents[role].grok).toBe('cursor-grok-4.5-high-fast');
     }
   });
 
@@ -268,11 +269,11 @@ describe('loadModelConfig', () => {
 
   test('each config has expected agent role count', async () => {
     const expectedCounts: Record<string, number> = {
-      opencode: 12,
-      claude: 12,
-      codex: 12,
-      gemini: 12,
-      cursor: 12,
+      opencode: 14,
+      claude: 14,
+      codex: 14,
+      gemini: 14,
+      cursor: 14,
     };
     for (const target of ['opencode', 'claude', 'codex', 'gemini', 'cursor'] as const) {
       const config = await loadModelConfig(target);
@@ -447,6 +448,18 @@ describe('copyFromManifest with modelConfig', () => {
       expect(content).not.toContain('{{MODEL_');
       // opencode install: frontmatter has model: field resolved to opencode model
       expect(content).toMatch(/^model: /m);
+    }
+  });
+
+  test('writing with modelConfig renders planner and devil prompts including grok', async () => {
+    const modelConfig = await loadModelConfig('opencode');
+    const manifest = await loadManifest('opencode');
+    await copyFromManifest(manifest, PRESETS_DIR, TEST_DIR, false, false, true, modelConfig);
+
+    for (const file of ['planner.md', 'devil.md']) {
+      const content = await readFile(join(TEST_DIR, '.opencode', 'prompts', 'v1.0.0', file), 'utf-8');
+      expect(content).not.toContain('{{MODEL');
+      expect(content).toContain('cursor-grok-4.5-high-fast');
     }
   });
 });

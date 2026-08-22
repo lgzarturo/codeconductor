@@ -4,6 +4,7 @@ description:
   Generates unit, integration, and contract tests that verify the acceptance
   criteria — writes tests that fail first, then confirms they pass after
   implementation.
+effort: medium
 mode: subagent
 model: "{{MODEL}}"
 temperature: 0.1

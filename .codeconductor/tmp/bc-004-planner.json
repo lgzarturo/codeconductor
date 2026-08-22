@@ -1,0 +1,61 @@
+{
+  "status": "success",
+  "confidence": 0.8,
+  "goal": "Portar la fase 1 de diagnosing-bugs como gate obligatorio en /cc:fix: bloquear la implementación hasta contar con un comando reproducible que capture el bug (red loop) y afirme el síntoma exacto del usuario, y reflejar ese loop como evidencia en cc verify.",
+  "assumptions": [
+    "El comando /cc:fix ya existe en .claude/commands/cc/fix.md y sigue el enrutamiento por Risk Level.",
+    "cc verify ya soporta adjuntar evidencia por --task <id> y puede extenderse sin romper su contrato actual.",
+    "TDD required: yes y Review required: yes aplican a este item (Global de BACKLOG.md)."
+  ],
+  "risks": [
+    {
+      "type": "process",
+      "description": "Bloquear /cc:fix sin loop reproducible podría frenar fixes triviales de bajo riesgo si el gate no se acota bien.",
+      "severity": "medium"
+    },
+    {
+      "type": "scope",
+      "description": "Construir el loop sigue siendo trabajo manual del agente (fuera de scope automatizarlo); riesgo de incumplimiento si no se documenta con claridad.",
+      "severity": "low"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "discover",
+      "title": "Mapear .claude/commands/cc/fix.md y el flujo actual de cc verify",
+      "priority": "P0",
+      "estimate": "S",
+      "dependencies": []
+    },
+    {
+      "id": "design",
+      "title": "Definir el gate obligatorio y su anclaje en cc verify",
+      "priority": "P0",
+      "estimate": "S",
+      "dependencies": ["discover"]
+    },
+    {
+      "id": "test",
+      "title": "Escribir tests que verifiquen el bloqueo sin loop reproducible y el reflejo en cc verify",
+      "priority": "P0",
+      "estimate": "M",
+      "dependencies": ["design"]
+    },
+    {
+      "id": "implement",
+      "title": "Actualizar fix.md y el contrato de verificación con el gate",
+      "priority": "P0",
+      "estimate": "M",
+      "dependencies": ["test"]
+    },
+    {
+      "id": "review",
+      "title": "Validar acceptance criteria, scope y ausencia de automatización no solicitada",
+      "priority": "P0",
+      "estimate": "S",
+      "dependencies": ["implement"]
+    }
+  ],
+  "questionsForUser": [],
+  "needsConfirmation": false
+}

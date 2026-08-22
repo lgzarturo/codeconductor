@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "activeItemId": "BC-003",
+  "activeItemId": "BC-004",
   "taskCards": [
     {
-      "id": "BC-003-discover",
-      "backlogId": "BC-003",
+      "id": "BC-004-discover",
+      "backlogId": "BC-004",
       "phase": "discover",
-      "title": "BC-003: Discover scope and impact",
-      "prompt": "Backlog item BC-003 — Revisión de dos ejes en /cc:review",
+      "title": "BC-004: Discover scope and impact",
+      "prompt": "Backlog item BC-004 — Gate de loop rojo reproducible en /cc:fix\n\nDescription: Portar la fase 1 de diagnosing-bugs como gate obligatorio en /cc:fix; antes de hipotetizar hay que construir un comando tight y red-capable que maneje la ruta real del bug y afirme el síntoma exacto del usuario.\nScope: Actualizar .claude/commands/cc/fix.md para bloquear la implementación hasta tener el loop; anclar el loop como check de cc verify.\n\nMap repository structure, conventions, and impact radius for this change.",
       "agent": "repo-explorer",
       "modelHint": "repo-explorer",
       "dependsOn": [],
@@ -17,15 +17,15 @@
       "status": "done"
     },
     {
-      "id": "BC-003-design",
-      "backlogId": "BC-003",
+      "id": "BC-004-design",
+      "backlogId": "BC-004",
       "phase": "design",
-      "title": "BC-003: Technical design",
-      "prompt": "Backlog item BC-003 — Revisión de dos ejes en /cc:review",
+      "title": "BC-004: Technical design",
+      "prompt": "Backlog item BC-004 — Gate de loop rojo reproducible en /cc:fix\n\nDescription: Portar la fase 1 de diagnosing-bugs como gate obligatorio en /cc:fix; antes de hipotetizar hay que construir un comando tight y red-capable que maneje la ruta real del bug y afirme el síntoma exacto del usuario.\nScope: Actualizar .claude/commands/cc/fix.md para bloquear la implementación hasta tener el loop; anclar el loop como check de cc verify.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
       "agent": "architect",
       "modelHint": "architect",
       "dependsOn": [
-        "BC-003-discover"
+        "BC-004-discover"
       ],
       "acceptanceCriteria": [
         "Technical plan lists files affected and approach"
@@ -33,51 +33,51 @@
       "status": "done"
     },
     {
-      "id": "BC-003-test",
-      "backlogId": "BC-003",
+      "id": "BC-004-test",
+      "backlogId": "BC-004",
       "phase": "test",
-      "title": "BC-003: Test coverage",
-      "prompt": "Backlog item BC-003 — Revisión de dos ejes en /cc:review",
+      "title": "BC-004: Test coverage",
+      "prompt": "Backlog item BC-004 — Gate de loop rojo reproducible en /cc:fix\n\nDescription: Portar la fase 1 de diagnosing-bugs como gate obligatorio en /cc:fix; antes de hipotetizar hay que construir un comando tight y red-capable que maneje la ruta real del bug y afirme el síntoma exacto del usuario.\nScope: Actualizar .claude/commands/cc/fix.md para bloquear la implementación hasta tener el loop; anclar el loop como check de cc verify.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
       "agent": "tester",
       "modelHint": "tester",
       "dependsOn": [
-        "BC-003-design"
+        "BC-004-design"
       ],
       "acceptanceCriteria": [
-        "Test covers: /cc:review ejecuta los ejes Standards y Spec en sub-agentes separados",
-        "Test covers: El eje Standards aplica el baseline de code smells salvo override documentado del repo",
-        "Test covers: El verdicto se registra con `cc scorecard record --verdict PASS|REVISE|REJECT`"
+        "Test covers: /cc:fix exige un comando reproducible corrido al menos una vez antes de hipotetizar",
+        "Test covers: El loop documentado es determinista y afirma el síntoma exacto del usuario",
+        "Test covers: `cc verify --task <id>` refleja el loop rojo como evidencia de verificación"
       ],
       "status": "done"
     },
     {
-      "id": "BC-003-implement",
-      "backlogId": "BC-003",
+      "id": "BC-004-implement",
+      "backlogId": "BC-004",
       "phase": "implement",
-      "title": "BC-003: Implementation",
-      "prompt": "Backlog item BC-003 — Revisión de dos ejes en /cc:review",
+      "title": "BC-004: Implementation",
+      "prompt": "Backlog item BC-004 — Gate de loop rojo reproducible en /cc:fix\n\nDescription: Portar la fase 1 de diagnosing-bugs como gate obligatorio en /cc:fix; antes de hipotetizar hay que construir un comando tight y red-capable que maneje la ruta real del bug y afirme el síntoma exacto del usuario.\nScope: Actualizar .claude/commands/cc/fix.md para bloquear la implementación hasta tener el loop; anclar el loop como check de cc verify.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
       "agent": "implementer",
       "modelHint": "implementer",
       "dependsOn": [
-        "BC-003-test"
+        "BC-004-test"
       ],
       "acceptanceCriteria": [
-        "/cc:review ejecuta los ejes Standards y Spec en sub-agentes separados",
-        "El eje Standards aplica el baseline de code smells salvo override documentado del repo",
-        "El verdicto se registra con `cc scorecard record --verdict PASS|REVISE|REJECT`"
+        "/cc:fix exige un comando reproducible corrido al menos una vez antes de hipotetizar",
+        "El loop documentado es determinista y afirma el síntoma exacto del usuario",
+        "`cc verify --task <id>` refleja el loop rojo como evidencia de verificación"
       ],
       "status": "done"
     },
     {
-      "id": "BC-003-review",
-      "backlogId": "BC-003",
+      "id": "BC-004-review",
+      "backlogId": "BC-004",
       "phase": "review",
-      "title": "BC-003: Review and validation",
-      "prompt": "Backlog item BC-003 — Revisión de dos ejes en /cc:review",
+      "title": "BC-004: Review and validation",
+      "prompt": "Backlog item BC-004 — Gate de loop rojo reproducible en /cc:fix\n\nDescription: Portar la fase 1 de diagnosing-bugs como gate obligatorio en /cc:fix; antes de hipotetizar hay que construir un comando tight y red-capable que maneje la ruta real del bug y afirme el síntoma exacto del usuario.\nScope: Actualizar .claude/commands/cc/fix.md para bloquear la implementación hasta tener el loop; anclar el loop como check de cc verify.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
       "agent": "reviewer",
       "modelHint": "reviewer",
       "dependsOn": [
-        "BC-003-implement"
+        "BC-004-implement"
       ],
       "acceptanceCriteria": [
         "All acceptance criteria verified",
@@ -87,15 +87,15 @@
       "status": "done"
     }
   ],
-  "lastScanHash": "c08c65eabe3cecab",
-  "lastScanAt": "2026-08-22T01:06:12.889Z",
+  "lastScanHash": "3935986c0b3162aa",
+  "lastScanAt": "2026-08-22T01:51:03.720Z",
   "changePaths": {
     "BC-001": "openspec/changes/bc-001-r-brica-writing-for-agents-para-auditar-prompts-",
     "BC-002": "openspec/changes/bc-002-context-md-como-glosario-de-dominio-y-criterios-",
-    "BC-003": "openspec/changes/bc-003-revisi-n-de-dos-ejes-en-cc-review"
+    "BC-003": "openspec/changes/bc-003-revisi-n-de-dos-ejes-en-cc-review",
+    "BC-004": "openspec/changes/bc-004-gate-de-loop-rojo-reproducible-en-cc-fix"
   },
   "itemSnapshots": {
-    "BC-004": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Gate de loop rojo reproducible en /cc:fix\"}",
     "BC-005": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"TDD por seams y checklist de anti-patrones en /cc:tdd-cycle\"}",
     "BC-006": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Planificación tracer-bullet con aristas bloqueantes\"}",
     "BC-007": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Gate de grilling en el rol Task Coach\"}",
@@ -104,6 +104,7 @@
     "BC-010": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Gate pre-commit typecheck y test adaptado a Bun\"}",
     "BC-011": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Comando /cc:handoff para traspaso entre sesiones\"}",
     "BC-012": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Router /cc:ask que recomienda el slash command correcto\"}",
+    "BC-004": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Gate de loop rojo reproducible en /cc:fix\"}",
     "BC-003": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Revisión de dos ejes en /cc:review\"}",
     "BC-002": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"CONTEXT.md como glosario de dominio y criterios ADR\"}",
     "BC-001": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Rúbrica writing-for-agents para auditar prompts de agentes\"}"

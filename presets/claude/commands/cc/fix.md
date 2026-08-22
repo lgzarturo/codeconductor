@@ -49,6 +49,33 @@ without a reproduction path cannot be classified reliably.
 
 ---
 
+## Step 1.5 — Red loop gate
+
+Before hypothesizing about the root cause, produce a reproduction command:
+one deterministic, tight command that exercises the real bug path and asserts
+the exact symptom the user reported (not a proxy or a related error).
+
+Requirements:
+
+- The command must be **deterministic** — running it twice produces the same
+  result.
+- The command's assertion must match the exact user-reported symptom (actual
+  vs. expected from the Task Card), not a generic failure.
+- Run it at least once before continuing. Do not proceed to Step 2 until you
+  have run it and it reproduces the bug (RED).
+
+Record the run as evidence so `cc verify` can see it: write a JSON file to
+`.codeconductor/evidence/` matching `EvidenceSchema` with `type: 'test'` and a
+`data` payload shaped like `ImplementerTestsSchema` (`runner`, `result`,
+`failedTests`), e.g. `{ "runner": "<reproduction command>", "result": "failed" }`
+for this red run. After the fix (Step 3/4a/4b), re-run the same command and
+update the evidence to `"result": "passed"` — `cc verify --task <id>` reads
+this evidence directly, no code changes required.
+
+**Do not proceed to Step 2 without a reproduction command that has been run.**
+
+---
+
 ## Step 2 — Route by risk
 
 Read the risk field from the Task Card and follow the corresponding route.

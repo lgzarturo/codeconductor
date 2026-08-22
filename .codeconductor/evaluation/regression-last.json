@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "id": "tests_pass",
+      "required": false,
+      "passed": true,
+      "message": "Command succeeded: npm test"
+    },
+    {
+      "id": "doctor_config",
+      "required": false,
+      "passed": false,
+      "message": "Command failed: npx cc-codeconductor doctor — Command failed: npx cc-codeconductor doctor\nnode:path:1339\n      validateString(arg, 'path');\n      ^\n\nTypeError [ERR_INVALID_ARG_TYPE]: The \"path\" argument must be of type string. Received undefined\n"
+    },
+    {
+      "id": "no_scope_creep",
+      "required": false,
+      "passed": true,
+      "message": "diff_scope check requires task context; skipped in CLI (manual in workflow)"
+    }
+  ],
+  "timestamp": "2026-08-22T01:48:55.901Z"
+}

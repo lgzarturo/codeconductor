@@ -14,20 +14,6 @@ Formato validable por `cc openspec validate`. Análisis completo en
 
 ## Items
 
-### BC-004 | Gate de loop rojo reproducible en /cc:fix
-
-- Priority: P0
-- Status: READY
-- Type: feature
-- Depends on: none
-- Description: Portar la fase 1 de diagnosing-bugs como gate obligatorio en /cc:fix; antes de hipotetizar hay que construir un comando tight y red-capable que maneje la ruta real del bug y afirme el síntoma exacto del usuario.
-- Scope: Actualizar .claude/commands/cc/fix.md para bloquear la implementación hasta tener el loop; anclar el loop como check de cc verify.
-- Out of scope: Automatizar la construcción del loop; sigue siendo trabajo del agente.
-- Acceptance:
-  - [ ] /cc:fix exige un comando reproducible corrido al menos una vez antes de hipotetizar
-  - [ ] El loop documentado es determinista y afirma el síntoma exacto del usuario
-  - [ ] `cc verify --task <id>` refleja el loop rojo como evidencia de verificación
-
 ### BC-005 | TDD por seams y checklist de anti-patrones en /cc:tdd-cycle
 
 - Priority: P1
@@ -141,6 +127,22 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [ ] El catálogo de flujos permanece alineado con los comandos disponibles
 
 ## Archive
+
+### BC-004 | Gate de loop rojo reproducible en /cc:fix
+
+- Priority: P0
+- Status: DONE
+- Type: feature
+- Depends on: none
+- Description: Portar la fase 1 de diagnosing-bugs como gate obligatorio en /cc:fix; antes de hipotetizar hay que construir un comando tight y red-capable que maneje la ruta real del bug y afirme el síntoma exacto del usuario.
+- Scope: Actualizar .claude/commands/cc/fix.md para bloquear la implementación hasta tener el loop; anclar el loop como check de cc verify.
+- Out of scope: Automatizar la construcción del loop; sigue siendo trabajo del agente.
+- Progress: 100
+- Reviewer: reviewer
+- Acceptance:
+  - [x] /cc:fix exige un comando reproducible corrido al menos una vez antes de hipotetizar
+  - [x] El loop documentado es determinista y afirma el síntoma exacto del usuario
+  - [x] `cc verify --task <id>` refleja el loop rojo como evidencia de verificación
 
 ### BC-003 | Revisión de dos ejes en /cc:review
 

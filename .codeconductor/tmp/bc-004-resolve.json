@@ -1,0 +1,222 @@
+{
+  "success": true,
+  "command": "ccep resolve",
+  "context": {
+    "envelope": {
+      "protocolVersion": "ccep-1",
+      "command": "openspec",
+      "userRequest": "BC-004",
+      "projectId": "cc-codeconductor",
+      "repoContext": {
+        "stack": [
+          "typescript"
+        ],
+        "existingModules": [],
+        "architecture": "modular"
+      },
+      "constraints": {
+        "outputFormat": "taskcard",
+        "needConfirmation": true,
+        "riskThreshold": "medium"
+      },
+      "executionPolicy": {
+        "modelMode": "structured",
+        "maxVariance": "low"
+      }
+    },
+    "profile": {
+      "id": "openspec",
+      "version": 1,
+      "command": "openspec",
+      "intakeSchema": "openspec-backlog-item",
+      "phases": [
+        {
+          "id": "validate-backlog",
+          "agent": "orchestrator",
+          "type": "cli-gate"
+        },
+        {
+          "id": "discover",
+          "agent": "repo-explorer"
+        },
+        {
+          "id": "design",
+          "agent": "architect"
+        },
+        {
+          "id": "test",
+          "agent": "tester"
+        },
+        {
+          "id": "implement",
+          "agent": "implementer",
+          "dependsOn": [
+            "test"
+          ]
+        },
+        {
+          "id": "review",
+          "agent": "reviewer"
+        }
+      ],
+      "routing": {
+        "default": [
+          "validate-backlog",
+          "discover",
+          "design",
+          "test",
+          "implement",
+          "review"
+        ]
+      },
+      "confirmationGate": {
+        "stopOnHighRisk": true,
+        "stopOnQuestions": true
+      }
+    },
+    "intent": {
+      "type": "openspec",
+      "goal": "BC-004"
+    },
+    "project": {
+      "name": "cc-codeconductor",
+      "rootDir": "/home/alg/GitHub/codeconductor",
+      "stack": [
+        "typescript"
+      ]
+    },
+    "knowledge": {
+      "productName": "codeconductor",
+      "domains": [
+        "core",
+        "detection",
+        "detectors",
+        "config",
+        "filesystem",
+        "generation",
+        "presets",
+        "runner",
+        "prompts",
+        "security",
+        "lsp",
+        "i18n",
+        "compilation",
+        "complexity",
+        "loop",
+        "mcp",
+        "sentry",
+        "goal",
+        "context",
+        "compaction",
+        "messages",
+        "memory",
+        "pipeline",
+        "openspec",
+        "evaluation",
+        "ccep",
+        "workflows",
+        "product-graph",
+        "knowledge",
+        "planner",
+        "impact",
+        "orchestrator",
+        "verification",
+        "feedback",
+        "product",
+        "presets",
+        "council",
+        "agents",
+        "manifests",
+        "models",
+        "adapters",
+        "claude",
+        "codex",
+        "opencode",
+        "agy",
+        "cursor",
+        "gemini",
+        "cli",
+        "commands",
+        "domain",
+        "council",
+        "lsp",
+        "seo",
+        "loop",
+        "product",
+        "utils",
+        "validation",
+        "infrastructure",
+        "http",
+        "parsers"
+      ],
+      "decisions": [
+        {
+          "id": "decision:adr-010",
+          "name": "Phase 5 — Memory Compression & Token Savings",
+          "data": {
+            "context": "CodeConductor agents currently operate with unbounded context growth. The\norchestrator produces verbose self-summaries, inter-agent messages carry\nredundant content, and there is no mechanism to clear history after completed\nphases. Over long workflows (50+ iterations), context can exceed 100KB+,\ndegrading agent performance and increasing token costs. The `maxTokenBudget`\nfield exists in the LoopConfig and LoopState schemas but is not enforced.\n\nPhase 5 addresses this with four mechanisms: micro-context injection from Task\nCard Scope, compaction hooks after TDD cycles, concise inter-agent messaging, and\ntoken budget enforcement in the compile-fix loop.",
+            "chosenOption": "Implement the four mechanisms as independent, composable modules:\n\n1. **Micro-context injection** — `ContextInjector` reads Task Card Scope block\n   and produces a filtered file list. The orchestrator passes only those files to\n   agents during SDD/TDD phases.\n\n2. **Compaction hook** — After TDD GREEN phase passes, the cc-tdd-cycle workflow\n   clears detailed history (RED/GREEN phase transcripts) and passes only the\n   summary report forward. This is a workflow-level behavior change, not a\n   code-level hook.\n\n3. **Concise inter-agent messages** — Agent contracts are updated so agents\n   produce only their deliverables (no self-praise, no \"I will now...\"). The\n   orchestrator's output format is simplified — it emits the routing decision and\n   status only, not a full self-summary.\n\n4. **Token budget enforcement** — Implement the existing `maxTokenBudget` and\n   `tokenBudgetUsed` placeholders in `loop-state.ts` and `loop-controller.ts`.\n   The `generateFn` signature is extended to return token usage, which is\n   accumulated and checked against the budget.\n\nThese are independent — token budget enforcement can ship before context\ninjection. They share the same acceptance criteria (≤40KB budgets).",
+            "consequences": [
+              "Easier:**",
+              "Agents operate with smaller, more focused context windows",
+              "Token costs decrease linearly with context size",
+              "TDD cycles leave no history residue after completing",
+              "Token budget enforcement prevents runaway loops from consuming excessive tokens",
+              "Harder:**",
+              "Context injection requires Task Card Scope to be accurate — if Scope is",
+              "Compaction hooks are workflow-level (prompts), not enforceable by code. If a",
+              "Constrains:**",
+              "Preset files must stay ≤40KB (existing constraint, reinforced here)",
+              "`maxTokenBudget` defaults to 0 (unlimited) — no breaking change",
+              "Backward compatible: all new behavior is opt-in via config or workflow"
+            ],
+            "status": "accepted"
+          }
+        },
+        {
+          "id": "decision:adr-011",
+          "name": "Product Operating System v1.0.0",
+          "data": {
+            "context": "CodeConductor v0.5.0 orchestrates agents through versioned prompts and task\ncards, but lacks a persistent, structured representation of the product itself.\nContext lives in chat sessions, scattered markdown, and external tools (Engram,\ngraphify). The orchestrator delegates via prompts without executable state\nmanagement.\n\nThe market need is not faster code generation — it is converting business ideas\ninto maintainable products with traceability from requirements through\nimplementation to outcomes.",
+            "chosenOption": "Evolve CodeConductor v1.0.0 into a **Product Operating System** with:\n\n1. **Product AST** — typed graph in `.codeconductor/product-graph.json`\n2. **Layered memory** — episodic (`events.jsonl`), operational, strategic, semantic (graph)\n3. **Knowledge ingestion** — `cc ingest` from repo sources (BACKLOG, ADRs, README, graphify)\n4. **Executable orchestrator** — `cc orchestrate` manages goal DAG state and emits CCEP envelopes\n5. **Impact engine** — `cc impact` previews blast radius before changes\n6. **Verification layer** — `cc verify` gates task completion on evidence\n7. **Feedback loop** — correlates outcomes and changelog with product graph\n\nPersistence is **file-based only** (JSON/YAML/JSONL in `.codeconductor/`). No\ndatabase server. Agents execute externally; the OS manages state and artifacts.\n\nCanonical contracts: `KnowledgeEntity`, `Decision`, `Evidence`, `CanonicalTaskCard`,\n`ProductGraph`, `ProductEvent`.",
+            "consequences": [
+              "Easier:**",
+              "Agents receive typed product context, not improvised prompts",
+              "Decisions and evidence are versioned and traceable",
+              "Goal execution survives session boundaries",
+              "Product knowledge accumulates with each iteration",
+              "Harder:**",
+              "Ingestion quality depends on repo documentation discipline",
+              "File-based graph may grow large; ingest uses hashing for incremental updates",
+              "Orchestrator does not invoke LLMs — humans/runners still execute agents",
+              "Constrains:**",
+              "Web dashboard deferred; CLI is the product console for v1.0.0",
+              "External analytics (GA4, Sentry) optional via `feedback-sources.yml`",
+              "`ExecutionContext.ast.source` extended with `product-graph`"
+            ],
+            "status": "accepted"
+          }
+        }
+      ],
+      "risks": [
+        {
+          "id": "risk:src-commands-debt-harvest-command-ts-reason",
+          "name": "[reason]\""
+        }
+      ],
+      "requirements": [],
+      "nodeCount": 3105
+    },
+    "ast": {
+      "source": "product-graph",
+      "confidence": "high"
+    },
+    "policies": {
+      "architecture": "modular",
+      "testing": "required",
+      "documentation": "required",
+      "breakingChanges": "approval"
+    },
+    "outputSchema": "openspec-backlog-item"
+  }
+}

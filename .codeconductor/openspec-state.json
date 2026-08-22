@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "activeItemId": "BC-008",
+  "activeItemId": "BC-010",
   "taskCards": [
     {
-      "id": "BC-008-discover",
-      "backlogId": "BC-008",
+      "id": "BC-010-discover",
+      "backlogId": "BC-010",
       "phase": "discover",
-      "title": "BC-008: Discover scope and impact",
-      "prompt": "Backlog item BC-008 — Secuencia expand-contract para refactors amplios en /cc:refactor\n\nDescription: Portar el caso wide-refactor de to-tickets como secuencia expand, migrate por lotes y contract para cambios cuyo blast radius rompe muchos call sites, usando cc impact para dimensionar el radio.\nScope: Actualizar .claude/commands/cc/refactor.md con la secuencia y su relación con Depends on.\n\nMap repository structure, conventions, and impact radius for this change.",
+      "title": "BC-010: Discover scope and impact",
+      "prompt": "Backlog item BC-010 — Gate pre-commit typecheck y test adaptado a Bun\n\nDescription: Portar setup-pre-commit adaptado a stdlib-first; un hook pre-commit mínimo que corre bun run typecheck y bun test sin añadir Husky ni lint-staged salvo que el proyecto destino ya los use.\nScope: Plantilla de hook pre-commit y documentación del gate para agentes.\n\nMap repository structure, conventions, and impact radius for this change.",
       "agent": "repo-explorer",
       "modelHint": "repo-explorer",
       "dependsOn": [],
@@ -17,15 +17,15 @@
       "status": "pending"
     },
     {
-      "id": "BC-008-design",
-      "backlogId": "BC-008",
+      "id": "BC-010-design",
+      "backlogId": "BC-010",
       "phase": "design",
-      "title": "BC-008: Technical design",
-      "prompt": "Backlog item BC-008 — Secuencia expand-contract para refactors amplios en /cc:refactor\n\nDescription: Portar el caso wide-refactor de to-tickets como secuencia expand, migrate por lotes y contract para cambios cuyo blast radius rompe muchos call sites, usando cc impact para dimensionar el radio.\nScope: Actualizar .claude/commands/cc/refactor.md con la secuencia y su relación con Depends on.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
+      "title": "BC-010: Technical design",
+      "prompt": "Backlog item BC-010 — Gate pre-commit typecheck y test adaptado a Bun\n\nDescription: Portar setup-pre-commit adaptado a stdlib-first; un hook pre-commit mínimo que corre bun run typecheck y bun test sin añadir Husky ni lint-staged salvo que el proyecto destino ya los use.\nScope: Plantilla de hook pre-commit y documentación del gate para agentes.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
       "agent": "architect",
       "modelHint": "architect",
       "dependsOn": [
-        "BC-008-discover"
+        "BC-010-discover"
       ],
       "acceptanceCriteria": [
         "Technical plan lists files affected and approach"
@@ -33,51 +33,51 @@
       "status": "pending"
     },
     {
-      "id": "BC-008-test",
-      "backlogId": "BC-008",
+      "id": "BC-010-test",
+      "backlogId": "BC-010",
       "phase": "test",
-      "title": "BC-008: Test coverage",
-      "prompt": "Backlog item BC-008 — Secuencia expand-contract para refactors amplios en /cc:refactor\n\nDescription: Portar el caso wide-refactor de to-tickets como secuencia expand, migrate por lotes y contract para cambios cuyo blast radius rompe muchos call sites, usando cc impact para dimensionar el radio.\nScope: Actualizar .claude/commands/cc/refactor.md con la secuencia y su relación con Depends on.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
+      "title": "BC-010: Test coverage",
+      "prompt": "Backlog item BC-010 — Gate pre-commit typecheck y test adaptado a Bun\n\nDescription: Portar setup-pre-commit adaptado a stdlib-first; un hook pre-commit mínimo que corre bun run typecheck y bun test sin añadir Husky ni lint-staged salvo que el proyecto destino ya los use.\nScope: Plantilla de hook pre-commit y documentación del gate para agentes.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
       "agent": "tester",
       "modelHint": "tester",
       "dependsOn": [
-        "BC-008-design"
+        "BC-010-design"
       ],
       "acceptanceCriteria": [
-        "Test covers: /cc:refactor distingue refactor amplio de rebanada vertical por blast radius",
-        "Test covers: La secuencia expand-migrate-contract mantiene el árbol verde entre lotes",
-        "Test covers: `cc impact` cuantifica el blast radius antes de secuenciar los lotes"
+        "Test covers: El hook pre-commit ejecuta typecheck y test antes de permitir el commit",
+        "Test covers: El gate no añade dependencias externas cuando el proyecto no las tiene",
+        "Test covers: Un commit con typecheck fallido queda bloqueado por el hook"
       ],
       "status": "pending"
     },
     {
-      "id": "BC-008-implement",
-      "backlogId": "BC-008",
+      "id": "BC-010-implement",
+      "backlogId": "BC-010",
       "phase": "implement",
-      "title": "BC-008: Implementation",
-      "prompt": "Backlog item BC-008 — Secuencia expand-contract para refactors amplios en /cc:refactor\n\nDescription: Portar el caso wide-refactor de to-tickets como secuencia expand, migrate por lotes y contract para cambios cuyo blast radius rompe muchos call sites, usando cc impact para dimensionar el radio.\nScope: Actualizar .claude/commands/cc/refactor.md con la secuencia y su relación con Depends on.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
+      "title": "BC-010: Implementation",
+      "prompt": "Backlog item BC-010 — Gate pre-commit typecheck y test adaptado a Bun\n\nDescription: Portar setup-pre-commit adaptado a stdlib-first; un hook pre-commit mínimo que corre bun run typecheck y bun test sin añadir Husky ni lint-staged salvo que el proyecto destino ya los use.\nScope: Plantilla de hook pre-commit y documentación del gate para agentes.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
       "agent": "implementer",
       "modelHint": "implementer",
       "dependsOn": [
-        "BC-008-test"
+        "BC-010-test"
       ],
       "acceptanceCriteria": [
-        "/cc:refactor distingue refactor amplio de rebanada vertical por blast radius",
-        "La secuencia expand-migrate-contract mantiene el árbol verde entre lotes",
-        "`cc impact` cuantifica el blast radius antes de secuenciar los lotes"
+        "El hook pre-commit ejecuta typecheck y test antes de permitir el commit",
+        "El gate no añade dependencias externas cuando el proyecto no las tiene",
+        "Un commit con typecheck fallido queda bloqueado por el hook"
       ],
       "status": "pending"
     },
     {
-      "id": "BC-008-review",
-      "backlogId": "BC-008",
+      "id": "BC-010-review",
+      "backlogId": "BC-010",
       "phase": "review",
-      "title": "BC-008: Review and validation",
-      "prompt": "Backlog item BC-008 — Secuencia expand-contract para refactors amplios en /cc:refactor\n\nDescription: Portar el caso wide-refactor de to-tickets como secuencia expand, migrate por lotes y contract para cambios cuyo blast radius rompe muchos call sites, usando cc impact para dimensionar el radio.\nScope: Actualizar .claude/commands/cc/refactor.md con la secuencia y su relación con Depends on.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
+      "title": "BC-010: Review and validation",
+      "prompt": "Backlog item BC-010 — Gate pre-commit typecheck y test adaptado a Bun\n\nDescription: Portar setup-pre-commit adaptado a stdlib-first; un hook pre-commit mínimo que corre bun run typecheck y bun test sin añadir Husky ni lint-staged salvo que el proyecto destino ya los use.\nScope: Plantilla de hook pre-commit y documentación del gate para agentes.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
       "agent": "reviewer",
       "modelHint": "reviewer",
       "dependsOn": [
-        "BC-008-implement"
+        "BC-010-implement"
       ],
       "acceptanceCriteria": [
         "All acceptance criteria verified",
@@ -87,8 +87,8 @@
       "status": "pending"
     }
   ],
-  "lastScanHash": "f1566131cdc700b8",
-  "lastScanAt": "2026-08-22T06:25:07.833Z",
+  "lastScanHash": "532dcece05fd81fb",
+  "lastScanAt": "2026-08-22T16:43:10.213Z",
   "changePaths": {
     "BC-001": "openspec/changes/bc-001-r-brica-writing-for-agents-para-auditar-prompts-",
     "BC-002": "openspec/changes/bc-002-context-md-como-glosario-de-dominio-y-criterios-",
@@ -97,13 +97,15 @@
     "BC-005": "openspec/changes/bc-005-tdd-por-seams-y-checklist-de-anti-patrones-en-cc",
     "BC-006": "openspec/changes/bc-006-planificaci-n-tracer-bullet-con-aristas-bloquean",
     "BC-007": "openspec/changes/bc-007-gate-de-grilling-en-el-rol-task-coach",
-    "BC-008": "openspec/changes/bc-008-secuencia-expand-contract-para-refactors-amplios"
+    "BC-008": "openspec/changes/bc-008-secuencia-expand-contract-para-refactors-amplios",
+    "BC-009": "openspec/changes/bc-009-hook-pretooluse-que-bloquea-git-destructivo",
+    "BC-010": "openspec/changes/bc-010-gate-pre-commit-typecheck-y-test-adaptado-a-bun"
   },
   "itemSnapshots": {
-    "BC-009": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Hook PreToolUse que bloquea git destructivo\"}",
     "BC-010": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Gate pre-commit typecheck y test adaptado a Bun\"}",
     "BC-011": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Comando /cc:handoff para traspaso entre sesiones\"}",
     "BC-012": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Router /cc:ask que recomienda el slash command correcto\"}",
+    "BC-009": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Hook PreToolUse que bloquea git destructivo\"}",
     "BC-008": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Secuencia expand-contract para refactors amplios en /cc:refactor\"}",
     "BC-007": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Gate de grilling en el rol Task Coach\"}",
     "BC-006": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Planificación tracer-bullet con aristas bloqueantes\"}",

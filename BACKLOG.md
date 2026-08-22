@@ -14,24 +14,10 @@ Formato validable por `cc openspec validate`. Análisis completo en
 
 ## Items
 
-### BC-009 | Hook PreToolUse que bloquea git destructivo
-
-- Priority: P0
-- Status: READY
-- Type: feature
-- Depends on: none
-- Description: Portar git-guardrails-claude-code como hook PreToolUse sobre Bash que intercepta y bloquea git push, reset --hard, clean -f, branch -D y checkout/restore de árbol, con exit code 2.
-- Scope: Script de guardrail y wiring en presets/**/hooks.json; materializa la regla de no push directo desde agentes.
-- Out of scope: Bloquear comandos no relacionados con git.
-- Acceptance:
-  - [ ] El hook bloquea git push y git reset --hard con exit code 2
-  - [ ] El mensaje de bloqueo indica que el agente no tiene autoridad sobre esos comandos
-  - [ ] La lista de patrones bloqueados es editable por el usuario del preset
-
 ### BC-010 | Gate pre-commit typecheck y test adaptado a Bun
 
 - Priority: P1
-- Status: READY
+- Status: PLANNED
 - Type: feature
 - Depends on: none
 - Description: Portar setup-pre-commit adaptado a stdlib-first; un hook pre-commit mínimo que corre bun run typecheck y bun test sin añadir Husky ni lint-staged salvo que el proyecto destino ya los use.
@@ -71,6 +57,22 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [ ] El catálogo de flujos permanece alineado con los comandos disponibles
 
 ## Archive
+
+### BC-009 | Hook PreToolUse que bloquea git destructivo
+
+- Priority: P0
+- Status: DONE
+- Type: feature
+- Depends on: none
+- Description: Portar git-guardrails-claude-code como hook PreToolUse sobre Bash que intercepta y bloquea git push, reset --hard, clean -f, branch -D y checkout/restore de árbol, con exit code 2.
+- Scope: Script de guardrail y wiring en presets/**/hooks.json; materializa la regla de no push directo desde agentes.
+- Out of scope: Bloquear comandos no relacionados con git.
+- Progress: 100
+- Reviewer: reviewer
+- Acceptance:
+  - [x] El hook bloquea git push y git reset --hard con exit code 2
+  - [x] El mensaje de bloqueo indica que el agente no tiene autoridad sobre esos comandos
+  - [x] La lista de patrones bloqueados es editable por el usuario del preset
 
 ### BC-008 | Secuencia expand-contract para refactors amplios en /cc:refactor
 

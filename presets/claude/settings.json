@@ -183,7 +183,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if echo \"$CLAUDE_TOOL_INPUT_COMMAND\" | grep -qE '(\\.env|secrets/|id_rsa|\\.pem|\\.key)\\b' && echo \"$CLAUDE_TOOL_INPUT_COMMAND\" | grep -qE '(cat|less|more|head|tail|cp |mv |scp )'; then echo 'Bloqueado: intento de leer archivos sensibles' >&2; exit 2; fi"
+            "command": "if echo \"$CLAUDE_TOOL_INPUT_COMMAND\" | grep -qE '(\\.env|secrets/|id_rsa|\\.pem|\\.key)\\b' && echo \"$CLAUDE_TOOL_INPUT_COMMAND\" | grep -qE '(cat|less|more|head|tail|cp |mv |scp )'; then echo 'Bloqueado: intento de leer archivos sensibles' >&2; exit 2; elif echo \"$CLAUDE_TOOL_INPUT_COMMAND\" | grep -qE '^\\s*git\\s+(push|reset\\s+--hard)' || echo \"$CLAUDE_TOOL_INPUT_COMMAND\" | grep -qE '^\\s*git\\s+clean\\s+(-[a-z]*f[a-z]*|--force)' || echo \"$CLAUDE_TOOL_INPUT_COMMAND\" | grep -qE '^\\s*git\\s+branch\\s+(-D|--delete\\s+--force)' || echo \"$CLAUDE_TOOL_INPUT_COMMAND\" | grep -qE '^\\s*git\\s+checkout\\s+(-f|--force|--discard-changes|--theirs|--ours|-\\s|-$)' || echo \"$CLAUDE_TOOL_INPUT_COMMAND\" | grep -qE '^\\s*git\\s+restore\\s+(-f|--force|--discard-changes|--theirs|--ours)'; then echo \"Bloqueado: El agente no tiene autoridad sobre este comando.\" >&2; exit 2; fi"
           }
         ]
       }

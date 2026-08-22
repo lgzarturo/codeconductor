@@ -67,3 +67,4 @@ _*.md
 
 # Graphify
 graphify-out/
+.git/hooks/pre-commit

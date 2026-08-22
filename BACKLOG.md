@@ -14,20 +14,6 @@ Formato validable por `cc openspec validate`. Análisis completo en
 
 ## Items
 
-### BC-007 | Gate de grilling en el rol Task Coach
-
-- Priority: P2
-- Status: PLANNED
-- Type: feature
-- Depends on: BC-002
-- Description: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mecánica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoyándose en el ConfirmationGate de cc ccep.
-- Scope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.
-- Out of scope: Añadir un motor de preguntas nuevo fuera de ccep.
-- Acceptance:
-  - [ ] El Task Coach estresa supuestos antes de aceptar el Task Card
-  - [ ] Un Task Card con preguntas abiertas detiene el flujo vía ConfirmationGate de ccep
-  - [ ] El Task Card final cubre los seis campos requeridos sin ambigüedad
-
 ### BC-008 | Secuencia expand-contract para refactors amplios en /cc:refactor
 
 - Priority: P2
@@ -99,6 +85,22 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [ ] El catálogo de flujos permanece alineado con los comandos disponibles
 
 ## Archive
+
+### BC-007 | Gate de grilling en el rol Task Coach
+
+- Priority: P2
+- Status: DONE
+- Type: feature
+- Depends on: BC-002
+- Description: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mecánica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoyándose en el ConfirmationGate de cc ccep.
+- Scope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.
+- Out of scope: Añadir un motor de preguntas nuevo fuera de ccep.
+- Progress: 100
+- Reviewer: reviewer
+- Acceptance:
+  - [x] El Task Coach estresa supuestos antes de aceptar el Task Card
+  - [x] Un Task Card con preguntas abiertas detiene el flujo vía ConfirmationGate de ccep
+  - [x] El Task Card final cubre los seis campos requeridos sin ambigüedad
 
 ### BC-006 | Planificación tracer-bullet con aristas bloqueantes
 

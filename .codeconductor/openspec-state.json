@@ -7,7 +7,7 @@
       "backlogId": "BC-007",
       "phase": "discover",
       "title": "BC-007: Discover scope and impact",
-      "prompt": "Backlog item BC-007 \u2014 Gate de grilling en el rol Task Coach\n\nDescription: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mec\u00e1nica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoy\u00e1ndose en el ConfirmationGate de cc ccep.\nScope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.\n\nMap repository structure, conventions, and impact radius for this change.",
+      "prompt": "Backlog item BC-007 — Gate de grilling en el rol Task Coach\n\nDescription: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mecánica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoyándose en el ConfirmationGate de cc ccep.\nScope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.\n\nMap repository structure, conventions, and impact radius for this change.",
       "agent": "repo-explorer",
       "modelHint": "repo-explorer",
       "dependsOn": [],
@@ -21,7 +21,7 @@
       "backlogId": "BC-007",
       "phase": "design",
       "title": "BC-007: Technical design",
-      "prompt": "Backlog item BC-007 \u2014 Gate de grilling en el rol Task Coach\n\nDescription: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mec\u00e1nica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoy\u00e1ndose en el ConfirmationGate de cc ccep.\nScope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
+      "prompt": "Backlog item BC-007 — Gate de grilling en el rol Task Coach\n\nDescription: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mecánica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoyándose en el ConfirmationGate de cc ccep.\nScope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
       "agent": "architect",
       "modelHint": "architect",
       "dependsOn": [
@@ -37,7 +37,7 @@
       "backlogId": "BC-007",
       "phase": "test",
       "title": "BC-007: Test coverage",
-      "prompt": "Backlog item BC-007 \u2014 Gate de grilling en el rol Task Coach\n\nDescription: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mec\u00e1nica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoy\u00e1ndose en el ConfirmationGate de cc ccep.\nScope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
+      "prompt": "Backlog item BC-007 — Gate de grilling en el rol Task Coach\n\nDescription: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mecánica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoyándose en el ConfirmationGate de cc ccep.\nScope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
       "agent": "tester",
       "modelHint": "tester",
       "dependsOn": [
@@ -45,8 +45,8 @@
       ],
       "acceptanceCriteria": [
         "Test covers: El Task Coach estresa supuestos antes de aceptar el Task Card",
-        "Test covers: Un Task Card con preguntas abiertas detiene el flujo v\u00eda ConfirmationGate de ccep",
-        "Test covers: El Task Card final cubre los seis campos requeridos sin ambig\u00fcedad"
+        "Test covers: Un Task Card con preguntas abiertas detiene el flujo vía ConfirmationGate de ccep",
+        "Test covers: El Task Card final cubre los seis campos requeridos sin ambigüedad"
       ],
       "status": "done"
     },
@@ -55,7 +55,7 @@
       "backlogId": "BC-007",
       "phase": "implement",
       "title": "BC-007: Implementation",
-      "prompt": "Backlog item BC-007 \u2014 Gate de grilling en el rol Task Coach\n\nDescription: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mec\u00e1nica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoy\u00e1ndose en el ConfirmationGate de cc ccep.\nScope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
+      "prompt": "Backlog item BC-007 — Gate de grilling en el rol Task Coach\n\nDescription: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mecánica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoyándose en el ConfirmationGate de cc ccep.\nScope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
       "agent": "implementer",
       "modelHint": "implementer",
       "dependsOn": [
@@ -63,8 +63,8 @@
       ],
       "acceptanceCriteria": [
         "El Task Coach estresa supuestos antes de aceptar el Task Card",
-        "Un Task Card con preguntas abiertas detiene el flujo v\u00eda ConfirmationGate de ccep",
-        "El Task Card final cubre los seis campos requeridos sin ambig\u00fcedad"
+        "Un Task Card con preguntas abiertas detiene el flujo vía ConfirmationGate de ccep",
+        "El Task Card final cubre los seis campos requeridos sin ambigüedad"
       ],
       "status": "done"
     },
@@ -73,7 +73,7 @@
       "backlogId": "BC-007",
       "phase": "review",
       "title": "BC-007: Review and validation",
-      "prompt": "Backlog item BC-007 \u2014 Gate de grilling en el rol Task Coach\n\nDescription: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mec\u00e1nica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoy\u00e1ndose en el ConfirmationGate de cc ccep.\nScope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
+      "prompt": "Backlog item BC-007 — Gate de grilling en el rol Task Coach\n\nDescription: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mecánica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoyándose en el ConfirmationGate de cc ccep.\nScope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
       "agent": "reviewer",
       "modelHint": "reviewer",
       "dependsOn": [
@@ -87,8 +87,8 @@
       "status": "done"
     }
   ],
-  "lastScanHash": "102cddcff33ead33",
-  "lastScanAt": "2026-08-22T03:44:23.268Z",
+  "lastScanHash": "1dfcb08e00ed9dec",
+  "lastScanAt": "2026-08-22T04:32:36.617Z",
   "changePaths": {
     "BC-001": "openspec/changes/bc-001-r-brica-writing-for-agents-para-auditar-prompts-",
     "BC-002": "openspec/changes/bc-002-context-md-como-glosario-de-dominio-y-criterios-",
@@ -99,17 +99,17 @@
     "BC-007": "openspec/changes/bc-007-gate-de-grilling-en-el-rol-task-coach"
   },
   "itemSnapshots": {
-    "BC-007": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Gate de grilling en el rol Task Coach\"}",
     "BC-008": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Secuencia expand-contract para refactors amplios en /cc:refactor\"}",
     "BC-009": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Hook PreToolUse que bloquea git destructivo\"}",
     "BC-010": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Gate pre-commit typecheck y test adaptado a Bun\"}",
     "BC-011": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Comando /cc:handoff para traspaso entre sesiones\"}",
     "BC-012": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Router /cc:ask que recomienda el slash command correcto\"}",
-    "BC-006": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Planificaci\u00f3n tracer-bullet con aristas bloqueantes\"}",
+    "BC-007": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Gate de grilling en el rol Task Coach\"}",
+    "BC-006": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Planificación tracer-bullet con aristas bloqueantes\"}",
     "BC-005": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"TDD por seams y checklist de anti-patrones en /cc:tdd-cycle\"}",
     "BC-004": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Gate de loop rojo reproducible en /cc:fix\"}",
-    "BC-003": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Revisi\u00f3n de dos ejes en /cc:review\"}",
+    "BC-003": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Revisión de dos ejes en /cc:review\"}",
     "BC-002": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"CONTEXT.md como glosario de dominio y criterios ADR\"}",
-    "BC-001": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"R\u00fabrica writing-for-agents para auditar prompts de agentes\"}"
+    "BC-001": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Rúbrica writing-for-agents para auditar prompts de agentes\"}"
   }
 }

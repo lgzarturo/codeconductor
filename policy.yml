@@ -42,6 +42,9 @@ denyWrite:
   - ".git/**"
   - ".claude/**"
   - ".opencode/**"
+  # Session handoffs belong in .codeconductor/sessions/ (gitignored). The
+  # compiler does not exist yet; gitignore + workflow redaction are the
+  # compensating controls for /cc:handoff.
   - ".codeconductor/**"
   - ".code-conductor/policy.yml"
   - "/etc/**"

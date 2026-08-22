@@ -1,5 +1,5 @@
 ---
-description: Compact the session into a Markdown handoff under .codeconductor/ for another agent or human.
+description: Compact the session into gitignored `.codeconductor/sessions/handoff.md` (redact secrets).
 ---
 
 # Handoff Workflow
@@ -20,7 +20,16 @@ Command: `handoff` (fixed for this workflow — do not infer from user text)
 
 ## Step 1 — Compact (docs)
 
-Invoke `docs`. Write Markdown only under `.codeconductor/` (for example `.codeconductor/handoff.md`). Include: goal, Task Card status, files touched, tests, open questions, and the next `/cc:` command.
+Invoke `docs`. Write **only** `.codeconductor/sessions/handoff.md` (gitignored).
+Do not write `.codeconductor/handoff.md` or any tracked path.
+
+Before writing, redact secrets, tokens, API keys, passwords, connection strings,
+`.env` contents, and log/stack-trace lines that embed those values. Summarize
+errors instead of pasting dumps. If unresolved credential material remains, stop
+and wait for a human (CCEP `stopOnHighRisk`).
+
+Include: goal, Task Card status (no secret fields), files touched, test
+pass/fail (not log dumps), open questions, and the next `/cc:` command.
 
 Do not edit source or tests.
 

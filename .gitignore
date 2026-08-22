@@ -30,6 +30,7 @@ id_ed25519
 # CodeConductor runtime
 .codeconductor/sessions/
 .codeconductor/generated/
+.codeconductor/handoff.md
 
 # OS
 .DS_Store

@@ -116,6 +116,7 @@ describe('ccep workflow profiles', () => {
     expect(loadWorkflowProfile('triage').phases[0]?.id).toBe('classify');
     expect(loadWorkflowProfile('prototype').routing.default).toEqual(['bounds', 'spike']);
     expect(loadWorkflowProfile('handoff').phases[0]?.agent).toBe('docs');
+    expect(loadWorkflowProfile('handoff').confirmationGate.stopOnHighRisk).toBe(true);
     expect(loadWorkflowProfile('clarify').confirmationGate.stopOnQuestions).toBe(true);
   });
 });

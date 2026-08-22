@@ -62,7 +62,7 @@ Command-specific workflow phases (unchanged semantics)
 | `explore` | explore | Repo map + next command |
 | `triage` | triage | Type, risk, destination command |
 | `prototype` | prototype | Isolated spike (not merge) |
-| `handoff` | handoff | Session compact under `.codeconductor/` |
+| `handoff` | handoff | Session compact to `.codeconductor/sessions/handoff.md` (gitignored) |
 | `clarify` | clarify | Restate last deliverable |
 
 ## CLI

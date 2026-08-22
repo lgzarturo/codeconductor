@@ -43,6 +43,7 @@ None. ConfirmationGate already passed on the plan.
 4. Run `/cc:review` on the diff.
 5. Do not merge a prototype; this path is the real feature.
 
-This file is the handoff artifact `/cc:handoff` would write under
-`.codeconductor/` in a live project. Here it lives next to the other example
-artifacts so another agent can resume without the original chat.
+This file is the handoff artifact `/cc:handoff` would write to
+`.codeconductor/sessions/handoff.md` in a live project (gitignored, secrets
+redacted). Here it lives next to the other example artifacts so another agent
+can resume without the original chat.

@@ -279,7 +279,7 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
       { id: 'compact', agent: 'docs', outputSchema: 'agent-output' },
     ],
     routing: { default: ['compact'] },
-    confirmationGate: { stopOnHighRisk: false, stopOnQuestions: false },
+    confirmationGate: { stopOnHighRisk: true, stopOnQuestions: true },
   },
   clarify: {
     id: 'clarify',

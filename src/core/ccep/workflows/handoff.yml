@@ -10,5 +10,5 @@ routing:
   default:
     - compact
 confirmationGate:
-  stopOnHighRisk: false
-  stopOnQuestions: false
+  stopOnHighRisk: true
+  stopOnQuestions: true

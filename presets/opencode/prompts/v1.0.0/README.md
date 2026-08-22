@@ -36,7 +36,8 @@ the CodeConductor Execution Protocol (CCEP-1) and the current workflow profiles.
   workflow-commands table, and a CCEP-1 confirmation-gate section.
 - Intake/design/test/review contracts stop on unresolved branches, wayfinding
   names the next `/cc:` command, TDD forbids green-by-weakening, and `docs` may
-  write session handoffs under `.codeconductor/`.
+  write session handoffs only to `.codeconductor/sessions/handoff.md` (gitignored,
+  secrets redacted).
 - Version markers and scorecard `contract_version` bumped to `v1.0.0`.
 
 ## Versioning

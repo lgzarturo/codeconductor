@@ -58,6 +58,8 @@ reliably.
 
 Capture evidence before tests: reproduction, logs or stack traces, and one
 falsifiable hypothesis of the root cause. Do not patch without that evidence.
+Redact secrets, tokens, and credential dumps from logs before they enter the
+Task Card. Summarize stack traces; do not paste env files.
 
 **STOP here. Show the Task Card and wait for human confirmation.**
 

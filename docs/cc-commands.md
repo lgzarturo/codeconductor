@@ -665,7 +665,7 @@ Primary CCEP loop (use these first):
 | ------- | ----------- |
 | `/cc-iterative` / `/cc:iterative` | Wayfinding, grilling, contracts, TDD, council, docs |
 | `/cc-triage` / `/cc:triage` | Classify request → destination workflow |
-| `/cc-handoff` / `/cc:handoff` | Compact session to `.codeconductor/` |
+| `/cc-handoff` / `/cc:handoff` | Compact session to gitignored `.codeconductor/sessions/handoff.md` |
 | `/cc-openspec` | OpenSpec delivery loop + backlog |
 
 Other installed commands:

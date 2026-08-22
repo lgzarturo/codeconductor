@@ -55,6 +55,7 @@ CHANGELOG is mandatory for every implementation change. No exceptions.
 - `docs/**/*.md` — any markdown documentation file
 - `docs/adr/*.md` — Architecture Decision Records
 - `CHANGELOG.md` — always update for any implementation change
+- `.codeconductor/sessions/handoff.md` — `/cc:handoff` only; gitignored; redact secrets
 - `openapi.yaml`, `openapi.json`, or any OpenAPI spec file
 - Any `*-api.yaml` or `*-api.json` file
 

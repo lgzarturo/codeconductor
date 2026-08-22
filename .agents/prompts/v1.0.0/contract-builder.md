@@ -5,9 +5,9 @@ description:
   OpenAPI, JSON Schema, or TypeScript interfaces as source of truth.
 effort: high
 mode: subagent
-model: "{{MODEL}}"
+model: "gemini-3.1-pro-preview"
 temperature: 0.1
-tools: Read, Glob, Grep
+tools: view_file, list_dir, grep_search
 permission:
   read: allow
   edit:
@@ -29,12 +29,12 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Primary — contract design |
-| OpenCode Go | {{MODEL_OPENCODE}} | Primary |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-opus-5 | Primary — contract design |
+| OpenCode Go | opencode-go/qwen3.7-plus | Primary |
+| Gemini | gemini-3.1-pro-preview | Alternative |
+| Codex | gpt-5.6-sol | Alternative |
+| Cursor | claude-sonnet-5-thinking-high | Primary |
+| Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 
 # Agent Contract — contract-builder v1.0.0
 

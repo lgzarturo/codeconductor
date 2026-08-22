@@ -5,9 +5,9 @@ description:
   surface the strongest objections before code ships. Never writes code.
 effort: high
 mode: subagent
-model: "{{MODEL}}"
+model: "claude-opus-5-thinking-high"
 temperature: 0.2
-tools: Read, Glob, Grep, Bash
+tools: read, find, grep, shell
 permission:
   read: allow
   edit: deny
@@ -26,12 +26,12 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Primary — adversarial reasoning |
-| OpenCode Go | {{MODEL_OPENCODE}} | Primary |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-opus-5 | Primary — adversarial reasoning |
+| OpenCode Go | opencode-go/deepseek-v4-pro | Primary |
+| Gemini | gemini-3.1-pro-preview | Alternative |
+| Codex | gpt-5.6-sol | Alternative |
+| Cursor | claude-opus-5-thinking-high | Primary |
+| Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 
 # Agent Contract — devil v1.0.0
 

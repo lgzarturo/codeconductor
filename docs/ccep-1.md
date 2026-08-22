@@ -55,7 +55,7 @@ Command-specific workflow phases (unchanged semantics)
 | `api-contract` | api-contract | API contract |
 | `db-migration` | db-migration | Migration plan |
 | `pagespeed` | pagespeed | PSI report |
-| `openspec` | openspec | Backlog delivery |
+| `openspec` | openspec | Delivery loop + backlog (`BACKLOG.md`) |
 | `scorecard` | scorecard | Agent evaluation |
 | `council` | council | Council verdict |
 | `iterative` | iterative | Wayfinding + contract + TDD + council |

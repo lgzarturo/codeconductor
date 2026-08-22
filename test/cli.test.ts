@@ -114,7 +114,7 @@ describe('CLI', () => {
     expect(result.stdout).toContain('CodeConductor CLI');
     expect(result.stdout).toContain(`CodeConductor CLI v${packageJson.version}`);
     expect(result.stdout).toContain('Usage:');
-    expect(result.stdout).toContain('Commands:');
+    expect(result.stdout).toContain('Published commands (package');
     expect(result.stdout).toContain('init');
     expect(result.stdout).toContain('detect');
     expect(result.stdout).toContain('install');

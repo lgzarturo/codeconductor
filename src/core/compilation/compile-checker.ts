@@ -25,7 +25,10 @@ export interface CompileResult {
 }
 
 export interface CompileCheckOptions {
-  /** Shell command to run (string or pre-split args). Default: `tsc --noEmit` */
+  /**
+   * Shell command to run (string or pre-split args). Default: `tsc --noEmit`.
+   * Must be a project-trusted compile command from config, never unsanitized CLI input.
+   */
   command?: string | string[];
   /** Working directory. Default: process.cwd() */
   cwd?: string;

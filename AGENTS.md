@@ -491,7 +491,11 @@ exceptions, or context here.
 - Canonical skills: `skills/cc-self-review/`, `skills/cc-update-preset-models/` (fuera de `presets/` y del npm package)
 - Cursor stubs: `.cursor/commands/` y `.cursor/skills/` para cada una
 - **Never** copy into `presets/`, CCEP profiles, Conductor Agent routing, or `src/presets/`
-- If `install preset --target cursor` overwrites `.cursor/commands` or `.cursor/skills`, restore from `skills/<name>/assets/commands/`
+- This repo **dogfoods** `bun run dev install preset --target cursor`. Maintainer stubs are skipped by `isMaintainerReservedDest` (including `--force`).
+
+### OpenSpec
+
+OpenSpec is a **delivery loop** (validate-backlog → discover → design → test → implement → review) and the backlog tool for `BACKLOG.md`. Use `bun run dev openspec …` and `/cc-openspec`.
 
 ## Approach
 

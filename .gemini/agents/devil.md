@@ -3,8 +3,9 @@ name: devil
 description:
   Devil's advocate for the council workflow — attacks the plan and the diff to
   surface the strongest objections before code ships. Never writes code.
+effort: high
 mode: subagent
-model: "{{MODEL}}"
+model: "gemini-3.1-pro-preview"
 temperature: 0.2
 tools: view_file, list_dir, search_grep, execute_command
 permission:

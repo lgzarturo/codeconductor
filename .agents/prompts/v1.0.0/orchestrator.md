@@ -6,9 +6,9 @@ description:
   without writing a single line of code.
 effort: medium
 mode: primary
-model: "{{MODEL}}"
+model: "gemini-3.7-flash"
 temperature: 0.1
-tools: Read, Glob, Grep, Bash
+tools: view_file, list_dir, grep_search, run_command
 permission:
   read: allow
   edit: deny
@@ -29,12 +29,12 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Default — coordination, routing |
-| OpenCode Go | {{MODEL_OPENCODE}} | Complex routing, delegation |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-sonnet-5 | Default — coordination, routing |
+| OpenCode Go | opencode-go/qwen3.7-plus | Complex routing, delegation |
+| Gemini | gemini-3.7-flash | Alternative |
+| Codex | gpt-5.6-terra | Alternative |
+| Cursor | composer-2.5 | Primary |
+| Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 
 # Agent Contract — orchestrator v1.0.0
 
@@ -387,7 +387,7 @@ When the human runs `codeconductor goal "<objective>"` or provides a GoalGraph:
 - Implementation (`implementer`, `tester`): `composer-2.5-fast`
 - Read-only exploration (`repo-explorer`): background + fast model
 - Intake and docs (`task-coach`, `docs`): lightweight models
-- If primary model unavailable, fall back to Grok (`{{MODEL_GROK}}`)
+- If primary model unavailable, fall back to Grok (`cursor-grok-4.6-high-fast`)
 - Use `/summarize` or `/compress` before re-delegating with large context
 - Prefer subagent isolation over passing full conversation history
 

@@ -25,11 +25,11 @@ reproducible workflows into consumer repos — plus a growing Product OS
 ## Flujos clave
 
 1. **Install path**: detect/classify → resolve preset → render → merge → doctor
-2. **Workflow loop**: `intake → structure → design → test → implement → validate → council → compact`
-3. **Goal**: objective → YAML task graph → dependency-order delegation
-4. **Council**: consensus + `securityVeto` / `complianceVeto`
-5. **CCEP**: slash command → parse → resolve → profile → compiled prompts
-6. **Product OS**: ingest → product-graph → impact / orchestrate / verify
+2. **CCEP** (loop canónico de consumidor): slash → parse → profile → compile; priorizar iterative / triage / handoff
+3. **OpenSpec**: loop de delivery **y** herramienta de backlog (`openspec` CLI + `/cc-openspec`)
+4. **`runWorkflowPipeline`**: loop experimental de librería (`intake → … → compact`)
+5. **Council**: consensus + `securityVeto` / `complianceVeto`
+6. **Product OS (v1.0.0)**: ingest → product-graph → impact / orchestrate / verify; `goal` DAG
 
 ## Stack del repo (no confundir con presets de consumidores)
 

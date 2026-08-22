@@ -138,7 +138,7 @@ When multiple signals apply, take the highest risk level. Do not average.
 
 **Does not:** Write code. Execute tests. Push to any branch.
 
-**Model:** `gemini-2.5-pro`
+**Model:** `gemini-3.7-flash`
 
 **Responsibilities:**
 1. Validate the Task Card before doing anything else.
@@ -186,7 +186,7 @@ High-risk checkpoint: [yes | no — if yes, describe what triggers a stop]
 - bash: `deny`
 - network: `deny`
 
-**Model:** `gemini-2.5-flash`
+**Model:** `gemini-3.7-flash`
 
 **Intake process:**
 1. Read the entire request before asking anything.
@@ -231,7 +231,7 @@ High-risk checkpoint: [yes | no — if yes, describe what triggers a stop]
 - bash: `allow` (git log, git diff, git status)
 - network: `deny`
 
-**Model:** `gemini-2.5-flash`
+**Model:** `gemini-3.7-flash`
 
 **Repo Map format:**
 ```markdown
@@ -266,7 +266,7 @@ High-risk checkpoint: [yes | no — if yes, describe what triggers a stop]
 - bash: `deny`
 - network: `deny`
 
-**Model:** `gemini-2.5-flash`
+**Model:** `gemini-3.7-flash`
 
 **Does not:** Write files. Execute commands. Make routing decisions.
 
@@ -290,7 +290,7 @@ When the orchestrator receives a GoalGraph, it delegates tasks in dependency ord
 - bash: `deny`
 - network: `deny`
 
-**Model:** `gemini-2.5-pro`
+**Model:** `gemini-3.1-pro-preview`
 
 **Technical Plan format:**
 ```markdown
@@ -327,7 +327,7 @@ When the orchestrator receives a GoalGraph, it delegates tasks in dependency ord
 - bash: `allow` (build, test, and lint commands only)
 - network: `deny`
 
-**Model:** `gemini-2.5-flash`
+**Model:** `gemini-3.7-flash`
 
 **Pre-implementation checklist:**
 1. Create a Git Worktree: `git worktree add ../<branch>-session <branch>`
@@ -368,7 +368,7 @@ When the orchestrator receives a GoalGraph, it delegates tasks in dependency ord
 - bash: `allow` (test commands only)
 - network: `deny`
 
-**Model:** `gemini-2.5-flash`
+**Model:** `gemini-3.7-flash`
 
 **Coverage Summary format:**
 ```markdown
@@ -397,7 +397,7 @@ When the orchestrator receives a GoalGraph, it delegates tasks in dependency ord
 - bash: `allow` (git diff, git status, test commands)
 - network: `deny`
 
-**Model:** `gemini-2.5-pro`
+**Model:** `gemini-3.1-pro-preview`
 
 **Review Axes & Gates:**
 - **Simplicity Gate**: Flag overcomplicated/speculative code. Ask: "Would a senior engineer say this is overbuilt?"
@@ -455,7 +455,7 @@ When the orchestrator receives a GoalGraph, it delegates tasks in dependency ord
 - bash: `deny`
 - network: `deny`
 
-**Model:** `gemini-2.5-flash`
+**Model:** `gemini-3.7-flash`
 
 ---
 

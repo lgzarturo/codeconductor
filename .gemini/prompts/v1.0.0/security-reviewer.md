@@ -5,9 +5,9 @@ description:
   authority on auth, payment, credentials, injection, and supply-chain paths.
 effort: high
 mode: subagent
-model: "{{MODEL}}"
+model: "gemini-3.1-pro-preview"
 temperature: 0.1
-tools: Read, Glob, Grep, Bash
+tools: view_file, list_dir, search_grep, execute_command
 permission:
   read: allow
   edit: deny
@@ -26,12 +26,12 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Primary — deep security reasoning |
-| OpenCode Go | {{MODEL_OPENCODE}} | Primary |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-opus-5 | Primary — deep security reasoning |
+| OpenCode Go | opencode-go/deepseek-v4-pro | Primary |
+| Gemini | gemini-3.1-pro-preview | Alternative |
+| Codex | gpt-5.6-sol | Alternative |
+| Cursor | claude-opus-5-thinking-high | Primary |
+| Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 
 # Agent Contract — security-reviewer v1.0.0
 

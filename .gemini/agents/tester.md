@@ -4,8 +4,9 @@ description:
   Generates unit, integration, and contract tests that verify the acceptance
   criteria — writes tests that fail first, then confirms they pass after
   implementation.
+effort: medium
 mode: subagent
-model: "gemini-2.5-flash"
+model: "gemini-3.7-flash"
 temperature: 0.1
 tools: view_file, write_file, patch_file, execute_command, list_dir, search_grep
 permission:
@@ -34,7 +35,7 @@ permission:
   grep: allow
   skill: ask
 ---
-# Agent Contract — tester v0.5.0
+# Agent Contract — tester v1.0.0
 
 ## Role
 
@@ -257,6 +258,22 @@ pytest | go test ./... | ...]
 
 **Suite Result**: [X passed, Y failed] **Failing Tests**: [list or "none"]
 ```
+
+---
+
+## CCEP-1 structured output
+
+When invoked via the CodeConductor Execution Protocol (`test` or `test-plan`
+phase), return **valid JSON only** matching `agent-output` and serialize the
+Test Report / matrix into `artifacts`:
+
+```json
+{ "status": "success", "artifacts": [{ "type": "test-report", "path": "" }], "next_actions": [] }
+```
+
+For a `tdd-cycle` red-state phase, `status` must reflect that tests were written
+and confirmed failing; list the failing test paths in `artifacts` so the
+`implementer` can pick them up.
 
 ---
 

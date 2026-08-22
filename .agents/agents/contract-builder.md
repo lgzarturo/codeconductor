@@ -3,8 +3,9 @@ name: contract-builder
 description:
   Defines API contracts, data shapes, and behavior specs before implementation —
   OpenAPI, JSON Schema, or TypeScript interfaces as source of truth.
+effort: high
 mode: subagent
-model: "gemini-2.5-pro"
+model: "gemini-3.1-pro-preview"
 temperature: 0.1
 tools: view_file, list_dir, grep_search
 permission:
@@ -24,7 +25,7 @@ permission:
   websearch: deny
   skill: ask
 ---
-# Agent Contract — contract-builder v0.5.0
+# Agent Contract — contract-builder v1.0.0
 
 ## Role
 
@@ -82,6 +83,21 @@ Produce one or more of:
 
 - [ ] [test description — request shape, response shape, error cases]
 ```
+
+---
+
+## CCEP-1 structured output
+
+When invoked via the CodeConductor Execution Protocol (`api-contract` phase),
+return **valid JSON only** matching `agent-output` and serialize the contract
+spec into `artifacts`:
+
+```json
+{ "status": "success", "artifacts": [{ "type": "api-contract", "path": "openapi.yaml" }], "next_actions": [] }
+```
+
+If contracts are ambiguous, set `status` to `needs_clarification` (or return the
+question in `next_actions`) rather than inventing shapes.
 
 ---
 

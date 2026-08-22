@@ -9,8 +9,8 @@ matrix.
 
 It is not a prompt collection. The CLI installs versioned agent contracts,
 routing rules, skills, policy templates, and workflow commands into a target
-repository. Product OS modules also exist in the repository, but remain
-implemented-unreleased until a package version that includes them is published.
+repository. Product OS modules also exist in the repository. They are documented as
+**v1.0.0** and remain unpublished while `package.json` is `0.5.0`.
 
 The output is commitable, reviewable, and reproducible — identical on any
 machine, for any team member, across time.
@@ -19,13 +19,23 @@ machine, for any team member, across time.
 
 ## Core Pipeline
 
-**Status:** The scan/classify/render pipeline is implemented by the CLI.
-The separate 8-phase multi-agent workflow loop remains an experimental,
-library-only API.
+**Status:** Shipped in published `0.5.0`. The scan/classify/render/merge/doctor
+pipeline is implemented by the CLI (`src/cli/`, `src/commands/`).
 
 ```text
 scan → classify → resolve preset → render → merge → validate
 ```
+
+### Orchestration loops
+
+Three loops exist; they are not aliases.
+
+| Loop | Role | Status |
+| ---- | ---- | ------ |
+| **CCEP** | Canonical consumer workflow. Slash commands compile through profiles in `src/core/ccep/`. Prefer **iterative**, **triage**, and **handoff**; other commands are supporting profiles. | Shipped in 0.5.0 |
+| **OpenSpec** | Delivery loop **and** backlog tool: `openspec validate/scan/plan/status/next` plus `/cc-openspec`. Phases: validate-backlog → discover → design → test → implement → review. | Shipped in 0.5.0 |
+| **`runWorkflowPipeline`** | Experimental 8-phase library API (`intake → … → compact`). Not a CLI runtime. | Experimental |
+| **Product OS / goal** | `goal`, `ingest`, `product`, `orchestrate`, `impact`, `verify` | Documented as **v1.0.0**, implemented-unreleased |
 
 ### 1. Scan
 
@@ -70,7 +80,7 @@ known commands registered.
 
 ### Project Scanner
 
-**Status:** Planned for v0.2.0
+**Status:** Shipped (published 0.5.0)
 
 Traverses the project directory and collects raw detection signals.
 
@@ -81,7 +91,7 @@ Traverses the project directory and collects raw detection signals.
 
 ### Stack Detector
 
-**Status:** Planned for v0.2.0
+**Status:** Shipped (published 0.5.0)
 
 Evaluates signals and computes a confidence score for each known stack.
 
@@ -93,7 +103,7 @@ Evaluates signals and computes a confidence score for each known stack.
 
 ### Preset Resolver
 
-**Status:** Planned for v0.2.0
+**Status:** Shipped (published 0.5.0)
 
 Maps a detected stack to a registered preset.
 
@@ -103,7 +113,7 @@ Maps a detected stack to a registered preset.
 
 ### Target Renderer
 
-**Status:** Planned
+**Status:** Shipped (published 0.5.0) as preset manifests + template render in `file-copier.ts`
 
 Processes preset templates and produces a concrete file plan.
 
@@ -113,7 +123,7 @@ Processes preset templates and produces a concrete file plan.
 
 ### Safe Merger
 
-**Status:** Planned for v0.2.0
+**Status:** Shipped (published 0.5.0) in `src/core/filesystem/safe-merger.ts`. Directory copies for runner commands/skills use `overwrite`; maintainer-only Cursor stubs are skipped (see `isMaintainerReservedDest`).
 
 Applies the file plan to the project without clobbering user content.
 
@@ -126,7 +136,7 @@ Applies the file plan to the project without clobbering user content.
 
 ### Doctor
 
-**Status:** Planned for v0.2.0
+**Status:** Shipped (published 0.5.0)
 
 Validates the installed configuration.
 
@@ -141,9 +151,12 @@ Validates the installed configuration.
 
 | Target   | Status                | Notes                                 |
 | -------- | --------------------- | ------------------------------------- |
-| OpenCode | Implemented in v0.1.0 | Manual preset support.                |
-| Claude   | Implemented in v0.1.0 | Manual Claude Code-compatible preset. |
-| Codex    | Implemented in v0.1.x | Manual Codex CLI-compatible preset.   |
+| OpenCode | Shipped (0.5.0) | `install preset --target opencode` |
+| Claude   | Shipped (0.5.0) | `install preset --target claude`   |
+| Codex    | Shipped (0.5.0) | `install preset --target codex`    |
+| Cursor   | Shipped (0.5.0) | `install preset --target cursor`   |
+| Gemini   | Shipped (0.5.0) | `install preset --target gemini`   |
+| AGY      | Shipped (0.5.0) | `install preset --target agy`      |
 
 Target-specific rendering means the same preset content is rendered differently
 per target. Agent contracts that work for OpenCode's `AGENTS.md` format are not
@@ -157,10 +170,11 @@ emit an explicit compatibility warning rather than silently dropping the rule.
 
 ## CLI Internal Structure
 
-Planned for v0.2.0. TypeScript, Node.js runtime, distributed via `npx`.
+Shipped. TypeScript, Bun (Node ≥20.11 compatible), distributed via `npx`.
+Layout lives under `src/`, not a separate `packages/codeconductor-cli` tree.
 
 ```text
-packages/codeconductor-cli/src/
+src/
   commands/
     init.ts
     doctor.ts
@@ -231,7 +245,7 @@ specified preset at full confidence.
 
 **Deterministic detection first.** File presence and dependency keys are
 evaluated before any heuristic or structural analysis. LLM enrichment is not
-part of v0.1.0 detection.
+part of detection.
 
 **Explicit configuration.** Every installed file is committed to the repository.
 There are no hidden or runtime-generated configurations.
@@ -275,7 +289,8 @@ updates.
 
 **Policy files.** **Status:** Implemented as declarative configuration.
 `policy.yml` defines what each agent should be allowed to read, write, and
-execute. CodeConductor does not enforce this file at runtime in v0.1.x.
+execute. CodeConductor does not enforce this file as an OS sandbox; enforcement
+depends on the target runner. This is not a runtime permission kernel.
 
 **Policy Compiler.** **Status:** Planned. The policy compiler is not implemented
 yet. Current policies are declarative and depend on target-tool support.

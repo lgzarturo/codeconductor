@@ -5,9 +5,9 @@ description:
   actually implemented — reads the diff first, writes only what changed.
 effort: low
 mode: subagent
-model: "{{MODEL}}"
+model: "gemini-3.7-flash"
 temperature: 0.1
-tools: Read, Write, Edit, Glob, Grep
+tools: view_file, write_file, patch_file, list_dir, search_grep
 permission:
   read: allow
   edit:
@@ -30,12 +30,12 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Fast — documentation |
-| OpenCode Go | {{MODEL_OPENCODE}} | Best — efficient docs |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-haiku-4-5-20251001 | Fast — documentation |
+| OpenCode Go | opencode-go/qwen3.7-plus | Best — efficient docs |
+| Gemini | gemini-3.7-flash | Alternative |
+| Codex | gpt-5.6-luna | Alternative |
+| Cursor | claude-4.5-haiku-thinking | Primary |
+| Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 
 # Agent Contract — docs v1.0.0
 

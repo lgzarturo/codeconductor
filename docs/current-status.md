@@ -15,8 +15,9 @@ entry does not by itself mean that version was published.
 | SEO audit / `llms.txt` commands | shipped | yes |
 | Scorecard and outcome evaluation | shipped | yes |
 | CCEP parse/profile/resolve/compile/validate/evaluate | shipped | yes |
-| Product graph, impact, orchestrate, verify | implemented, unreleased | no |
-| Goal DAG planning/runtime | implemented, unreleased | no |
+| OpenSpec loop (`openspec` CLI + `/cc-openspec`) | shipped | yes |
+| Product graph, impact, orchestrate, verify | implemented, unreleased — **v1.0.0** | no |
+| Goal DAG planning/runtime | implemented, unreleased — **v1.0.0** | no |
 | 8-phase `runWorkflowPipeline` | experimental library API | no CLI runtime |
 | Stack-specific skill selection | shipped | yes |
 | Full stack-specific asset pruning/replacement | planned | no |
@@ -32,7 +33,9 @@ entry does not by itself mean that version was published.
 
 ## Release documentation
 
-- `docs/v0.4.0-release-notes.md` and `docs/v0.5.0-release-notes.md` describe
-  published milestones.
-- `docs/v1.0.0-release-notes.md` is a draft for implemented-but-unreleased
-  Product OS work while `package.json` remains below `1.0.0`.
+The next documented release is **v1.0.0** (Product OS). Historical notes for
+0.4.0 and 0.5.0 remain in `docs/v0.4.0-release-notes.md` and
+`docs/v0.5.0-release-notes.md`.
+
+- [docs/v1.0.0-release-notes.md](v1.0.0-release-notes.md) — draft while
+  `package.json` remains `0.5.0`

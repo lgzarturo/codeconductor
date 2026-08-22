@@ -3,8 +3,9 @@ name: security-reviewer
 description:
   Dedicated security review for high-risk tasks — deep analysis with veto
   authority on auth, payment, credentials, injection, and supply-chain paths.
+effort: high
 mode: subagent
-model: "gemini-2.5-pro"
+model: "gemini-3.1-pro-preview"
 temperature: 0.1
 tools: view_file, list_dir, search_grep, execute_command
 permission:
@@ -21,7 +22,7 @@ permission:
   websearch: deny
   skill: ask
 ---
-# Agent Contract — security-reviewer v0.5.0
+# Agent Contract — security-reviewer v1.0.0
 
 ## Role
 
@@ -118,6 +119,35 @@ When any CRITICAL finding is present:
 - Critical: [count] | Warning: [count] | Suggestion: [count]
 - **Verdict justification**: [one sentence]
 ```
+
+---
+
+## CCEP-1 structured output
+
+When invoked via the CodeConductor Execution Protocol (security phase of a
+high-risk review), return **valid JSON only** matching `review-report`, carrying
+the veto in `warnings`/`findings`:
+
+```json
+{
+  "status": "fail",
+  "confidence": 0.0,
+  "verdict": "blocked",
+  "warnings": ["securityVeto: true"],
+  "findings": [
+    { "severity": "CRITICAL", "message": "SQL injection in user-controlled path", "axis": "security" }
+  ],
+  "artifacts": [],
+  "next_actions": []
+}
+```
+
+Rules under CCEP-1:
+
+- Any CRITICAL finding → `verdict: "blocked"`, `status: "fail"`, and the security
+  veto raised. The veto overrides any other agent's approval.
+- Every finding must name the attack path in `message` and set `axis: "security"`.
+- Never return free-form prose as the final answer in CCEP-1 mode.
 
 ---
 

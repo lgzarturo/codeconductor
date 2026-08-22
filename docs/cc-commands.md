@@ -1,6 +1,13 @@
 # CodeConductor CLI Commands Reference
 
-Reference documentation for all available commands in the CodeConductor CLI.
+Reference for the CodeConductor CLI. Published package is **0.5.0**. Commands
+under Product OS (`goal`, `ingest`, `product`, `orchestrate`, `impact`,
+`verify`) are documented as **v1.0.0** — present in this repo via
+`bun run dev`, not in the published npm package.
+
+**Loops:** CCEP slash commands are the canonical consumer workflow (prefer
+`/cc-iterative`, `/cc-triage`, `/cc-handoff`). OpenSpec is a delivery loop
+and the backlog tool. `runWorkflowPipeline` is experimental library-only.
 
 ---
 
@@ -569,6 +576,9 @@ remains `pending`.
 
 ### `npx cc-codeconductor openspec <subcommand>`
 
+OpenSpec is a **delivery loop** (validate-backlog → discover → design → test →
+implement → review) and the **backlog** tool for `BACKLOG.md`.
+
 OpenSpec backlog delivery: validate `BACKLOG.md`, scan changes, plan TaskCards,
 and return the next executable card.
 
@@ -646,8 +656,19 @@ directly in the conversation.
 
 ### Cursor slash commands
 
-After `install preset --target cursor`, the following commands are available in
-`.cursor/commands/cc/`:
+After `install preset --target cursor`, commands live in `.cursor/commands/cc/`.
+Dogfooding this repository also keeps maintainer-only `/cc-self-review` stubs.
+
+Primary CCEP loop (use these first):
+
+| Command | Description |
+| ------- | ----------- |
+| `/cc-iterative` / `/cc:iterative` | Wayfinding, grilling, contracts, TDD, council, docs |
+| `/cc-triage` / `/cc:triage` | Classify request → destination workflow |
+| `/cc-handoff` / `/cc:handoff` | Compact session to `.codeconductor/` |
+| `/cc-openspec` | OpenSpec delivery loop + backlog |
+
+Other installed commands:
 
 | Command | Description |
 | ------- | ----------- |
@@ -660,14 +681,10 @@ After `install preset --target cursor`, the following commands are available in
 | `/cc-api-contract` | API contract definition |
 | `/cc-db-migration` | Database migration workflow |
 | `/cc-pagespeed` | PageSpeed audit |
-| `/cc-openspec` | OpenSpec backlog workflow |
 | `/cc-scorecard` | Agent scorecard evaluation |
 | `/cc-council` | Council-driven SDD/TDD/review |
-| `/cc-iterative` / `/cc:iterative` | Wayfinding, grilling, contracts, TDD, council, docs |
 | `/cc-explore` / `/cc:explore` | Repo map and next-command suggestion |
-| `/cc-triage` / `/cc:triage` | Classify request → destination workflow |
 | `/cc-prototype` / `/cc:prototype` | Disposable spike (isolated worktree) |
-| `/cc-handoff` / `/cc:handoff` | Compact session to `.codeconductor/` |
 | `/cc-clarify` / `/cc:clarify` | Re-explain last deliverable |
 
 Use `/multitask` before parallel steps (e.g. review + docs) for concurrent

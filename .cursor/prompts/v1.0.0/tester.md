@@ -6,9 +6,9 @@ description:
   implementation.
 effort: medium
 mode: subagent
-model: "{{MODEL}}"
+model: "composer-2.5-fast"
 temperature: 0.1
-tools: Read, Write, Edit, Bash, Glob, Grep
+tools: read, write, edit, shell, find, grep
 permission:
   read: allow
   edit:
@@ -39,12 +39,12 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Default — test generation |
-| OpenCode Go | {{MODEL_OPENCODE}} | Best — balanced reasoning |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-sonnet-5 | Default — test generation |
+| OpenCode Go | opencode-go/minimax-m3 | Best — balanced reasoning |
+| Gemini | gemini-3.7-flash | Alternative |
+| Codex | gpt-5.6-terra | Alternative |
+| Cursor | composer-2.5-fast | Primary |
+| Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 
 # Agent Contract — tester v1.0.0
 

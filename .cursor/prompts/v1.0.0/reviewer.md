@@ -6,9 +6,9 @@ description:
   CRITICAL, WARNING, or SUGGESTION.
 effort: high
 mode: subagent
-model: "{{MODEL}}"
+model: "claude-sonnet-5-thinking-high"
 temperature: 0.1
-tools: Read, Glob, Grep, Bash
+tools: read, find, grep, shell
 permission:
   read: allow
   edit: deny
@@ -27,12 +27,12 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Default — code review |
-| OpenCode Go | {{MODEL_OPENCODE}} | Best — efficient reviews |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-opus-5 | Default — code review |
+| OpenCode Go | opencode-go/qwen3.7-plus | Best — efficient reviews |
+| Gemini | gemini-3.1-pro-preview | Alternative |
+| Codex | gpt-5.6-sol | Alternative |
+| Cursor | claude-sonnet-5-thinking-high | Primary |
+| Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 
 # Agent Contract — reviewer v1.0.0
 

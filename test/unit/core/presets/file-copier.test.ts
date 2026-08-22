@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import {
   applySingleFile,
   copyFromManifest,
+  isMaintainerReservedDest,
   listFilesRecursive,
   mergeDeep,
   renderTemplate,
@@ -188,6 +189,28 @@ describe('core/presets/file-copier', () => {
       const result = await applySingleFile(src, dest, 'overwrite', true, false, false, null, 'en', dir);
       expect(result.action).toBe('written');
       expect(await readFile(dest, 'utf-8')).toBe('NEW');
+    });
+
+    test('does not overwrite maintainer-reserved Cursor skill stubs even with force', async () => {
+      const src = await srcFile('FROM-PRESET');
+      const dir = await tmp('dst-');
+      const dest = join(dir, '.cursor', 'commands', 'cc-self-review.md');
+      await mkdir(join(dir, '.cursor', 'commands'), { recursive: true });
+      await writeFile(dest, 'MAINTAINER');
+      expect(isMaintainerReservedDest(dir, dest)).toBe(true);
+      const result = await applySingleFile(
+        src,
+        dest,
+        'overwrite',
+        true,
+        false,
+        false,
+        null,
+        'en',
+        dir
+      );
+      expect(result.action).toBe('skipped');
+      expect(await readFile(dest, 'utf-8')).toBe('MAINTAINER');
     });
 
     test('force overwrite rejects a destination symlink and preserves its target', async () => {

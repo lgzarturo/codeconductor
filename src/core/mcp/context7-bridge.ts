@@ -46,7 +46,42 @@ export interface Context7BridgeConfig {
   baseUrl?: string;
 }
 
-const DEFAULT_BASE_URL = 'https://api.context7.com/v1';
+export const DEFAULT_CONTEXT7_BASE_URL = 'https://api.context7.com/v1';
+const ALLOWED_CONTEXT7_HOST = 'api.context7.com';
+
+/**
+ * Pin Context7 traffic to the official HTTPS origin. Custom `baseUrl` values
+ * that point at other hosts (or http) are rejected so they cannot be used as
+ * an SSRF trampoline; `fetch` also uses `redirect: 'error'`.
+ */
+export function resolveContext7BaseUrl(raw: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Context7Error(`Invalid Context7 base URL: ${raw}`, 'INVALID_BASE_URL');
+  }
+  if (parsed.protocol !== 'https:') {
+    throw new Context7Error(
+      `Context7 base URL must use https: ${raw}`,
+      'INVALID_BASE_URL',
+    );
+  }
+  if (parsed.username !== '' || parsed.password !== '') {
+    throw new Context7Error(
+      `Context7 base URL must not include credentials: ${parsed.hostname}`,
+      'INVALID_BASE_URL',
+    );
+  }
+  if (parsed.hostname !== ALLOWED_CONTEXT7_HOST) {
+    throw new Context7Error(
+      `Context7 base URL host must be ${ALLOWED_CONTEXT7_HOST}`,
+      'INVALID_BASE_URL',
+    );
+  }
+  const path = parsed.pathname.replace(/\/$/, '') || '';
+  return `${parsed.origin}${path}`;
+}
 
 // ─── Internal API types ───────────────────────────────────────────────────────
 
@@ -69,8 +104,8 @@ type QueryDocsResponse = z.infer<typeof Context7DocResultSchema>;
 // ─── Factory ──────────────────────────────────────────────────────────────────
 
 export function createContext7Bridge(config: Context7BridgeConfig = {}) {
+  const baseUrl = resolveContext7BaseUrl(config.baseUrl ?? DEFAULT_CONTEXT7_BASE_URL);
   const apiKey = config.apiKey ?? process.env.CONTEXT7_API_KEY;
-  const baseUrl = config.baseUrl ?? DEFAULT_BASE_URL;
 
   if (!apiKey) {
     throw new Context7Error(
@@ -86,6 +121,7 @@ export function createContext7Bridge(config: Context7BridgeConfig = {}) {
     const url = `${baseUrl}${path}`;
     const response = await fetch(url, {
       method: 'POST',
+      redirect: 'error',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,

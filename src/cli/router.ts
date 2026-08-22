@@ -178,7 +178,7 @@ export function getHelp(): string {
 
 Usage: npx cc-codeconductor <command> [options]
 
-Commands:
+Published commands (package ${packageJson.version}):
   init                    Initialize CodeConductor in a project
   detect                  Detect project stack and recommended presets
   install council         Install generated council spec files to runner targets
@@ -191,15 +191,17 @@ Commands:
   help                    Show general CLI usage and command list
   cc-help                 Show preset inventory (skills, subagents, commands)
   debt-harvest / harvest  Scan source files for deferred debt items
+  ccep                    Compile and evaluate CCEP workflow contracts
+  openspec                OpenSpec loop: backlog + delivery (validate/scan/plan/status/next)
+  scorecard               Record and aggregate evaluation outcomes
+
+v1.0.0 (in this repo, not in published ${packageJson.version}):
   goal / cc-goal          Plan goal into task graph with dependencies
   ingest                  Ingest repo knowledge into product graph
   product                 Explore product graph and memory
   orchestrate             Runtime orchestrator for goal execution
   impact                  Analyze change impact on product graph
   verify                  Verify task completion with evidence
-  ccep                    Compile and evaluate CCEP workflow contracts
-  openspec                Validate and execute OpenSpec backlog workflows
-  scorecard               Record and aggregate evaluation outcomes
 
 Options:
   --help, -h              Show this help message
@@ -221,13 +223,14 @@ Stack-specific presets (v0.4.0, registered in preset-registry):
   Detection wires matching specialized skills onto the generic target workflow.
   Full stack-specific asset pruning/replacement is not implemented yet.
 
-Workflow Loop Core (v0.4.0, experimental):
-  runWorkflowPipeline() in src/core/pipeline/workflow-loop.ts runs the
-  experimental 8-phase loop (intake -> structure -> design -> test ->
-  implement -> validate -> council -> compact) with wall-clock,
-  files-modified and lines-changed guardrails and STOP gates after Design
-  and Council. It is library-only today — not a shipped CLI runtime; prefer
-  CCEP profiles and slash-command workflows for production orchestration.
+Orchestration loops:
+  CCEP slash commands are the canonical consumer loop (profiles in
+  src/core/ccep/). Prefer /cc-iterative, /cc-triage, and /cc-handoff;
+  other CCEP commands are supporting profiles.
+  OpenSpec is a delivery loop (CLI openspec + /cc-openspec) on top of
+  BACKLOG.md — not only a scanner.
+  runWorkflowPipeline() in src/core/pipeline/workflow-loop.ts is an
+  experimental library-only 8-phase loop — not a shipped CLI runtime.
 
 Council consensus v0.4.0:
   Per-agent confidence thresholds (< 0.6 or average < 0.7 escalate)

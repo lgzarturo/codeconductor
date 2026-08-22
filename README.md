@@ -13,97 +13,52 @@ contracts, task cards, and risk-based routing.
 >
 > ## Current Scope
 >
-> What works today:
+> Canonical matrix: [docs/current-status.md](docs/current-status.md).
+> Published package is **0.5.0**. The next documented release is **v1.0.0**
+> (Product OS). This repository: `bun run dev …` (not `npx`) while iterating.
+>
+> Published in 0.5.0:
 >
 > - `npx cc-codeconductor init` — detects project stack, writes
 >   `.codeconductor/config.yml`, copies `council.yml` and `policy.yml` into
 >   `.codeconductor/presets/`
-> - `npx cc-codeconductor install council --target <opencode|claude|codex|agy|all>` —
->   generates and writes preset files; supports `--global` to install to
->   `~/.opencode/`, `~/.claude/`, `~/.codex/`, `~/.agents/`
-> - `npx cc-codeconductor install lsp --target <opencode|claude|codex|gemini|cursor|agy|all>` —
->   installs LSP servers and configures AI coding tools; auto-detects project
->   languages or use `--lang` to override
-> - `npx cc-codeconductor detect` — detects project stack and recommends presets
-> - `npx cc-codeconductor doctor` — validates configuration and installed runner
->   directories
-> - `npx cc-codeconductor update` — re-applies the council preset for the configured
->   target
-> - `npx cc-codeconductor seo audit --url <url>` — runs a comprehensive SEO audit
->   on a single page (meta tags, schema.org, GEO readiness) and generates a
->   markdown report
-> - `npx cc-codeconductor seo audit --sitemap <url>` — batch audits all URLs from
->   a sitemap.xml with rate limiting and SSRF prevention
-> - `npx cc-codeconductor seo llms --sitemap <url>` — generates a `llms.txt` file
->   for AI-search readiness from sitemap content
-> - `npx cc-codeconductor help` / `--help` — general CLI usage and command list
-> - `npx cc-codeconductor cc-help` — preset inventory (skills, subagents,
->   commands) for the active or specified target
-> - `npx cc-codeconductor debt-harvest` (alias: `harvest`) — scans source files
->   for `// defer` comments and writes `.codeconductor/debt-ledger.md`
-> - `npx cc-codeconductor goal "<objective>"` (alias: `cc-goal`) — decomposes an
->   objective into a dependency-ordered task graph, writes
->   `.codeconductor/current-goal.yml`
-> - `/cc-pagespeed --url <url>` — audits web performance using the PageSpeed
->   Insights API; applies the 80/20 principle to produce a prioritized report of
->   Core Web Vitals (LCP, TBT, CLS, FCP, TTFB) with framework-specific fixes;
->   requires `PAGESPEED_API_KEY` env var for full CrUX field data (optional but
->   recommended)
-> - `npx cc-codeconductor install preset --target <opencode|claude|codex|agy|all>` —
->   installs the full preset (agents, prompts, skills, commands, settings) for the
->   chosen runner; use `--locale=es` to inject Spanish-aware instructions into
->   agent files, or rely on the locale saved during `init`
-> - **Stack-specific presets (v0.4.0)**: `ts-next-drizzle`, `spring-kotlin-jpa`,
->   `laravel-tall`, `python-data-api` — bundle `architect` + `implementer`
->   contracts tuned to a single framework so `install preset` drops in the right
->   defaults for that stack.
-> - **9 specialized skills (v0.4.0)**: `drizzle-schema-architect`,
->   `tailwind-responsive-auditor`, `seo-analytics-injector`,
->   `jpa-nplusone-detector`, `spring-auth-auditor`, `livewire-alpine-bridge`,
->   `fastapi-pydantic-strict`, `tdd-mutation-tester`, `auth-token-inspector` —
->   loaded automatically by the matching preset.
-> - **Workflow Loop Core (v0.4.0, experimental)** — library-only 8-phase pipeline
->   (`intake → structure → design → test → implement → validate → council →
->   compact`) with operational guardrails (wall-clock timeout, max files
->   modified, max lines changed) and human-in-the-loop STOP gates after Design
->   and Council Verdict. Prefer CCEP slash-command workflows for production.
-> - **Council consensus v0.4.0** — agent confidence thresholds
->   (`< 0.6` per-agent or `< 0.7` average escalates) and a `complianceVeto`
->   channel that overrides majority the same way `securityVeto` does.
-> - **Goal orchestration (v0.4.0)** — `goal` planner writes
->   `.codeconductor/current-goal.yml`; the orchestrator delegates tasks in
->   dependency order and blocks dependents when a prerequisite is `blocked`.
-> - **Memory compression + escalation emitter (v0.4.0)** — Phase 5 memory index
->   + token budget hook keeps inter-agent context below the configured budget;
->   the loop controller emits escalation reports when guardrails fire.
-> - **Parallel subagents (v0.4.0)** — risk-based routing policy v0.4.0 enables
->   parallel execution for eligible agent sequences (architect + implementer
->   pattern, council verdict fan-out).
-> - **Product Operating System (v1.0.0)** — typed product graph in
->   `.codeconductor/product-graph.json`, `cc ingest`, `cc product`, `cc orchestrate`,
->   `cc impact`, `cc verify`, episodic memory (`events.jsonl`), and feedback loop
-> - Manual presets for OpenCode, Claude Code, and Codex
-> - Versioned Agent Contracts
-> - Routing Policy documentation
-> - Task Card, Scorecard, and workflow templates
-> - Spring Boot/Kotlin and Python/Django workflow guidance
+> - `npx cc-codeconductor install council --target <opencode|claude|codex|agy|all>`
+> - `npx cc-codeconductor install preset --target <opencode|claude|codex|gemini|cursor|agy|all>`
+> - `npx cc-codeconductor install lsp --target <…>`
+> - `npx cc-codeconductor detect` / `doctor` / `update`
+> - `npx cc-codeconductor seo audit` / `seo llms` (SSRF-guarded fetch)
+> - `npx cc-codeconductor help` / `cc-help`
+> - `npx cc-codeconductor debt-harvest` (alias: `harvest`)
+> - `npx cc-codeconductor ccep …` — CCEP is the canonical consumer workflow loop
+> - `npx cc-codeconductor openspec …` — OpenSpec is a **delivery loop** and the
+>   backlog tool (`validate` / `scan` / `plan` / `status` / `next`)
+> - `npx cc-codeconductor scorecard …`
+> - Slash commands after `install preset` — prefer `/cc-iterative`, `/cc-triage`,
+>   `/cc-handoff`; `/cc-openspec` runs the OpenSpec loop
+> - Stack-specific skill selection (`ts-next-drizzle`, `spring-kotlin-jpa`,
+>   `laravel-tall`, `python-data-api`)
+> - Council consensus: confidence thresholds + `securityVeto` / `complianceVeto`
 >
-> See [docs/v0.4.0-release-notes.md](docs/v0.4.0-release-notes.md) for the
-> full v0.4.0 feature breakdown.
+> Documented as **v1.0.0** (in this repo, not in published 0.5.0):
+>
+> - `goal` / `ingest` / `product` / `orchestrate` / `impact` / `verify`
+> - Product graph in `.codeconductor/product-graph.json`
+> - See [docs/v1.0.0-release-notes.md](docs/v1.0.0-release-notes.md)
+>
+> Experimental (library only, not a CLI runtime):
+>
+> - `runWorkflowPipeline()` — 8-phase loop in `src/core/pipeline/workflow-loop.ts`
 >
 > What does not exist yet:
 >
-> - Runtime sandbox enforcement
-> - Policy compiler
-> - Automated agent evaluation
-> - Safe Merger
+> - Runtime sandbox / OS-level isolation
+> - Policy compiler / uniform target enforcement
+> - Full stack-specific asset pruning
 >
-> Security note:
->
-> CodeConductor currently provides declarative policies and documented
-> guardrails. It does not yet enforce OS-level isolation, shell sandboxing, or
-> runtime permission boundaries by itself. Treat all agent execution as
-> dependent on the capabilities and limitations of the target tool.
+> Security note: policies are declarative. Agent execution depends on the
+> target runner. `install preset --target cursor` overwrites runner command
+> dirs; maintainer-only stubs (`cc-self-review`, `cc-update-preset-models`)
+> are skipped so this repo can dogfood `install preset`.
 
 ---
 
@@ -542,19 +497,11 @@ codeconductor/
 
 ## Roadmap
 
-Current package status and the distinction between shipped,
-implemented-unreleased, experimental, and planned capabilities are tracked in
-[docs/current-status.md](docs/current-status.md).
+Published package: **0.5.0**. The next documented release is **v1.0.0**
+(Product OS). Details: [docs/current-status.md](docs/current-status.md) and
+[docs/v1.0.0-release-notes.md](docs/v1.0.0-release-notes.md).
 
-| Version    | Focus                                                       |
-| ---------- | ----------------------------------------------------------- |
-| **v0.2.0** | **CLI: init, detect, install, doctor, update — shipped** ✅ |
-| v0.3.0     | Next.js, FastAPI, generic presets, monorepo support         |
-| **v0.4.0** | **Workflow Loop Core, stack-specific presets, 9 specialized skills, confidence thresholds + compliance veto in council consensus, goal orchestration, memory compression — shipped** ✅ |
-| v0.5.0     | Scorecard CLI, prompt contracts v0.5.0 (Evaluation gate, 3 new agents, Grok fallback) — shipped ✅ |
-| v1.0.0     | Product OS modules implemented in repository; release remains unpublished while package version is `0.5.0` |
-
-See [ROADMAP.md](ROADMAP.md) for details.
+See [ROADMAP.md](ROADMAP.md) for historical notes.
 
 ---
 

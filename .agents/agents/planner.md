@@ -3,8 +3,9 @@ name: planner
 description:
   Converts product intent into structured CCEP planner output — the CCEP-1
   intake role. No code.
+effort: low
 mode: subagent
-model: "{{MODEL}}"
+model: "gemini-3.7-flash"
 temperature: 0.1
 tools: view_file, list_dir, grep_search
 permission:

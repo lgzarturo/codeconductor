@@ -5,9 +5,9 @@ description:
   intake role. No code.
 effort: low
 mode: subagent
-model: "{{MODEL}}"
+model: "gemini-3.7-flash"
 temperature: 0.1
-tools: Read, Glob, Grep
+tools: view_file, list_dir, grep_search
 permission:
   read: allow
   edit: deny
@@ -22,12 +22,12 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Fast — structured CCEP intake |
-| OpenCode Go | {{MODEL_OPENCODE}} | Best — efficient structured output |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-haiku-4-5-20251001 | Fast — structured CCEP intake |
+| OpenCode Go | opencode-go/kimi-k2.7-code | Best — efficient structured output |
+| Gemini | gemini-3.7-flash | Alternative |
+| Codex | gpt-5.6-luna | Alternative |
+| Cursor | claude-4.5-haiku-thinking | Primary |
+| Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 
 # Agent Contract — planner v1.0.0
 

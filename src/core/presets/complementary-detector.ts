@@ -21,6 +21,7 @@ export function detectComplementaryTools(): ComplementaryToolsStatus {
 
   const isCmdAvailable = (cmd: string): boolean => {
     try {
+      // `cmd` is always a literal from detectComplementaryTools, never user input.
       const command = process.platform === 'win32' ? `where ${cmd}` : `which ${cmd}`;
       execSync(command, { stdio: 'ignore', timeout: 1000 });
       return true;

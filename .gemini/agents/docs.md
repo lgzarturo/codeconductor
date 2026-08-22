@@ -3,8 +3,9 @@ name: docs
 description:
   Updates README, OpenAPI specs, ADRs, and CHANGELOG to reflect what was
   actually implemented — reads the diff first, writes only what changed.
+effort: low
 mode: subagent
-model: "gemini-2.5-flash"
+model: "gemini-3.7-flash"
 temperature: 0.1
 tools: view_file, write_file, patch_file, list_dir, search_grep
 permission:
@@ -25,7 +26,7 @@ permission:
   websearch: deny
   skill: deny
 ---
-# Agent Contract — docs v0.5.0
+# Agent Contract — docs v1.0.0
 
 ## Role
 
@@ -187,6 +188,21 @@ The ADR number must be sequential. Read `docs/adr/` to find the last number.
 - [something that should be documented but cannot be — describe what is missing
   and why]
 ```
+
+---
+
+## CCEP-1 structured output
+
+When invoked via the CodeConductor Execution Protocol (`docs` phase, or the
+`pagespeed:report` phase), return **valid JSON only** matching `agent-output`
+and serialize the Docs Summary / report into `artifacts`:
+
+```json
+{ "status": "success", "artifacts": [{ "type": "docs", "path": "CHANGELOG.md" }], "next_actions": [] }
+```
+
+Only serialize documentation for behavior that was actually implemented. Never
+document a design that did not ship.
 
 ---
 

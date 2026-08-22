@@ -5,9 +5,9 @@ description:
   invented architecture — and runs tests before declaring done.
 effort: medium
 mode: subagent
-model: "{{MODEL}}"
+model: "composer-2.5-fast"
 temperature: 0.1
-tools: Read, Write, Edit, Bash, Glob, Grep
+tools: read, write, edit, shell, find, grep
 permission:
   read: allow
   edit: allow
@@ -36,12 +36,12 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Default — code implementation |
-| OpenCode Go | {{MODEL_OPENCODE}} | Best — reasoning for code |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-sonnet-5 | Default — code implementation |
+| OpenCode Go | opencode-go/mimo-v2.5-pro | Best — reasoning for code |
+| Gemini | gemini-3.7-flash | Alternative |
+| Codex | gpt-5.6-terra | Alternative |
+| Cursor | composer-2.5-fast | Primary |
+| Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 
 # Agent Contract — implementer v1.0.0
 

@@ -24,6 +24,32 @@ import { detectComplementaryTools } from './complementary-detector';
 
 export type FileAction = 'written' | 'appended' | 'merged' | 'skipped' | 'error';
 
+/**
+ * Destinations that dogfooding this repo must keep when `install preset`
+ * overwrites `.cursor/commands` and `.cursor/skills`. These files are not in
+ * consumer presets; skipping them (including under `--force`) preserves
+ * maintainer-only skills.
+ */
+const MAINTAINER_RESERVED_EXACT: ReadonlySet<string> = new Set([
+  '.cursor/commands/cc-self-review.md',
+  '.cursor/commands/cc/self-review.md',
+  '.cursor/commands/cc-update-preset-models.md',
+  '.cursor/commands/cc/update-preset-models.md',
+]);
+
+const MAINTAINER_RESERVED_PREFIXES: ReadonlyArray<string> = [
+  '.cursor/skills/cc-self-review/',
+  '.cursor/skills/cc-update-preset-models/',
+];
+
+export function isMaintainerReservedDest(baseDir: string, destPath: string): boolean {
+  const rel = relative(baseDir, destPath).replace(/\\/g, '/');
+  if (MAINTAINER_RESERVED_EXACT.has(rel)) return true;
+  return MAINTAINER_RESERVED_PREFIXES.some(
+    (prefix) => rel === prefix.slice(0, -1) || rel.startsWith(prefix)
+  );
+}
+
 export interface FileCopyResult {
   src: string;
   dest: string;
@@ -400,6 +426,10 @@ export async function applySingleFile(
   baseDir?: string
 ): Promise<FileCopyResult> {
   if (strategy === 'skip') {
+    return { src: srcPath, dest: destPath, action: 'skipped', dryRun };
+  }
+
+  if (baseDir !== undefined && isMaintainerReservedDest(baseDir, destPath)) {
     return { src: srcPath, dest: destPath, action: 'skipped', dryRun };
   }
 

@@ -4,6 +4,8 @@ import {
   Context7Error,
   Context7LibrarySchema,
   Context7DocResultSchema,
+  resolveContext7BaseUrl,
+  DEFAULT_CONTEXT7_BASE_URL,
   type Context7Library,
   type Context7BridgeConfig,
 } from '../src/core/mcp/context7-bridge';
@@ -78,6 +80,32 @@ describe('createContext7Bridge', () => {
     const bridge = createContext7Bridge();
     expect(bridge.resolveLibraryId).toBeDefined();
     delete process.env.CONTEXT7_API_KEY;
+  });
+
+  test('rejects a non-https or non-allowlisted baseUrl before fetch', () => {
+    expect(() => createContext7Bridge({ apiKey: 'k', baseUrl: 'http://127.0.0.1/v1' })).toThrow(
+      Context7Error
+    );
+    expect(() =>
+      createContext7Bridge({ apiKey: 'k', baseUrl: 'https://evil.example/v1' })
+    ).toThrow(/api.context7.com/);
+  });
+});
+
+describe('resolveContext7BaseUrl', () => {
+  test('pins the official origin', () => {
+    expect(resolveContext7BaseUrl(DEFAULT_CONTEXT7_BASE_URL)).toBe(
+      'https://api.context7.com/v1'
+    );
+    expect(resolveContext7BaseUrl('https://api.context7.com/v1/')).toBe(
+      'https://api.context7.com/v1'
+    );
+  });
+
+  test('rejects credentials in the URL', () => {
+    expect(() =>
+      resolveContext7BaseUrl('https://user:pass@api.context7.com/v1')
+    ).toThrow(/credentials/);
   });
 });
 

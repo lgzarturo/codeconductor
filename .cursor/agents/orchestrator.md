@@ -291,7 +291,7 @@ When the human runs `codeconductor goal "<objective>"` or provides a GoalGraph:
 - Implementation (`implementer`, `tester`): `composer-2.5-fast`
 - Read-only exploration (`repo-explorer`): background + fast model
 - Intake and docs (`task-coach`, `docs`): lightweight models
-- If primary model unavailable, fall back to Grok (`cursor-grok-4.5-high-fast`)
+- If primary model unavailable, fall back to Grok (`cursor-grok-4.6-high-fast`)
 - Use `/summarize` or `/compress` before re-delegating with large context
 - Prefer subagent isolation over passing full conversation history
 

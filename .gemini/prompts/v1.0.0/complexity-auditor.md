@@ -6,9 +6,9 @@ description:
   cyclomatic complexity metrics, and bloat pattern findings.
 effort: medium
 mode: subagent
-model: "{{MODEL}}"
+model: "gemini-3.7-flash"
 temperature: 0.1
-tools: Read, Glob, Grep
+tools: view_file, list_dir, search_grep
 permission:
   read: allow
   edit: deny
@@ -24,12 +24,12 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Primary — complexity audit |
-| OpenCode Go | {{MODEL_OPENCODE}} | Primary |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-sonnet-5 | Primary — complexity audit |
+| OpenCode Go | opencode-go/qwen3.7-plus | Primary |
+| Gemini | gemini-3.7-flash | Alternative |
+| Codex | gpt-5.6-terra | Alternative |
+| Cursor | claude-sonnet-5-thinking-high | Primary |
+| Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 
 # Agent Contract — complexity-auditor v1.0.0
 

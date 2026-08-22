@@ -4,8 +4,9 @@ description:
   Reviews the implementation diff for correctness, architecture alignment,
   security issues, and scope creep — produces structured findings categorized as
   CRITICAL, WARNING, or SUGGESTION.
+effort: high
 mode: subagent
-model: "gemini-2.5-pro"
+model: "gemini-3.1-pro-preview"
 temperature: 0.1
 tools: view_file, list_dir, search_grep, execute_command
 permission:
@@ -22,7 +23,7 @@ permission:
   websearch: deny
   skill: ask
 ---
-# Agent Contract — reviewer v0.5.0
+# Agent Contract — reviewer v1.0.0
 
 ## Role
 
@@ -221,7 +222,36 @@ Apply these detailed checks based on the detected stack:
 
 ---
 
-## Scorecard integration (v0.5.0)
+## CCEP-1 structured output
+
+When invoked via the CodeConductor Execution Protocol (`review` phase), return
+**valid JSON only** matching `review-report` — the Markdown report above is the
+human-facing form; under CCEP-1 the same findings are serialized to the schema:
+
+```json
+{
+  "status": "pass",
+  "confidence": 0.0,
+  "verdict": "approved",
+  "warnings": [],
+  "findings": [
+    { "severity": "WARNING", "message": "Missing edge-case test", "axis": "test_coverage" }
+  ],
+  "artifacts": [],
+  "next_actions": []
+}
+```
+
+Rules under CCEP-1:
+
+- Any CRITICAL finding → `verdict: "blocked"` and `status: "fail"`.
+- Every finding must include `severity`, `message`, and `axis`.
+- Base every finding on diff evidence — no speculation.
+- Never return free-form prose as the final answer in CCEP-1 mode.
+
+---
+
+## Scorecard integration (v1.0.0)
 
 When the orchestrator requests evaluation, produce scores for all 8 criteria in
 `docs/agent-scorecard.md`:
@@ -239,7 +269,7 @@ When the orchestrator requests evaluation, produce scores for all 8 criteria in
 
 Map review verdict to scorecard verdict: `approved` → PASS, `approved with warnings` → REVISE (if warnings are material), `blocked` → REJECT.
 
-Invoke skill `evaluation` and run `scorecard record` with agent `reviewer`, model used, and `contract_version: v0.5.0`.
+Invoke skill `evaluation` and run `scorecard record` with agent `reviewer`, model used, and `contract_version: v1.0.0`.
 
 ---
 

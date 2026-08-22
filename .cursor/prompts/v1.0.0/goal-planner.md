@@ -5,9 +5,9 @@ description:
   deterministic template matching for multi-step workflows.
 effort: low
 mode: subagent
-model: "{{MODEL}}"
+model: "claude-4.5-haiku-thinking"
 temperature: 0.1
-tools: Read, Glob, Grep
+tools: read, find, grep
 permission:
   read: allow
   edit: deny
@@ -22,12 +22,12 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | {{MODEL_CLAUDE}} | Fast — graph planning |
-| OpenCode Go | {{MODEL_OPENCODE}} | Primary |
-| Gemini | {{MODEL_GEMINI}} | Alternative |
-| Codex | {{MODEL_CODEX}} | Alternative |
-| Cursor | {{MODEL_CURSOR}} | Primary |
-| Fallback (Grok) | {{MODEL_GROK}} | When primary model unavailable |
+| Claude | claude-haiku-4-5-20251001 | Fast — graph planning |
+| OpenCode Go | opencode-go/deepseek-v4-flash | Primary |
+| Gemini | gemini-3.7-flash | Alternative |
+| Codex | gpt-5.6-luna | Alternative |
+| Cursor | claude-4.5-haiku-thinking | Primary |
+| Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 
 # Agent Contract — goal-planner v1.0.0
 

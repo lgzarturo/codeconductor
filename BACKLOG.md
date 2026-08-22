@@ -14,20 +14,6 @@ Formato validable por `cc openspec validate`. Análisis completo en
 
 ## Items
 
-### BC-006 | Planificación tracer-bullet con aristas bloqueantes
-
-- Priority: P1
-- Status: PLANNED
-- Type: feature
-- Depends on: none
-- Description: Documentar y anclar la mecánica de to-tickets (rebanadas verticales tracer-bullet con aristas bloqueantes) sobre los items BC-NNN y el campo Depends on, en /cc:openspec y cc goal.
-- Scope: Guía de planificación y ajuste de .claude/commands/cc/openspec.md; se apoya en la validación de dependencias existente.
-- Out of scope: Integrar issue trackers externos como GitHub o Linear.
-- Acceptance:
-  - [ ] La guía define tracer bullet como rebanada vertical demoable del tamaño de un contexto
-  - [ ] Las aristas bloqueantes se expresan como Depends on entre items BC-NNN
-  - [ ] `cc openspec validate` confirma ausencia de ciclos y dependencias desconocidas
-
 ### BC-007 | Gate de grilling en el rol Task Coach
 
 - Priority: P2
@@ -113,6 +99,22 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [ ] El catálogo de flujos permanece alineado con los comandos disponibles
 
 ## Archive
+
+### BC-006 | Planificación tracer-bullet con aristas bloqueantes
+
+- Priority: P1
+- Status: DONE
+- Type: feature
+- Depends on: none
+- Description: Documentar y anclar la mecánica de to-tickets (rebanadas verticales tracer-bullet con aristas bloqueantes) sobre los items BC-NNN y el campo Depends on, en /cc:openspec y cc goal.
+- Scope: Guía de planificación y ajuste de .claude/commands/cc/openspec.md; se apoya en la validación de dependencias existente.
+- Out of scope: Integrar issue trackers externos como GitHub o Linear.
+- Progress: 100
+- Reviewer: reviewer
+- Acceptance:
+  - [x] La guía define tracer bullet como rebanada vertical demoable del tamaño de un contexto
+  - [x] Las aristas bloqueantes se expresan como Depends on entre items BC-NNN
+  - [x] `cc openspec validate` confirma ausencia de ciclos y dependencias desconocidas
 
 ### BC-005 | TDD por seams y checklist de anti-patrones en /cc:tdd-cycle
 

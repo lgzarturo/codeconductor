@@ -66,7 +66,7 @@
         "Las aristas bloqueantes se expresan como Depends on entre items BC-NNN",
         "`cc openspec validate` confirma ausencia de ciclos y dependencias desconocidas"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "BC-006-review",
@@ -84,11 +84,11 @@
         "Tests pass",
         "No scope creep beyond backlog item"
       ],
-      "status": "pending"
+      "status": "done"
     }
   ],
-  "lastScanHash": "7f70acfc8b3c93c4",
-  "lastScanAt": "2026-08-22T02:18:20.876Z",
+  "lastScanHash": "102cddcff33ead33",
+  "lastScanAt": "2026-08-22T02:44:07.929Z",
   "changePaths": {
     "BC-001": "openspec/changes/bc-001-r-brica-writing-for-agents-para-auditar-prompts-",
     "BC-002": "openspec/changes/bc-002-context-md-como-glosario-de-dominio-y-criterios-",
@@ -98,13 +98,13 @@
     "BC-006": "openspec/changes/bc-006-planificaci-n-tracer-bullet-con-aristas-bloquean"
   },
   "itemSnapshots": {
-    "BC-006": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Planificación tracer-bullet con aristas bloqueantes\"}",
     "BC-007": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Gate de grilling en el rol Task Coach\"}",
     "BC-008": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Secuencia expand-contract para refactors amplios en /cc:refactor\"}",
     "BC-009": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Hook PreToolUse que bloquea git destructivo\"}",
     "BC-010": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Gate pre-commit typecheck y test adaptado a Bun\"}",
     "BC-011": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Comando /cc:handoff para traspaso entre sesiones\"}",
     "BC-012": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Router /cc:ask que recomienda el slash command correcto\"}",
+    "BC-006": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Planificación tracer-bullet con aristas bloqueantes\"}",
     "BC-005": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"TDD por seams y checklist de anti-patrones en /cc:tdd-cycle\"}",
     "BC-004": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Gate de loop rojo reproducible en /cc:fix\"}",
     "BC-003": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Revisión de dos ejes en /cc:review\"}",

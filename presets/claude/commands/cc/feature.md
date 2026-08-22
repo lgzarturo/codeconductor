@@ -28,13 +28,18 @@ Command: `feature` (fixed for this workflow — do not infer from user text)
 Adopt the **Task Coach** role as defined in `CLAUDE.md`.
 
 Produce a complete Task Card. The Task Card is ready when it contains: title,
-type, risk classification, scope, context, acceptance criteria, and constraints.
+type, risk classification, scope, context, acceptance criteria, and
+constraints, and every assumption behind it has survived one grilling
+question (Grilling protocol).
 
 If any field is missing or ambiguous, ask one clarifying question at a time and
 wait for the answer. Do not proceed with an incomplete Task Card.
 
-**STOP here. Show the completed Task Card and wait for human confirmation before
-continuing.**
+**STOP here.** Unresolved grilling questions or missing fields populate
+`questionsForUser` in the CCEP-1 `planner-output`; the `ConfirmationGate`
+(`ccep evaluate`) reads that field and halts the workflow until a human
+answers. Show the completed Task Card and wait for that confirmation before
+continuing.
 
 ---
 

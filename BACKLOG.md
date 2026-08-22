@@ -17,7 +17,7 @@ Formato validable por `cc openspec validate`. Análisis completo en
 ### BC-008 | Secuencia expand-contract para refactors amplios en /cc:refactor
 
 - Priority: P2
-- Status: TODO
+- Status: PLANNED
 - Type: refactor
 - Depends on: BC-006
 - Description: Portar el caso wide-refactor de to-tickets como secuencia expand, migrate por lotes y contract para cambios cuyo blast radius rompe muchos call sites, usando cc impact para dimensionar el radio.

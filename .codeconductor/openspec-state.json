@@ -1,94 +1,94 @@
 {
   "version": 1,
-  "activeItemId": "BC-007",
+  "activeItemId": "BC-008",
   "taskCards": [
     {
-      "id": "BC-007-discover",
-      "backlogId": "BC-007",
+      "id": "BC-008-discover",
+      "backlogId": "BC-008",
       "phase": "discover",
-      "title": "BC-007: Discover scope and impact",
-      "prompt": "Backlog item BC-007 — Gate de grilling en el rol Task Coach\n\nDescription: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mecánica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoyándose en el ConfirmationGate de cc ccep.\nScope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.\n\nMap repository structure, conventions, and impact radius for this change.",
+      "title": "BC-008: Discover scope and impact",
+      "prompt": "Backlog item BC-008 — Secuencia expand-contract para refactors amplios en /cc:refactor\n\nDescription: Portar el caso wide-refactor de to-tickets como secuencia expand, migrate por lotes y contract para cambios cuyo blast radius rompe muchos call sites, usando cc impact para dimensionar el radio.\nScope: Actualizar .claude/commands/cc/refactor.md con la secuencia y su relación con Depends on.\n\nMap repository structure, conventions, and impact radius for this change.",
       "agent": "repo-explorer",
       "modelHint": "repo-explorer",
       "dependsOn": [],
       "acceptanceCriteria": [
         "Repo map identifies relevant files and impact radius"
       ],
-      "status": "done"
+      "status": "pending"
     },
     {
-      "id": "BC-007-design",
-      "backlogId": "BC-007",
+      "id": "BC-008-design",
+      "backlogId": "BC-008",
       "phase": "design",
-      "title": "BC-007: Technical design",
-      "prompt": "Backlog item BC-007 — Gate de grilling en el rol Task Coach\n\nDescription: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mecánica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoyándose en el ConfirmationGate de cc ccep.\nScope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
+      "title": "BC-008: Technical design",
+      "prompt": "Backlog item BC-008 — Secuencia expand-contract para refactors amplios en /cc:refactor\n\nDescription: Portar el caso wide-refactor de to-tickets como secuencia expand, migrate por lotes y contract para cambios cuyo blast radius rompe muchos call sites, usando cc impact para dimensionar el radio.\nScope: Actualizar .claude/commands/cc/refactor.md con la secuencia y su relación con Depends on.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
       "agent": "architect",
       "modelHint": "architect",
       "dependsOn": [
-        "BC-007-discover"
+        "BC-008-discover"
       ],
       "acceptanceCriteria": [
         "Technical plan lists files affected and approach"
       ],
-      "status": "done"
+      "status": "pending"
     },
     {
-      "id": "BC-007-test",
-      "backlogId": "BC-007",
+      "id": "BC-008-test",
+      "backlogId": "BC-008",
       "phase": "test",
-      "title": "BC-007: Test coverage",
-      "prompt": "Backlog item BC-007 — Gate de grilling en el rol Task Coach\n\nDescription: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mecánica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoyándose en el ConfirmationGate de cc ccep.\nScope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
+      "title": "BC-008: Test coverage",
+      "prompt": "Backlog item BC-008 — Secuencia expand-contract para refactors amplios en /cc:refactor\n\nDescription: Portar el caso wide-refactor de to-tickets como secuencia expand, migrate por lotes y contract para cambios cuyo blast radius rompe muchos call sites, usando cc impact para dimensionar el radio.\nScope: Actualizar .claude/commands/cc/refactor.md con la secuencia y su relación con Depends on.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
       "agent": "tester",
       "modelHint": "tester",
       "dependsOn": [
-        "BC-007-design"
+        "BC-008-design"
       ],
       "acceptanceCriteria": [
-        "Test covers: El Task Coach estresa supuestos antes de aceptar el Task Card",
-        "Test covers: Un Task Card con preguntas abiertas detiene el flujo vía ConfirmationGate de ccep",
-        "Test covers: El Task Card final cubre los seis campos requeridos sin ambigüedad"
+        "Test covers: /cc:refactor distingue refactor amplio de rebanada vertical por blast radius",
+        "Test covers: La secuencia expand-migrate-contract mantiene el árbol verde entre lotes",
+        "Test covers: `cc impact` cuantifica el blast radius antes de secuenciar los lotes"
       ],
-      "status": "done"
+      "status": "pending"
     },
     {
-      "id": "BC-007-implement",
-      "backlogId": "BC-007",
+      "id": "BC-008-implement",
+      "backlogId": "BC-008",
       "phase": "implement",
-      "title": "BC-007: Implementation",
-      "prompt": "Backlog item BC-007 — Gate de grilling en el rol Task Coach\n\nDescription: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mecánica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoyándose en el ConfirmationGate de cc ccep.\nScope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
+      "title": "BC-008: Implementation",
+      "prompt": "Backlog item BC-008 — Secuencia expand-contract para refactors amplios en /cc:refactor\n\nDescription: Portar el caso wide-refactor de to-tickets como secuencia expand, migrate por lotes y contract para cambios cuyo blast radius rompe muchos call sites, usando cc impact para dimensionar el radio.\nScope: Actualizar .claude/commands/cc/refactor.md con la secuencia y su relación con Depends on.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
       "agent": "implementer",
       "modelHint": "implementer",
       "dependsOn": [
-        "BC-007-test"
+        "BC-008-test"
       ],
       "acceptanceCriteria": [
-        "El Task Coach estresa supuestos antes de aceptar el Task Card",
-        "Un Task Card con preguntas abiertas detiene el flujo vía ConfirmationGate de ccep",
-        "El Task Card final cubre los seis campos requeridos sin ambigüedad"
+        "/cc:refactor distingue refactor amplio de rebanada vertical por blast radius",
+        "La secuencia expand-migrate-contract mantiene el árbol verde entre lotes",
+        "`cc impact` cuantifica el blast radius antes de secuenciar los lotes"
       ],
-      "status": "done"
+      "status": "pending"
     },
     {
-      "id": "BC-007-review",
-      "backlogId": "BC-007",
+      "id": "BC-008-review",
+      "backlogId": "BC-008",
       "phase": "review",
-      "title": "BC-007: Review and validation",
-      "prompt": "Backlog item BC-007 — Gate de grilling en el rol Task Coach\n\nDescription: Reforzar el rol Task Coach y el paso 1 de /cc:feature con la mecánica grill (entrevista relentless que estresa supuestos) antes de aceptar el Task Card, apoyándose en el ConfirmationGate de cc ccep.\nScope: Actualizar el contrato del rol Task Coach y .claude/commands/cc/feature.md.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
+      "title": "BC-008: Review and validation",
+      "prompt": "Backlog item BC-008 — Secuencia expand-contract para refactors amplios en /cc:refactor\n\nDescription: Portar el caso wide-refactor de to-tickets como secuencia expand, migrate por lotes y contract para cambios cuyo blast radius rompe muchos call sites, usando cc impact para dimensionar el radio.\nScope: Actualizar .claude/commands/cc/refactor.md con la secuencia y su relación con Depends on.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
       "agent": "reviewer",
       "modelHint": "reviewer",
       "dependsOn": [
-        "BC-007-implement"
+        "BC-008-implement"
       ],
       "acceptanceCriteria": [
         "All acceptance criteria verified",
         "Tests pass",
         "No scope creep beyond backlog item"
       ],
-      "status": "done"
+      "status": "pending"
     }
   ],
   "lastScanHash": "1dfcb08e00ed9dec",
-  "lastScanAt": "2026-08-22T04:32:36.617Z",
+  "lastScanAt": "2026-08-22T04:40:36.854Z",
   "changePaths": {
     "BC-001": "openspec/changes/bc-001-r-brica-writing-for-agents-para-auditar-prompts-",
     "BC-002": "openspec/changes/bc-002-context-md-como-glosario-de-dominio-y-criterios-",
@@ -96,7 +96,8 @@
     "BC-004": "openspec/changes/bc-004-gate-de-loop-rojo-reproducible-en-cc-fix",
     "BC-005": "openspec/changes/bc-005-tdd-por-seams-y-checklist-de-anti-patrones-en-cc",
     "BC-006": "openspec/changes/bc-006-planificaci-n-tracer-bullet-con-aristas-bloquean",
-    "BC-007": "openspec/changes/bc-007-gate-de-grilling-en-el-rol-task-coach"
+    "BC-007": "openspec/changes/bc-007-gate-de-grilling-en-el-rol-task-coach",
+    "BC-008": "openspec/changes/bc-008-secuencia-expand-contract-para-refactors-amplios"
   },
   "itemSnapshots": {
     "BC-008": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Secuencia expand-contract para refactors amplios en /cc:refactor\"}",

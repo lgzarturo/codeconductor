@@ -1,0 +1,76 @@
+{
+  "id": "sc-mt88irs0-22x8",
+  "taskId": "BC-011",
+  "agent": "reviewer",
+  "model": "opencode-go/qwen3.7-plus",
+  "contractVersion": "0.5.0",
+  "criteria": [
+    {
+      "id": "acceptance",
+      "label": "Acceptance criteria met",
+      "weight": 0.3,
+      "score": 2,
+      "notes": "Los 3 criterios verificados manualmente: handoff.md ya produce el documento con estado/próximos pasos (preexistente), ahora declara context_scope recomendado, y el propio documento generado permite retomar el trabajo sin contexto previo."
+    },
+    {
+      "id": "minimal_diff",
+      "label": "Minimal diff (no scope creep)",
+      "weight": 0.2,
+      "score": 2,
+      "notes": "Diff real (worktree limpio): solo presets/claude/commands/cc/handoff.md (Files Affected del Technical Plan) + test/ccep/bc-011-handoff-context-scope.test.ts. El auto-suggested score=0 era un falso positivo: collectScorecardSignals() en src/core/evaluation/scorecard-signals.ts compara `f.includes(s)` (ruta corta incluye la frase larga de Scope) en vez de `s.includes(f)` — nunca puede matchear un campo Scope en prosa. Bug preexistente del tool, no corregido aquí por estar fuera del alcance de BC-011.",
+      "autoSuggested": false
+    },
+    {
+      "id": "tests",
+      "label": "Tests present and passing",
+      "weight": 0.15,
+      "score": 2,
+      "notes": "3 tests nuevos en test/ccep/bc-011-handoff-context-scope.test.ts, confirmados RED antes de implementar y GREEN después (bun test: 3 pass, 0 fail)."
+    },
+    {
+      "id": "regressions",
+      "label": "No regressions introduced",
+      "weight": 0.15,
+      "score": 2,
+      "notes": "Suite completa corrida en el worktree: 2291 pass, 0 fail. `scorecard regression` reporta tests_pass fallido porque corre `npm test` internamente y el proyecto usa bun (mismatch preexistente del tool, no de este cambio); el check es required:false y no bloquea."
+    },
+    {
+      "id": "conventions",
+      "label": "Code follows project conventions",
+      "weight": 0.1,
+      "score": 2,
+      "notes": "Test sigue el patrón de test/ccep/bc-004-fix-red-loop-gate.test.ts (slicing por sección + regex). Edición de handoff.md mantiene el estilo de prosa y numeración de Steps existente."
+    },
+    {
+      "id": "documentation",
+      "label": "Documentation updated if required",
+      "weight": 0.05,
+      "score": 2,
+      "notes": "Cambio interno a un slash command; ruta media (sin rol Docs) consistente con BC-004..BC-008, que tampoco actualizaron CHANGELOG."
+    },
+    {
+      "id": "context_discipline",
+      "label": "Context discipline",
+      "weight": 0.05,
+      "score": 1,
+      "notes": "Desviación de proceso divulgada: el dispatch de subagentes (discover y design) no relayó contenido tras varios intentos; esas fases se ejecutaron directamente en esta sesión en vez de vía subagente con contexto aislado. El resto de fases (test, implement) sí se ejecutaron con las restricciones del rol correspondiente."
+    },
+    {
+      "id": "cc_gain",
+      "label": "Complexity diffusion (cc-gain)",
+      "weight": 0.05,
+      "score": 1,
+      "notes": "cc-gain raw=0.4, verdict=neutral (señal real, no falso positivo): el diff añade prosa a un prompt markdown sin reducir LOC/complejidad, comportamiento esperado para una adición documental.",
+      "autoSuggested": true
+    }
+  ],
+  "weightedScore": 2.0,
+  "verdict": "PASS",
+  "findings": [
+    "Falso positivo de scope creep corregido manualmente (bug de collectScorecardSignals, ver nota de minimal_diff).",
+    "Context discipline reducido a 1/2 por desviación de proceso divulgada (dispatch de subagentes sin contenido de retorno)."
+  ],
+  "createdAt": "2026-08-25T05:39:00.021Z",
+  "backlogId": "BC-011",
+  "source": "manual"
+}

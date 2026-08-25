@@ -18,6 +18,7 @@ import {
   updateBacklogItemInMarkdown,
 } from '../core/openspec/openspec-state';
 import { BACKLOG_FILENAME } from '../core/openspec/backlog-parser';
+import { runLoopForProject, shouldRunAgentLoop } from '../core/loop/loop-engine';
 import type { OutputMode } from '../utils/logger';
 
 export interface OpenspecOptions {
@@ -254,12 +255,21 @@ async function handleNext(projectRoot: string): Promise<{ code: number; data?: u
     };
   }
 
+  let loop = undefined;
+  if (shouldRunAgentLoop(undefined, next.agent, next.phase)) {
+    loop = await runLoopForProject(projectRoot, {
+      taskTitle: next.title,
+      originalTask: next.prompt,
+    });
+  }
+
   return {
-    code: 0,
+    code: loop && !loop.success ? 1 : 0,
     data: {
-      success: true,
+      success: !(loop && !loop.success),
       command: 'openspec next',
       taskCard: next,
+      ...(loop ? { loop } : {}),
     },
   };
 }

@@ -78,6 +78,35 @@ afterEach(async () => {
 });
 
 describe('orchestrate run --complete', () => {
+  test('runs the compile-fix loop before completing implement/test tasks', async () => {
+    await writeFile(
+      join(projectRoot, '.codeconductor', 'config.yml'),
+      `${CONFIG}  compileCheck:
+    enabled: true
+    command: node -e "process.exit(1)"
+    timeoutMs: 5000
+`,
+      'utf-8',
+    );
+    await writeGoal(projectRoot, goalWith('low'));
+    await startTask(projectRoot, 'task-1', 'implementer');
+
+    const result = await orchestrateCommand({
+      subcommand: 'run',
+      projectRoot,
+      output: 'json',
+      taskId: 'task-1',
+      complete: true,
+      allowCompileCheck: true,
+    });
+
+    expect(result.code).toBe(1);
+    expect(await statusOf('task-1')).toBe('in-progress');
+    const data = result.data as { errors?: string[]; loop?: { finalPhase: string } };
+    expect(data.errors?.[0]).toMatch(/Compile-fix loop/);
+    expect(data.loop?.finalPhase).toBe('ESCALATED');
+  });
+
   test('completes a task whose verification passes', async () => {
     await writeGoal(projectRoot, goalWith('low'));
     await startTask(projectRoot, 'task-1', 'implementer');

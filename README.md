@@ -138,6 +138,41 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 
 ---
 
+## Programmatic API
+
+`cc-codeconductor` ships a library entry in addition to the CLI. The `bin`
+commands still resolve to `dist/index.js`. Application code should import the
+package root:
+
+```ts
+import {
+  LoopEngine,
+  runLoop,
+  runVerification,
+  getNextTask,
+  startTask,
+  completeTask,
+  loopStateMachine,
+  createInitialState,
+} from 'cc-codeconductor';
+```
+
+Exported surface (stable for this minor):
+
+- Orchestrator: `getReadyTasks`, `getNextTask`, `startTask`, `completeTask`, `goalTaskToCanonicalCard`, `buildTaskEnvelope`, `formatGoalStatus`
+- Loop engine (TC3): `LoopEngine`, `runLoop`, `runLoopForProject`, `shouldRunAgentLoop`, `formatFeedback`
+- Verification: `runVerification`, `gateTaskCompletion`, `validateEvidenceIds`
+- Zod contracts: everything from `src/validation/schemas.ts`
+- Domain loop: `createInitialState`, `loopStateMachine` and their types
+
+`infrastructure/` and `*-internal` modules are not part of the public API.
+
+```bash
+bun run build   # CLI → dist/index.js, library → dist/library.js + .d.ts
+```
+
+---
+
 ## CLI Usage
 
 ### Install

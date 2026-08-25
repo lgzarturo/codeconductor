@@ -12,6 +12,7 @@ import { runFeedbackLoop } from '../core/feedback/feedback-ingestor';
 import { goalTaskToCanonicalCard } from '../core/orchestrator/runtime-orchestrator';
 import { enrichGoalWithProduct } from '../core/planner/product-planner';
 import { loadGraph } from '../core/product-graph/graph-store';
+import { runLoopForProject, shouldRunAgentLoop } from '../core/loop/loop-engine';
 import type { OutputMode } from '../utils/logger';
 
 export interface OrchestrateOptions {
@@ -163,6 +164,27 @@ async function handleRun(
     };
   }
   const card = goalTaskToCanonicalCard(enrichedTask, enriched.objective);
+
+  if (shouldRunAgentLoop(enrichedTask.type, enrichedTask.agentType)) {
+    const loop = await runLoopForProject(projectRoot, {
+      taskTitle: enrichedTask.title,
+      allowCompileCheck,
+      originalTask: enriched.objective,
+    });
+    if (!loop.success) {
+      return {
+        code: 1,
+        data: {
+          success: false,
+          command: 'orchestrate',
+          errors: [
+            `Compile-fix loop did not succeed (${loop.finalPhase}).`,
+          ],
+          loop,
+        },
+      };
+    }
+  }
 
   const verify = await runVerification(projectRoot, taskId, goal.data, { allowCompileCheck });
   if (!verify.success) {

@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/index.ts"],
+  "exclude": ["node_modules", "dist", "test", "src/cli/**", "src/infrastructure/**"]
+}

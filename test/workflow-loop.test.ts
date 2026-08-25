@@ -1,15 +1,4 @@
-import { describe, expect, it, mock } from 'bun:test';
-
-let execSyncMock: (cmd: string, options?: any) => string = () => '';
-
-// Mock node:child_process using Bun's mock.module
-mock.module('node:child_process', () => {
-  return {
-    execSync: (cmd: string, options?: any) => {
-      return execSyncMock(cmd, options);
-    },
-  };
-});
+import { describe, expect, it } from 'bun:test';
 
 import { runWorkflowPipeline } from '../src/core/pipeline/workflow-loop';
 import type { TaskCard, TechnicalPlan, ValidationReport, PipelineCallbacks } from '../src/core/pipeline/workflow-loop';
@@ -74,13 +63,6 @@ const defaultCallbacks = (): PipelineCallbacks => ({
 
 describe('Workflow Loop Core Pipeline & Guardrails', () => {
   it('runs successfully end-to-end (Phases 1-8)', async () => {
-    // Mock git commands for implementation checks to return 0 changes (clean repo)
-    execSyncMock = (cmd) => {
-      if (cmd === 'git status --porcelain') return '';
-      if (cmd === 'git diff --numstat') return '';
-      return '';
-    };
-
     const result = await runWorkflowPipeline('Please implement feature X', {
       callbacks: defaultCallbacks(),
     });
@@ -241,17 +223,11 @@ describe('Workflow Loop Core Pipeline & Guardrails', () => {
 
   it('triggers files modified guardrail when limit is exceeded', async () => {
     const callbacks = defaultCallbacks();
-    // Return 3 modified files on git status --porcelain
-    execSyncMock = (cmd) => {
-      if (cmd === 'git status --porcelain') {
-        return 'M src/a.ts\nM src/b.ts\nA src/c.ts\n';
-      }
-      return '';
-    };
 
     const result = await runWorkflowPipeline('raw', {
       callbacks,
       maxFilesModified: 2,
+      gitStats: async () => ({ filesModified: 3, linesChanged: 0 }),
     });
 
     expect(result.success).toBe(false);
@@ -261,17 +237,11 @@ describe('Workflow Loop Core Pipeline & Guardrails', () => {
 
   it('triggers lines changed guardrail when limit is exceeded', async () => {
     const callbacks = defaultCallbacks();
-    // Return 15 lines added/deleted on git diff --numstat
-    execSyncMock = (cmd) => {
-      if (cmd === 'git diff --numstat') {
-        return '10\t5\tsrc/a.ts\n';
-      }
-      return '';
-    };
 
     const result = await runWorkflowPipeline('raw', {
       callbacks,
       maxLinesChanged: 10,
+      gitStats: async () => ({ filesModified: 1, linesChanged: 15 }),
     });
 
     expect(result.success).toBe(false);

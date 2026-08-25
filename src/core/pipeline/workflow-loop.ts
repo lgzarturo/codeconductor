@@ -1,10 +1,11 @@
-import { execSync } from 'node:child_process';
 import { councilConsensus } from '../../domain/council/council-consensus';
 import type {
   ConsensusConfig,
   CouncilVerdictInput,
   CouncilVerdict,
 } from '../../domain/council/council-consensus';
+import { LoopEngine, type GuardrailHit } from '../loop/loop-engine';
+import type { GitStatsReader } from '../loop/git-stats';
 
 export interface TaskCard {
   title: string;
@@ -60,6 +61,7 @@ export interface PipelineConfig {
   cwd?: string;
   councilConfig?: ConsensusConfig;
   callbacks: PipelineCallbacks;
+  gitStats?: GitStatsReader;
 }
 
 export interface PipelineResult {
@@ -69,42 +71,6 @@ export interface PipelineResult {
   taskCard?: TaskCard;
   technicalPlan?: TechnicalPlan;
   verdict?: CouncilVerdict;
-}
-
-// Git helpers specific to pipeline checks
-function getModifiedFilesCount(cwd?: string): number {
-  try {
-    const output = execSync('git status --porcelain', {
-      cwd: cwd || process.cwd(),
-      encoding: 'utf-8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    });
-    return output.split('\n').filter((line) => line.trim().length > 0).length;
-  } catch {
-    return 0;
-  }
-}
-
-function getLinesChangedCount(cwd?: string): number {
-  try {
-    const output = execSync('git diff --numstat', {
-      cwd: cwd || process.cwd(),
-      encoding: 'utf-8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    });
-    let total = 0;
-    const lines = output.split('\n').filter((line) => line.trim().length > 0);
-    for (const line of lines) {
-      const parts = line.split(/\s+/);
-      const added = parseInt(parts[0] || '0', 10);
-      const deleted = parseInt(parts[1] || '0', 10);
-      if (!isNaN(added)) total += added;
-      if (!isNaN(deleted)) total += deleted;
-    }
-    return total;
-  } catch {
-    return 0;
-  }
 }
 
 /**
@@ -117,48 +83,46 @@ export async function runWorkflowPipeline(
   rawRequest: string,
   config: PipelineConfig,
 ): Promise<PipelineResult> {
-  const startTime = Date.now();
   const { callbacks, maxWallClockSeconds = 0, maxFilesModified = 0, maxLinesChanged = 0, cwd } = config;
+  const engine = new LoopEngine(
+    { maxWallClockSeconds, maxFilesModified, maxLinesChanged, cwd },
+    config.gitStats,
+  );
 
-  const checkTimeout = (phase: PipelineResult['phase']): PipelineResult | null => {
-    if (maxWallClockSeconds > 0) {
-      const elapsed = (Date.now() - startTime) / 1000;
-      if (elapsed > maxWallClockSeconds) {
-        return {
-          success: false,
-          phase,
-          error: `Timeout guardrail triggered: elapsed time ${elapsed.toFixed(1)}s exceeded limit of ${maxWallClockSeconds}s`,
-        };
-      }
+  const failGuardrail = (
+    phase: PipelineResult['phase'],
+    hit: GuardrailHit,
+  ): PipelineResult => {
+    if (hit.kind === 'timeout') {
+      return {
+        success: false,
+        phase,
+        error: `Timeout guardrail triggered: elapsed time ${hit.elapsedSeconds.toFixed(1)}s exceeded limit of ${hit.limit}s`,
+      };
     }
-    return null;
+    if (hit.kind === 'files') {
+      return {
+        success: false,
+        phase,
+        error: `Files modified guardrail triggered: ${hit.count} files changed exceeded limit of ${hit.limit}`,
+      };
+    }
+    return {
+      success: false,
+      phase,
+      error: `Lines changed guardrail triggered: ${hit.count} lines changed exceeded limit of ${hit.limit}`,
+    };
   };
 
-  const checkGitGuardrails = (phase: PipelineResult['phase']): PipelineResult | null => {
-    if (maxFilesModified > 0) {
-      const modified = getModifiedFilesCount(cwd);
-      if (modified > maxFilesModified) {
-        return {
-          success: false,
-          phase,
-          error: `Files modified guardrail triggered: ${modified} files changed exceeded limit of ${maxFilesModified}`,
-        };
-      }
-    }
-    if (maxLinesChanged > 0) {
-      const changed = getLinesChangedCount(cwd);
-      if (changed > maxLinesChanged) {
-        return {
-          success: false,
-          phase,
-          error: `Lines changed guardrail triggered: ${changed} lines changed exceeded limit of ${maxLinesChanged}`,
-        };
-      }
-    }
-    return null;
+  const checkGuardrails = async (
+    phase: PipelineResult['phase'],
+    scope: 'time' | 'all' = 'time',
+  ): Promise<PipelineResult | null> => {
+    const hit = await engine.evaluate(scope);
+    return hit ? failGuardrail(phase, hit) : null;
   };
 
-  let timeoutErr = checkTimeout('INTAKE');
+  let timeoutErr = await checkGuardrails('INTAKE');
   if (timeoutErr) return timeoutErr;
 
   // Phase 1: Intake
@@ -169,7 +133,7 @@ export async function runWorkflowPipeline(
     return { success: false, phase: 'INTAKE', error: String(e) };
   }
 
-  timeoutErr = checkTimeout('STRUCTURE');
+  timeoutErr = await checkGuardrails('STRUCTURE');
   if (timeoutErr) return timeoutErr;
 
   // Phase 2: Structure
@@ -180,7 +144,7 @@ export async function runWorkflowPipeline(
     return { success: false, phase: 'STRUCTURE', error: String(e), taskCard };
   }
 
-  timeoutErr = checkTimeout('DESIGN');
+  timeoutErr = await checkGuardrails('DESIGN');
   if (timeoutErr) return timeoutErr;
 
   // Phase 3: Design
@@ -207,7 +171,7 @@ export async function runWorkflowPipeline(
     return { success: false, phase: 'DESIGN', error: `STOP Gate error: ${String(e)}`, taskCard: compactedCard, technicalPlan: plan };
   }
 
-  timeoutErr = checkTimeout('TEST');
+  timeoutErr = await checkGuardrails('TEST');
   if (timeoutErr) return timeoutErr;
 
   // Phase 4: Test (RED)
@@ -226,7 +190,7 @@ export async function runWorkflowPipeline(
     return { success: false, phase: 'TEST', error: String(e), taskCard: compactedCard, technicalPlan: plan };
   }
 
-  timeoutErr = checkTimeout('IMPLEMENT');
+  timeoutErr = await checkGuardrails('IMPLEMENT');
   if (timeoutErr) return timeoutErr;
 
   // Phase 5: Implement (GREEN)
@@ -239,7 +203,7 @@ export async function runWorkflowPipeline(
       loopIter++;
       const implResult = await callbacks.runImplement(plan, tddFeedback);
       
-      const gitErr = checkGitGuardrails('IMPLEMENT');
+      const gitErr = await checkGuardrails('IMPLEMENT', 'all');
       if (gitErr) return gitErr;
 
       if (implResult.testsPass) {
@@ -262,7 +226,7 @@ export async function runWorkflowPipeline(
     return { success: false, phase: 'IMPLEMENT', error: String(e), taskCard: compactedCard, technicalPlan: plan };
   }
 
-  timeoutErr = checkTimeout('VALIDATE');
+  timeoutErr = await checkGuardrails('VALIDATE');
   if (timeoutErr) return timeoutErr;
 
   // Phase 6: Validate (Mutation + Scope Audit)
@@ -291,7 +255,7 @@ export async function runWorkflowPipeline(
     return { success: false, phase: 'VALIDATE', error: String(e), taskCard: compactedCard, technicalPlan: plan };
   }
 
-  timeoutErr = checkTimeout('COUNCIL');
+  timeoutErr = await checkGuardrails('COUNCIL');
   if (timeoutErr) return timeoutErr;
 
   // Phase 7: Council Verdict
@@ -350,7 +314,7 @@ export async function runWorkflowPipeline(
     };
   }
 
-  timeoutErr = checkTimeout('COMPACT');
+  timeoutErr = await checkGuardrails('COMPACT');
   if (timeoutErr) return timeoutErr;
 
   // Phase 8: Compact

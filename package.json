@@ -16,6 +16,8 @@
   "license": "MIT",
   "files": [
     "dist/index.js",
+    "dist/library.js",
+    "dist/**/*.d.ts",
     "policy.yml",
     "presets/",
     "src/presets/"
@@ -28,13 +30,24 @@
     "node": ">=20.11"
   },
   "type": "module",
+  "main": "./dist/library.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/library.js"
+    }
+  },
   "bin": {
     "cc-codeconductor": "./dist/index.js",
     "codeconductor": "./dist/index.js"
   },
   "scripts": {
     "dev": "bun run src/cli/main.ts",
-    "build": "bun build src/cli/main.ts --target=node --outfile=dist/index.js",
+    "build": "bun run scripts/build.ts",
+    "build:cli": "bun build src/cli/main.ts --target=node --outfile=dist/index.js",
+    "build:lib": "bun build src/index.ts --target=node --outfile=dist/library.js --packages=external",
+    "build:types": "tsc -p tsconfig.lib.json --emitDeclarationOnly",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "check:prompt-changelog": "bun run scripts/check-prompt-changelog.ts",

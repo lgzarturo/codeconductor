@@ -14,21 +14,23 @@ Formato validable por `cc openspec validate`. Análisis completo en
 
 ## Items
 
+## Archive
+
 ### BC-012 | Router /cc:ask que recomienda el slash command correcto
 
 - Priority: P3
-- Status: TODO
+- Status: DONE
 - Type: feature
 - Depends on: BC-001
 - Description: Portar ask-matt como router de baja prioridad que, dado un problema en lenguaje natural, recomienda el slash command adecuado entre feature, fix, refactor, review, tdd-cycle y openspec.
 - Scope: Definir /cc:ask apoyado en /cc:help con el catálogo de flujos.
 - Out of scope: Ejecutar automáticamente el flujo recomendado sin confirmación humana.
+- Progress: 100
+- Reviewer: reviewer
 - Acceptance:
-  - [ ] /cc:ask mapea un problema en lenguaje natural a un slash command concreto
-  - [ ] La recomendación justifica por qué ese flujo encaja con el problema
-  - [ ] El catálogo de flujos permanece alineado con los comandos disponibles
-
-## Archive
+  - [x] /cc:ask mapea un problema en lenguaje natural a un slash command concreto
+  - [x] La recomendación justifica por qué ese flujo encaja con el problema
+  - [x] El catálogo de flujos permanece alineado con los comandos disponibles
 
 ### BC-011 | Comando /cc:handoff para traspaso entre sesiones
 

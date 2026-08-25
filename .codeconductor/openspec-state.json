@@ -1,13 +1,12 @@
 {
   "version": 1,
-  "activeItemId": "BC-011",
   "taskCards": [
     {
-      "id": "BC-011-discover",
-      "backlogId": "BC-011",
+      "id": "BC-012-discover",
+      "backlogId": "BC-012",
       "phase": "discover",
-      "title": "BC-011: Discover scope and impact",
-      "prompt": "Backlog item BC-011 — Comando /cc:handoff para traspaso entre sesiones\n\nDescription: /cc:handoff ya existe y genera `.codeconductor/sessions/handoff.md` con estado, archivos tocados y próximo comando; falta que declare explícitamente el context_scope recomendado para la próxima sesión y verificación de que una sesión nueva puede retomar el trabajo solo con ese documento.\nScope: Añadir al handoff generado la declaración explícita de context_scope (isolated/continuation/full) recomendado para la próxima sesión.\n\nMap repository structure, conventions, and impact radius for this change.",
+      "title": "BC-012: Discover scope and impact",
+      "prompt": "Backlog item BC-012 — Router /cc:ask que recomienda el slash command correcto\n\nDescription: Portar ask-matt como router de baja prioridad que, dado un problema en lenguaje natural, recomienda el slash command adecuado entre feature, fix, refactor, review, tdd-cycle y openspec.\nScope: Definir /cc:ask apoyado en /cc:help con el catálogo de flujos.\n\nMap repository structure, conventions, and impact radius for this change.",
       "agent": "repo-explorer",
       "modelHint": "repo-explorer",
       "dependsOn": [],
@@ -17,15 +16,15 @@
       "status": "done"
     },
     {
-      "id": "BC-011-design",
-      "backlogId": "BC-011",
+      "id": "BC-012-design",
+      "backlogId": "BC-012",
       "phase": "design",
-      "title": "BC-011: Technical design",
-      "prompt": "Backlog item BC-011 — Comando /cc:handoff para traspaso entre sesiones\n\nDescription: /cc:handoff ya existe y genera `.codeconductor/sessions/handoff.md` con estado, archivos tocados y próximo comando; falta que declare explícitamente el context_scope recomendado para la próxima sesión y verificación de que una sesión nueva puede retomar el trabajo solo con ese documento.\nScope: Añadir al handoff generado la declaración explícita de context_scope (isolated/continuation/full) recomendado para la próxima sesión.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
+      "title": "BC-012: Technical design",
+      "prompt": "Backlog item BC-012 — Router /cc:ask que recomienda el slash command correcto\n\nDescription: Portar ask-matt como router de baja prioridad que, dado un problema en lenguaje natural, recomienda el slash command adecuado entre feature, fix, refactor, review, tdd-cycle y openspec.\nScope: Definir /cc:ask apoyado en /cc:help con el catálogo de flujos.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
       "agent": "architect",
       "modelHint": "architect",
       "dependsOn": [
-        "BC-011-discover"
+        "BC-012-discover"
       ],
       "acceptanceCriteria": [
         "Technical plan lists files affected and approach"
@@ -33,51 +32,51 @@
       "status": "done"
     },
     {
-      "id": "BC-011-test",
-      "backlogId": "BC-011",
+      "id": "BC-012-test",
+      "backlogId": "BC-012",
       "phase": "test",
-      "title": "BC-011: Test coverage",
-      "prompt": "Backlog item BC-011 — Comando /cc:handoff para traspaso entre sesiones\n\nDescription: /cc:handoff ya existe y genera `.codeconductor/sessions/handoff.md` con estado, archivos tocados y próximo comando; falta que declare explícitamente el context_scope recomendado para la próxima sesión y verificación de que una sesión nueva puede retomar el trabajo solo con ese documento.\nScope: Añadir al handoff generado la declaración explícita de context_scope (isolated/continuation/full) recomendado para la próxima sesión.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
+      "title": "BC-012: Test coverage",
+      "prompt": "Backlog item BC-012 — Router /cc:ask que recomienda el slash command correcto\n\nDescription: Portar ask-matt como router de baja prioridad que, dado un problema en lenguaje natural, recomienda el slash command adecuado entre feature, fix, refactor, review, tdd-cycle y openspec.\nScope: Definir /cc:ask apoyado en /cc:help con el catálogo de flujos.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
       "agent": "tester",
       "modelHint": "tester",
       "dependsOn": [
-        "BC-011-design"
+        "BC-012-design"
       ],
       "acceptanceCriteria": [
-        "Test covers: /cc:handoff produce un documento de handoff con el estado y los próximos pasos",
-        "Test covers: El documento declara el context_scope recomendado para la próxima sesión",
-        "Test covers: Una sesión nueva puede retomar el trabajo solo con el handoff"
+        "Test covers: /cc:ask mapea un problema en lenguaje natural a un slash command concreto",
+        "Test covers: La recomendación justifica por qué ese flujo encaja con el problema",
+        "Test covers: El catálogo de flujos permanece alineado con los comandos disponibles"
       ],
       "status": "done"
     },
     {
-      "id": "BC-011-implement",
-      "backlogId": "BC-011",
+      "id": "BC-012-implement",
+      "backlogId": "BC-012",
       "phase": "implement",
-      "title": "BC-011: Implementation",
-      "prompt": "Backlog item BC-011 — Comando /cc:handoff para traspaso entre sesiones\n\nDescription: /cc:handoff ya existe y genera `.codeconductor/sessions/handoff.md` con estado, archivos tocados y próximo comando; falta que declare explícitamente el context_scope recomendado para la próxima sesión y verificación de que una sesión nueva puede retomar el trabajo solo con ese documento.\nScope: Añadir al handoff generado la declaración explícita de context_scope (isolated/continuation/full) recomendado para la próxima sesión.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
+      "title": "BC-012: Implementation",
+      "prompt": "Backlog item BC-012 — Router /cc:ask que recomienda el slash command correcto\n\nDescription: Portar ask-matt como router de baja prioridad que, dado un problema en lenguaje natural, recomienda el slash command adecuado entre feature, fix, refactor, review, tdd-cycle y openspec.\nScope: Definir /cc:ask apoyado en /cc:help con el catálogo de flujos.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
       "agent": "implementer",
       "modelHint": "implementer",
       "dependsOn": [
-        "BC-011-test"
+        "BC-012-test"
       ],
       "acceptanceCriteria": [
-        "/cc:handoff produce un documento de handoff con el estado y los próximos pasos",
-        "El documento declara el context_scope recomendado para la próxima sesión",
-        "Una sesión nueva puede retomar el trabajo solo con el handoff"
+        "/cc:ask mapea un problema en lenguaje natural a un slash command concreto",
+        "La recomendación justifica por qué ese flujo encaja con el problema",
+        "El catálogo de flujos permanece alineado con los comandos disponibles"
       ],
       "status": "done"
     },
     {
-      "id": "BC-011-review",
-      "backlogId": "BC-011",
+      "id": "BC-012-review",
+      "backlogId": "BC-012",
       "phase": "review",
-      "title": "BC-011: Review and validation",
-      "prompt": "Backlog item BC-011 — Comando /cc:handoff para traspaso entre sesiones\n\nDescription: /cc:handoff ya existe y genera `.codeconductor/sessions/handoff.md` con estado, archivos tocados y próximo comando; falta que declare explícitamente el context_scope recomendado para la próxima sesión y verificación de que una sesión nueva puede retomar el trabajo solo con ese documento.\nScope: Añadir al handoff generado la declaración explícita de context_scope (isolated/continuation/full) recomendado para la próxima sesión.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
+      "title": "BC-012: Review and validation",
+      "prompt": "Backlog item BC-012 — Router /cc:ask que recomienda el slash command correcto\n\nDescription: Portar ask-matt como router de baja prioridad que, dado un problema en lenguaje natural, recomienda el slash command adecuado entre feature, fix, refactor, review, tdd-cycle y openspec.\nScope: Definir /cc:ask apoyado en /cc:help con el catálogo de flujos.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
       "agent": "reviewer",
       "modelHint": "reviewer",
       "dependsOn": [
-        "BC-011-implement"
+        "BC-012-implement"
       ],
       "acceptanceCriteria": [
         "All acceptance criteria verified",
@@ -100,10 +99,11 @@
     "BC-008": "openspec/changes/bc-008-secuencia-expand-contract-para-refactors-amplios",
     "BC-009": "openspec/changes/bc-009-hook-pretooluse-que-bloquea-git-destructivo",
     "BC-010": "openspec/changes/bc-010-gate-pre-commit-typecheck-y-test-adaptado-a-bun",
-    "BC-011": "openspec/changes/bc-011-comando-cc-handoff-para-traspaso-entre-sesiones"
+    "BC-011": "openspec/changes/bc-011-comando-cc-handoff-para-traspaso-entre-sesiones",
+    "BC-012": "openspec/changes/bc-012-router-cc-ask-que-recomienda-el-slash-command-co"
   },
   "itemSnapshots": {
-    "BC-012": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Router /cc:ask que recomienda el slash command correcto\"}",
+    "BC-012": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Router /cc:ask que recomienda el slash command correcto\"}",
     "BC-011": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Comando /cc:handoff para traspaso entre sesiones\"}",
     "BC-010": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Gate pre-commit typecheck y test adaptado a Bun\"}",
     "BC-009": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Hook PreToolUse que bloquea git destructivo\"}",

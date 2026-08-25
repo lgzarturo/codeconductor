@@ -18,6 +18,7 @@ import type { ProductOptions } from '../commands/product.command';
 import type { OrchestrateOptions } from '../commands/orchestrate.command';
 import type { ImpactOptions } from '../commands/impact.command';
 import type { VerifyOptions } from '../commands/verify.command';
+import type { AskOptions } from '../commands/ask.command';
 import type { OutputMode } from '../utils/logger';
 
 /**
@@ -182,6 +183,7 @@ Published commands (package ${packageJson.version}):
   doctor                  Validate configuration and generated files
   update                  Update installed presets
   help                    Show general CLI usage and command list
+  ask                     Recommend a /cc: slash command from a natural-language problem
   cc-help                 Show preset inventory (skills, subagents, commands)
   debt-harvest / harvest  Scan source files for deferred debt items
   ccep                    Compile and evaluate CCEP workflow contracts
@@ -273,6 +275,7 @@ Examples:
   npx cc-codeconductor scorecard models
   npx cc-codeconductor scorecard aggregate
   npx cc-codeconductor help
+  npx cc-codeconductor ask "login fails with 500"
   npx cc-codeconductor cc-help --target opencode
   npx cc-codeconductor cc-help --target claude --output json
 
@@ -461,6 +464,18 @@ export async function routeCommand(
           help: getHelp(),
         },
       };
+
+    case 'ask': {
+      const { askCommand } = await import('../commands/ask.command');
+      const problem =
+        subcommand && !subcommand.startsWith('-')
+          ? [subcommand, ...(args.rest ?? [])].join(' ').trim()
+          : (args.rest ?? []).join(' ').trim() || String(options.problem ?? '');
+      return askCommand({
+        problem,
+        output: flags.output,
+      } as AskOptions);
+    }
 
     case 'cc-help': {
       const { helpCommand } = await import('../commands/help.command');

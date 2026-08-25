@@ -14,6 +14,44 @@ import { downloadPinnedBinary } from './binary-downloader';
 
 const execFileAsync = promisify(execFile);
 
+/** argv for `tar -x` so archive uid/mode never land in ~/.codeconductor/lsp. */
+export const TAR_EXTRACT_HARDENING_FLAGS = [
+  '--no-same-owner',
+  '--no-same-permissions',
+] as const;
+
+/**
+ * List tar members and reject zip-slip / absolute paths before extract.
+ */
+export async function assertTarArchiveSafe(
+  archivePath: string,
+  destRoot: string,
+): Promise<void> {
+  const { stdout } = await execFileAsync('tar', ['-tzf', archivePath], {
+    timeout: 60000,
+    maxBuffer: 10 * 1024 * 1024,
+  });
+  const entries = stdout
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  for (const entry of entries) {
+    resolveSafeArchiveEntry(destRoot, entry);
+  }
+}
+
+export async function extractHardenedTar(
+  archivePath: string,
+  destRoot: string,
+): Promise<void> {
+  await assertTarArchiveSafe(archivePath, destRoot);
+  await execFileAsync(
+    'tar',
+    ['-xzf', archivePath, '-C', destRoot, ...TAR_EXTRACT_HARDENING_FLAGS],
+    { timeout: 120000 },
+  );
+}
+
 /**
  * LSP installer class
  */
@@ -224,25 +262,7 @@ export class LspInstaller {
         );
       }
 
-      const { stdout } = await execFileAsync('tar', ['-tzf', archivePath], {
-        timeout: 60000,
-        maxBuffer: 10 * 1024 * 1024,
-      });
-      const entries = stdout
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0);
-      for (const entry of entries) {
-        resolveSafeArchiveEntry(workDir, entry);
-      }
-
-      await execFileAsync(
-        'tar',
-        // --no-same-owner/--no-same-permissions: archive metadata must never
-        // grant ownership or loose permissions in the user's bin directory.
-        ['-xzf', archivePath, '-C', workDir, '--no-same-owner', '--no-same-permissions'],
-        { timeout: 120000 },
-      );
+      await extractHardenedTar(archivePath, workDir);
 
       // Prefer a discovered binary named like def.binaryName under the extract root.
       const candidate = join(workDir, def.binaryName);

@@ -91,9 +91,9 @@ describe('LspInstaller Domain Types', () => {
         language: 'typescript',
         serverName: 'TypeScript Language Server',
         packageManager: 'npm',
-        package: 'typescript-language-server',
+        package: 'typescript-language-server@6.0.0',
         binaryName: 'typescript-language-server',
-        installCmd: 'npm install -g typescript-language-server',
+        installCmd: 'npm install -g typescript-language-server@6.0.0',
         versionFlag: '--version',
         npmDetect: 'typescript-language-server',
       };

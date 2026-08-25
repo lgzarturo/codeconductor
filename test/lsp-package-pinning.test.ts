@@ -6,8 +6,19 @@
  * every package pinned.
  */
 import { describe, expect, test } from 'bun:test';
+import { execFileSync } from 'node:child_process';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { assertPinnedPackage } from '../src/core/lsp/binary-integrity';
+import {
+  TAR_EXTRACT_HARDENING_FLAGS,
+  assertTarArchiveSafe,
+  createLspInstaller,
+  extractHardenedTar,
+} from '../src/core/lsp/lsp-installer';
 import { getAllLsps } from '../src/core/lsp/lsp-registry';
+import type { LspDefinition } from '../src/domain/lsp/lsp-definition';
 
 describe('assertPinnedPackage', () => {
   const base = { serverName: 'Test Server' };
@@ -68,6 +79,68 @@ describe('LSP registry: every registry package is pinned', () => {
       if (def.packageManager === 'npm') {
         expect(def.installCmd).toContain(def.package);
       }
+    }
+  });
+});
+
+describe('LspInstaller: refuse unpinned registry installs', () => {
+  test('installLsp fails closed when the npm package has no exact version', async () => {
+    const def: LspDefinition = {
+      id: 'unpinned-test',
+      language: 'typescript',
+      serverName: 'Unpinned Test Server',
+      packageManager: 'npm',
+      package: 'typescript-language-server',
+      binaryName: 'cc-lsp-unpinned-binary-xyz',
+      installCmd: 'npm install -g typescript-language-server',
+      versionFlag: '--version',
+    };
+
+    const result = await createLspInstaller().installLsp(def);
+    expect(result.status).toBe('failed');
+    expect(result.error).toMatch(/not version-pinned/);
+  });
+});
+
+describe('hardened tar extract (TC2/W4)', () => {
+  test('extract flags include anti zip-slip ownership/mode options', () => {
+    expect(TAR_EXTRACT_HARDENING_FLAGS).toContain('--no-same-owner');
+    expect(TAR_EXTRACT_HARDENING_FLAGS).toContain('--no-same-permissions');
+  });
+
+  test('rejects a tar whose members escape the destination', async () => {
+    const work = await mkdtemp(join(tmpdir(), 'cc-tar-slip-'));
+    try {
+      const payloadDir = join(work, 'payload');
+      await mkdir(payloadDir);
+      await writeFile(join(payloadDir, 'ok.txt'), 'ok', 'utf-8');
+      const archive = join(work, 'slip.tar.gz');
+      execFileSync('tar', ['--transform=s,^,../,', '-czf', archive, '-C', payloadDir, 'ok.txt']);
+
+      await expect(assertTarArchiveSafe(archive, join(work, 'out'))).rejects.toThrow(
+        /unsafe/i,
+      );
+    } finally {
+      await rm(work, { recursive: true, force: true });
+    }
+  });
+
+  test('extracts a well-formed archive under the destination', async () => {
+    const work = await mkdtemp(join(tmpdir(), 'cc-tar-ok-'));
+    try {
+      const payloadDir = join(work, 'payload');
+      const out = join(work, 'out');
+      await mkdir(payloadDir);
+      await mkdir(out);
+      await writeFile(join(payloadDir, 'ok.txt'), 'ok', 'utf-8');
+      const archive = join(work, 'ok.tar.gz');
+      execFileSync('tar', ['-czf', archive, '-C', payloadDir, 'ok.txt']);
+
+      await extractHardenedTar(archive, out);
+      const extracted = await Bun.file(join(out, 'ok.txt')).text();
+      expect(extracted).toBe('ok');
+    } finally {
+      await rm(work, { recursive: true, force: true });
     }
   });
 });

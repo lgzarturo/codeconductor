@@ -1,4 +1,5 @@
 import type { LspDefinition } from '../../domain/lsp/lsp-definition';
+import { assertPinnedPackage } from './binary-integrity';
 
 const LSP_DEFINITIONS: readonly LspDefinition[] = [
   {
@@ -52,6 +53,12 @@ const LSP_DEFINITIONS: readonly LspDefinition[] = [
     binaryPlatforms: {},
   },
 ];
+
+for (const def of LSP_DEFINITIONS) {
+  if (def.packageManager !== 'binary') {
+    assertPinnedPackage(def);
+  }
+}
 
 /**
  * Resolve LSP definitions for given languages

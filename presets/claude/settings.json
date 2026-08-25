@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "env": {
     "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
-    "CLAUDE_CODE_DISABLE_1M_CONTEXT": "1",
+    "CLAUDE_CODE_DISABLE_1M_CONTEXT": "0",
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
     "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1",
@@ -13,7 +13,7 @@
     "CLAUDE_CODE_SIMPLE_SYSTEM_PROMPT": "1",
     "ENABLE_TOOL_SEARCH": "auto",
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "80",
-    "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "1",
+    "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "0",
     "CLAUDE_CODE_SUBAGENT_MODEL": "haiku",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "MAX_THINKING_TOKENS": "24000",
@@ -135,26 +135,13 @@
       "Edit(./**/.env)"
     ],
     "ask": [
-      "Bash(git push*)",
       "Bash(git push --force*)",
       "Bash(git reset --hard*)",
-      "Bash(npm install*)",
-      "Bash(npm i *)",
-      "Bash(pnpm install*)",
-      "Bash(pnpm add *)",
-      "Bash(yarn add *)",
-      "Bash(pip install*)",
       "Bash(docker run*)",
       "Bash(docker compose up*)",
-      "Bash(docker compose down*)",
-      "Bash(./gradlew build*)",
-      "Bash(./gradlew bootRun*)",
-      "Bash(mvn install*)",
-      "Bash(mvn deploy*)",
-      "Bash(vercel*)",
-      "Bash(npx vercel*)"
+      "Bash(docker compose down*)"
     ],
-    "defaultMode": "acceptEdits",
+    "defaultMode": "bypassPermissions",
     "disableBypassPermissionsMode": "disable"
   },
   "hooks": {
@@ -223,17 +210,9 @@
       "allowLocalBinding": true
     },
     "filesystem": {
-      "denyRead": [
-        "~/.ssh",
-        "~/.aws",
-        "~/.gnupg",
-        "./.env",
-        "./.env.*"
-      ]
+      "denyRead": ["~/.ssh", "~/.aws", "~/.gnupg", "./.env", "./.env.*"]
     },
-    "excludedCommands": [
-      "docker *"
-    ]
+    "excludedCommands": ["docker *"]
   },
   "extraKnownMarketplaces": {
     "agricidaniel-claude-seo": {
@@ -247,7 +226,7 @@
   "feedbackSurveyRate": 0,
   "spinnerTipsEnabled": false,
   "alwaysThinkingEnabled": true,
-  "effortLevel": "xhigh",
+  "effortLevel": "medium",
   "awaySummaryEnabled": false,
   "showClearContextOnPlanAccept": true,
   "autoUpdatesChannel": "stable",

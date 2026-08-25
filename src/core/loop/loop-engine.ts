@@ -5,12 +5,18 @@ import {
   type CompileResult,
 } from '../compilation/compile-checker';
 import { loadConfig } from '../config/config-loader';
-import type { LoopState } from '../../domain/loop/loop-state';
 import {
   createInitialState,
   loopStateMachine,
+  tddCycleStateMachine,
+  type LoopState,
+  type TddState,
 } from '../../domain/loop/loop-state';
 import { readGitChangeStats, type GitStatsReader } from './git-stats';
+import {
+  loadTddSuiteEvidence,
+} from '../verification/verification-runner';
+import { err, ok, type Result } from '../../utils/result';
 
 export interface LoopConfig {
   maxIterations?: number;
@@ -371,6 +377,26 @@ export function shouldRunAgentLoop(
   if (phase === 'implement' || phase === 'test') return true;
   if (agentType === 'implementer' || agentType === 'tester') return true;
   return type === 'feature' || type === 'fix' || type === 'test';
+}
+
+/**
+ * Apply runner-captured TDD suite evidence to the domain TDD machine.
+ * Hand-written evidence files fail closed via `loadTddSuiteEvidence`.
+ */
+export async function advanceTddPhase(
+  projectRoot: string,
+  taskId: string,
+  state: TddState,
+  evidenceId: string,
+): Promise<Result<{ state: TddState; result: 'CONTINUE' | 'TERMINATE' }, Error>> {
+  const loaded = await loadTddSuiteEvidence(projectRoot, taskId, evidenceId);
+  if (!loaded.success) return loaded;
+  const next = tddCycleStateMachine(state, {
+    type: 'SUITE_EVIDENCE',
+    evidenceId,
+    evidence: loaded.data,
+  });
+  return ok(next);
 }
 
 export async function runLoopForProject(

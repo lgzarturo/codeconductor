@@ -27,7 +27,7 @@ import type { CommandEnvelopeInput } from '../../validation/schemas';
  * it. Used when a later step fails, so a task is never left half-transitioned.
  * The original failure is returned, annotated when the undo itself fails.
  */
-async function rollbackTaskStatus(
+export async function rollbackTaskStatus(
   projectRoot: string,
   graph: GoalGraphInput,
   task: GoalTaskInput,

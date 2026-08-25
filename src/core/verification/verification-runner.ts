@@ -11,8 +11,10 @@ import {
 import { loadConfig } from '../config/config-loader';
 import {
   isAllowlistedCompileCommand,
+  isAllowlistedTestCommand,
   runCompileCheck,
 } from '../compilation/compile-checker';
+import type { TddSuiteEvidence } from '../../domain/loop/loop-state';
 import { err, ok, type Result } from '../../utils/result';
 import { evidenceDir } from '../product-graph/paths';
 import { appendEvent } from '../memory/episodic-store';
@@ -70,6 +72,22 @@ function evidenceFilePath(evDir: string, id: string): Result<string, Error> {
     return err(new Error(`Refusing to write evidence for "${id}" outside ${evDir}`));
   }
   return ok(path);
+}
+
+async function persistEvidence(
+  projectRoot: string,
+  evidence: EvidenceInput,
+): Promise<Result<void, Error>> {
+  const evDir = evidenceDir(projectRoot);
+  const evidencePath = evidenceFilePath(evDir, evidence.id);
+  if (!evidencePath.success) return evidencePath;
+  try {
+    await mkdir(evDir, { recursive: true });
+    await writeFile(evidencePath.data, JSON.stringify(evidence, null, 2), 'utf-8');
+  } catch (e) {
+    return err(e instanceof Error ? e : new Error(String(e)));
+  }
+  return ok(undefined);
 }
 
 async function collectTaskEvidence(
@@ -235,7 +253,6 @@ export async function runVerification(
   }
 
   // Evidence files for task
-  const evDir = evidenceDir(projectRoot);
   const collected = await collectTaskEvidence(projectRoot, taskId);
   if (!collected.success) return collected;
 
@@ -279,15 +296,8 @@ export async function runVerification(
     data: { passed, checks },
   };
 
-  const evidencePath = evidenceFilePath(evDir, evidence.id);
-  if (!evidencePath.success) return evidencePath;
-
-  try {
-    await mkdir(evDir, { recursive: true });
-    await writeFile(evidencePath.data, JSON.stringify(evidence, null, 2), 'utf-8');
-  } catch (e) {
-    return err(e instanceof Error ? e : new Error(String(e)));
-  }
+  const persisted = await persistEvidence(projectRoot, evidence);
+  if (!persisted.success) return persisted;
   if (passed) evidenceIds.push(evidence.id);
 
   const event = await appendEvent(projectRoot, {
@@ -340,4 +350,139 @@ export async function gateTaskCompletion(
   }
 
   return ok(true);
+}
+
+const TDD_EVIDENCE_SOURCE = 'cc verify';
+const TDD_CAPTURED_BY = 'verification-runner';
+
+export interface CaptureTddSuiteOptions extends RunVerificationOptions {
+  /** Allowlisted test command (`bun test`, `npm test`, …). */
+  readonly command: string;
+}
+
+/**
+ * Run a test suite and store TDD evidence. Only this function writes records
+ * that `tddCycleStateMachine` will accept as RED/GREEN gates.
+ */
+export async function captureTddSuiteEvidence(
+  projectRoot: string,
+  taskId: string,
+  options: CaptureTddSuiteOptions,
+): Promise<
+  Result<
+    {
+      evidenceId: string;
+      suiteFailed: boolean;
+      suitePassed: boolean;
+    },
+    Error
+  >
+> {
+  if (!options.allowCompileCheck && !isAllowlistedTestCommand(options.command)) {
+    return err(
+      new Error(
+        'TDD suite command is not on the test allowlist. Re-run with --allow-compile-check to trust it.',
+      ),
+    );
+  }
+
+  const result = await runCompileCheck({
+    command: options.command,
+    cwd: projectRoot,
+  });
+
+  const suitePassed = result.success && !result.timedOut && result.exitCode === 0;
+  const suiteFailed = !result.timedOut && result.exitCode !== 0;
+
+  const evidence: EvidenceInput = {
+    id: `ev-tdd-${taskId}-${Date.now()}`,
+    source: TDD_EVIDENCE_SOURCE,
+    type: 'tdd',
+    timestamp: new Date().toISOString(),
+    relatedTask: taskId,
+    confidence: suitePassed || suiteFailed ? 0.9 : 0.3,
+    summary: suitePassed
+      ? 'TDD suite passed'
+      : suiteFailed
+        ? 'TDD suite failed'
+        : 'TDD suite inconclusive',
+    data: {
+      capturedBy: TDD_CAPTURED_BY,
+      suiteFailed,
+      suitePassed,
+      exitCode: result.exitCode,
+      timedOut: result.timedOut,
+      command: options.command,
+    },
+  };
+
+  const persisted = await persistEvidence(projectRoot, evidence);
+  if (!persisted.success) return persisted;
+
+  const event = await appendEvent(projectRoot, {
+    type: 'verification.completed',
+    timestamp: new Date().toISOString(),
+    payload: {
+      taskId,
+      tdd: true,
+      suiteFailed,
+      suitePassed,
+      evidenceId: evidence.id,
+    },
+  });
+  if (!event.success) return event;
+
+  return ok({
+    evidenceId: evidence.id,
+    suiteFailed,
+    suitePassed,
+  });
+}
+
+/**
+ * Load TDD suite evidence written by `captureTddSuiteEvidence`. Hand-edited
+ * files (wrong source/type/`capturedBy`) are rejected.
+ */
+export async function loadTddSuiteEvidence(
+  projectRoot: string,
+  taskId: string,
+  evidenceId: string,
+): Promise<Result<TddSuiteEvidence, Error>> {
+  const evDir = evidenceDir(projectRoot);
+  const path = evidenceFilePath(evDir, evidenceId);
+  if (!path.success) return path;
+
+  let raw: string;
+  try {
+    raw = await readFile(path.data, 'utf-8');
+  } catch (e) {
+    return err(e instanceof Error ? e : new Error(String(e)));
+  }
+
+  let ev: EvidenceInput;
+  try {
+    ev = EvidenceSchema.parse(JSON.parse(raw));
+  } catch {
+    return err(new Error(`Evidence "${evidenceId}" is not valid TDD evidence`));
+  }
+
+  if (ev.relatedTask !== taskId) {
+    return err(new Error(`Evidence "${evidenceId}" is not a record of task ${taskId}`));
+  }
+  if (ev.type !== 'tdd' || ev.source !== TDD_EVIDENCE_SOURCE) {
+    return err(new Error(`Evidence "${evidenceId}" was not captured by the verification runner`));
+  }
+
+  const capturedBy = ev.data?.capturedBy;
+  const suiteFailed = ev.data?.suiteFailed;
+  const suitePassed = ev.data?.suitePassed;
+  if (
+    capturedBy !== TDD_CAPTURED_BY ||
+    typeof suiteFailed !== 'boolean' ||
+    typeof suitePassed !== 'boolean'
+  ) {
+    return err(new Error(`Evidence "${evidenceId}" was not captured by the verification runner`));
+  }
+
+  return ok({ capturedBy, suiteFailed, suitePassed });
 }

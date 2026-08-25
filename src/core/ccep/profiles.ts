@@ -102,9 +102,10 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     taskCard: { type: 'test', requiredFields: ['scope', 'acceptanceCriteria'] },
     phases: [
       { id: 'test', agent: 'tester', requires: 'red-state' },
-      { id: 'implement', agent: 'implementer' },
+      { id: 'implement', agent: 'implementer', requires: 'green-state' },
+      { id: 'refactor', agent: 'implementer', requires: 'refactor-state' },
     ],
-    routing: { default: ['test', 'implement'] },
+    routing: { default: ['test', 'implement', 'refactor'] },
     confirmationGate: { stopOnHighRisk: false, stopOnQuestions: true },
   },
   'api-contract': {

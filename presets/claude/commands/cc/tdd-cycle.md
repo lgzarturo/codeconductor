@@ -43,6 +43,17 @@ non-negotiable:
 Do not write implementation code during RED. Do not refactor during GREEN.
 Mixing phases invalidates the cycle.
 
+## Verifiable phase gates
+
+RED → GREEN and GREEN → REFACTOR are enforced by `tddCycleStateMachine` in
+`domain/loop`. Evidence must be captured with `captureTddSuiteEvidence` (verification
+runner) — do not hand-edit JSON under `.codeconductor/evidence/`.
+
+- RED→GREEN requires runner evidence that the suite **failed**.
+- GREEN→REFACTOR requires runner evidence that the suite **passed**.
+
+Do not advance phases until that evidence exists.
+
 Each cycle covers a single vertical slice of behavior — one cycle, one
 behavior — and follows red-before-green: RED must complete before GREEN
 starts.

@@ -234,3 +234,86 @@ export function loopStateMachine(
   // Fallback — should not be reached with valid transition checks
   return { state, result: 'TERMINATE' };
 }
+
+// ─── TDD cycle (RED → GREEN → REFACTOR) ──────────────────────────────────────
+
+/**
+ * Evidence payload that may advance TDD phases. Only records written by
+ * `captureTddSuiteEvidence` set `capturedBy: 'verification-runner'`.
+ */
+export interface TddSuiteEvidence {
+  readonly capturedBy: string;
+  readonly suiteFailed: boolean;
+  readonly suitePassed: boolean;
+}
+
+export type TddPhase = 'RED' | 'GREEN' | 'REFACTOR' | 'FAILED';
+
+export interface TddState {
+  readonly phase: TddPhase;
+  readonly evidenceIds: readonly string[];
+}
+
+export type TddAction =
+  | { readonly type: 'SUITE_EVIDENCE'; readonly evidenceId: string; readonly evidence: TddSuiteEvidence }
+  | { readonly type: 'ABORT' };
+
+export function createInitialTddState(): TddState {
+  return { phase: 'RED', evidenceIds: [] };
+}
+
+function isRunnerTddEvidence(evidence: TddSuiteEvidence): boolean {
+  return evidence.capturedBy === 'verification-runner';
+}
+
+/**
+ * Guarded TDD phase machine. RED→GREEN needs a failing suite captured by the
+ * verification runner; GREEN→REFACTOR needs a passing suite from the same source.
+ */
+export function tddCycleStateMachine(
+  state: TddState,
+  action: TddAction,
+): { state: TddState; result: LoopActionResult } {
+  if (action.type === 'ABORT') {
+    if (state.phase === 'FAILED') {
+      return { state, result: 'TERMINATE' };
+    }
+    return { state: { ...state, phase: 'FAILED' }, result: 'TERMINATE' };
+  }
+
+  if (state.phase === 'FAILED' || state.phase === 'REFACTOR') {
+    return { state, result: 'TERMINATE' };
+  }
+
+  if (!isRunnerTddEvidence(action.evidence)) {
+    return { state, result: 'TERMINATE' };
+  }
+
+  if (state.phase === 'RED') {
+    if (action.evidence.suiteFailed && !action.evidence.suitePassed) {
+      return {
+        state: {
+          phase: 'GREEN',
+          evidenceIds: [...state.evidenceIds, action.evidenceId],
+        },
+        result: 'CONTINUE',
+      };
+    }
+    return { state, result: 'TERMINATE' };
+  }
+
+  if (state.phase === 'GREEN') {
+    if (action.evidence.suitePassed && !action.evidence.suiteFailed) {
+      return {
+        state: {
+          phase: 'REFACTOR',
+          evidenceIds: [...state.evidenceIds, action.evidenceId],
+        },
+        result: 'CONTINUE',
+      };
+    }
+    return { state, result: 'TERMINATE' };
+  }
+
+  return { state, result: 'TERMINATE' };
+}

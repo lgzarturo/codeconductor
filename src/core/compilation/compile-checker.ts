@@ -114,6 +114,13 @@ export function isAllowlistedCompileCommand(command: string | string[]): boolean
   );
 }
 
+/** Allowlisted commands that actually run a test suite (`bun test`, `npm test`, …). */
+export function isAllowlistedTestCommand(command: string | string[]): boolean {
+  if (!isAllowlistedCompileCommand(command)) return false;
+  const parts = Array.isArray(command) ? command : tokenizeCommand(command);
+  return parts.some((token) => token === 'test' || token.startsWith('test:'));
+}
+
 /**
  * Minimal environment for compile-check child processes.
  *

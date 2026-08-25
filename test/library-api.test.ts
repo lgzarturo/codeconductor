@@ -21,6 +21,8 @@ describe('public library surface', () => {
     expect(typeof api.runLoop).toBe('function');
     expect(typeof api.runVerification).toBe('function');
     expect(typeof api.loopStateMachine).toBe('function');
+    expect(typeof api.tddCycleStateMachine).toBe('function');
+    expect(typeof api.captureTddSuiteEvidence).toBe('function');
     expect(typeof api.createInitialState).toBe('function');
     expect(api.GoalGraphSchema).toBeDefined();
     expect(api.CanonicalTaskCardSchema).toBeDefined();

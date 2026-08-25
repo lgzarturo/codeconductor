@@ -12,10 +12,15 @@ phases:
     requires: red-state
   - id: implement
     agent: implementer
+    requires: green-state
+  - id: refactor
+    agent: implementer
+    requires: refactor-state
 routing:
   default:
     - test
     - implement
+    - refactor
 confirmationGate:
   stopOnHighRisk: false
   stopOnQuestions: true

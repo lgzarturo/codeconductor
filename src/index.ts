@@ -12,6 +12,7 @@ export {
   getNextTask,
   startTask,
   completeTask,
+  rollbackTaskStatus,
   formatGoalStatus,
 } from './core/orchestrator/runtime-orchestrator';
 export type { OrchestratorNextResult } from './core/orchestrator/runtime-orchestrator';
@@ -22,6 +23,7 @@ export {
   runLoopForProject,
   shouldRunAgentLoop,
   formatFeedback,
+  advanceTddPhase,
 } from './core/loop/loop-engine';
 export type {
   LoopConfig,
@@ -36,18 +38,30 @@ export {
   runVerification,
   gateTaskCompletion,
   validateEvidenceIds,
+  captureTddSuiteEvidence,
+  loadTddSuiteEvidence,
 } from './core/verification/verification-runner';
 export type {
   RunVerificationOptions,
   VerificationCheck,
+  CaptureTddSuiteOptions,
 } from './core/verification/verification-runner';
 
 export * from './validation/schemas';
 
-export { createInitialState, loopStateMachine } from './domain/loop/loop-state';
+export {
+  createInitialState,
+  loopStateMachine,
+  createInitialTddState,
+  tddCycleStateMachine,
+} from './domain/loop/loop-state';
 export type {
   LoopPhase,
   LoopState,
   LoopAction,
   LoopActionResult,
+  TddPhase,
+  TddState,
+  TddAction,
+  TddSuiteEvidence,
 } from './domain/loop/loop-state';

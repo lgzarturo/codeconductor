@@ -30,7 +30,10 @@ errors instead of pasting dumps. If unresolved credential material remains, stop
 and wait for a human (CCEP `stopOnHighRisk`).
 
 Include: goal, Task Card status (no secret fields), files touched, test
-pass/fail (not log dumps), open questions, and the next `/cc:` command.
+pass/fail (not log dumps), open questions, the next `/cc:` command, and the
+recommended `context_scope` (`isolated` | `continuation` | `full`) for the next
+session — derived from the Task Card status above, not invented, with a
+one-sentence justification.
 
 Do not edit source or tests.
 

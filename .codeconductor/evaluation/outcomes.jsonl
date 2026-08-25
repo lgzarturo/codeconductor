@@ -6,3 +6,4 @@
 {"id":"out-mt3zu4tm-sifz","taskId":"BC-008","source":"openspec","agent":"reviewer","model":"unknown","contractVersion":"0.5.0","timestamp":"2026-08-22T06:24:48.874Z","status":"pass","verdict":"PASS","backlogId":"BC-008"}
 {"id":"out-mt4lwt62-b0nl","taskId":"BC-009","source":"review","agent":"reviewer","model":"unknown","contractVersion":"0.5.0","timestamp":"2026-08-22T16:42:45.290Z","status":"pass","verdict":"PASS","backlogId":"BC-009"}
 {"id":"out-mt4lx1ok-bkah","taskId":"BC-009","source":"review","agent":"reviewer","model":"unknown","contractVersion":"0.5.0","timestamp":"2026-08-22T16:42:56.324Z","status":"pass","verdict":"PASS","weightedScore":2.15,"backlogId":"BC-009"}
+{"id":"out-mt88kdhe-623v","taskId":"BC-011","source":"openspec","agent":"reviewer","model":"unknown","contractVersion":"0.5.0","timestamp":"2026-08-25T05:40:14.786Z","status":"pass","verdict":"PASS","weightedScore":2,"backlogId":"BC-011"}

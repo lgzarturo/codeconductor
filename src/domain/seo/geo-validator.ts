@@ -118,33 +118,20 @@ export function validateGeo(html: string, url: string): AuditCheck[] {
   return checks;
 }
 
-export async function checkLlmsTxt(baseUrl: string): Promise<AuditCheck[]> {
+async function fetchLlmsTxtChecks(root: string): Promise<AuditCheck[]> {
   const checks: AuditCheck[] = [];
 
-  let root: string;
   try {
-    const parsed = new URL(baseUrl);
-    root = `${parsed.protocol}//${parsed.host}`;
-  } catch {
-    return [{
-      name: 'llms-txt',
-      category: 'geo',
-      severity: 'error',
-      message: `Invalid base URL: ${baseUrl}`,
-    }];
-  }
-
-  try {
-    const response = await safeFetch(`${root}/llms.txt`);
-    if (response.status === 200 && response.body.length > 0) {
+    const txtResult = await safeFetch(`${root}/llms.txt`);
+    if (txtResult.status === 200 && txtResult.body.length > 0) {
       checks.push({
         name: 'llms-txt',
         category: 'geo',
         severity: 'pass',
-        message: `llms.txt found (${response.body.length} bytes)`,
+        message: `llms.txt found (${txtResult.body.length} bytes)`,
       });
 
-      if (!response.body.startsWith('#')) {
+      if (!txtResult.body.startsWith('#')) {
         checks.push({
           name: 'llms-txt-format',
           category: 'geo',
@@ -165,7 +152,7 @@ export async function checkLlmsTxt(baseUrl: string): Promise<AuditCheck[]> {
         name: 'llms-txt',
         category: 'geo',
         severity: 'error',
-        message: `llms.txt returned status ${response.status}`,
+        message: `llms.txt returned status ${txtResult.status}`,
         remediation: 'Create a llms.txt file at the site root following the llms.txt specification.',
       });
     }
@@ -179,25 +166,49 @@ export async function checkLlmsTxt(baseUrl: string): Promise<AuditCheck[]> {
     });
   }
 
+  return checks;
+}
+
+async function fetchLlmsFullChecks(root: string): Promise<AuditCheck[]> {
   try {
     const response = await safeFetch(`${root}/llms-full.txt`);
     if (response.status === 200 && response.body.length > 0) {
-      checks.push({
+      return [{
         name: 'llms-full-txt',
         category: 'geo',
         severity: 'pass',
         message: `llms-full.txt found (${response.body.length} bytes)`,
-      });
+      }];
     }
+    return [];
   } catch {
-    checks.push({
+    return [{
       name: 'llms-full-txt',
       category: 'geo',
       severity: 'info',
       message: 'llms-full.txt not found (optional)',
       remediation: 'Consider creating llms-full.txt with extended content for AI tools.',
-    });
+    }];
+  }
+}
+
+export async function checkLlmsTxt(baseUrl: string): Promise<AuditCheck[]> {
+  let root: string;
+  try {
+    const parsed = new URL(baseUrl);
+    root = `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return [{
+      name: 'llms-txt',
+      category: 'geo',
+      severity: 'error',
+      message: `Invalid base URL: ${baseUrl}`,
+    }];
   }
 
-  return checks;
+  const [txtChecks, fullChecks] = await Promise.all([
+    fetchLlmsTxtChecks(root),
+    fetchLlmsFullChecks(root),
+  ]);
+  return [...txtChecks, ...fullChecks];
 }

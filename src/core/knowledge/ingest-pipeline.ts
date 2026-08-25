@@ -21,7 +21,28 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { productMetaPath } from '../product-graph/paths';
 import { ProductMetaSchema } from '../../validation/schemas';
 
-const DEFER_REGEX = /\/\/\s*defer\s*[-:]\s*(.+?)(?:\s*--(\w+))?\s*$/gm;
+const DEFER_REGEX_SOURCE = String.raw`\/\/\s*defer\s*[-:]\s*(.+?)(?:\s*--(\w+))?\s*$`;
+const WALK_READ_CONCURRENCY = 8;
+
+async function mapLimit<T, R>(
+  items: readonly T[],
+  limit: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) return [];
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  async function worker(): Promise<void> {
+    while (true) {
+      const index = next++;
+      if (index >= items.length) return;
+      out[index] = await fn(items[index]!, index);
+    }
+  }
+  const workers = Math.min(limit, items.length);
+  await Promise.all(Array.from({ length: workers }, () => worker()));
+  return out;
+}
 
 export interface IngestResult {
   entitiesAdded: number;
@@ -41,7 +62,7 @@ async function hashFile(path: string): Promise<string | null> {
 
 async function collectDeferRisks(projectRoot: string): Promise<KnowledgeEntityInput[]> {
   const { readdir } = await import('node:fs/promises');
-  const entities: KnowledgeEntityInput[] = [];
+  const files: string[] = [];
 
   async function walk(dir: string): Promise<void> {
     try {
@@ -52,23 +73,7 @@ async function collectDeferRisks(projectRoot: string): Promise<KnowledgeEntityIn
         if (entry.isDirectory()) {
           await walk(full);
         } else if (entry.name.endsWith('.ts')) {
-          const content = await readFile(full, 'utf-8');
-          const rel = full.replace(projectRoot + '/', '');
-          let match;
-          DEFER_REGEX.lastIndex = 0;
-          while ((match = DEFER_REGEX.exec(content)) !== null) {
-            const reason = match[1]!.trim();
-            const slug = slugify(`${rel}-${reason}`).slice(0, 48);
-            entities.push({
-              type: 'risk',
-              id: entityId('risk', slug),
-              name: reason,
-              source: rel,
-              confidence: 'high',
-              relations: [],
-              data: { file: rel, tag: match[2] },
-            });
-          }
+          files.push(full);
         }
       }
     } catch {
@@ -77,7 +82,30 @@ async function collectDeferRisks(projectRoot: string): Promise<KnowledgeEntityIn
   }
 
   await walk(join(projectRoot, 'src'));
-  return entities;
+
+  const perFile = await mapLimit(files, WALK_READ_CONCURRENCY, async (full) => {
+    const entities: KnowledgeEntityInput[] = [];
+    const content = await readFile(full, 'utf-8');
+    const rel = full.replace(projectRoot + '/', '');
+    const deferRe = new RegExp(DEFER_REGEX_SOURCE, 'gm');
+    let match: RegExpExecArray | null;
+    while ((match = deferRe.exec(content)) !== null) {
+      const reason = match[1]!.trim();
+      const slug = slugify(`${rel}-${reason}`).slice(0, 48);
+      entities.push({
+        type: 'risk',
+        id: entityId('risk', slug),
+        name: reason,
+        source: rel,
+        confidence: 'high',
+        relations: [],
+        data: { file: rel, tag: match[2] },
+      });
+    }
+    return entities;
+  });
+
+  return perFile.flat();
 }
 
 async function parseBacklogEntities(projectRoot: string): Promise<KnowledgeEntityInput[]> {
@@ -126,14 +154,14 @@ async function parseAdrEntities(projectRoot: string): Promise<KnowledgeEntityInp
   const adrDir = join(projectRoot, 'docs', 'adr');
   const entities: KnowledgeEntityInput[] = [];
   try {
-    const files = await readdir(adrDir);
-    for (const file of files) {
-      if (!file.endsWith('.md')) continue;
-      const adr = await parseAdrFile(join(adrDir, file));
-      if (adr) {
-        entities.push(...adrToEntities(adr, `docs/adr/${file}`));
-      }
-    }
+    const files = (await readdir(adrDir)).filter((file) => file.endsWith('.md'));
+    const parsed = await Promise.all(
+      files.map(async (file) => {
+        const adr = await parseAdrFile(join(adrDir, file));
+        return adr ? adrToEntities(adr, `docs/adr/${file}`) : [];
+      }),
+    );
+    entities.push(...parsed.flat());
   } catch {
     // no adr dir
   }
@@ -197,37 +225,40 @@ export async function runIngest(projectRoot: string, productName: string): Promi
   const sources: string[] = [];
   const allEntities: KnowledgeEntityInput[] = [];
 
-  const readme = await parseReadmeEntities(projectRoot, productName);
+  const [readme, backlog, adrs, graphify, components, risks] = await Promise.all([
+    parseReadmeEntities(projectRoot, productName),
+    parseBacklogEntities(projectRoot),
+    parseAdrEntities(projectRoot),
+    parseGraphifyEntities(projectRoot),
+    scanSrcComponents(projectRoot),
+    collectDeferRisks(projectRoot),
+  ]);
+
   if (readme.length) {
     sources.push('README.md');
     allEntities.push(...readme);
   }
 
-  const backlog = await parseBacklogEntities(projectRoot);
   if (backlog.length) {
     sources.push('BACKLOG.md');
     allEntities.push(...backlog);
   }
 
-  const adrs = await parseAdrEntities(projectRoot);
   if (adrs.length) {
     sources.push('docs/adr');
     allEntities.push(...adrs);
   }
 
-  const graphify = await parseGraphifyEntities(projectRoot);
   if (graphify.length) {
     sources.push('graphify-out/graph.json');
     allEntities.push(...graphify);
   }
 
-  const components = await scanSrcComponents(projectRoot);
   if (components.length) {
     sources.push('src/');
     allEntities.push(...components);
   }
 
-  const risks = await collectDeferRisks(projectRoot);
   if (risks.length) {
     sources.push('src/ (defer)');
     allEntities.push(...risks);

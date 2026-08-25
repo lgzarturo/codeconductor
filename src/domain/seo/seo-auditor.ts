@@ -11,6 +11,37 @@ import type {
   SitemapEntry,
 } from './seo-types';
 
+const HOST_CONCURRENCY = 4;
+
+async function mapLimit<T, R>(
+  items: readonly T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) return [];
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  async function worker(): Promise<void> {
+    while (true) {
+      const index = next++;
+      if (index >= items.length) return;
+      out[index] = await fn(items[index]!);
+    }
+  }
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, () => worker()),
+  );
+  return out;
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url;
+  }
+}
+
 function computeSummary(pages: PageAuditResult[]): AuditSummary {
   let passed = 0;
   let warnings = 0;
@@ -66,35 +97,45 @@ export async function auditSitemap(
     entries = entries.slice(0, maxUrls);
   }
 
-  const pages: PageAuditResult[] = [];
-
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i];
-
-    if (onProgress) {
-      onProgress(i + 1, entries.length, entry.url);
-    }
-
-    if (i > 0 && requestDelay > 0) {
-      await delay(requestDelay);
-    }
-
-    try {
-      const result = await auditSingleUrl(entry.url, { followRedirects });
-      pages.push(result);
-    } catch (error) {
-      pages.push({
-        url: entry.url,
-        checks: [{
-          name: 'fetch-error',
-          category: 'technical',
-          severity: 'error',
-          message: `Failed to fetch: ${String(error)}`,
-        }],
-        responseTime: 0,
-      });
-    }
+  const groups = new Map<string, SitemapEntry[]>();
+  for (const entry of entries) {
+    const host = hostOf(entry.url);
+    const list = groups.get(host) ?? [];
+    list.push(entry);
+    groups.set(host, list);
   }
+
+  const pagesByUrl = new Map<string, PageAuditResult>();
+  let progress = 0;
+
+  await mapLimit([...groups.values()], HOST_CONCURRENCY, async (hostEntries) => {
+    for (let i = 0; i < hostEntries.length; i++) {
+      const entry = hostEntries[i]!;
+      if (i > 0 && requestDelay > 0) {
+        await delay(requestDelay);
+      }
+      progress += 1;
+      onProgress?.(progress, entries.length, entry.url);
+      try {
+        pagesByUrl.set(entry.url, await auditSingleUrl(entry.url, { followRedirects }));
+      } catch (error) {
+        pagesByUrl.set(entry.url, {
+          url: entry.url,
+          checks: [{
+            name: 'fetch-error',
+            category: 'technical',
+            severity: 'error',
+            message: `Failed to fetch: ${String(error)}`,
+          }],
+          responseTime: 0,
+        });
+      }
+    }
+  });
+
+  const pages: PageAuditResult[] = entries.map(
+    (entry) => pagesByUrl.get(entry.url)!,
+  );
 
   try {
     let siteRoot: string;

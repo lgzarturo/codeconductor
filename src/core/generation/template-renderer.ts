@@ -13,11 +13,13 @@ export function renderTemplate(template: string, data: TemplateData): string {
 
   for (const [key, value] of Object.entries(data)) {
     const placeholder = `{{${key}}}`;
-    if (Array.isArray(value)) {
-      result = result.replace(new RegExp(placeholder, 'g'), value.join(', '));
-    } else if (value !== undefined) {
-      result = result.replace(new RegExp(placeholder, 'g'), String(value));
-    }
+    const replacement = Array.isArray(value)
+      ? value.join(', ')
+      : value !== undefined
+        ? String(value)
+        : undefined;
+    if (replacement === undefined) continue;
+    result = result.split(placeholder).join(replacement);
   }
 
   return result;

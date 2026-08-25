@@ -1,30 +1,23 @@
 import packageJson from '../../package.json';
 import { z } from 'zod';
-import { detectCommand, type DetectOptions } from '../commands/detect.command';
-import { doctorCommand, type DoctorOptions } from '../commands/doctor.command';
-import { initCommand, type InitOptions } from '../commands/init.command';
-import {
-  installCommand,
-  installPresetCommand,
-  type InstallOptions,
-  type InstallPresetOptions,
-} from '../commands/install.command';
-import { installLspCommand, type InstallLspOptions } from '../commands/install-lsp.command';
-import { debtHarvestCommand, type DebtHarvestOptions } from '../commands/debt-harvest.command';
-import { goalCommand, type GoalOptions } from '../commands/goal.command';
-import { ccepCommand, type CcepOptions } from '../commands/ccep.command';
-import { openspecCommand, type OpenspecOptions } from '../commands/openspec.command';
-import { scorecardCommand, type ScorecardOptions } from '../commands/scorecard.command';
-import { helpCommand, type HelpOptions } from '../commands/help.command';
-import { seoAuditCommand } from '../commands/seo-audit.command';
-import { seoLlmsCommand } from '../commands/seo-llms.command';
+import type { DetectOptions } from '../commands/detect.command';
+import type { DoctorOptions } from '../commands/doctor.command';
+import type { InitOptions } from '../commands/init.command';
+import type { InstallOptions, InstallPresetOptions } from '../commands/install.command';
+import type { InstallLspOptions } from '../commands/install-lsp.command';
+import type { DebtHarvestOptions } from '../commands/debt-harvest.command';
+import type { GoalOptions } from '../commands/goal.command';
+import type { CcepOptions } from '../commands/ccep.command';
+import type { OpenspecOptions } from '../commands/openspec.command';
+import type { ScorecardOptions } from '../commands/scorecard.command';
+import type { HelpOptions } from '../commands/help.command';
 import type { SeoAuditOptions, SeoLlmsOptions } from '../domain/seo/seo-types';
-import { updateCommand, type UpdateOptions } from '../commands/update.command';
-import { ingestCommand, type IngestOptions } from '../commands/ingest.command';
-import { productCommand, type ProductOptions } from '../commands/product.command';
-import { orchestrateCommand, type OrchestrateOptions } from '../commands/orchestrate.command';
-import { impactCommand, type ImpactOptions } from '../commands/impact.command';
-import { verifyCommand, type VerifyOptions } from '../commands/verify.command';
+import type { UpdateOptions } from '../commands/update.command';
+import type { IngestOptions } from '../commands/ingest.command';
+import type { ProductOptions } from '../commands/product.command';
+import type { OrchestrateOptions } from '../commands/orchestrate.command';
+import type { ImpactOptions } from '../commands/impact.command';
+import type { VerifyOptions } from '../commands/verify.command';
 import type { OutputMode } from '../utils/logger';
 
 /**
@@ -361,7 +354,8 @@ export async function routeCommand(
   }
 
   switch (command) {
-    case 'init':
+    case 'init': {
+      const { initCommand } = await import('../commands/init.command');
       return initCommand({
         projectRoot,
         dryRun: flags.dryRun,
@@ -370,12 +364,15 @@ export async function routeCommand(
         output: flags.output,
         locale: (options.locale === 'es' ? 'es' : 'en') as 'en' | 'es',
       } as InitOptions);
+    }
 
-    case 'detect':
+    case 'detect': {
+      const { detectCommand } = await import('../commands/detect.command');
       return detectCommand({
         projectRoot,
         output: flags.output,
       } as DetectOptions);
+    }
 
     case 'install': {
       const isGlobal = options.global === true || options.global === 'true';
@@ -401,6 +398,7 @@ export async function routeCommand(
       target = target || 'opencode';
 
       if (resolvedSubcommand === 'lsp') {
+        const { installLspCommand } = await import('../commands/install-lsp.command');
         return installLspCommand({
           projectRoot,
           target,
@@ -412,6 +410,7 @@ export async function routeCommand(
         } as InstallLspOptions);
       }
 
+      const { installCommand, installPresetCommand } = await import('../commands/install.command');
       if (resolvedSubcommand === 'preset') {
         return installPresetCommand({
           projectRoot,
@@ -434,13 +433,16 @@ export async function routeCommand(
       } as InstallOptions);
     }
 
-    case 'doctor':
+    case 'doctor': {
+      const { doctorCommand } = await import('../commands/doctor.command');
       return doctorCommand({
         projectRoot,
         output: flags.output,
       } as DoctorOptions);
+    }
 
-    case 'update':
+    case 'update': {
+      const { updateCommand } = await import('../commands/update.command');
       return updateCommand({
         projectRoot,
         dryRun: flags.dryRun,
@@ -448,6 +450,7 @@ export async function routeCommand(
         global: options.global === true || options.global === 'true',
         output: flags.output,
       } as UpdateOptions);
+    }
 
     case 'help':
       return {
@@ -459,24 +462,29 @@ export async function routeCommand(
         },
       };
 
-    case 'cc-help':
+    case 'cc-help': {
+      const { helpCommand } = await import('../commands/help.command');
       return helpCommand({
         projectRoot,
         target: options.target as string | undefined,
         output: flags.output,
         command: 'cc-help',
       } as HelpOptions);
+    }
 
     case 'debt-harvest':
-    case 'harvest':
+    case 'harvest': {
+      const { debtHarvestCommand } = await import('../commands/debt-harvest.command');
       return debtHarvestCommand({
         projectRoot,
         dir: options.dir as string | undefined,
         output: flags.output,
       } as DebtHarvestOptions);
+    }
 
     case 'goal':
-    case 'cc-goal':
+    case 'cc-goal': {
+      const { goalCommand } = await import('../commands/goal.command');
       return goalCommand({
         objective: subcommand || (options.objective as string) || args.rest?.join(' ') || '',
         projectRoot,
@@ -484,12 +492,15 @@ export async function routeCommand(
         product: options.product === true || options.product === 'true',
         dryRun: flags.dryRun,
       } as GoalOptions);
+    }
 
-    case 'ingest':
+    case 'ingest': {
+      const { ingestCommand } = await import('../commands/ingest.command');
       return ingestCommand({
         projectRoot,
         output: flags.output,
       } as IngestOptions);
+    }
 
     case 'product':
     case 'cc-product': {
@@ -501,6 +512,7 @@ export async function routeCommand(
       const queryText = productSub === 'query' ? args.rest?.join(' ') : undefined;
       const pathFrom = productSub === 'path' ? args.rest?.[0] : undefined;
       const pathTo = productSub === 'path' ? args.rest?.[1] : undefined;
+      const { productCommand } = await import('../commands/product.command');
       return productCommand({
         subcommand: productSub,
         projectRoot,
@@ -520,6 +532,7 @@ export async function routeCommand(
         return unknownSubcommand(command, subcommand, validSubs);
       }
       const orchSub = subcommand && validSubs.includes(subcommand) ? subcommand : 'status';
+      const { orchestrateCommand } = await import('../commands/orchestrate.command');
       return orchestrateCommand({
         subcommand: orchSub,
         projectRoot,
@@ -535,6 +548,7 @@ export async function routeCommand(
     case 'cc-impact': {
       const filesOpt = options.files as string | undefined;
       const files = filesOpt ? filesOpt.split(',').map((s) => s.trim()) : args.rest;
+      const { impactCommand } = await import('../commands/impact.command');
       return impactCommand({
         projectRoot,
         output: flags.output,
@@ -545,7 +559,8 @@ export async function routeCommand(
     }
 
     case 'verify':
-    case 'cc-verify':
+    case 'cc-verify': {
+      const { verifyCommand } = await import('../commands/verify.command');
       return verifyCommand({
         projectRoot,
         output: flags.output,
@@ -553,6 +568,7 @@ export async function routeCommand(
         allowCompileCheck:
           options['allow-compile-check'] === true || options['allow-compile-check'] === 'true',
       } as VerifyOptions);
+    }
 
     case 'ccep': {
       const validSubs = ['parse', 'profile', 'resolve', 'compile', 'validate', 'evaluate'];
@@ -574,6 +590,7 @@ export async function routeCommand(
           ? requestParts
           : undefined;
 
+      const { ccepCommand } = await import('../commands/ccep.command');
       return ccepCommand({
         subcommand: ccepSub,
         projectRoot,
@@ -605,6 +622,7 @@ export async function routeCommand(
         return unknownSubcommand(command, subcommand, validSubs);
       }
 
+      const { openspecCommand } = await import('../commands/openspec.command');
       return openspecCommand({
         subcommand: openspecSub,
         itemId,
@@ -640,6 +658,7 @@ export async function routeCommand(
           ? options.models.split(',').map((s) => s.trim())
           : undefined;
 
+      const { scorecardCommand } = await import('../commands/scorecard.command');
       return scorecardCommand({
         subcommand: scorecardSub,
         projectRoot,
@@ -675,6 +694,7 @@ export async function routeCommand(
         return cliContractError('seo', seoOptions.errors);
       }
       if (subcommand === 'audit') {
+        const { seoAuditCommand } = await import('../commands/seo-audit.command');
         return seoAuditCommand({
           url: options.url as string | undefined,
           sitemap: options.sitemap as string | undefined,
@@ -688,6 +708,7 @@ export async function routeCommand(
         } as SeoAuditOptions);
       }
       if (subcommand === 'llms') {
+        const { seoLlmsCommand } = await import('../commands/seo-llms.command');
         return seoLlmsCommand({
           url: options.url as string | undefined,
           sitemap: options.sitemap as string | undefined,

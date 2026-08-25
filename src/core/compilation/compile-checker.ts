@@ -41,8 +41,11 @@ const DEFAULT_TIMEOUT_MS = 120_000;
 
 /**
  * Tokenize a shell command string, respecting single and double quotes.
+ *
+ * Exported so other modules that must spawn configured commands (e.g. the
+ * regression checklist) can avoid invoking a shell entirely.
  */
-function tokenizeCommand(cmd: string): string[] {
+export function tokenizeCommand(cmd: string): string[] {
   const tokens: string[] = [];
   let current = '';
   let inSingle = false;
@@ -77,6 +80,58 @@ function tokenizeCommand(cmd: string): string[] {
   }
   if (current) tokens.push(current);
   return tokens;
+}
+
+/**
+ * Compile commands that may run without `--allow-compile-check`.
+ *
+ * Matching is token-prefix on a path-free argv[0] so `./evil` or
+ * `/tmp/tsc` never slip through as "tsc". Extra flags after the prefix
+ * are allowed (`tsc --noEmit`, `bun run typecheck`).
+ */
+const ALLOWLISTED_ARGV_PREFIXES: readonly (readonly string[])[] = [
+  ['tsc'],
+  ['bun', 'run'],
+  ['bun', 'test'],
+  ['npm', 'test'],
+  ['npm', 'run'],
+  ['npx', 'tsc'],
+  ['pnpm', 'test'],
+  ['pnpm', 'run'],
+  ['yarn', 'test'],
+  ['yarn', 'run'],
+];
+
+export function isAllowlistedCompileCommand(command: string | string[]): boolean {
+  const parts = Array.isArray(command) ? command : tokenizeCommand(command);
+  if (parts.length === 0) return false;
+  const bin = parts[0]!;
+  if (bin.includes('/') || bin.includes('\\')) return false;
+  return ALLOWLISTED_ARGV_PREFIXES.some(
+    (prefix) =>
+      parts.length >= prefix.length &&
+      prefix.every((token, i) => parts[i] === token),
+  );
+}
+
+/**
+ * Minimal environment for compile-check child processes.
+ *
+ * The compile command comes from the analyzed project's own config, so the
+ * child must not inherit secrets (API keys, cloud credentials) from
+ * `process.env`. Only what a compiler needs to run is forwarded.
+ */
+function minimalChildEnv(): Record<string, string> {
+  const env: Record<string, string> = {
+    PATH: process.env.PATH ?? '',
+    NODE_NO_WARNINGS: '1',
+  };
+  if (process.env.HOME) env.HOME = process.env.HOME;
+  if (process.platform === 'win32') {
+    if (process.env.SystemRoot) env.SystemRoot = process.env.SystemRoot;
+    if (process.env.USERPROFILE) env.USERPROFILE = process.env.USERPROFILE;
+  }
+  return env;
 }
 
 // ─── Error parsers ───────────────────────────────────────────────────────────
@@ -230,7 +285,7 @@ export async function runCompileCheck(
       cwd,
       stdout: 'pipe',
       stderr: 'pipe',
-      env: { ...process.env, NODE_NO_WARNINGS: '1' },
+      env: minimalChildEnv(),
       // On POSIX this creates a process group so timeout cleanup can terminate
       // descendants as well as the direct child.
       detached: process.platform !== 'win32',

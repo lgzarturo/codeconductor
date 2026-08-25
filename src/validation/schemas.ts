@@ -43,7 +43,10 @@ export const ProjectProfileSchema = z.object({
 });
 
 /**
- * Compile check config schema — validates the compileCheck section
+ * Compile check config schema — validates the compileCheck section.
+ *
+ * `command` is a string from the analyzed repo. Verification only executes it
+ * when `--allow-compile-check` is set or the argv matches the compile allowlist.
  */
 export const CompileCheckConfigSchema = z.object({
   enabled: z.boolean(),

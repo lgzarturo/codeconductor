@@ -20,6 +20,30 @@ export function assertPinnedBinaryUrl(url: string): void {
   }
 }
 
+/**
+ * Reject npm/pip package specs without an exact version pin.
+ *
+ * Installing `latest` from a registry is a supply-chain risk: a compromised
+ * release would be picked up silently on the next install. Pinned specs look
+ * like `name@1.2.3` or `@scope/name@1.2.3` (pip: `name==1.2.3`).
+ */
+export function assertPinnedPackage(def: {
+  readonly serverName: string;
+  readonly packageManager: string;
+  readonly package: string;
+}): void {
+  const pinned =
+    def.packageManager === 'pip'
+      ? /^[A-Za-z0-9._-]+==\d[^\s]*$/.test(def.package)
+      : /^(@[A-Za-z0-9._~-]+\/)?[A-Za-z0-9._~-]+@\d[^\s]*$/.test(def.package);
+  if (!pinned) {
+    throw new Error(
+      `Refusing to install ${def.serverName}: package "${def.package}" is not version-pinned. ` +
+        'Record an exact version (e.g. name@1.2.3) before installing.',
+    );
+  }
+}
+
 export function assertSha256Hex(content: Uint8Array, expectedHex: string): void {
   const expected = expectedHex.trim().toLowerCase();
   if (!/^[0-9a-f]{64}$/.test(expected)) {

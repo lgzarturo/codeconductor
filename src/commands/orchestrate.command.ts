@@ -20,12 +20,14 @@ export interface OrchestrateOptions {
   readonly output: OutputMode;
   readonly taskId?: string;
   readonly complete?: boolean;
+  /** Explicit trust to run the repo-configured compile command during verification. */
+  readonly allowCompileCheck?: boolean;
 }
 
 export async function orchestrateCommand(
   options: OrchestrateOptions,
 ): Promise<{ code: number; data?: unknown }> {
-  const { subcommand, projectRoot, output, taskId, complete } = options;
+  const { subcommand, projectRoot, output, taskId, complete, allowCompileCheck } = options;
 
   try {
     switch (subcommand) {
@@ -34,7 +36,7 @@ export async function orchestrateCommand(
       case 'next':
         return await handleNext(projectRoot, output);
       case 'run':
-        return await handleRun(projectRoot, output, taskId, complete);
+        return await handleRun(projectRoot, output, taskId, complete, allowCompileCheck);
       case 'cycle':
         return await handleCycle(projectRoot, output);
       default:
@@ -125,6 +127,7 @@ async function handleRun(
   output: OutputMode,
   taskId?: string,
   complete?: boolean,
+  allowCompileCheck?: boolean,
 ): Promise<{ code: number; data?: unknown }> {
   if (!complete) {
     return handleNext(projectRoot, output);
@@ -161,7 +164,7 @@ async function handleRun(
   }
   const card = goalTaskToCanonicalCard(enrichedTask, enriched.objective);
 
-  const verify = await runVerification(projectRoot, taskId, goal.data);
+  const verify = await runVerification(projectRoot, taskId, goal.data, { allowCompileCheck });
   if (!verify.success) {
     return { code: 1, data: { success: false, command: 'orchestrate', errors: [verify.error.message] } };
   }

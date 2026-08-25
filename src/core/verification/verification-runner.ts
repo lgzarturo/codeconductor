@@ -9,7 +9,10 @@ import {
   type EvidenceInput,
 } from '../../validation/schemas';
 import { loadConfig } from '../config/config-loader';
-import { runCompileCheck } from '../compilation/compile-checker';
+import {
+  isAllowlistedCompileCommand,
+  runCompileCheck,
+} from '../compilation/compile-checker';
 import { err, ok, type Result } from '../../utils/result';
 import { evidenceDir } from '../product-graph/paths';
 import { appendEvent } from '../memory/episodic-store';
@@ -136,10 +139,21 @@ export async function validateEvidenceIds(
   return ok(undefined);
 }
 
+export interface RunVerificationOptions {
+  /**
+   * Explicit trust to execute the compile command configured by the analyzed
+   * project itself (`.codeconductor/config.yml`). Without this opt-in the
+   * command is executed only if it matches the compile allowlist
+   * (`tsc`, `bun run`, `npm test`, …). Anything else fails closed.
+   */
+  readonly allowCompileCheck?: boolean;
+}
+
 export async function runVerification(
   projectRoot: string,
   taskId: string,
   goal?: GoalGraphInput,
+  options?: RunVerificationOptions,
 ): Promise<Result<{ passed: boolean; checks: VerificationCheck[]; evidenceIds: string[] }, Error>> {
   const checks: VerificationCheck[] = [];
   const evidenceIds: string[] = [];
@@ -190,6 +204,17 @@ export async function runVerification(
         name: 'compile_check',
         passed: false,
         message: 'Compile check enabled but no command configured',
+      });
+    } else if (
+      !options?.allowCompileCheck &&
+      !isAllowlistedCompileCommand(compileCheck.command)
+    ) {
+      checks.push({
+        name: 'compile_check',
+        passed: false,
+        message:
+          'Compile check not executed: the command is not on the compile allowlist. ' +
+          'Re-run with --allow-compile-check to trust it.',
       });
     } else {
       const compile = await runCompileCheck({

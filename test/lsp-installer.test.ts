@@ -110,11 +110,11 @@ describe('LspInstaller Domain Types', () => {
         language: 'php',
         serverName: 'Intelephense',
         packageManager: 'npm',
-        package: '@bmewburn/vscode-intelephense-client',
+        package: 'intelephense@1.18.5',
         binaryName: 'intelephense',
-        installCmd: 'npm install -g @bmewburn/vscode-intelephense-client',
+        installCmd: 'npm install -g intelephense@1.18.5',
         versionFlag: '--version',
-        npmDetect: '@bmewburn/vscode-intelephense-client',
+        npmDetect: 'intelephense',
       };
 
       expect(def.id).toBe('php');
@@ -128,9 +128,9 @@ describe('LspInstaller Domain Types', () => {
         language: 'python',
         serverName: 'Pyright',
         packageManager: 'npm',
-        package: 'pyright',
+        package: 'pyright@1.1.413',
         binaryName: 'pyright-langserver',
-        installCmd: 'npm install -g pyright',
+        installCmd: 'npm install -g pyright@1.1.413',
         versionFlag: '--version',
         npmDetect: 'pyright',
       };

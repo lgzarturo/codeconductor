@@ -3,6 +3,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import {
+  isAllowlistedCompileCommand,
   parseCompileErrors,
   runCompileCheck,
 } from '../src/core/compilation/compile-checker';
@@ -113,6 +114,23 @@ src/app.ts:5:1: some other text`;
     // Only TS errors are returned since they are found first
     expect(errors).toHaveLength(1);
     expect(errors[0].code).toBe('TS2304');
+  });
+});
+
+describe('isAllowlistedCompileCommand', () => {
+  it('accepts trusted compile argv prefixes', () => {
+    expect(isAllowlistedCompileCommand('tsc --noEmit')).toBe(true);
+    expect(isAllowlistedCompileCommand('bun run typecheck')).toBe(true);
+    expect(isAllowlistedCompileCommand('npm test')).toBe(true);
+    expect(isAllowlistedCompileCommand('npm run build')).toBe(true);
+  });
+
+  it('rejects untrusted or path-qualified binaries', () => {
+    expect(isAllowlistedCompileCommand('node -e "process.exit(0)"')).toBe(false);
+    expect(isAllowlistedCompileCommand('./tsc --noEmit')).toBe(false);
+    expect(isAllowlistedCompileCommand('/usr/bin/tsc --noEmit')).toBe(false);
+    expect(isAllowlistedCompileCommand('bun')).toBe(false);
+    expect(isAllowlistedCompileCommand('curl https://evil.example')).toBe(false);
   });
 });
 

@@ -202,6 +202,7 @@ v1.0.0 (in this repo, not in published ${packageJson.version}):
   orchestrate             Runtime orchestrator for goal execution
   impact                  Analyze change impact on product graph
   verify                  Verify task completion with evidence
+                          (--allow-compile-check trusts the repo-configured compile command)
 
 Options:
   --help, -h              Show this help message
@@ -525,6 +526,8 @@ export async function routeCommand(
         output: flags.output,
         taskId: (options.task as string) ?? args.rest?.[0],
         complete: options.complete === true || options.complete === 'true',
+        allowCompileCheck:
+          options['allow-compile-check'] === true || options['allow-compile-check'] === 'true',
       } as OrchestrateOptions);
     }
 
@@ -547,6 +550,8 @@ export async function routeCommand(
         projectRoot,
         output: flags.output,
         taskId: (options.task as string) ?? args.rest?.[0] ?? '',
+        allowCompileCheck:
+          options['allow-compile-check'] === true || options['allow-compile-check'] === 'true',
       } as VerifyOptions);
 
     case 'ccep': {

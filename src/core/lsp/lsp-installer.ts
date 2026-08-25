@@ -6,6 +6,7 @@ import { promisify } from 'node:util';
 import type { LspDefinition, LspInstallResult, LspInstallReport, LspStatus } from '../../domain/lsp/lsp-definition';
 import {
   assertBinaryArtifact,
+  assertPinnedPackage,
   assertSha256Hex,
   resolveSafeArchiveEntry,
 } from './binary-integrity';
@@ -157,6 +158,7 @@ export class LspInstaller {
   }
 
   private async installNpm(def: LspDefinition): Promise<void> {
+    assertPinnedPackage(def);
     try {
       await execFileAsync('npm', ['install', '-g', def.package], { timeout: 120000 });
     } catch (error) {
@@ -165,6 +167,7 @@ export class LspInstaller {
   }
 
   private async installPip(def: LspDefinition): Promise<void> {
+    assertPinnedPackage(def);
     try {
       await execFileAsync('pip', ['install', '--user', def.package], { timeout: 120000 });
     } catch (error) {
@@ -233,9 +236,13 @@ export class LspInstaller {
         resolveSafeArchiveEntry(workDir, entry);
       }
 
-      await execFileAsync('tar', ['-xzf', archivePath, '-C', workDir], {
-        timeout: 120000,
-      });
+      await execFileAsync(
+        'tar',
+        // --no-same-owner/--no-same-permissions: archive metadata must never
+        // grant ownership or loose permissions in the user's bin directory.
+        ['-xzf', archivePath, '-C', workDir, '--no-same-owner', '--no-same-permissions'],
+        { timeout: 120000 },
+      );
 
       // Prefer a discovered binary named like def.binaryName under the extract root.
       const candidate = join(workDir, def.binaryName);

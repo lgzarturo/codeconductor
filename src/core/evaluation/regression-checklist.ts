@@ -1,7 +1,8 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parse } from 'yaml';
+import { tokenizeCommand } from '../compilation/compile-checker';
 import { ROOT_PRESETS_DIR } from '../presets/package-paths';
 import { err, ok, type Result } from '../../utils/result';
 
@@ -42,6 +43,33 @@ export async function loadRegressionChecklist(): Promise<CheckDef[]> {
 }
 
 /**
+ * Execute one checklist command without a shell.
+ *
+ * Tokenized `execFile` — never `execSync(string)`. A checklist command must
+ * not be able to smuggle shell metacharacters (`&&`, `|`, `$()`) into a
+ * shell; they are passed as literal argv entries instead.
+ */
+export function runCheckCommand(
+  cmd: string,
+  cwd: string,
+): { passed: boolean; message: string } {
+  const [file, ...args] = tokenizeCommand(cmd);
+  if (!file) return { passed: false, message: 'Empty command' };
+  try {
+    execFileSync(file, args, {
+      cwd,
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      timeout: 120000,
+    });
+    return { passed: true, message: `Command succeeded: ${cmd}` };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { passed: false, message: `Command failed: ${cmd} — ${msg.slice(0, 200)}` };
+  }
+}
+
+/**
  * Run regression checklist against project.
  */
 export async function runRegressionChecklist(
@@ -66,28 +94,12 @@ export async function runRegressionChecklist(
       const cmd = options.command && def.id === 'tests_pass' ? options.command : def.command;
       if (!cmd) continue;
 
-      try {
-        execSync(cmd, {
-          cwd: projectRoot,
-          encoding: 'utf-8',
-          stdio: ['ignore', 'pipe', 'pipe'],
-          timeout: 120000,
-        });
-        checks.push({
-          id: def.id,
-          required: def.required ?? true,
-          passed: true,
-          message: `Command succeeded: ${cmd}`,
-        });
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        checks.push({
-          id: def.id,
-          required: def.required ?? true,
-          passed: false,
-          message: `Command failed: ${cmd} — ${msg.slice(0, 200)}`,
-        });
-      }
+      const outcome = runCheckCommand(cmd, projectRoot);
+      checks.push({
+        id: def.id,
+        required: def.required ?? true,
+        ...outcome,
+      });
     }
 
     const report: RegressionReport = {

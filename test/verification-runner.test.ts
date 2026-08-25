@@ -112,22 +112,79 @@ describe('runVerification: fail-closed', () => {
     expect(result.success).toBe(false);
   });
 
-  test('actually executes the configured compile command', async () => {
+  test('allowlisted compile commands run without --allow-compile-check', async () => {
+    await writeConfig(configWithCompileCheck('bun run --silent cc-no-such-script-xyz'));
+
+    const result = await runVerification(projectRoot, 'task-1', makeGoal());
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const check = result.data.checks.find((c) => c.name === 'compile_check');
+    expect(check?.message).not.toContain('--allow-compile-check');
+    expect(check?.message).toMatch(/Compile check (passed|failed)/);
+  });
+
+  test('does not execute the repo-configured compile command without explicit opt-in', async () => {
     await writeConfig(
       configWithCompileCheck(`node -e "require('fs').writeFileSync('compile-ran.txt','1')"`),
     );
 
     const result = await runVerification(projectRoot, 'task-1', makeGoal());
+
+    expect(existsSync(join(projectRoot, 'compile-ran.txt'))).toBe(false);
+    expectFailClosed(result);
+    if (result.success) {
+      const check = result.data.checks.find((c) => c.name === 'compile_check');
+      expect(check?.message).toContain('--allow-compile-check');
+    }
+  });
+
+  test('actually executes the configured compile command with opt-in', async () => {
+    await writeConfig(
+      configWithCompileCheck(`node -e "require('fs').writeFileSync('compile-ran.txt','1')"`),
+    );
+
+    const result = await runVerification(projectRoot, 'task-1', makeGoal(), {
+      allowCompileCheck: true,
+    });
     expect(existsSync(join(projectRoot, 'compile-ran.txt'))).toBe(true);
     expect(result.success).toBe(true);
     if (!result.success) return;
     expect(result.data.passed).toBe(true);
   });
 
+  test('the compile child process does not inherit secrets from process.env', async () => {
+    process.env.CC_TEST_SECRET_LEAK = 'top-secret';
+    process.env.OPENAI_API_KEY = 'sk-test-must-not-leak';
+    try {
+      await writeConfig(
+        configWithCompileCheck(
+          `node -e "require('fs').writeFileSync('child-env.json', JSON.stringify({ keys: Object.keys(process.env), path: process.env.PATH }))"`,
+        ),
+      );
+
+      await runVerification(projectRoot, 'task-1', makeGoal(), { allowCompileCheck: true });
+
+      const childEnv = JSON.parse(
+        await readFile(join(projectRoot, 'child-env.json'), 'utf-8'),
+      ) as { keys: string[]; path?: string };
+      expect(childEnv.keys).not.toContain('CC_TEST_SECRET_LEAK');
+      expect(childEnv.keys).not.toContain('OPENAI_API_KEY');
+      expect(childEnv.keys).toContain('PATH');
+      expect(typeof childEnv.path).toBe('string');
+      expect(childEnv.path!.length).toBeGreaterThan(0);
+    } finally {
+      delete process.env.CC_TEST_SECRET_LEAK;
+      delete process.env.OPENAI_API_KEY;
+    }
+  });
+
   test('fails closed when the compile command exits non-zero', async () => {
     await writeConfig(configWithCompileCheck('node -e "process.exit(1)"'));
 
-    const result = await runVerification(projectRoot, 'task-1', makeGoal());
+    const result = await runVerification(projectRoot, 'task-1', makeGoal(), {
+      allowCompileCheck: true,
+    });
     expectFailClosed(result);
   });
 
@@ -135,7 +192,9 @@ describe('runVerification: fail-closed', () => {
     await writeConfig(configWithCompileCheck('node -e "setTimeout(() => {}, 3000)"', 100));
 
     const startedAt = performance.now();
-    const result = await runVerification(projectRoot, 'task-1', makeGoal());
+    const result = await runVerification(projectRoot, 'task-1', makeGoal(), {
+      allowCompileCheck: true,
+    });
     const elapsedMs = performance.now() - startedAt;
 
     expectFailClosed(result);
@@ -145,7 +204,9 @@ describe('runVerification: fail-closed', () => {
   test('fails closed when the compile command cannot be spawned', async () => {
     await writeConfig(configWithCompileCheck('cc-nonexistent-binary-xyz --check'));
 
-    const result = await runVerification(projectRoot, 'task-1', makeGoal());
+    const result = await runVerification(projectRoot, 'task-1', makeGoal(), {
+      allowCompileCheck: true,
+    });
     expectFailClosed(result);
   });
 

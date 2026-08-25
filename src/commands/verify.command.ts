@@ -6,6 +6,8 @@ export interface VerifyOptions {
   readonly projectRoot: string;
   readonly output: OutputMode;
   readonly taskId: string;
+  /** Explicit trust to run the repo-configured compile command. */
+  readonly allowCompileCheck?: boolean;
 }
 
 export async function verifyCommand(
@@ -27,7 +29,9 @@ export async function verifyCommand(
   const goal = await loadGoal(projectRoot);
   const goalData = goal.success ? goal.data : undefined;
 
-  const result = await runVerification(projectRoot, taskId, goalData);
+  const result = await runVerification(projectRoot, taskId, goalData, {
+    allowCompileCheck: options.allowCompileCheck === true,
+  });
   if (!result.success) {
     return {
       code: 1,

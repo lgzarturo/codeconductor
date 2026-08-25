@@ -4,14 +4,14 @@
     {
       "id": "tests_pass",
       "required": false,
-      "passed": true,
-      "message": "Command succeeded: npm test"
+      "passed": false,
+      "message": "Command failed: npm test — Command failed: npm test\n[loop] 2026-08-25T05:30:53.495Z phase=IDLE action=INIT iteration=0\n[loop] 2026-08-25T05:30:53.496Z phase=RUNNING action=START iteration=1\n[loop] 2026-08-25T05:30:53.496Z phase"
     },
     {
       "id": "doctor_config",
       "required": false,
-      "passed": false,
-      "message": "Command failed: npx cc-codeconductor doctor — Command failed: npx cc-codeconductor doctor\nnode:path:1339\n      validateString(arg, 'path');\n      ^\n\nTypeError [ERR_INVALID_ARG_TYPE]: The \"path\" argument must be of type string. Received undefined\n"
+      "passed": true,
+      "message": "Command succeeded: npx cc-codeconductor doctor"
     },
     {
       "id": "no_scope_creep",
@@ -20,5 +20,5 @@
       "message": "diff_scope check requires task context; skipped in CLI (manual in workflow)"
     }
   ],
-  "timestamp": "2026-08-22T16:38:23.985Z"
+  "timestamp": "2026-08-25T05:31:30.124Z"
 }

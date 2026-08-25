@@ -1,94 +1,94 @@
 {
   "version": 1,
-  "activeItemId": "BC-010",
+  "activeItemId": "BC-011",
   "taskCards": [
     {
-      "id": "BC-010-discover",
-      "backlogId": "BC-010",
+      "id": "BC-011-discover",
+      "backlogId": "BC-011",
       "phase": "discover",
-      "title": "BC-010: Discover scope and impact",
-      "prompt": "Backlog item BC-010 — Gate pre-commit typecheck y test adaptado a Bun\n\nDescription: Portar setup-pre-commit adaptado a stdlib-first; un hook pre-commit mínimo que corre bun run typecheck y bun test sin añadir Husky ni lint-staged salvo que el proyecto destino ya los use.\nScope: Plantilla de hook pre-commit y documentación del gate para agentes.\n\nMap repository structure, conventions, and impact radius for this change.",
+      "title": "BC-011: Discover scope and impact",
+      "prompt": "Backlog item BC-011 — Comando /cc:handoff para traspaso entre sesiones\n\nDescription: /cc:handoff ya existe y genera `.codeconductor/sessions/handoff.md` con estado, archivos tocados y próximo comando; falta que declare explícitamente el context_scope recomendado para la próxima sesión y verificación de que una sesión nueva puede retomar el trabajo solo con ese documento.\nScope: Añadir al handoff generado la declaración explícita de context_scope (isolated/continuation/full) recomendado para la próxima sesión.\n\nMap repository structure, conventions, and impact radius for this change.",
       "agent": "repo-explorer",
       "modelHint": "repo-explorer",
       "dependsOn": [],
       "acceptanceCriteria": [
         "Repo map identifies relevant files and impact radius"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
-      "id": "BC-010-design",
-      "backlogId": "BC-010",
+      "id": "BC-011-design",
+      "backlogId": "BC-011",
       "phase": "design",
-      "title": "BC-010: Technical design",
-      "prompt": "Backlog item BC-010 — Gate pre-commit typecheck y test adaptado a Bun\n\nDescription: Portar setup-pre-commit adaptado a stdlib-first; un hook pre-commit mínimo que corre bun run typecheck y bun test sin añadir Husky ni lint-staged salvo que el proyecto destino ya los use.\nScope: Plantilla de hook pre-commit y documentación del gate para agentes.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
+      "title": "BC-011: Technical design",
+      "prompt": "Backlog item BC-011 — Comando /cc:handoff para traspaso entre sesiones\n\nDescription: /cc:handoff ya existe y genera `.codeconductor/sessions/handoff.md` con estado, archivos tocados y próximo comando; falta que declare explícitamente el context_scope recomendado para la próxima sesión y verificación de que una sesión nueva puede retomar el trabajo solo con ese documento.\nScope: Añadir al handoff generado la declaración explícita de context_scope (isolated/continuation/full) recomendado para la próxima sesión.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
       "agent": "architect",
       "modelHint": "architect",
       "dependsOn": [
-        "BC-010-discover"
+        "BC-011-discover"
       ],
       "acceptanceCriteria": [
         "Technical plan lists files affected and approach"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
-      "id": "BC-010-test",
-      "backlogId": "BC-010",
+      "id": "BC-011-test",
+      "backlogId": "BC-011",
       "phase": "test",
-      "title": "BC-010: Test coverage",
-      "prompt": "Backlog item BC-010 — Gate pre-commit typecheck y test adaptado a Bun\n\nDescription: Portar setup-pre-commit adaptado a stdlib-first; un hook pre-commit mínimo que corre bun run typecheck y bun test sin añadir Husky ni lint-staged salvo que el proyecto destino ya los use.\nScope: Plantilla de hook pre-commit y documentación del gate para agentes.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
+      "title": "BC-011: Test coverage",
+      "prompt": "Backlog item BC-011 — Comando /cc:handoff para traspaso entre sesiones\n\nDescription: /cc:handoff ya existe y genera `.codeconductor/sessions/handoff.md` con estado, archivos tocados y próximo comando; falta que declare explícitamente el context_scope recomendado para la próxima sesión y verificación de que una sesión nueva puede retomar el trabajo solo con ese documento.\nScope: Añadir al handoff generado la declaración explícita de context_scope (isolated/continuation/full) recomendado para la próxima sesión.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
       "agent": "tester",
       "modelHint": "tester",
       "dependsOn": [
-        "BC-010-design"
+        "BC-011-design"
       ],
       "acceptanceCriteria": [
-        "Test covers: El hook pre-commit ejecuta typecheck y test antes de permitir el commit",
-        "Test covers: El gate no añade dependencias externas cuando el proyecto no las tiene",
-        "Test covers: Un commit con typecheck fallido queda bloqueado por el hook"
+        "Test covers: /cc:handoff produce un documento de handoff con el estado y los próximos pasos",
+        "Test covers: El documento declara el context_scope recomendado para la próxima sesión",
+        "Test covers: Una sesión nueva puede retomar el trabajo solo con el handoff"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
-      "id": "BC-010-implement",
-      "backlogId": "BC-010",
+      "id": "BC-011-implement",
+      "backlogId": "BC-011",
       "phase": "implement",
-      "title": "BC-010: Implementation",
-      "prompt": "Backlog item BC-010 — Gate pre-commit typecheck y test adaptado a Bun\n\nDescription: Portar setup-pre-commit adaptado a stdlib-first; un hook pre-commit mínimo que corre bun run typecheck y bun test sin añadir Husky ni lint-staged salvo que el proyecto destino ya los use.\nScope: Plantilla de hook pre-commit y documentación del gate para agentes.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
+      "title": "BC-011: Implementation",
+      "prompt": "Backlog item BC-011 — Comando /cc:handoff para traspaso entre sesiones\n\nDescription: /cc:handoff ya existe y genera `.codeconductor/sessions/handoff.md` con estado, archivos tocados y próximo comando; falta que declare explícitamente el context_scope recomendado para la próxima sesión y verificación de que una sesión nueva puede retomar el trabajo solo con ese documento.\nScope: Añadir al handoff generado la declaración explícita de context_scope (isolated/continuation/full) recomendado para la próxima sesión.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
       "agent": "implementer",
       "modelHint": "implementer",
       "dependsOn": [
-        "BC-010-test"
+        "BC-011-test"
       ],
       "acceptanceCriteria": [
-        "El hook pre-commit ejecuta typecheck y test antes de permitir el commit",
-        "El gate no añade dependencias externas cuando el proyecto no las tiene",
-        "Un commit con typecheck fallido queda bloqueado por el hook"
+        "/cc:handoff produce un documento de handoff con el estado y los próximos pasos",
+        "El documento declara el context_scope recomendado para la próxima sesión",
+        "Una sesión nueva puede retomar el trabajo solo con el handoff"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
-      "id": "BC-010-review",
-      "backlogId": "BC-010",
+      "id": "BC-011-review",
+      "backlogId": "BC-011",
       "phase": "review",
-      "title": "BC-010: Review and validation",
-      "prompt": "Backlog item BC-010 — Gate pre-commit typecheck y test adaptado a Bun\n\nDescription: Portar setup-pre-commit adaptado a stdlib-first; un hook pre-commit mínimo que corre bun run typecheck y bun test sin añadir Husky ni lint-staged salvo que el proyecto destino ya los use.\nScope: Plantilla de hook pre-commit y documentación del gate para agentes.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
+      "title": "BC-011: Review and validation",
+      "prompt": "Backlog item BC-011 — Comando /cc:handoff para traspaso entre sesiones\n\nDescription: /cc:handoff ya existe y genera `.codeconductor/sessions/handoff.md` con estado, archivos tocados y próximo comando; falta que declare explícitamente el context_scope recomendado para la próxima sesión y verificación de que una sesión nueva puede retomar el trabajo solo con ese documento.\nScope: Añadir al handoff generado la declaración explícita de context_scope (isolated/continuation/full) recomendado para la próxima sesión.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
       "agent": "reviewer",
       "modelHint": "reviewer",
       "dependsOn": [
-        "BC-010-implement"
+        "BC-011-implement"
       ],
       "acceptanceCriteria": [
         "All acceptance criteria verified",
         "Tests pass",
         "No scope creep beyond backlog item"
       ],
-      "status": "pending"
+      "status": "done"
     }
   ],
-  "lastScanHash": "532dcece05fd81fb",
-  "lastScanAt": "2026-08-22T16:43:10.213Z",
+  "lastScanHash": "620aba2bbc3ae662",
+  "lastScanAt": "2026-08-25T05:40:35.737Z",
   "changePaths": {
     "BC-001": "openspec/changes/bc-001-r-brica-writing-for-agents-para-auditar-prompts-",
     "BC-002": "openspec/changes/bc-002-context-md-como-glosario-de-dominio-y-criterios-",
@@ -99,12 +99,13 @@
     "BC-007": "openspec/changes/bc-007-gate-de-grilling-en-el-rol-task-coach",
     "BC-008": "openspec/changes/bc-008-secuencia-expand-contract-para-refactors-amplios",
     "BC-009": "openspec/changes/bc-009-hook-pretooluse-que-bloquea-git-destructivo",
-    "BC-010": "openspec/changes/bc-010-gate-pre-commit-typecheck-y-test-adaptado-a-bun"
+    "BC-010": "openspec/changes/bc-010-gate-pre-commit-typecheck-y-test-adaptado-a-bun",
+    "BC-011": "openspec/changes/bc-011-comando-cc-handoff-para-traspaso-entre-sesiones"
   },
   "itemSnapshots": {
-    "BC-010": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Gate pre-commit typecheck y test adaptado a Bun\"}",
-    "BC-011": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Comando /cc:handoff para traspaso entre sesiones\"}",
     "BC-012": "{\"status\":\"TODO\",\"progress\":0,\"title\":\"Router /cc:ask que recomienda el slash command correcto\"}",
+    "BC-011": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Comando /cc:handoff para traspaso entre sesiones\"}",
+    "BC-010": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Gate pre-commit typecheck y test adaptado a Bun\"}",
     "BC-009": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Hook PreToolUse que bloquea git destructivo\"}",
     "BC-008": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Secuencia expand-contract para refactors amplios en /cc:refactor\"}",
     "BC-007": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Gate de grilling en el rol Task Coach\"}",

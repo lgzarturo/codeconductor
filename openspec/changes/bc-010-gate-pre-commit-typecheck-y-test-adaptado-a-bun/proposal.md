@@ -12,8 +12,8 @@ Portar setup-pre-commit adaptado a stdlib-first; un hook pre-commit mínimo que 
 
 ## Capabilities
 
-- **New Capabilities:** (to be refined in design phase)
-- **Modified Capabilities:** (to be refined in design phase)
+- **New Capabilities:** stdlib-first git `pre-commit` installer (Bun typecheck + test) documented in `GATE.md` per runner preset
+- **Modified Capabilities:** none (no Husky/lint-staged; no package.json dependency)
 
 ## Impact
 

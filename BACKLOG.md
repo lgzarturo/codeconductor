@@ -14,34 +14,6 @@ Formato validable por `cc openspec validate`. Análisis completo en
 
 ## Items
 
-### BC-010 | Gate pre-commit typecheck y test adaptado a Bun
-
-- Priority: P1
-- Status: PLANNED
-- Type: feature
-- Depends on: none
-- Description: Portar setup-pre-commit adaptado a stdlib-first; un hook pre-commit mínimo que corre bun run typecheck y bun test sin añadir Husky ni lint-staged salvo que el proyecto destino ya los use.
-- Scope: Plantilla de hook pre-commit y documentación del gate para agentes.
-- Out of scope: Imponer Prettier o lint-staged como dependencia obligatoria.
-- Acceptance:
-  - [ ] El hook pre-commit ejecuta typecheck y test antes de permitir el commit
-  - [ ] El gate no añade dependencias externas cuando el proyecto no las tiene
-  - [ ] Un commit con typecheck fallido queda bloqueado por el hook
-
-### BC-011 | Comando /cc:handoff para traspaso entre sesiones
-
-- Priority: P2
-- Status: TODO
-- Type: feature
-- Depends on: none
-- Description: Portar handoff y claude-handoff para compactar la conversación en un documento de handoff consumible por la siguiente sesión, integrado con context_scope y el compaction hook existentes.
-- Scope: Definir /cc:handoff y su plantilla de documento; reutiliza context-injector y compaction.
-- Out of scope: Lanzar automáticamente un agente en background.
-- Acceptance:
-  - [ ] /cc:handoff produce un documento de handoff con el estado y los próximos pasos
-  - [ ] El documento declara el context_scope recomendado para la próxima sesión
-  - [ ] Una sesión nueva puede retomar el trabajo solo con el handoff
-
 ### BC-012 | Router /cc:ask que recomienda el slash command correcto
 
 - Priority: P3
@@ -57,6 +29,38 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [ ] El catálogo de flujos permanece alineado con los comandos disponibles
 
 ## Archive
+
+### BC-011 | Comando /cc:handoff para traspaso entre sesiones
+
+- Priority: P2
+- Status: DONE
+- Type: feature
+- Depends on: none
+- Description: /cc:handoff ya existe y genera `.codeconductor/sessions/handoff.md` con estado, archivos tocados y próximo comando; falta que declare explícitamente el context_scope recomendado para la próxima sesión y verificación de que una sesión nueva puede retomar el trabajo solo con ese documento.
+- Scope: Actualizar presets/claude/commands/cc/handoff.md (archivo fuente versionado; .claude/commands/cc/handoff.md es una copia local gitignored) para declarar el context_scope (isolated/continuation/full) recomendado para la próxima sesión.
+- Out of scope: Rediseñar el resto del documento de handoff; "compaction hook" y "context-injector" como módulos separados (no existen en este repo).
+- Progress: 100
+- Reviewer: reviewer
+- Acceptance:
+  - [x] /cc:handoff produce un documento de handoff con el estado y los próximos pasos
+  - [x] El documento declara el context_scope recomendado para la próxima sesión
+  - [x] Una sesión nueva puede retomar el trabajo solo con el handoff
+
+### BC-010 | Gate pre-commit typecheck y test adaptado a Bun
+
+- Priority: P1
+- Status: DONE
+- Type: feature
+- Depends on: none
+- Description: Portar setup-pre-commit adaptado a stdlib-first; un hook pre-commit mínimo que corre bun run typecheck y bun test sin añadir Husky ni lint-staged salvo que el proyecto destino ya los use.
+- Scope: Plantilla de hook pre-commit y documentación del gate para agentes.
+- Out of scope: Imponer Prettier o lint-staged como dependencia obligatoria.
+- Progress: 100
+- Reviewer: reviewer
+- Acceptance:
+  - [x] El hook pre-commit ejecuta typecheck y test antes de permitir el commit
+  - [x] El gate no añade dependencias externas cuando el proyecto no las tiene
+  - [x] Un commit con typecheck fallido queda bloqueado por el hook
 
 ### BC-009 | Hook PreToolUse que bloquea git destructivo
 

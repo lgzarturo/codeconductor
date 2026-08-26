@@ -1,0 +1,13 @@
+{
+  "id": "fix-ccep-import-meta-dir",
+  "source": "cc:fix reproduction",
+  "type": "test",
+  "timestamp": "2026-08-25T00:00:00.000Z",
+  "relatedTask": "fix-ccep-import-meta-dir",
+  "confidence": 1,
+  "summary": "node dist/index.js ccep parse no longer crashes; BUNDLED_WORKFLOWS_DIR now resolves via fileURLToPath(import.meta.url), which works under both Node and Bun",
+  "data": {
+    "runner": "node dist/index.js ccep parse --command fix \"login fails on Safari\" --output=json",
+    "result": "passed"
+  }
+}

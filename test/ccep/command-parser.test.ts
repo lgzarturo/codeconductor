@@ -11,8 +11,8 @@ import {
 const PROJECT_ROOT = resolve(import.meta.dir, '../..');
 
 describe('ccep command-parser', () => {
-  test('exports all 18 supported workflow commands', () => {
-    expect(CCEP_COMMANDS).toHaveLength(18);
+  test('exports all 19 supported workflow commands', () => {
+    expect(CCEP_COMMANDS).toHaveLength(19);
     expect(CCEP_COMMANDS).toContain('feature');
     expect(CCEP_COMMANDS).toContain('fix');
     expect(CCEP_COMMANDS).toContain('council');
@@ -21,6 +21,7 @@ describe('ccep command-parser', () => {
     expect(CCEP_COMMANDS).toContain('triage');
     expect(CCEP_COMMANDS).toContain('openspec');
     expect(CCEP_COMMANDS).toContain('pagespeed');
+    expect(CCEP_COMMANDS).toContain('security');
   });
 
   test('uses explicit command from slash — not inferred from user text', () => {

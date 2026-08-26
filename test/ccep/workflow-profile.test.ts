@@ -7,10 +7,10 @@ import {
 import { validateWorkflowProfile } from '../../src/validation/schemas';
 
 describe('ccep workflow profiles', () => {
-  test('registry contains a valid profile for each of the 18 commands', () => {
+  test('registry contains a valid profile for each of the 19 commands', () => {
     const profiles = loadAllWorkflowProfiles();
 
-    expect(profiles.size).toBe(18);
+    expect(profiles.size).toBe(19);
     for (const command of CCEP_COMMANDS) {
       expect(profiles.has(command)).toBe(true);
       const profile = profiles.get(command)!;
@@ -50,6 +50,24 @@ describe('ccep workflow profiles', () => {
     );
 
     expect(lowRule?.then).toContain('implement');
+    expect(highRule?.then).toContain('review');
+  });
+
+  test('security profile mirrors fix risk-based routing with authorization gate', () => {
+    const profile = loadWorkflowProfile('security');
+
+    expect(profile.id).toBe('security');
+    expect(profile.taskCard?.requiredFields).toContain('domain');
+    expect(profile.taskCard?.requiredFields).toContain('authorization');
+    expect(profile.routing.riskRules?.length).toBeGreaterThan(0);
+
+    const lowRule = profile.routing.riskRules?.find((r) => r.when.risk === 'low');
+    const highRule = profile.routing.riskRules?.find((r) =>
+      Array.isArray(r.when.risk) ? r.when.risk.includes('high') : r.when.risk === 'high',
+    );
+
+    expect(lowRule?.then).toContain('implement');
+    expect(lowRule?.then).not.toContain('review');
     expect(highRule?.then).toContain('review');
   });
 

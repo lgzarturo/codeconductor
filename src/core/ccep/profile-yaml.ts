@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import {
   validateWorkflowProfile,
@@ -9,7 +10,7 @@ import {
 import { WORKFLOW_PROFILES } from './profiles';
 
 /** Directory containing bundled default workflow YAML files. */
-export const BUNDLED_WORKFLOWS_DIR = join(import.meta.dir, 'workflows');
+export const BUNDLED_WORKFLOWS_DIR = join(dirname(fileURLToPath(import.meta.url)), 'workflows');
 
 export function workflowYamlPath(command: WorkflowCommandInput, projectRoot?: string): string | null {
   if (projectRoot) {

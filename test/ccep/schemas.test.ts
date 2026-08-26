@@ -29,6 +29,7 @@ describe('ccep schemas', () => {
       'prototype',
       'handoff',
       'clarify',
+      'security',
     ];
 
     for (const command of commands) {

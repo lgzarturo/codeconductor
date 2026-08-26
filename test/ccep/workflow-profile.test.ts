@@ -53,6 +53,24 @@ describe('ccep workflow profiles', () => {
     expect(highRule?.then).toContain('review');
   });
 
+  test('security profile mirrors fix risk-based routing with authorization gate', () => {
+    const profile = loadWorkflowProfile('security');
+
+    expect(profile.id).toBe('security');
+    expect(profile.taskCard?.requiredFields).toContain('domain');
+    expect(profile.taskCard?.requiredFields).toContain('authorization');
+    expect(profile.routing.riskRules?.length).toBeGreaterThan(0);
+
+    const lowRule = profile.routing.riskRules?.find((r) => r.when.risk === 'low');
+    const highRule = profile.routing.riskRules?.find((r) =>
+      Array.isArray(r.when.risk) ? r.when.risk.includes('high') : r.when.risk === 'high',
+    );
+
+    expect(lowRule?.then).toContain('implement');
+    expect(lowRule?.then).not.toContain('review');
+    expect(highRule?.then).toContain('review');
+  });
+
   test('council profile defines SDD → TDD → implement → council review', () => {
     const profile = loadWorkflowProfile('council');
 

@@ -32,6 +32,7 @@ describe('core/ccep/command-parser', () => {
     expect(CCEP_COMMANDS).toContain('council');
     expect(CCEP_COMMANDS).toContain('iterative');
     expect(CCEP_COMMANDS).toContain('backlog');
+    expect(CCEP_COMMANDS).toContain('security');
     expect(CCEP_COMMANDS).toHaveLength(19);
   });
 

@@ -42,10 +42,15 @@ const OUTPUT_SCHEMAS: Record<string, string> = {
   "needsConfirmation": true
 }`,
   'council-verdict': `{
-  "status": "APPROVED" | "BLOCKED",
-  "confidence": 0.0,
+  "status": "APPROVED" | "REJECTED" | "ESCALATED",
+  "totalAgents": 0,
+  "approvedCount": 0,
+  "rejectedCount": 0,
+  "abstainedCount": 0,
+  "vetoApplied": false,
   "findings": [],
-  "next_actions": []
+  "summary": "",
+  "individualVerdicts": []
 }`,
   'technical-plan': '{ "approach": "", "filesAffected": [], "risks": [] }',
   'fix-intake-output': '{ "actualBehavior": "", "expectedBehavior": "", "reproductionSteps": [] }',

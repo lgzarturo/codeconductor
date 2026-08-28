@@ -84,4 +84,23 @@ describe('ccep prompt-compiler', () => {
     expect(schemaLayer?.content).toContain('planner-output');
     expect(schemaLayer?.content).toContain('questionsForUser');
   });
+
+  test('council-review prompt stub matches CouncilVerdictSchema', async () => {
+    const envelope = parseCommand('council', 'Add OAuth2 login', PROJECT_ROOT);
+    const profile = loadWorkflowProfile('council');
+    const context = await resolveContext(envelope, profile, PROJECT_ROOT);
+
+    const compiled = compilePrompt({
+      role: 'orchestrator',
+      phase: 'council-review',
+      context,
+      promptVersion: 'v1.0.0',
+    });
+
+    const schemaLayer = compiled.layers.find((l) => l.name === 'output_schema');
+    expect(schemaLayer?.content).toContain('council-verdict');
+    expect(schemaLayer?.content).toContain('"APPROVED" | "REJECTED" | "ESCALATED"');
+    expect(schemaLayer?.content).toContain('individualVerdicts');
+    expect(schemaLayer?.content).not.toContain('BLOCKED');
+  });
 });

@@ -49,6 +49,18 @@ agents:
       - pipelines
       - analytics
 
+  - id: security-reviewer
+    role: Security Reviewer
+    context: repo-readonly
+    modelHint: security-reasoning
+    focus:
+      - security
+      - vulnerabilities
+      - credentials
+      - injection
+      - auth
+      - supply-chain
+
   - id: devil
     role: Devil
     context: repo-readonly

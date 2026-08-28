@@ -60,6 +60,9 @@ describe('Product OS schemas', () => {
       agentType: 'implementer',
       evidenceRequired: ['tests_passed'],
       status: 'ready',
+      type: 'feature',
+      requiresHumanReview: true,
+      requiresTests: true,
     });
     expect(card.agentType).toBe('implementer');
   });

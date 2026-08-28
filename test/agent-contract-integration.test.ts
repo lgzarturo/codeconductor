@@ -46,6 +46,7 @@ function verdict(
     agentRole: agentId.charAt(0).toUpperCase() + agentId.slice(1),
     status,
     securityVeto,
+    confidence: 1,
     findings: [
       {
         category: 'integration',
@@ -64,6 +65,7 @@ function vetoVerdict(agentId: string): CouncilVerdictInput {
     agentRole: agentId.charAt(0).toUpperCase() + agentId.slice(1),
     status: 'REJECTED',
     securityVeto: true,
+    confidence: 1,
     findings: [
       {
         category: 'security',

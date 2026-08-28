@@ -3,8 +3,10 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
+  applyBacklogTransition,
   archiveItemInMarkdown,
   canTransition,
+  escapeRegExp,
   getNextTaskCard,
   hashContent,
   loadOpenspecState,
@@ -132,6 +134,47 @@ describe('core/openspec/openspec-state', () => {
       expect(out).toContain('## Archive');
       expect(out).toContain('- Status: DONE');
       expect(out).toContain('BC-002');
+    });
+  });
+
+  describe('applyBacklogTransition', () => {
+    test('rejects illegal transitions with an actionable error', () => {
+      const md = '### BC-001 | Feature\n- Status: IN_PROGRESS\n- Progress: 10%\n';
+      const result = applyBacklogTransition(md, 'BC-001', 'IN_PROGRESS', 'PLANNED');
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.message).toMatch(/IN_PROGRESS → PLANNED/);
+      }
+    });
+
+    test('allows READY → PLANNED', () => {
+      const md = '### BC-001 | Feature\n- Status: READY\n- Progress: 0%\n';
+      const result = applyBacklogTransition(md, 'BC-001', 'READY', 'PLANNED');
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toContain('- Status: PLANNED');
+      }
+    });
+
+    test('is idempotent when from and to are the same', () => {
+      const md = '### BC-001 | Feature\n- Status: PLANNED\n- Progress: 0%\n';
+      const result = applyBacklogTransition(md, 'BC-001', 'PLANNED', 'PLANNED', 10);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toContain('- Progress: 10%');
+        expect(result.data).toContain('- Status: PLANNED');
+      }
+    });
+  });
+
+  describe('escapeRegExp', () => {
+    test('prevents a crafted id from matching a different heading', () => {
+      const md = '### BC-001 | Feature\n- Status: TODO\n### BC-00X | Other\n- Status: READY\n';
+      const poisoned = 'BC-00.';
+      const out = updateBacklogItemInMarkdown(md, poisoned, { status: 'DONE' });
+      expect(out).toContain('- Status: TODO');
+      expect(out).toContain('- Status: READY');
+      expect(escapeRegExp('BC-00.')).toBe('BC-00\\.');
     });
   });
 });

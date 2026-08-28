@@ -79,6 +79,7 @@ export function goalTaskToCanonicalCard(
     status: task.status === 'in-progress' ? 'in-progress' : task.status === 'done' ? 'done' : task.status === 'blocked' ? 'blocked' : 'ready',
     type: task.type,
     linkedCapabilities: [],
+    boundaries: [],
   };
 }
 

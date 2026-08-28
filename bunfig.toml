@@ -1,0 +1,9 @@
+[test]
+coverageSkipTestFiles = true
+coveragePathIgnorePatterns = ["src/presets/"]
+coverageReporter = ["text", "lcov"]
+coverageDir = "./coverage"
+# Do not set coverageThreshold here. Bun enforces it per-file, so existing
+# low-coverage modules (e.g. SEO auditors) make `bun test --coverage` exit 1
+# even when aggregate coverage is well above the floor. The 70% aggregate
+# ratchet lives in scripts/check-coverage.ts (CI: bun run check:coverage).

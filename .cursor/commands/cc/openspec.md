@@ -86,6 +86,21 @@ Update BACKLOG item status to `PLANNED` (CLI does this automatically).
 
 ---
 
+## Drive card status (CLI)
+
+Do not edit `.codeconductor/openspec-state.json` by hand.
+
+```bash
+npx cc-codeconductor openspec start <cardId>
+npx cc-codeconductor openspec done <cardId>
+npx cc-codeconductor openspec block <cardId> --reason "waiting on design"
+npx cc-codeconductor openspec archive <itemId>
+```
+
+`start` moves the card `pending → doing` and the item `PLANNED → IN_PROGRESS`. `done` marks the card complete, updates Progress, and moves the item to `REVIEW` when every card is done and review is required. `archive` requires all cards done (and review evidence when Global review is required) and moves `openspec/changes/<slug>` to `archive/`.
+
+---
+
 ## Step 5 — Model matrix and execute loop
 
 Before executing phases, show resolved models:
@@ -115,7 +130,7 @@ Use the model configured in the installed preset for each agent role.
 After each phase:
 
 - Mark progress in deliverable summary.
-- Set TaskCard status to `done` in `.codeconductor/openspec-state.json` when phase completes.
+- Run `npx cc-codeconductor openspec done <cardId>` when the phase completes. Do not edit openspec-state.json by hand.
 
 Implementer: create a Git worktree before editing (`git worktree add ../<branch>-session <branch>`).
 

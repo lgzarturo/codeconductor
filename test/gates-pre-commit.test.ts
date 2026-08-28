@@ -5,7 +5,7 @@
  * Estos tests extraen, ejecutan y verifican su conducta en repos git temporales.
  *
  * Conducta esperada del script:
- * 1. Ejecuta `bun run typecheck` y `bun run test` antes de permitir commit.
+ * 1. Ejecuta `bun run typecheck`, `bun run lint` y `bun run test` antes de permitir commit.
  * 2. Si fallan, bloquea el commit (exit 1).
  * 3. Detecta Husky/lint-staged en package.json y advierte sin instalar.
  * 4. Si hook ya existe, advierte y no sobrescribe.
@@ -61,6 +61,7 @@ async function createTestRepo(): Promise<TestRepo> {
     version: '1.0.0',
     scripts: {
       typecheck: 'echo "Typecheck passed"',
+      lint: 'echo "Lint passed"',
       test: 'echo "Tests passed"'
     }
   };
@@ -96,9 +97,9 @@ describe('BC-010: Pre-commit Gate', () => {
       expect(script.includes('bun run typecheck')).toBe(true);
     });
 
-    test('Script debe contener check de bun run test', async () => {
+    test('Script debe contener check de bun run lint', async () => {
       const script = await extractBashScript();
-      expect(script.includes('bun run test')).toBe(true);
+      expect(script.includes('bun run lint')).toBe(true);
     });
   });
 
@@ -133,7 +134,7 @@ describe('BC-010: Pre-commit Gate', () => {
       expect(stat).toMatch(/x/); // Debe tener permiso ejecutable
     });
 
-    test('Commit debe permitirse si typecheck y test pasan', async () => {
+    test('Commit debe permitirse si typecheck, lint y test pasan', async () => {
       const script = await extractBashScript();
       execSync(script, { cwd: testRepo.path, shell: '/bin/bash' });
 
@@ -160,6 +161,7 @@ describe('BC-010: Pre-commit Gate', () => {
         version: '1.0.0',
         scripts: {
           typecheck: 'exit 1',
+          lint: 'echo "Lint passed"',
           test: 'echo "Tests passed"'
         }
       };
@@ -196,6 +198,7 @@ describe('BC-010: Pre-commit Gate', () => {
         version: '1.0.0',
         scripts: {
           typecheck: 'echo "Typecheck passed"',
+          lint: 'echo "Lint passed"',
           test: 'exit 1'
         }
       };
@@ -232,6 +235,7 @@ describe('BC-010: Pre-commit Gate', () => {
         version: '1.0.0',
         scripts: {
           typecheck: 'echo "Typecheck passed"',
+          lint: 'echo "Lint passed"',
           test: 'echo "Tests passed"'
         },
         husky: {
@@ -318,6 +322,7 @@ describe('BC-010: Pre-commit Gate', () => {
       
       // Verificar que ambos comandos están presentes
       expect(script.includes('bun run typecheck')).toBe(true);
+      expect(script.includes('bun run lint')).toBe(true);
       expect(script.includes('bun run test')).toBe(true);
       
       // Verificar que hay lógica de bloqueo (exit 1)

@@ -45,6 +45,8 @@ export interface LoopResult {
   readonly finalPhase: LoopState['phase'];
   readonly escalationReport?: EscalationReport;
   readonly errorHistory: readonly (readonly CompileError[])[];
+  readonly compileCheck?: 'ran' | 'skipped';
+  readonly compileCheckSkipReason?: string;
 }
 
 export type GuardrailHit =
@@ -153,6 +155,8 @@ export async function runLoop(
   let state = createInitialState({ maxIterations, maxTokenBudget });
   let totalErrors = 0;
   let feedbackText: string | undefined;
+  let compileCheck: LoopResult['compileCheck'];
+  let compileCheckSkipReason: string | undefined;
 
   logTransition(state.phase, 'INIT', state.iteration);
 
@@ -198,6 +202,12 @@ export async function runLoop(
         logTransition(state.phase, 'COMPILE_CHECK', state.iteration);
         const compileResult = await compileCheckFn();
         totalErrors += compileResult.errors.length;
+        if (compileResult.skipped) {
+          compileCheck = 'skipped';
+          compileCheckSkipReason = compileResult.skipReason;
+        } else {
+          compileCheck = 'ran';
+        }
 
         const checkResult = loopStateMachine(state, {
           type: 'COMPILE_CHECK_COMPLETED',
@@ -226,6 +236,8 @@ export async function runLoop(
           totalErrors,
           finalPhase: 'DONE',
           errorHistory: state.errorHistory,
+          compileCheck,
+          compileCheckSkipReason,
         };
       }
 
@@ -239,6 +251,8 @@ export async function runLoop(
           finalPhase: 'ESCALATED',
           escalationReport: report,
           errorHistory: state.errorHistory,
+          compileCheck,
+          compileCheckSkipReason,
         };
       }
 
@@ -250,6 +264,8 @@ export async function runLoop(
           totalErrors,
           finalPhase: 'FAILED',
           errorHistory: state.errorHistory,
+          compileCheck,
+          compileCheckSkipReason,
         };
       }
 
@@ -261,6 +277,8 @@ export async function runLoop(
           totalErrors,
           finalPhase: state.phase,
           errorHistory: state.errorHistory,
+          compileCheck,
+          compileCheckSkipReason,
         };
       }
     }
@@ -368,6 +386,15 @@ const CLEAN_COMPILE: CompileResult = {
   timedOut: false,
 };
 
+export function skippedCompileResult(reason: string): CompileResult {
+  return {
+    ...CLEAN_COMPILE,
+    skipped: true,
+    skipReason: reason,
+    stderr: `compileCheck: skipped\n${reason}`,
+  };
+}
+
 /** implement / test agent phases that must run the compile-fix engine. */
 export function shouldRunAgentLoop(
   type?: string,
@@ -414,11 +441,22 @@ export async function runLoopForProject(
     : undefined;
 
   const compileCheckFn: CompileCheckFn = async () => {
-    if (!compileCheck?.enabled || !compileCheck.command) return CLEAN_COMPILE;
+    if (!compileCheck?.enabled || !compileCheck.command) {
+      return skippedCompileResult(
+        !compileCheck?.enabled
+          ? 'Compile check is not enabled in config.'
+          : 'Compile check is enabled but no command is configured.',
+      );
+    }
     const allowed =
       options.allowCompileCheck === true ||
       isAllowlistedCompileCommand(compileCheck.command);
-    if (!allowed) return CLEAN_COMPILE;
+    if (!allowed) {
+      return skippedCompileResult(
+        'Compile check not executed: the command is not on the compile allowlist. ' +
+          'Re-run with --allow-compile-check to trust it.',
+      );
+    }
     const result = await runCompileCheck({
       command: compileCheck.command,
       cwd: projectRoot,

@@ -186,8 +186,8 @@ Published commands (package ${packageJson.version}):
   ask                     Recommend a /cc: slash command from a natural-language problem
   cc-help                 Show preset inventory (skills, subagents, commands)
   debt-harvest / harvest  Scan source files for deferred debt items
-  ccep                    Compile and evaluate CCEP workflow contracts
-  openspec                OpenSpec loop: backlog + delivery (validate/scan/plan/status/next)
+  ccep                    CCEP contracts: parse/profile/validate/evaluate/consensus/taskcard
+  openspec                OpenSpec loop: validate/scan/plan/status/next/start/done/block/archive
   scorecard               Record and aggregate evaluation outcomes
 
 v1.0.0 (in this repo, not in published ${packageJson.version}):
@@ -266,11 +266,17 @@ Examples:
   npx cc-codeconductor ccep profile council --output json
   npx cc-codeconductor ccep resolve --command feature "Add CRUD"
   npx cc-codeconductor ccep evaluate --command feature --input @planner.json
+  npx cc-codeconductor ccep consensus --input @verdicts.json
+  npx cc-codeconductor ccep taskcard --command feature --input @card.json
   npx cc-codeconductor openspec validate
   npx cc-codeconductor openspec scan
   npx cc-codeconductor openspec plan BC-001
   npx cc-codeconductor openspec status
   npx cc-codeconductor openspec next
+  npx cc-codeconductor openspec start BC-001-discover
+  npx cc-codeconductor openspec done BC-001-discover
+  npx cc-codeconductor openspec block BC-001-implement --reason "waiting on design"
+  npx cc-codeconductor openspec archive BC-001
   npx cc-codeconductor scorecard create --task BC-001 --from-diff
   npx cc-codeconductor scorecard models
   npx cc-codeconductor scorecard aggregate
@@ -586,7 +592,7 @@ export async function routeCommand(
     }
 
     case 'ccep': {
-      const validSubs = ['parse', 'profile', 'resolve', 'compile', 'validate', 'evaluate'];
+      const validSubs = ['parse', 'profile', 'resolve', 'compile', 'validate', 'evaluate', 'consensus', 'taskcard'];
       if (subcommand && !validSubs.includes(subcommand)) {
         return unknownSubcommand('ccep', subcommand, validSubs);
       }
@@ -601,7 +607,7 @@ export async function routeCommand(
             : requestParts.join(' ').trim();
 
       const validateRest =
-        (ccepSub === 'validate' || ccepSub === 'evaluate') && !options.input
+        (ccepSub === 'validate' || ccepSub === 'evaluate' || ccepSub === 'consensus' || ccepSub === 'taskcard') && !options.input
           ? requestParts
           : undefined;
 
@@ -617,13 +623,24 @@ export async function routeCommand(
         input: options.input as string | undefined,
         contextPath: (options.context as string) || (options.contextPath as string),
         promptVersion: (options['prompt-version'] as string) || (options.promptVersion as string),
+        config: options.config as string | undefined,
         rest: validateRest,
       } as CcepOptions);
     }
 
     case 'openspec':
     case 'cc-openspec': {
-      const validSubs = ['validate', 'scan', 'plan', 'status', 'next'];
+      const validSubs = [
+        'validate',
+        'scan',
+        'plan',
+        'status',
+        'next',
+        'start',
+        'done',
+        'block',
+        'archive',
+      ];
       let openspecSub = 'validate';
       let itemId: string | undefined = (options.item as string) || undefined;
 
@@ -641,6 +658,7 @@ export async function routeCommand(
       return openspecCommand({
         subcommand: openspecSub,
         itemId,
+        reason: typeof options.reason === 'string' ? options.reason : undefined,
         projectRoot,
         output: flags.output,
       } as OpenspecOptions);

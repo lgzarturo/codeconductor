@@ -47,6 +47,15 @@ const mockVerdicts: CouncilVerdictInput[] = [
     findings: [],
     summary: 'Security approved.',
   },
+  {
+    agentId: 'devil',
+    agentRole: 'Devil',
+    status: 'APPROVED',
+    securityVeto: false,
+    confidence: 0.85,
+    findings: [],
+    summary: 'Devil approved.',
+  },
 ];
 
 const defaultCallbacks = (): PipelineCallbacks => ({
@@ -311,6 +320,15 @@ describe('Confidence-Based Council Consensus & Compliance Veto', () => {
         findings: [],
         summary: 'Approved',
       },
+      {
+        agentId: 'product',
+        agentRole: 'Product',
+        status: 'APPROVED',
+        securityVeto: false,
+        confidence: 0.65,
+        findings: [],
+        summary: 'Approved',
+      },
     ];
 
     const result = councilConsensus(verdicts);
@@ -327,6 +345,7 @@ describe('Confidence-Based Council Consensus & Compliance Veto', () => {
         status: 'REJECTED',
         securityVeto: false,
         complianceVeto: true, // compliance veto
+        confidence: 1,
         findings: [{ category: 'compliance', severity: 'critical', message: 'PII leak', agentId: 'compliance' }],
         summary: 'Compliance veto applied',
       },

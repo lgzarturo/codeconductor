@@ -1,9 +1,12 @@
 import type { z } from 'zod';
 import {
   AgentOutputSchema,
+  CanonicalTaskCardSchema,
+  CouncilVerdictSchema,
   ImplementerOutputSchema,
   PlannerOutputSchema,
   ReviewerOutputSchema,
+  ScorecardRecordSchema,
   TechnicalPlanOutputSchema,
   validateImplementerOutput,
   validatePlannerOutput,
@@ -18,6 +21,12 @@ export const OUTPUT_SCHEMA_NAMES = [
   'fix-intake-output',
   'council-verdict',
   'agent-output',
+  'taskcard',
+  'test-plan',
+  'complexity-audit',
+  'api-contract',
+  'pagespeed-report',
+  'scorecard-record',
 ] as const;
 
 export type OutputSchemaName = (typeof OUTPUT_SCHEMA_NAMES)[number];
@@ -28,9 +37,19 @@ const SCHEMA_REGISTRY: Record<string, z.ZodTypeAny> = {
   'review-report': ReviewerOutputSchema,
   'technical-plan': TechnicalPlanOutputSchema,
   'fix-intake-output': AgentOutputSchema,
-  'council-verdict': AgentOutputSchema,
+  'council-verdict': CouncilVerdictSchema,
   'agent-output': AgentOutputSchema,
+  taskcard: CanonicalTaskCardSchema,
+  'test-plan': AgentOutputSchema,
+  'complexity-audit': AgentOutputSchema,
+  'api-contract': AgentOutputSchema,
+  'pagespeed-report': AgentOutputSchema,
+  'scorecard-record': ScorecardRecordSchema,
 };
+
+export function isRegisteredOutputSchema(name: string): boolean {
+  return SCHEMA_REGISTRY[name] !== undefined;
+}
 
 export interface ValidationResult {
   readonly valid: boolean;
@@ -64,7 +83,14 @@ export function validateAgentOutputBySchema(
   role?: string,
 ): ValidationResult {
   const resolved = resolveOutputSchemaName(schemaName, role);
-  const schema = SCHEMA_REGISTRY[resolved] ?? AgentOutputSchema;
+  const schema = SCHEMA_REGISTRY[resolved];
+  if (!schema) {
+    return {
+      valid: false,
+      schema: resolved,
+      errors: [`Unknown output schema: ${resolved}`],
+    };
+  }
 
   const parsed = schema.safeParse(data);
   if (parsed.success) {

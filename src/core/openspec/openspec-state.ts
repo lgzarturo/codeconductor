@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import {
   OpenspecStateSchema,
+  type BacklogItemInput,
   type BacklogStatusInput,
   type OpenspecStateInput,
   type OpenspecTaskCardInput,
@@ -27,6 +28,43 @@ const ALLOWED_TRANSITIONS: Record<BacklogStatusInput, BacklogStatusInput[]> = {
  */
 export function canTransition(from: BacklogStatusInput, to: BacklogStatusInput): boolean {
   return ALLOWED_TRANSITIONS[from]?.includes(to) ?? false;
+}
+
+export function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Apply a validated backlog status transition in markdown.
+ * Same-status updates are idempotent and may still rewrite Progress.
+ */
+export function applyBacklogTransition(
+  content: string,
+  itemId: string,
+  from: BacklogStatusInput,
+  to: BacklogStatusInput,
+  progress?: number,
+): Result<string, Error> {
+  if (from === to) {
+    if (progress === undefined) return ok(content);
+    return ok(updateBacklogItemInMarkdown(content, itemId, { progress }));
+  }
+  if (!canTransition(from, to)) {
+    const allowed = ALLOWED_TRANSITIONS[from] ?? [];
+    return err(
+      new Error(
+        `Illegal backlog transition for ${itemId}: ${from} → ${to}. ` +
+          `Allowed: ${allowed.length > 0 ? allowed.join(', ') : 'none'}.`,
+      ),
+    );
+  }
+  return ok(updateBacklogItemInMarkdown(content, itemId, { status: to, progress }));
+}
+
+export async function writeFileAtomic(path: string, content: string): Promise<void> {
+  const tmp = `${path}.${process.pid}.${Date.now()}.tmp`;
+  await writeFile(tmp, content, 'utf-8');
+  await rename(tmp, path);
 }
 
 /**
@@ -64,7 +102,10 @@ export async function writeOpenspecState(
     const dir = resolve(projectRoot, '.codeconductor');
     await mkdir(dir, { recursive: true });
     const validated = OpenspecStateSchema.parse(state);
-    await writeFile(resolve(dir, 'openspec-state.json'), JSON.stringify(validated, null, 2), 'utf-8');
+    await writeFileAtomic(
+      resolve(dir, 'openspec-state.json'),
+      JSON.stringify(validated, null, 2),
+    );
     return ok(undefined);
   } catch (e) {
     return err(e instanceof Error ? e : new Error(String(e)));
@@ -105,6 +146,19 @@ export function hashContent(content: string): string {
   return createHash('sha256').update(content).digest('hex').slice(0, 16);
 }
 
+export function serializeItemSnapshot(item: BacklogItemInput): string {
+  return JSON.stringify({
+    status: item.status,
+    progress: item.progress,
+    title: item.title,
+    description: item.description,
+    scope: item.scope,
+    type: item.type,
+    priority: item.priority,
+    acceptanceCriteria: item.acceptanceCriteria,
+  });
+}
+
 /**
  * Update item status/progress in BACKLOG.md content string.
  */
@@ -115,7 +169,7 @@ export function updateBacklogItemInMarkdown(
 ): string {
   const lines = content.split('\n');
   let inTargetItem = false;
-  const idPattern = new RegExp(`^###\\s+.*${itemId}\\b`, 'i');
+  const idPattern = new RegExp(`^###\\s+.*${escapeRegExp(itemId)}\\b`, 'i');
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -141,7 +195,9 @@ export function updateBacklogItemInMarkdown(
  */
 export function archiveItemInMarkdown(content: string, itemId: string): string {
   const lines = content.split('\n');
-  const itemStart = lines.findIndex((l) => l.match(new RegExp(`^###\\s+.*${itemId}\\b`, 'i')));
+  const itemStart = lines.findIndex((l) =>
+    l.match(new RegExp(`^###\\s+.*${escapeRegExp(itemId)}\\b`, 'i')),
+  );
   if (itemStart < 0) return content;
 
   let itemEnd = lines.length;

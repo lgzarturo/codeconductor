@@ -5,6 +5,7 @@ import type {
   OpenspecTaskCardPhaseInput,
 } from '../../validation/schemas';
 import { routePhaseToAgent } from './agent-router';
+import { hashContent, serializeItemSnapshot } from './openspec-state';
 
 const DEFAULT_PHASE_ORDER: OpenspecTaskCardPhaseInput[] = [
   'discover',
@@ -86,15 +87,41 @@ export function getPhaseOrder(doc: BacklogDocumentInput): OpenspecTaskCardPhaseI
   return doc.global.tddRequired ? [...TDD_PHASE_ORDER] : [...DEFAULT_PHASE_ORDER];
 }
 
+export function hashItemSnapshot(item: BacklogItemInput): string {
+  return hashContent(serializeItemSnapshot(item));
+}
+
+export interface PlanTaskCardsResult {
+  readonly cards: OpenspecTaskCardInput[];
+  readonly invalidatedCards: string[];
+  readonly tddImpact?: {
+    readonly previousOrder: OpenspecTaskCardPhaseInput[];
+    readonly nextOrder: OpenspecTaskCardPhaseInput[];
+    readonly resetCardIds: string[];
+  };
+}
+
 /**
  * Generate TaskCards for a single backlog item.
+ * Drifted item snapshots reset matching cards to pending.
  */
 export function planTaskCardsForItem(
   item: BacklogItemInput,
   doc: BacklogDocumentInput,
-  existingCards: OpenspecTaskCardInput[] = []
-): OpenspecTaskCardInput[] {
+  existingCards: OpenspecTaskCardInput[] = [],
+  previousSnapshot?: string,
+): PlanTaskCardsResult {
   const phases = getPhaseOrder(doc);
+  const currentHash = hashItemSnapshot(item);
+  const snapshotDrifted = Boolean(
+    previousSnapshot && hashContent(previousSnapshot) !== currentHash,
+  );
+  const existingForItem = existingCards.filter((c) => c.backlogId === item.id);
+  const previousOrder = existingForItem.map((c) => c.phase);
+  const orderChanged =
+    previousOrder.length > 0 && previousOrder.join(',') !== phases.join(',');
+
+  const invalidatedCards: string[] = [];
   const cards: OpenspecTaskCardInput[] = [];
   let prevId: string | undefined;
 
@@ -103,6 +130,13 @@ export function planTaskCardsForItem(
     const existing = existingCards.find((c) => c.id === id);
     const route = routePhaseToAgent(phase);
     const dependsOn = prevId ? [prevId] : [];
+    const drifted =
+      snapshotDrifted ||
+      Boolean(existing?.itemHash && existing.itemHash !== currentHash);
+    const reset = drifted || orderChanged;
+    if (existing && reset) {
+      invalidatedCards.push(existing.id);
+    }
 
     cards.push({
       id,
@@ -114,12 +148,27 @@ export function planTaskCardsForItem(
       modelHint: route.modelKey,
       dependsOn,
       acceptanceCriteria: phaseAcceptance(phase, item),
-      status: existing?.status ?? 'pending',
+      status: reset ? 'pending' : (existing?.status ?? 'pending'),
+      itemHash: currentHash,
     });
     prevId = id;
   }
 
-  return cards;
+  const leftover = existingForItem.filter((c) => !phases.includes(c.phase));
+  for (const card of leftover) {
+    invalidatedCards.push(card.id);
+  }
+
+  const uniqueInvalidated = [...new Set(invalidatedCards)];
+  const tddImpact = orderChanged
+    ? {
+        previousOrder,
+        nextOrder: phases,
+        resetCardIds: uniqueInvalidated,
+      }
+    : undefined;
+
+  return { cards, invalidatedCards: uniqueInvalidated, tddImpact };
 }
 
 /**

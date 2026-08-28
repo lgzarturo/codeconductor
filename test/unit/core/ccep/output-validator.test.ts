@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'bun:test';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { parse as parseYaml } from 'yaml';
 import {
   OUTPUT_SCHEMA_NAMES,
+  isRegisteredOutputSchema,
   parseJsonInput,
   resolveOutputSchemaName,
   validateAgentOutputBySchema,
@@ -22,9 +26,10 @@ const implementerOutput = { status: 'success', confidence: 0.8 };
 const reviewerOutput = { status: 'pass', confidence: 0.9, verdict: 'approved' };
 
 describe('core/ccep/output-validator', () => {
-  test('exposes the seven canonical schema names', () => {
+  test('exposes registered output schema names', () => {
     expect(OUTPUT_SCHEMA_NAMES).toContain('planner-output');
-    expect(OUTPUT_SCHEMA_NAMES).toHaveLength(7);
+    expect(OUTPUT_SCHEMA_NAMES).toContain('council-verdict');
+    expect(OUTPUT_SCHEMA_NAMES).toContain('taskcard');
   });
 
   describe('resolveOutputSchemaName', () => {
@@ -104,5 +109,40 @@ describe('core/ccep/output-validator', () => {
       expect(result.valid).toBe(true);
       expect(result.schema).toBe('agent-output');
     });
+  });
+
+  test('every workflow YAML outputSchema is registered', () => {
+    const dir = join(import.meta.dir, '../../../../src/core/ccep/workflows');
+    const names = new Set<string>();
+    for (const file of readdirSync(dir).filter((name) => name.endsWith('.yml'))) {
+      const doc = parseYaml(readFileSync(join(dir, file), 'utf-8')) as {
+        phases?: Array<{ outputSchema?: string }>;
+      };
+      for (const phase of doc.phases ?? []) {
+        if (phase.outputSchema) names.add(phase.outputSchema);
+      }
+    }
+    expect(names.size).toBeGreaterThan(0);
+    for (const name of names) {
+      expect(isRegisteredOutputSchema(name)).toBe(true);
+    }
+    for (const name of OUTPUT_SCHEMA_NAMES) {
+      expect(isRegisteredOutputSchema(name)).toBe(true);
+    }
+  });
+
+  test('agent-output shape does not validate as council-verdict', () => {
+    const result = validateAgentOutputBySchema('council-verdict', {
+      status: 'success',
+      confidence: 1,
+    });
+    expect(result.valid).toBe(false);
+    expect(result.schema).toBe('council-verdict');
+  });
+
+  test('unknown schema names fail closed', () => {
+    const result = validateAgentOutputBySchema('not-a-schema', { status: 'success', confidence: 1 });
+    expect(result.valid).toBe(false);
+    expect(result.errors?.join(' ')).toContain('Unknown output schema');
   });
 });

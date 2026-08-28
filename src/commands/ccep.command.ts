@@ -9,6 +9,14 @@ import {
   resolveWorkflowPhase,
 } from '../core/ccep/workflow-profile-loader';
 import {
+  councilConsensus,
+  type ConsensusConfig,
+  type CouncilVerdictInput,
+} from '../domain/council/council-consensus';
+import { validateTaskCardForProfile } from '../core/ccep/task-card-validator';
+import {
+  CanonicalTaskCardSchema,
+  ConsensusConfigSchema,
   validateExecutionContext,
   validatePlannerOutput,
   WorkflowCommandSchema,
@@ -26,6 +34,7 @@ export interface CcepOptions {
   readonly input?: string;
   readonly contextPath?: string;
   readonly promptVersion?: string;
+  readonly config?: string;
   readonly rest?: string[];
 }
 
@@ -109,6 +118,39 @@ async function readInputPayload(
   }
 }
 
+function consensusExitCode(status: 'APPROVED' | 'REJECTED' | 'ESCALATED'): number {
+  if (status === 'APPROVED') return 0;
+  if (status === 'REJECTED') return 1;
+  return 2;
+}
+
+function parseConsensusPayload(data: unknown):
+  | { ok: true; verdicts: CouncilVerdictInput[]; config?: ConsensusConfig }
+  | { ok: false; error: string } {
+  if (Array.isArray(data)) {
+    return { ok: true, verdicts: data as CouncilVerdictInput[] };
+  }
+  if (typeof data !== 'object' || data === null) {
+    return { ok: false, error: 'Consensus input must be a verdicts array or { verdicts, config? }' };
+  }
+  const record = data as { verdicts?: unknown; config?: unknown };
+  if (!Array.isArray(record.verdicts)) {
+    return { ok: false, error: 'Consensus input must be a verdicts array or { verdicts, config? }' };
+  }
+  let config: ConsensusConfig | undefined;
+  if (record.config !== undefined) {
+    const parsed = ConsensusConfigSchema.safeParse(record.config);
+    if (!parsed.success) {
+      return {
+        ok: false,
+        error: parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; '),
+      };
+    }
+    config = parsed.data;
+  }
+  return { ok: true, verdicts: record.verdicts as CouncilVerdictInput[], config };
+}
+
 export async function ccepCommand(
   options: CcepOptions,
 ): Promise<{ code: number; data?: unknown }> {
@@ -122,6 +164,7 @@ export async function ccepCommand(
     input,
     contextPath,
     promptVersion = 'v1.0.0',
+    config,
     rest,
   } = options;
 
@@ -291,6 +334,23 @@ export async function ccepCommand(
         };
       }
 
+      if (profile.taskCard && CanonicalTaskCardSchema.safeParse(payload.data).success) {
+        const issues = validateTaskCardForProfile(profile, payload.data);
+        return {
+          code: issues.length === 0 ? 0 : 1,
+          data: {
+            success: issues.length === 0,
+            command: 'ccep validate',
+            phase: phaseId,
+            role: agentRole,
+            schema: 'taskcard',
+            valid: issues.length === 0,
+            issues,
+            errors: issues.map((issue) => issue.message),
+          },
+        };
+      }
+
       const result = validateOutputForRole(
         agentRole,
         resolvedPhase.outputSchema,
@@ -308,6 +368,102 @@ export async function ccepCommand(
           valid: result.valid,
           errors: result.errors,
           data: result.data,
+        },
+      };
+    }
+
+    case 'taskcard': {
+      const parsed = parseWorkflowCommand(command);
+      if (!parsed.ok) {
+        return {
+          code: 1,
+          data: { success: false, command: 'ccep taskcard', errors: [parsed.error] },
+        };
+      }
+      const profile = loadWorkflowProfile(parsed.command, projectRoot);
+      if (!profile.taskCard) {
+        return {
+          code: 1,
+          data: {
+            success: false,
+            command: 'ccep taskcard',
+            errors: [`Workflow "${parsed.command}" does not declare a taskCard contract`],
+          },
+        };
+      }
+      const payload = await readInputPayload(projectRoot, input, rest);
+      if (!payload.ok) {
+        return {
+          code: 1,
+          data: { success: false, command: 'ccep taskcard', errors: [payload.error] },
+        };
+      }
+      const issues = validateTaskCardForProfile(profile, payload.data);
+      return {
+        code: issues.length === 0 ? 0 : 1,
+        data: {
+          success: issues.length === 0,
+          command: 'ccep taskcard',
+          workflow: parsed.command,
+          issues,
+          errors: issues.map((issue) => issue.message),
+        },
+      };
+    }
+
+    case 'consensus': {
+      const payload = await readInputPayload(projectRoot, input, rest);
+      if (!payload.ok) {
+        return {
+          code: 1,
+          data: { success: false, command: 'ccep consensus', errors: [payload.error] },
+        };
+      }
+
+      const parsedBallots = parseConsensusPayload(payload.data);
+      if (!parsedBallots.ok) {
+        return {
+          code: 1,
+          data: { success: false, command: 'ccep consensus', errors: [parsedBallots.error] },
+        };
+      }
+
+      let mergedConfig = parsedBallots.config;
+      if (config) {
+        const configPayload = await readInputPayload(projectRoot, config);
+        if (!configPayload.ok) {
+          return {
+            code: 1,
+            data: {
+              success: false,
+              command: 'ccep consensus',
+              errors: [`Invalid --config: ${configPayload.error}`],
+            },
+          };
+        }
+        const parsedConfig = ConsensusConfigSchema.safeParse(configPayload.data);
+        if (!parsedConfig.success) {
+          return {
+            code: 1,
+            data: {
+              success: false,
+              command: 'ccep consensus',
+              errors: parsedConfig.error.issues.map(
+                (issue) => `${issue.path.join('.')}: ${issue.message}`,
+              ),
+            },
+          };
+        }
+        mergedConfig = { ...mergedConfig, ...parsedConfig.data };
+      }
+
+      const verdict = councilConsensus(parsedBallots.verdicts, mergedConfig);
+      return {
+        code: consensusExitCode(verdict.status),
+        data: {
+          success: verdict.status === 'APPROVED',
+          command: 'ccep consensus',
+          verdict,
         },
       };
     }
@@ -394,7 +550,7 @@ export async function ccepCommand(
           success: false,
           command: 'ccep',
           errors: [
-            `Unknown subcommand: ${subcommand}. Use: parse, profile, resolve, compile, validate, evaluate`,
+            `Unknown subcommand: ${subcommand}. Use: parse, profile, resolve, compile, validate, evaluate, consensus, taskcard`,
           ],
         },
       };

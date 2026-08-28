@@ -50,6 +50,8 @@
     "build:types": "tsc -p tsconfig.lib.json --emitDeclarationOnly",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
+    "lint": "bun run scripts/lint.ts",
+    "check:coverage": "bun run scripts/check-coverage.ts",
     "check:prompt-changelog": "bun run scripts/check-prompt-changelog.ts",
     "release:patch": "bash release.sh patch",
     "release:minor": "bash release.sh minor",

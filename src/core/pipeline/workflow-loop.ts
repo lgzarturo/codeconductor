@@ -51,7 +51,7 @@ export interface PipelineCallbacks {
   runCompact: (card: TaskCard, summary: string) => Promise<void>;
   
   // STOP Gates
-  onStopGate: (phase: number, data: any) => Promise<'APPROVE' | 'REJECT' | 'ESCALATE'>;
+  onStopGate: (phase: number, data: unknown) => Promise<'APPROVE' | 'REJECT' | 'ESCALATE'>;
 }
 
 export interface PipelineConfig {

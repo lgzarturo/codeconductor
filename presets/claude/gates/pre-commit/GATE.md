@@ -1,6 +1,6 @@
-# Pre-commit Gate: Typecheck and Test
+# Pre-commit Gate: Typecheck, Lint, and Test
 
-Este gate instala un hook `pre-commit` que ejecuta `bun run typecheck` y `bun run test` antes de permitir commits en el repositorio. Si cualquiera de estos comandos falla, el commit es bloqueado.
+Este gate instala un hook `pre-commit` que ejecuta `bun run typecheck`, `bun run lint` y `bun run test` antes de permitir commits en el repositorio. Si cualquiera de estos comandos falla, el commit es bloqueado.
 
 ## Cuándo usar
 
@@ -63,6 +63,7 @@ mkdir -p "$GIT_DIR/hooks"
 cat > "$HOOK_PATH" << 'HOOK_EOF'
 #!/bin/bash
 bun run typecheck || exit 1
+bun run lint || exit 1
 bun run test || exit 1
 HOOK_EOF
 
@@ -78,7 +79,7 @@ echo "Pre-commit hook installed successfully."
 - **Resolución dinámica de git dir**: Usa `git rev-parse --git-dir` para localizar el directorio correcto, incluso en worktrees.
 - **Detección de conflictos**: Si Husky o lint-staged ya está en `package.json`, el script avisa y no instala para evitar conflictos.
 - **Protección de hooks existentes**: Si ya existe un `.git/hooks/pre-commit`, el script no lo sobrescribe.
-- **Solo Bun**: El hook ejecuta `bun run typecheck` y `bun run test`. Asegúrate de que estos scripts están definidos en `package.json`.
+- **Solo Bun**: El hook ejecuta `bun run typecheck`, `bun run lint` y `bun run test`. Asegúrate de que estos scripts están definidos en `package.json`.
 
 ## Verificación
 
@@ -121,7 +122,7 @@ Verifica que el hook es ejecutable:
 
     chmod +x .git/hooks/pre-commit
 
-Verifica que `bun run typecheck` y `bun run test` existen en `package.json`:
+Verifica que `bun run typecheck`, `bun run lint` y `bun run test` existen en `package.json`:
 
     cat package.json | grep -A 5 '"scripts"'
 

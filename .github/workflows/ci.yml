@@ -16,8 +16,10 @@ jobs:
           bun-version: latest
       - run: bun install
       - run: bun run typecheck
+      - run: bun run lint
       - run: bun run check:prompt-changelog
       - run: bun test --coverage
+      - run: bun run check:coverage
       - uses: actions/upload-artifact@v4
         if: always()
         with:

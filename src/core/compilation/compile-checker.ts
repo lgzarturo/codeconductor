@@ -22,6 +22,8 @@ export interface CompileResult {
   errors: CompileError[];
   durationMs: number;
   timedOut: boolean;
+  skipped?: boolean;
+  skipReason?: string;
 }
 
 export interface CompileCheckOptions {

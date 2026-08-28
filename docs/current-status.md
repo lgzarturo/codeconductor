@@ -2,7 +2,7 @@
 
 This file is the canonical shipped/planned matrix for the repository.
 
-**Published package version:** `0.5.0` (from `package.json`)
+**Published package version:** `1.0.0` (from `package.json`)
 
 Code present in the repository but assigned to a later release is
 **implemented, unreleased**. A release-note filename or historical roadmap
@@ -37,5 +37,5 @@ The next documented release is **v1.0.0** (Product OS). Historical notes for
 0.4.0 and 0.5.0 remain in `docs/v0.4.0-release-notes.md` and
 `docs/v0.5.0-release-notes.md`.
 
-- [docs/v1.0.0-release-notes.md](v1.0.0-release-notes.md) — draft while
-  `package.json` remains `0.5.0`
+- [docs/v1.0.0-release-notes.md](v1.0.0-release-notes.md) — draft for the
+  Product OS surface while the published package version is `1.0.0`

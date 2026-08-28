@@ -3,6 +3,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import {
   OpenspecStateSchema,
+  type BacklogItemInput,
   type BacklogStatusInput,
   type OpenspecStateInput,
   type OpenspecTaskCardInput,
@@ -143,6 +144,19 @@ export function getNextTaskCard(state: OpenspecStateInput): OpenspecTaskCardInpu
  */
 export function hashContent(content: string): string {
   return createHash('sha256').update(content).digest('hex').slice(0, 16);
+}
+
+export function serializeItemSnapshot(item: BacklogItemInput): string {
+  return JSON.stringify({
+    status: item.status,
+    progress: item.progress,
+    title: item.title,
+    description: item.description,
+    scope: item.scope,
+    type: item.type,
+    priority: item.priority,
+    acceptanceCriteria: item.acceptanceCriteria,
+  });
 }
 
 /**

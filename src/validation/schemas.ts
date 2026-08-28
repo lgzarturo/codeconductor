@@ -721,6 +721,7 @@ export const OpenspecTaskCardSchema = z.object({
   dependsOn: z.array(z.string()).default([]),
   acceptanceCriteria: z.array(z.string()),
   status: OpenspecTaskCardStatusSchema,
+  itemHash: z.string().optional(),
 });
 
 export const OpenspecStateSchema = z.object({

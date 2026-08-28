@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { BacklogItemInput } from '../../validation/schemas';
 import { parseBacklogMarkdown, BACKLOG_FILENAME } from './backlog-parser';
-import { hashContent } from './openspec-state';
+import { hashContent, serializeItemSnapshot } from './openspec-state';
 import { err, ok, type Result } from '../../utils/result';
 
 export interface ScanDiff {
@@ -17,11 +17,7 @@ export interface ScanDiff {
 function itemSnapshot(items: BacklogItemInput[]): Record<string, string> {
   const snap: Record<string, string> = {};
   for (const item of items) {
-    snap[item.id] = JSON.stringify({
-      status: item.status,
-      progress: item.progress,
-      title: item.title,
-    });
+    snap[item.id] = serializeItemSnapshot(item);
   }
   return snap;
 }

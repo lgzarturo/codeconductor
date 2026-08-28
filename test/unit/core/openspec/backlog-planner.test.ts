@@ -42,20 +42,52 @@ describe('core/openspec/backlog-planner', () => {
 
   describe('planTaskCardsForItem', () => {
     test('creates one chained card per phase', () => {
-      const cards = planTaskCardsForItem(item(), doc([], true));
+      const { cards } = planTaskCardsForItem(item(), doc([], true));
       expect(cards).toHaveLength(5);
       expect(cards[0].id).toBe('BC-001-discover');
       expect(cards[0].dependsOn).toEqual([]);
       expect(cards[1].dependsOn).toEqual(['BC-001-discover']);
       expect(cards.map((c) => c.phase)).toEqual(['discover', 'design', 'test', 'implement', 'review']);
+      expect(cards.every((c) => typeof c.itemHash === 'string' && c.itemHash.length > 0)).toBe(true);
     });
 
-    test('preserves the status of existing cards', () => {
-      const existing = planTaskCardsForItem(item(), doc([], true)).map((c) =>
+    test('preserves the status of existing cards when the item hash is unchanged', () => {
+      const first = planTaskCardsForItem(item(), doc([], true)).cards;
+      const existing = first.map((c) =>
         c.id === 'BC-001-discover' ? { ...c, status: 'done' as const } : c,
       );
-      const cards = planTaskCardsForItem(item(), doc([], true), existing);
+      const { cards, invalidatedCards } = planTaskCardsForItem(item(), doc([], true), existing);
       expect(cards[0].status).toBe('done');
+      expect(invalidatedCards).toEqual([]);
+    });
+
+    test('resets drifted cards when the item snapshot hash changes', () => {
+      const first = planTaskCardsForItem(item(), doc([], true)).cards;
+      const existing = first.map((c) => ({ ...c, status: 'done' as const }));
+      const { cards, invalidatedCards } = planTaskCardsForItem(
+        item({ title: 'Changed title' }),
+        doc([], true),
+        existing,
+      );
+      expect(cards.every((c) => c.status === 'pending')).toBe(true);
+      expect(invalidatedCards).toContain('BC-001-discover');
+    });
+
+    test('reports tddRequired phase-order changes and resets leftover cards', () => {
+      const tddCards = planTaskCardsForItem(item(), doc([], true)).cards.map((c) => ({
+        ...c,
+        status: 'done' as const,
+      }));
+      const { cards, tddImpact, invalidatedCards } = planTaskCardsForItem(
+        item(),
+        doc([], false),
+        tddCards,
+      );
+      expect(cards.map((c) => c.phase)).toEqual(['discover', 'design', 'implement', 'test', 'review']);
+      expect(cards.every((c) => c.status === 'pending')).toBe(true);
+      expect(tddImpact?.previousOrder).toEqual(['discover', 'design', 'test', 'implement', 'review']);
+      expect(tddImpact?.nextOrder).toEqual(['discover', 'design', 'implement', 'test', 'review']);
+      expect(invalidatedCards.length).toBeGreaterThan(0);
     });
   });
 

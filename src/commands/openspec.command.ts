@@ -22,6 +22,7 @@ import {
   archiveItemInMarkdown,
   writeFileAtomic,
   canTransition,
+  serializeItemSnapshot,
 } from '../core/openspec/openspec-state';
 import { BACKLOG_FILENAME } from '../core/openspec/backlog-parser';
 import { runLoopForProject, shouldRunAgentLoop } from '../core/loop/loop-engine';
@@ -258,7 +259,13 @@ async function handlePlan(
     ]);
   }
 
-  const taskCards = planTaskCardsForItem(item, doc, existingState.taskCards);
+  const planned = planTaskCardsForItem(
+    item,
+    doc,
+    existingState.taskCards,
+    existingState.itemSnapshots?.[item.id],
+  );
+  const taskCards = planned.cards;
   await ensureOpenspecConfig(projectRoot);
   const changePath = await generateOpenspecChange(projectRoot, item, taskCards);
 
@@ -270,6 +277,10 @@ async function handlePlan(
     changePaths: {
       ...existingState.changePaths,
       [item.id]: changePath,
+    },
+    itemSnapshots: {
+      ...existingState.itemSnapshots,
+      [item.id]: serializeItemSnapshot(item),
     },
   };
   const written = await persistState(projectRoot, newState);
@@ -299,6 +310,8 @@ async function handlePlan(
       title: item.title,
       changePath,
       taskCards,
+      invalidatedCards: planned.invalidatedCards,
+      tddImpact: planned.tddImpact,
     },
   };
 }

@@ -93,7 +93,7 @@ describe('backlog-planner', () => {
     const parsed = parseBacklogMarkdown(content);
     if (!parsed.success) return;
     const item = parsed.data.items[0];
-    const cards = planTaskCardsForItem(item, parsed.data);
+    const { cards } = planTaskCardsForItem(item, parsed.data);
     expect(cards.length).toBe(5);
     expect(cards[0].dependsOn).toEqual([]);
     expect(cards[1].dependsOn).toEqual([cards[0].id]);

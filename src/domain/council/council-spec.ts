@@ -1,3 +1,7 @@
+import type { ConsensusConfig } from './council-consensus';
+
+const SECURITY_HINTS = ['security', 'auth', 'injection', 'credentials', 'supply-chain'];
+
 /**
  * Council specification interface
  */
@@ -80,6 +84,38 @@ export const DEFAULT_COUNCIL_AGENTS: CouncilAgentSpec[] = [
     focus: ['review', 'edge-cases', 'failure-modes'],
   },
 ];
+
+export function hasSecurityFocusedAgent(spec: CouncilSpec): boolean {
+  return spec.agents.some((agent) => {
+    const haystack = [agent.id, agent.role, ...agent.focus].join(' ').toLowerCase();
+    return SECURITY_HINTS.some((hint) => haystack.includes(hint));
+  });
+}
+
+/**
+ * Derive a ConsensusConfig from the effective council spec.
+ * `allowSecurityVeto` requires at least one security-focused agent.
+ */
+export function deriveConsensusConfig(
+  spec: CouncilSpec,
+  overrides: Partial<ConsensusConfig> = {},
+): ConsensusConfig {
+  const expectedAgentIds = spec.agents.map((agent) => agent.id);
+  const allowSecurityVeto = overrides.allowSecurityVeto ?? true;
+  if (allowSecurityVeto && !hasSecurityFocusedAgent(spec)) {
+    throw new Error(
+      'allowSecurityVeto requires at least one security-focused agent in the council roster',
+    );
+  }
+  return {
+    algorithm: overrides.algorithm ?? 'majority',
+    allowSecurityVeto,
+    allowComplianceVeto: overrides.allowComplianceVeto ?? true,
+    expectedAgentIds: overrides.expectedAgentIds ?? expectedAgentIds,
+    quorum: overrides.quorum ?? Math.ceil(expectedAgentIds.length / 2),
+    criticalFindingsPolicy: overrides.criticalFindingsPolicy ?? 'escalate',
+  };
+}
 
 /**
  * Convert a CouncilSpec to an AgentContract targeting specific providers.

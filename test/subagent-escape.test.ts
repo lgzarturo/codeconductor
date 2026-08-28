@@ -131,6 +131,7 @@ describe('Subagent escape — council veto from security-reviewer', () => {
         agentRole: 'Architect',
         status: 'APPROVED' as const,
         securityVeto: false,
+        confidence: 1,
         findings: [],
         summary: 'Approved.',
       },
@@ -139,6 +140,7 @@ describe('Subagent escape — council veto from security-reviewer', () => {
         agentRole: 'Security Reviewer',
         status: 'REJECTED' as const,
         securityVeto: true,
+        confidence: 1,
         findings: [
           {
             category: 'security',
@@ -174,6 +176,7 @@ describe('Subagent escape — council veto from security-reviewer', () => {
         agentRole: 'Architect',
         status: 'APPROVED' as const,
         securityVeto: false,
+        confidence: 1,
         findings: [],
         summary: 'Approved.',
       },
@@ -182,6 +185,7 @@ describe('Subagent escape — council veto from security-reviewer', () => {
         agentRole: 'Product',
         status: 'APPROVED' as const,
         securityVeto: false,
+        confidence: 1,
         findings: [],
         summary: 'Approved.',
       },
@@ -190,6 +194,7 @@ describe('Subagent escape — council veto from security-reviewer', () => {
         agentRole: 'Delivery',
         status: 'APPROVED' as const,
         securityVeto: false,
+        confidence: 1,
         findings: [],
         summary: 'Approved.',
       },
@@ -198,6 +203,7 @@ describe('Subagent escape — council veto from security-reviewer', () => {
         agentRole: 'Security Reviewer',
         status: 'REJECTED' as const,
         securityVeto: true,
+        confidence: 1,
         findings: [
           {
             category: 'security',

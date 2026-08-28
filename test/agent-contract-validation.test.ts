@@ -97,6 +97,7 @@ describe('CouncilVerdictInputSchema', () => {
       agentRole: 'Architect',
       status: 'APPROVED',
       securityVeto: false,
+      confidence: 1,
       findings: [],
       summary: 'Looks good.',
     };
@@ -110,6 +111,7 @@ describe('CouncilVerdictInputSchema', () => {
       agentRole: 'Security',
       status: 'REJECTED',
       securityVeto: true,
+      confidence: 1,
       findings: [
         {
           category: 'security',
@@ -535,6 +537,7 @@ describe('validateCouncilVerdictInput (throwing helper)', () => {
       agentRole: 'Architect',
       status: 'APPROVED',
       securityVeto: false,
+      confidence: 1,
       findings: [],
       summary: 'LGTM',
     };

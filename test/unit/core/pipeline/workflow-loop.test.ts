@@ -26,6 +26,7 @@ const PLAN: TechnicalPlan = {
 const approvingVerdicts: CouncilVerdictInput[] = [
   { agentId: 'a1', agentRole: 'architect', status: 'APPROVED', securityVeto: false, confidence: 1, findings: [], summary: 'ok' },
   { agentId: 'a2', agentRole: 'security', status: 'APPROVED', securityVeto: false, confidence: 1, findings: [], summary: 'ok' },
+  { agentId: 'a3', agentRole: 'devil', status: 'APPROVED', securityVeto: false, confidence: 1, findings: [], summary: 'ok' },
 ];
 
 function makeCallbacks(overrides: Partial<PipelineCallbacks> = {}): PipelineCallbacks {

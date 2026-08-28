@@ -22,6 +22,8 @@ export interface CouncilVerdictInput {
   readonly summary: string;
 }
 
+export type CriticalFindingsPolicy = 'escalate' | 'reject' | 'ignore';
+
 /**
  * Consensus algorithm configuration
  */
@@ -30,10 +32,14 @@ export interface ConsensusConfig {
   readonly allowSecurityVeto: boolean;
   readonly allowComplianceVeto?: boolean;
   /**
-   * Roster expected to vote under the unanimous algorithm, which cannot approve
-   * without it. Ignored by majority.
+   * Roster expected to vote. Required for unanimous approval; used for
+   * quorum defaults under majority.
    */
   readonly expectedAgentIds?: readonly string[];
+  /** Minimum ballots required. See resolveQuorum(). */
+  readonly quorum?: number;
+  /** What to do with severity:critical findings after explicit vetos. */
+  readonly criticalFindingsPolicy?: CriticalFindingsPolicy;
 }
 
 /**
@@ -58,19 +64,50 @@ const DEFAULT_CONFIG: ConsensusConfig = {
   algorithm: 'majority',
   allowSecurityVeto: true,
   allowComplianceVeto: true,
+  criticalFindingsPolicy: 'escalate',
 };
 
 const VALID_STATUSES: ReadonlySet<string> = new Set(['APPROVED', 'REJECTED', 'ABSTAIN']);
+
+const SECURITY_CATEGORIES = new Set([
+  'security',
+  'auth',
+  'injection',
+  'credentials',
+  'supply-chain',
+]);
 
 function canonicalAgentId(agentId: string): string {
   return agentId.trim().toLowerCase();
 }
 
+function isSecurityCategory(category: string): boolean {
+  return SECURITY_CATEGORIES.has(category.trim().toLowerCase());
+}
+
+export function resolveQuorum(
+  config: ConsensusConfig,
+  ballotCount: number,
+): { readonly required: number; readonly met: boolean } {
+  if (typeof config.quorum === 'number') {
+    const required = Math.max(1, config.quorum);
+    return { required, met: ballotCount >= required };
+  }
+  if (config.expectedAgentIds && config.expectedAgentIds.length > 0) {
+    const required = Math.ceil(config.expectedAgentIds.length / 2);
+    return { required, met: ballotCount >= required };
+  }
+  if (config.algorithm === 'majority') {
+    return { required: 3, met: ballotCount >= 3 };
+  }
+  return { required: 1, met: ballotCount >= 1 };
+}
+
 /**
- * Reason why unanimity is not reached, or undefined when every required agent
- * approved exactly once.
+ * Shared ballot-box checks for majority and unanimous.
+ * Returns a reason to escalate, or undefined when the box is usable.
  */
-function unanimousFailure(
+export function validateBallotBox(
   verdicts: readonly CouncilVerdictInput[],
   expectedAgentIds?: readonly string[],
 ): string | undefined {
@@ -100,6 +137,11 @@ function unanimousFailure(
     return `${invalidCount} invalid verdict(s) received`;
   }
 
+  const missingConfidence = verdicts.filter((v) => typeof v.confidence !== 'number').length;
+  if (missingConfidence > 0) {
+    return `${missingConfidence} verdict(s) missing confidence`;
+  }
+
   const seen = new Set<string>();
   const duplicates = new Set<string>();
   for (const v of verdicts) {
@@ -113,12 +155,21 @@ function unanimousFailure(
     return `duplicate verdicts from ${[...duplicates].join(', ')}`;
   }
 
-  // Unanimity is only meaningful against a declared roster: without one, an
-  // agent that was never asked is indistinguishable from one that approved.
+  return undefined;
+}
+
+function unanimousFailure(
+  verdicts: readonly CouncilVerdictInput[],
+  expectedAgentIds?: readonly string[],
+): string | undefined {
+  const box = validateBallotBox(verdicts, expectedAgentIds);
+  if (box) return box;
+
   if (expectedAgentIds === undefined) {
     return 'missing expected agent roster';
   }
 
+  const seen = new Set(verdicts.map((v) => canonicalAgentId(v.agentId)));
   const missing = expectedAgentIds.filter((id) => !seen.has(canonicalAgentId(id)));
   if (missing.length > 0) {
     return `missing verdicts from ${missing.join(', ')}`;
@@ -139,20 +190,44 @@ function unanimousFailure(
   return undefined;
 }
 
+function escalated(
+  verdicts: readonly CouncilVerdictInput[],
+  summary: string,
+  counts?: {
+    approvedCount?: number;
+    rejectedCount?: number;
+    abstainedCount?: number;
+    averageConfidence?: number;
+    findings?: readonly CouncilFinding[];
+  },
+): CouncilVerdict {
+  return {
+    status: 'ESCALATED',
+    totalAgents: verdicts.length,
+    approvedCount: counts?.approvedCount ?? 0,
+    rejectedCount: counts?.rejectedCount ?? 0,
+    abstainedCount: counts?.abstainedCount ?? 0,
+    vetoApplied: false,
+    complianceVetoApplied: false,
+    averageConfidence: counts?.averageConfidence,
+    findings: counts?.findings ? [...counts.findings] : [],
+    summary,
+    individualVerdicts: verdicts,
+  };
+}
+
 /**
  * Compute council consensus from N verdicts.
  *
  * Rules:
- *  - Security veto (securityVeto=true + REJECTED) overrides majority → REJECTED
- *  - Compliance veto (complianceVeto=true + REJECTED) overrides majority → REJECTED
- *  - confidence check: if any agent's confidence < 0.6, or average confidence < 0.7 → ESCALATED
+ *  - Ballot box (roster, duplicates, invalid status, missing confidence) applies
+ *    to majority and unanimous — failure → ESCALATED
+ *  - Quorum: config.quorum, else ceil(roster/2), else majority-without-roster requires 3
+ *  - Security/compliance veto (including derived security-critical findings) → REJECTED
+ *  - criticalFindingsPolicy (default escalate) after explicit vetos
+ *  - confidence < 0.6 or average < 0.7 → ESCALATED
  *  - majority: APPROVED if approvedCount > rejectedCount
- *  - unanimous: APPROVED only if every agent in `config.expectedAgentIds`
- *    approved exactly once — missing, duplicate, unexpected, abstaining or
- *    invalid verdicts → ESCALATED. The roster is mandatory: without it there is
- *    no way to tell a silenced agent from an approving one, so a unanimous
- *    config that omits it always escalates.
- *  - No majority and no veto → ESCALATED
+ *  - unanimous: every expected agent approved exactly once
  *  - Empty input → ESCALATED
  */
 export function councilConsensus(
@@ -161,20 +236,16 @@ export function councilConsensus(
 ): CouncilVerdict {
   const totalAgents = verdicts.length;
 
-  // Empty input → ESCALATED
   if (totalAgents === 0) {
-    return {
-      status: 'ESCALATED',
-      totalAgents: 0,
-      approvedCount: 0,
-      rejectedCount: 0,
-      abstainedCount: 0,
-      vetoApplied: false,
-      complianceVetoApplied: false,
-      findings: [],
-      summary: 'No verdicts submitted — escalated for human review.',
-      individualVerdicts: [],
-    };
+    return escalated(verdicts, 'No verdicts submitted — escalated for human review.');
+  }
+
+  const ballotFailure = validateBallotBox(verdicts, config.expectedAgentIds);
+  if (ballotFailure) {
+    return escalated(
+      verdicts,
+      `Ballot box invalid: ${ballotFailure} — escalated for human review.`,
+    );
   }
 
   let approvedCount = 0;
@@ -186,6 +257,9 @@ export function councilConsensus(
   let totalConfidence = 0;
   let hasLowConfidence = false;
   const allFindings: CouncilFinding[] = [];
+  const allowCompliance =
+    typeof config.allowComplianceVeto === 'boolean' ? config.allowComplianceVeto : true;
+  const policy = config.criticalFindingsPolicy ?? 'escalate';
 
   for (const v of verdicts) {
     switch (v.status) {
@@ -200,7 +274,10 @@ export function councilConsensus(
         break;
     }
 
-    const confidence = typeof v.confidence === 'number' ? v.confidence : 1.0;
+    if (typeof v.confidence !== 'number') {
+      return escalated(verdicts, 'Ballot box invalid: verdict(s) missing confidence — escalated for human review.');
+    }
+    const confidence = v.confidence;
     totalConfidence += confidence;
     if (confidence < 0.6) {
       hasLowConfidence = true;
@@ -211,21 +288,33 @@ export function councilConsensus(
       vetoByAgentId = v.agentId;
     }
 
-    const allowCompliance = typeof config.allowComplianceVeto === 'boolean'
-      ? config.allowComplianceVeto
-      : true;
-
     if (allowCompliance && v.complianceVeto && v.status === 'REJECTED') {
       complianceVetoApplied = true;
       vetoByAgentId = v.agentId;
     }
 
-    allFindings.push(...v.findings);
+    for (const finding of v.findings) {
+      allFindings.push(finding);
+      if (
+        config.allowSecurityVeto &&
+        finding.severity === 'critical' &&
+        isSecurityCategory(finding.category)
+      ) {
+        vetoApplied = true;
+        vetoByAgentId = v.agentId;
+      }
+    }
   }
 
   const averageConfidence = totalConfidence / totalAgents;
+  const counts = {
+    approvedCount,
+    rejectedCount,
+    abstainedCount,
+    averageConfidence,
+    findings: allFindings,
+  };
 
-  // Security or Compliance veto wins first (override all)
   if (vetoApplied || complianceVetoApplied) {
     const vetoAgent = verdicts.find((v) => v.agentId === vetoByAgentId);
     const vetoType = vetoApplied ? 'Security' : 'Compliance';
@@ -245,13 +334,10 @@ export function councilConsensus(
     };
   }
 
-  // Confidence check: Low confidence triggers escalation before standard consensus logic
-  if (hasLowConfidence || averageConfidence < 0.7) {
-    const reason = hasLowConfidence
-      ? 'one or more agents reported confidence below 0.6'
-      : `average confidence (${averageConfidence.toFixed(2)}) is below 0.7`;
+  const critical = allFindings.filter((f) => f.severity === 'critical');
+  if (critical.length > 0 && policy === 'reject') {
     return {
-      status: 'ESCALATED',
+      status: 'REJECTED',
       totalAgents,
       approvedCount,
       rejectedCount,
@@ -260,12 +346,40 @@ export function councilConsensus(
       complianceVetoApplied: false,
       averageConfidence,
       findings: allFindings,
-      summary: `Confidence threshold breach: ${reason} — escalated for human review.`,
+      summary: `${critical.length} critical finding(s) — rejected by criticalFindingsPolicy.`,
       individualVerdicts: verdicts,
     };
   }
+  if (critical.length > 0 && policy === 'escalate') {
+    return escalated(
+      verdicts,
+      `${critical.length} critical finding(s) — escalated by criticalFindingsPolicy.`,
+      counts,
+    );
+  }
 
-  // Majority check
+  const quorum = resolveQuorum(config, totalAgents);
+  if (!quorum.met) {
+    return escalated(
+      verdicts,
+      `Quorum not reached (${totalAgents}/${quorum.required}) — escalated for human review.`,
+      counts,
+    );
+  }
+
+  if (hasLowConfidence || averageConfidence < 0.7) {
+    const reason = hasLowConfidence
+      ? 'one or more agents reported confidence below 0.6'
+      : `average confidence (${averageConfidence.toFixed(2)}) is below 0.7`;
+    return escalated(verdicts, `Confidence threshold breach: ${reason} — escalated for human review.`, {
+      approvedCount,
+      rejectedCount,
+      abstainedCount,
+      averageConfidence,
+      findings: allFindings,
+    });
+  }
+
   if (config.algorithm === 'majority') {
     if (approvedCount > rejectedCount) {
       return {
@@ -284,7 +398,6 @@ export function councilConsensus(
     }
   }
 
-  // Unanimous check
   if (config.algorithm === 'unanimous') {
     const failure = unanimousFailure(verdicts, config.expectedAgentIds);
     if (!failure) {
@@ -303,33 +416,28 @@ export function councilConsensus(
       };
     }
 
-    return {
-      status: 'ESCALATED',
-      totalAgents,
+    return escalated(
+      verdicts,
+      `Unanimity not reached: ${failure} — escalated for human review.`,
+      {
+        approvedCount,
+        rejectedCount,
+        abstainedCount,
+        averageConfidence,
+        findings: allFindings,
+      },
+    );
+  }
+
+  return escalated(
+    verdicts,
+    `No clear consensus (${approvedCount} approved, ${rejectedCount} rejected, ${abstainedCount} abstained) — escalated for human review.`,
+    {
       approvedCount,
       rejectedCount,
       abstainedCount,
-      vetoApplied: false,
-      complianceVetoApplied: false,
       averageConfidence,
       findings: allFindings,
-      summary: `Unanimity not reached: ${failure} — escalated for human review.`,
-      individualVerdicts: verdicts,
-    };
-  }
-
-  // No clear majority or rejection → ESCALATED
-  return {
-    status: 'ESCALATED',
-    totalAgents,
-    approvedCount,
-    rejectedCount,
-    abstainedCount,
-    vetoApplied: false,
-    complianceVetoApplied: false,
-    averageConfidence,
-    findings: allFindings,
-    summary: `No clear consensus (${approvedCount} approved, ${rejectedCount} rejected, ${abstainedCount} abstained) — escalated for human review.`,
-    individualVerdicts: verdicts,
-  };
+    },
+  );
 }

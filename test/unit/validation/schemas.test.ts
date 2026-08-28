@@ -71,6 +71,7 @@ const councilVerdictInput = {
   agentRole: 'r',
   status: 'APPROVED',
   securityVeto: false,
+  confidence: 1,
   findings: [],
   summary: 's',
 };

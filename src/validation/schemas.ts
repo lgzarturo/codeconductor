@@ -26,7 +26,14 @@ export const CouncilSpecSchema = z.object({
   version: z.string(),
   description: z.string(),
   outputContract: z.string(),
-  agents: z.array(CouncilAgentSpecSchema),
+  agents: z
+    .array(CouncilAgentSpecSchema)
+    .min(1)
+    .refine(
+      (agents) =>
+        new Set(agents.map((a) => a.id.trim().toLowerCase())).size === agents.length,
+      { message: 'council agent ids must be unique' },
+    ),
 });
 
 /**
@@ -265,7 +272,7 @@ export const CouncilVerdictInputSchema = z.object({
   status: z.enum(['APPROVED', 'REJECTED', 'ABSTAIN']),
   securityVeto: z.boolean(),
   complianceVeto: z.boolean().optional(),
-  confidence: z.number().min(0).max(1).optional(),
+  confidence: z.number().min(0).max(1),
   findings: z.array(CouncilFindingSchema),
   summary: z.string(),
 });
@@ -286,13 +293,25 @@ export const ConsensusConfigSchema = z
           new Set(ids.map((id) => id.trim().toLowerCase())).size === ids.length,
       )
       .optional(),
+    quorum: z.number().int().positive().optional(),
+    criticalFindingsPolicy: z.enum(['escalate', 'reject', 'ignore']).optional(),
   })
   // The unanimous algorithm cannot approve without a roster, so a config that
   // omits one is rejected at the edge rather than escalating every review.
   .refine((config) => config.algorithm !== 'unanimous' || config.expectedAgentIds !== undefined, {
     message: 'unanimous consensus requires a non-empty expectedAgentIds roster',
     path: ['expectedAgentIds'],
-  });
+  })
+  .refine(
+    (config) =>
+      !config.allowSecurityVeto ||
+      config.expectedAgentIds === undefined ||
+      config.expectedAgentIds.some((id) => id.toLowerCase().includes('security')),
+    {
+      message: 'allowSecurityVeto requires at least one security agent in expectedAgentIds',
+      path: ['expectedAgentIds'],
+    },
+  );
 
 /**
  * Council verdict schema — the final output of the consensus engine

@@ -15,6 +15,7 @@ function makeVerdict(
     agentRole: agentId.charAt(0).toUpperCase() + agentId.slice(1),
     status,
     securityVeto,
+    confidence: 1,
     findings: [],
     summary: `${agentId} voted ${status}.`,
   };
@@ -35,6 +36,7 @@ function makeVetoVerdict(agentId: string): CouncilVerdictInput {
       },
     ],
     summary: `${agentId} applied security veto.`,
+    confidence: 1,
   };
 }
 
@@ -105,7 +107,7 @@ describe('councilConsensus — security veto override', () => {
     const verdicts = [
       makeVerdict('architect', 'APPROVED'),
       makeVerdict('product', 'APPROVED'),
-      makeVetoVerdict('security'),
+      makeVerdict('security', 'REJECTED', true),
     ];
     const result = councilConsensus(verdicts, NO_VETO_CONFIG);
     expect(result.status).toBe('APPROVED');
@@ -120,9 +122,11 @@ describe('councilConsensus — security veto override', () => {
         agentRole: 'Security',
         status: 'APPROVED',
         securityVeto: true,
+        confidence: 1,
         findings: [],
         summary: 'Approved despite veto flag.',
       },
+      makeVerdict('devil', 'APPROVED'),
     ];
     const result = councilConsensus(verdicts, MAJORITY_CONFIG);
     expect(result.status).toBe('APPROVED');
@@ -189,10 +193,11 @@ describe('councilConsensus — edge cases', () => {
     expect(result.summary).toContain('No verdicts submitted');
   });
 
-  test('single APPROVED → APPROVED', () => {
+  test('single APPROVED without roster → ESCALATED (majority quorum is 3)', () => {
     const verdicts = [makeVerdict('architect', 'APPROVED')];
     const result = councilConsensus(verdicts, MAJORITY_CONFIG);
-    expect(result.status).toBe('APPROVED');
+    expect(result.status).toBe('ESCALATED');
+    expect(result.summary).toMatch(/Quorum not reached/);
   });
 
   test('single REJECTED → ESCALATED', () => {
@@ -217,6 +222,7 @@ describe('councilConsensus — edge cases', () => {
         agentRole: 'Architect',
         status: 'APPROVED',
         securityVeto: false,
+        confidence: 1,
         findings: [
           { category: 'architecture', severity: 'warning', message: 'Consider DI', agentId: 'architect' },
         ],
@@ -227,11 +233,13 @@ describe('councilConsensus — edge cases', () => {
         agentRole: 'Security',
         status: 'APPROVED',
         securityVeto: false,
+        confidence: 1,
         findings: [
           { category: 'security', severity: 'info', message: 'Use HTTPS', agentId: 'security' },
         ],
         summary: 'Approved.',
       },
+      makeVerdict('devil', 'APPROVED'),
     ];
     const result = councilConsensus(verdicts, MAJORITY_CONFIG);
     expect(result.findings).toHaveLength(2);
@@ -311,6 +319,7 @@ describe('councilConsensus — multiple security vetos', () => {
         agentRole: 'FalseFlag',
         status: 'REJECTED',
         securityVeto: false,
+        confidence: 1,
         findings: [],
         summary: 'rejected without veto',
       },
@@ -597,5 +606,88 @@ describe('councilConsensus — security-reviewer sub-agent', () => {
     expect(result.totalAgents).toBe(6);
     expect(result.approvedCount).toBe(5);
     expect(result.rejectedCount).toBe(1);
+  });
+});
+
+describe('councilConsensus — ballot box, quorum, confidence, critical findings', () => {
+  test('duplicate agent IDs → ESCALATED', () => {
+    const verdicts = [
+      makeVerdict('architect', 'APPROVED'),
+      makeVerdict('architect', 'APPROVED'),
+      makeVerdict('devil', 'APPROVED'),
+    ];
+    const result = councilConsensus(verdicts, MAJORITY_CONFIG);
+    expect(result.status).toBe('ESCALATED');
+    expect(result.summary).toContain('duplicate');
+  });
+
+  test('missing confidence → ESCALATED', () => {
+    const incomplete = {
+      agentId: 'architect',
+      agentRole: 'Architect',
+      status: 'APPROVED' as const,
+      securityVeto: false,
+      findings: [],
+      summary: 'no confidence',
+    };
+    const result = councilConsensus(
+      [incomplete as CouncilVerdictInput, makeVerdict('security', 'APPROVED'), makeVerdict('devil', 'APPROVED')],
+      MAJORITY_CONFIG,
+    );
+    expect(result.status).toBe('ESCALATED');
+    expect(result.summary).toContain('confidence');
+  });
+
+  test('critical finding without veto flag → ESCALATED by default policy', () => {
+    const verdicts: CouncilVerdictInput[] = [
+      {
+        ...makeVerdict('architect', 'APPROVED'),
+        findings: [
+          {
+            category: 'architecture',
+            severity: 'critical',
+            message: 'Unbounded module growth',
+            agentId: 'architect',
+          },
+        ],
+      },
+      makeVerdict('security', 'APPROVED'),
+      makeVerdict('devil', 'APPROVED'),
+    ];
+    const result = councilConsensus(verdicts, MAJORITY_CONFIG);
+    expect(result.status).toBe('ESCALATED');
+    expect(result.summary).toContain('critical');
+  });
+
+  test('critical security finding without securityVeto flag is a derived veto → REJECTED', () => {
+    const verdicts: CouncilVerdictInput[] = [
+      makeVerdict('architect', 'APPROVED'),
+      {
+        ...makeVerdict('security', 'APPROVED'),
+        findings: [
+          {
+            category: 'injection',
+            severity: 'critical',
+            message: 'SQL injection in login',
+            agentId: 'security',
+          },
+        ],
+      },
+      makeVerdict('devil', 'APPROVED'),
+    ];
+    const result = councilConsensus(verdicts, MAJORITY_CONFIG);
+    expect(result.status).toBe('REJECTED');
+    expect(result.vetoApplied).toBe(true);
+    expect(result.vetoByAgentId).toBe('security');
+  });
+
+  test('quorum not reached (2 ballots, majority without roster) → ESCALATED', () => {
+    const verdicts = [
+      makeVerdict('architect', 'APPROVED'),
+      makeVerdict('security', 'APPROVED'),
+    ];
+    const result = councilConsensus(verdicts, MAJORITY_CONFIG);
+    expect(result.status).toBe('ESCALATED');
+    expect(result.summary).toMatch(/Quorum not reached/);
   });
 });

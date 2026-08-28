@@ -266,6 +266,7 @@ Examples:
   npx cc-codeconductor ccep profile council --output json
   npx cc-codeconductor ccep resolve --command feature "Add CRUD"
   npx cc-codeconductor ccep evaluate --command feature --input @planner.json
+  npx cc-codeconductor ccep consensus --input @verdicts.json
   npx cc-codeconductor openspec validate
   npx cc-codeconductor openspec scan
   npx cc-codeconductor openspec plan BC-001
@@ -590,7 +591,7 @@ export async function routeCommand(
     }
 
     case 'ccep': {
-      const validSubs = ['parse', 'profile', 'resolve', 'compile', 'validate', 'evaluate'];
+      const validSubs = ['parse', 'profile', 'resolve', 'compile', 'validate', 'evaluate', 'consensus'];
       if (subcommand && !validSubs.includes(subcommand)) {
         return unknownSubcommand('ccep', subcommand, validSubs);
       }
@@ -605,7 +606,7 @@ export async function routeCommand(
             : requestParts.join(' ').trim();
 
       const validateRest =
-        (ccepSub === 'validate' || ccepSub === 'evaluate') && !options.input
+        (ccepSub === 'validate' || ccepSub === 'evaluate' || ccepSub === 'consensus') && !options.input
           ? requestParts
           : undefined;
 
@@ -621,6 +622,7 @@ export async function routeCommand(
         input: options.input as string | undefined,
         contextPath: (options.context as string) || (options.contextPath as string),
         promptVersion: (options['prompt-version'] as string) || (options.promptVersion as string),
+        config: options.config as string | undefined,
         rest: validateRest,
       } as CcepOptions);
     }

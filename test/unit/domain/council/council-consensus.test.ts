@@ -40,10 +40,13 @@ describe('domain/council/council-consensus', () => {
   });
 
   test('majority: a tie with no clear winner escalates', () => {
-    const v = councilConsensus([
-      verdict({ agentId: 'a1', status: 'APPROVED' }),
-      verdict({ agentId: 'a2', status: 'REJECTED' }),
-    ]);
+    const v = councilConsensus(
+      [
+        verdict({ agentId: 'a1', status: 'APPROVED' }),
+        verdict({ agentId: 'a2', status: 'REJECTED' }),
+      ],
+      { algorithm: 'majority', allowSecurityVeto: true, quorum: 2 },
+    );
     expect(v.status).toBe('ESCALATED');
     expect(v.summary).toContain('No clear consensus');
   });
@@ -94,6 +97,7 @@ describe('domain/council/council-consensus', () => {
     const v = councilConsensus([
       verdict({ agentId: 'a1', status: 'APPROVED', confidence: 0.9 }),
       verdict({ agentId: 'a2', status: 'APPROVED', confidence: 0.5 }),
+      verdict({ agentId: 'a3', status: 'APPROVED', confidence: 0.9 }),
     ]);
     expect(v.status).toBe('ESCALATED');
     expect(v.summary).toContain('confidence');
@@ -103,6 +107,7 @@ describe('domain/council/council-consensus', () => {
     const v = councilConsensus([
       verdict({ agentId: 'a1', status: 'APPROVED', confidence: 0.65 }),
       verdict({ agentId: 'a2', status: 'APPROVED', confidence: 0.65 }),
+      verdict({ agentId: 'a3', status: 'APPROVED', confidence: 0.65 }),
     ]);
     expect(v.status).toBe('ESCALATED');
     expect(v.averageConfidence).toBeCloseTo(0.65, 5);
@@ -120,20 +125,21 @@ describe('domain/council/council-consensus', () => {
     expect(v.summary).toContain('roster');
   });
 
-  test('majority algorithm approves without an expected roster', () => {
+  test('majority algorithm approves without an expected roster when quorum is met', () => {
     const v = councilConsensus(
-      [verdict({ agentId: 'a1' }), verdict({ agentId: 'a2' })],
+      [verdict({ agentId: 'a1' }), verdict({ agentId: 'a2' }), verdict({ agentId: 'a3' })],
       { algorithm: 'majority', allowSecurityVeto: true },
     );
     expect(v.status).toBe('APPROVED');
   });
 
-  test('majority algorithm ignores a malformed expected roster', () => {
+  test('majority algorithm escalates a malformed expected roster', () => {
     const v = councilConsensus(
-      [verdict({ agentId: 'a1' }), verdict({ agentId: 'a2' })],
+      [verdict({ agentId: 'a1' }), verdict({ agentId: 'a2' }), verdict({ agentId: 'a3' })],
       { algorithm: 'majority', allowSecurityVeto: true, expectedAgentIds: [] },
     );
-    expect(v.status).toBe('APPROVED');
+    expect(v.status).toBe('ESCALATED');
+    expect(v.summary).toContain('invalid');
   });
 
   test('unanimous algorithm escalates when any agent rejects', () => {
@@ -206,6 +212,30 @@ describe('domain/council/council-consensus', () => {
     expect(v.abstainedCount).toBe(1);
     expect(v.approvedCount).toBe(2);
     expect(v.findings).toHaveLength(1);
+  });
+});
+
+describe('domain/council/council-consensus — ballot box', () => {
+  test('majority escalates duplicate voters', () => {
+    const v = councilConsensus([
+      verdict({ agentId: 'a1' }),
+      verdict({ agentId: 'a1' }),
+      verdict({ agentId: 'a3' }),
+    ]);
+    expect(v.status).toBe('ESCALATED');
+    expect(v.summary).toContain('duplicate');
+  });
+
+  test('majority escalates when confidence is omitted', () => {
+    const missing = { ...verdict({ agentId: 'a1' }) };
+    delete (missing as { confidence?: number }).confidence;
+    const v = councilConsensus([
+      missing,
+      verdict({ agentId: 'a2' }),
+      verdict({ agentId: 'a3' }),
+    ]);
+    expect(v.status).toBe('ESCALATED');
+    expect(v.summary).toContain('confidence');
   });
 });
 

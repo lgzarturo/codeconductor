@@ -200,7 +200,7 @@ const cases: Array<[string, (d: unknown) => unknown, unknown]> = [
   ['validateEvidence', validateEvidence, { id: 'e1', source: 's', type: 't', timestamp: '2026-07-26', confidence: 0.5 }],
   ['validateCanonicalTaskCard', validateCanonicalTaskCard, {
     id: 't1', title: 'T', objective: 'o', context: 'c', acceptanceCriteria: ['a'],
-    risk: 'low', agentType: 'implementer', status: 'ready',
+    risk: 'low', agentType: 'implementer', status: 'ready', type: 'feature',
   }],
   ['validateProductEvent', validateProductEvent, { id: 'ev1', type: 'task.started', timestamp: '2026-07-26' }],
 ];

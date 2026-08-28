@@ -1,5 +1,6 @@
 import type { BacklogDocumentInput, BacklogItemInput } from '../../validation/schemas';
 import { BacklogDocumentSchema } from '../../validation/schemas';
+import { isVagueCriterion } from '../shared/vague-criterion';
 
 export interface ValidationIssue {
   code: string;
@@ -12,18 +13,6 @@ export interface ValidationReport {
   errors: ValidationIssue[];
   recommendations: string[];
 }
-
-const VAGUE_PATTERNS = [
-  /^mejorar\s/i,
-  /^fix\s+bugs?$/i,
-  /^refactor$/i,
-  /^hacer\s+refactor/i,
-  /^arreglar\s+bugs?/i,
-  /^improve\s+ux$/i,
-  /^better\s+ux$/i,
-  /^cleanup$/i,
-  /^misc$/i,
-];
 
 function allItems(doc: BacklogDocumentInput): BacklogItemInput[] {
   return [...doc.items, ...doc.archive];
@@ -55,12 +44,6 @@ function detectCycle(items: BacklogItemInput[]): string | null {
     if (dfs(id)) return id;
   }
   return null;
-}
-
-function isVagueCriterion(text: string): boolean {
-  const t = text.trim();
-  if (t.length < 8) return true;
-  return VAGUE_PATTERNS.some((p) => p.test(t));
 }
 
 /**

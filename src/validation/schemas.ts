@@ -522,8 +522,15 @@ export const CanonicalTaskCardSchema = z.object({
   agentType: z.string(),
   evidenceRequired: z.array(z.string()).default([]),
   status: CanonicalTaskCardStatusSchema,
-  type: z.enum(['feature', 'fix', 'refactor', 'review', 'docs', 'test']).optional(),
+  type: z.enum(['feature', 'fix', 'refactor', 'review', 'docs', 'test']),
   linkedCapabilities: z.array(z.string()).default([]),
+  boundaries: z.array(z.string()).default([]),
+  requiresHumanReview: z.boolean().optional(),
+  requiresTests: z.boolean().optional(),
+  contextScope: z.enum(['isolated', 'continuation', 'full']).optional(),
+  actualBehavior: z.string().optional(),
+  expectedBehavior: z.string().optional(),
+  reproductionSteps: z.array(z.string()).optional(),
 });
 
 export const ProductGraphNodeSchema = z.object({

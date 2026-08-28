@@ -1,5 +1,6 @@
 import type { TaskCard } from '../pipeline/workflow-loop';
 import type { BacklogItemInput, OpenspecTaskCardInput } from '../../validation/schemas';
+import { classifyRisk } from '../ccep/risk-classifier';
 
 /**
  * Map backlog item type to pipeline TaskCard type.
@@ -20,16 +21,8 @@ function mapBacklogType(
 }
 
 /**
- * Infer risk from backlog priority.
- */
-function inferRisk(priority: BacklogItemInput['priority']): TaskCard['risk'] {
-  if (priority === 'P0') return 'high';
-  if (priority === 'P1') return 'medium';
-  return 'low';
-}
-
-/**
  * Convert an OpenSpec task card + backlog item to pipeline TaskCard shape.
+ * Risk follows AGENTS.md signals, not backlog priority (P0 ≠ high).
  */
 export function openspecTaskCardToPipelineTaskCard(
   card: OpenspecTaskCardInput,
@@ -40,10 +33,15 @@ export function openspecTaskCardToPipelineTaskCard(
     .map((s) => s.trim())
     .filter(Boolean);
 
+  const mappedType = mapBacklogType(item.type);
   return {
     title: card.title,
-    type: mapBacklogType(item.type),
-    risk: inferRisk(item.priority),
+    type: mappedType,
+    risk: classifyRisk({
+      type: mappedType,
+      targetFiles: scopeIn,
+      signals: [item.type, item.scope, item.risks ?? '', item.description],
+    }),
     scope: {
       in: scopeIn.length > 0 ? scopeIn : [item.scope],
       out: item.outOfScope ? [item.outOfScope] : [],

@@ -267,6 +267,7 @@ Examples:
   npx cc-codeconductor ccep resolve --command feature "Add CRUD"
   npx cc-codeconductor ccep evaluate --command feature --input @planner.json
   npx cc-codeconductor ccep consensus --input @verdicts.json
+  npx cc-codeconductor ccep taskcard --command feature --input @card.json
   npx cc-codeconductor openspec validate
   npx cc-codeconductor openspec scan
   npx cc-codeconductor openspec plan BC-001
@@ -591,7 +592,7 @@ export async function routeCommand(
     }
 
     case 'ccep': {
-      const validSubs = ['parse', 'profile', 'resolve', 'compile', 'validate', 'evaluate', 'consensus'];
+      const validSubs = ['parse', 'profile', 'resolve', 'compile', 'validate', 'evaluate', 'consensus', 'taskcard'];
       if (subcommand && !validSubs.includes(subcommand)) {
         return unknownSubcommand('ccep', subcommand, validSubs);
       }
@@ -606,7 +607,7 @@ export async function routeCommand(
             : requestParts.join(' ').trim();
 
       const validateRest =
-        (ccepSub === 'validate' || ccepSub === 'evaluate' || ccepSub === 'consensus') && !options.input
+        (ccepSub === 'validate' || ccepSub === 'evaluate' || ccepSub === 'consensus' || ccepSub === 'taskcard') && !options.input
           ? requestParts
           : undefined;
 

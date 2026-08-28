@@ -1,5 +1,5 @@
-import { mkdir, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { mkdir, rename, writeFile } from 'node:fs/promises';
+import { basename, resolve } from 'node:path';
 import type { BacklogItemInput, OpenspecTaskCardInput } from '../../validation/schemas';
 import { buildChangeSlug } from './backlog-planner';
 
@@ -46,6 +46,19 @@ ${item.acceptanceCriteria.map((c) => `- ${c}`).join('\n')}
 `;
 }
 
+export function tasksMarkdown(cards: OpenspecTaskCardInput[]): string {
+  return tasksContent(cards);
+}
+
+export async function writeTasksMarkdown(
+  projectRoot: string,
+  changePath: string,
+  cards: OpenspecTaskCardInput[],
+): Promise<void> {
+  await mkdir(resolve(projectRoot, changePath), { recursive: true });
+  await writeFile(resolve(projectRoot, changePath, 'tasks.md'), tasksContent(cards), 'utf-8');
+}
+
 function tasksContent(cards: OpenspecTaskCardInput[]): string {
   const implCards = cards.filter((c) => c.phase === 'implement' || c.phase === 'test');
   const lines = ['# Implementation Tasks', ''];
@@ -84,6 +97,19 @@ ${item.acceptanceCriteria.map((c) => `- ${c}`).join('\n')}
   await writeFile(resolve(changeDir, 'specs', 'delta.md'), specStub, 'utf-8');
 
   return `openspec/changes/${slug}`;
+}
+
+export async function archiveChangeFolder(
+  projectRoot: string,
+  changePath: string,
+): Promise<string> {
+  const src = resolve(projectRoot, changePath);
+  const slug = basename(changePath);
+  const destDir = resolve(projectRoot, 'openspec', 'changes', 'archive');
+  await mkdir(destDir, { recursive: true });
+  const dest = resolve(destDir, slug);
+  await rename(src, dest);
+  return `openspec/changes/archive/${slug}`;
 }
 
 /**

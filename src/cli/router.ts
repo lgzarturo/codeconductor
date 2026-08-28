@@ -187,7 +187,7 @@ Published commands (package ${packageJson.version}):
   cc-help                 Show preset inventory (skills, subagents, commands)
   debt-harvest / harvest  Scan source files for deferred debt items
   ccep                    Compile and evaluate CCEP workflow contracts
-  openspec                OpenSpec loop: backlog + delivery (validate/scan/plan/status/next)
+  openspec                OpenSpec loop: validate/scan/plan/status/next/start/done/block/archive
   scorecard               Record and aggregate evaluation outcomes
 
 v1.0.0 (in this repo, not in published ${packageJson.version}):
@@ -271,6 +271,10 @@ Examples:
   npx cc-codeconductor openspec plan BC-001
   npx cc-codeconductor openspec status
   npx cc-codeconductor openspec next
+  npx cc-codeconductor openspec start BC-001-discover
+  npx cc-codeconductor openspec done BC-001-discover
+  npx cc-codeconductor openspec block BC-001-implement --reason "waiting on design"
+  npx cc-codeconductor openspec archive BC-001
   npx cc-codeconductor scorecard create --task BC-001 --from-diff
   npx cc-codeconductor scorecard models
   npx cc-codeconductor scorecard aggregate
@@ -623,7 +627,17 @@ export async function routeCommand(
 
     case 'openspec':
     case 'cc-openspec': {
-      const validSubs = ['validate', 'scan', 'plan', 'status', 'next'];
+      const validSubs = [
+        'validate',
+        'scan',
+        'plan',
+        'status',
+        'next',
+        'start',
+        'done',
+        'block',
+        'archive',
+      ];
       let openspecSub = 'validate';
       let itemId: string | undefined = (options.item as string) || undefined;
 
@@ -641,6 +655,7 @@ export async function routeCommand(
       return openspecCommand({
         subcommand: openspecSub,
         itemId,
+        reason: typeof options.reason === 'string' ? options.reason : undefined,
         projectRoot,
         output: flags.output,
       } as OpenspecOptions);

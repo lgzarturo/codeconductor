@@ -111,11 +111,10 @@ describe('ClaudeAgentContractRenderer', () => {
       targets: [{ target: 'claude' }],
       contractVersion: '1.0.0',
     };
-    // CouncilSpecSchema passes (empty agents is valid), but generated output
-    // lacks agent files → validation fails
     const result = renderer.render(contract);
     expect(result.allValid).toBe(false);
-    expect(result.errors.some((e) => e.includes('agent file'))).toBe(true);
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.errors.some((e) => e.includes('Invalid CouncilSpec'))).toBe(true);
   });
 });
 
@@ -478,7 +477,8 @@ describe('CodexAgentContractRenderer', () => {
     };
     const result = renderer.render(contract);
     expect(result.allValid).toBe(false);
-    expect(result.errors.some((e) => e.includes('agent file'))).toBe(true);
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.errors.some((e) => e.includes('Invalid CouncilSpec'))).toBe(true);
   });
 });
 
@@ -548,7 +548,8 @@ describe('AgyAgentContractRenderer', () => {
     };
     const result = renderer.render(contract);
     expect(result.allValid).toBe(false);
-    expect(result.errors.some((e) => e.includes('agent file'))).toBe(true);
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.errors.some((e) => e.includes('Invalid CouncilSpec'))).toBe(true);
   });
 });
 

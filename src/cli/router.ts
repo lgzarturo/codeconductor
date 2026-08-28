@@ -186,7 +186,7 @@ Published commands (package ${packageJson.version}):
   ask                     Recommend a /cc: slash command from a natural-language problem
   cc-help                 Show preset inventory (skills, subagents, commands)
   debt-harvest / harvest  Scan source files for deferred debt items
-  ccep                    Compile and evaluate CCEP workflow contracts
+  ccep                    CCEP contracts: parse/profile/validate/evaluate/consensus/taskcard
   openspec                OpenSpec loop: validate/scan/plan/status/next/start/done/block/archive
   scorecard               Record and aggregate evaluation outcomes
 

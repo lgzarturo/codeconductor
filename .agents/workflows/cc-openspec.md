@@ -46,6 +46,8 @@ Use `$ARGUMENTS` BC-id or `npx cc-codeconductor openspec status` for next READY 
 
 Run `npx cc-codeconductor openspec plan <BC-id>`. Show TaskCards and `openspec/changes/` path.
 
+Drive status with CLI (do not edit openspec-state.json): `openspec start <cardId>`, `openspec done <cardId>`, `openspec block <cardId> --reason "…"`, `openspec archive <itemId>`.
+
 ---
 
 ## Step 4 — Execute loop
@@ -70,6 +72,6 @@ Reviewer approves or rejects against acceptance criteria. Reject → `IN_PROGRES
 
 ## Step 6 — Update
 
-Mark DONE, move to Archive in BACKLOG.md, run `openspec scan`.
+Mark DONE with `openspec archive <itemId>` (all cards must be done), then run `openspec scan`.
 
 Apply skill `openspec` for format and state rules.

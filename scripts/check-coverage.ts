@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
 /**
  * Fail CI when overall lcov coverage drops below the declared floor.
- * bunfig.toml coverageThreshold is kept as the documented ratchet; this
- * script enforces the aggregate number bun 1.4 does not.
+ * Bun's bunfig coverageThreshold is per-file (and exits 1 with no message),
+ * so this script is the aggregate ratchet. Do not add coverageThreshold to
+ * bunfig.toml.
  */
 
 import { readFile } from 'node:fs/promises';

@@ -116,7 +116,7 @@ Formato validable por `cc openspec validate`. Análisis completo en
 - Reviewer: reviewer
 - Acceptance:
   - [x] current-status declara la version de package.json y CC-08 pasa
-  - [x] bunfig coverageThreshold queda en el suelo actual y CI falla si baja
+  - [x] check:coverage fija el suelo agregado al 70% y CI falla si baja (bunfig no usa coverageThreshold: bun lo aplica por archivo)
   - [x] bun run lint corre scripts/lint.ts y el hook pre-commit incluye lint
   - [x] compileCheck omitido reporta skipped con motivo, no un compile limpio silencioso
 

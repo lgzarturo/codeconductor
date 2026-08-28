@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { parseLcovTotals, COVERAGE_FLOOR } from '../../../scripts/check-coverage';
 
 describe('scripts/check-coverage.ts', () => {
@@ -24,5 +26,10 @@ describe('scripts/check-coverage.ts', () => {
     const totals = parseLcovTotals(lcov);
     expect(totals.lines).toBeLessThan(COVERAGE_FLOOR.lines);
     expect(totals.functions).toBeLessThan(COVERAGE_FLOOR.functions);
+  });
+
+  test('bunfig.toml does not set coverageThreshold (bun applies it per-file)', () => {
+    const bunfig = readFileSync(join(import.meta.dir, '../../../bunfig.toml'), 'utf-8');
+    expect(bunfig).not.toMatch(/^\s*coverageThreshold\s*=/m);
   });
 });

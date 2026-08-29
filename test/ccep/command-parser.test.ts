@@ -22,6 +22,7 @@ describe('ccep command-parser', () => {
     expect(CCEP_COMMANDS).toContain('openspec');
     expect(CCEP_COMMANDS).toContain('backlog');
     expect(CCEP_COMMANDS).toContain('pagespeed');
+    expect(CCEP_COMMANDS).toContain('security');
   });
 
   test('uses explicit command from slash — not inferred from user text', () => {

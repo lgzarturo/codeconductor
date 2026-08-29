@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 
@@ -102,6 +102,54 @@ describe('cc-security command — OpenCode', () => {
     expect(content).toMatch(/authorization/i);
     expect(content).toMatch(/risk/i);
   });
+});
+
+// ─── Safety gate text across every command copy ─────────────────────────────
+
+const COMMAND_COPIES = [
+  'presets/claude/commands/cc/security.md',
+  'presets/cursor/commands/cc/security.md',
+  'presets/opencode/commands/cc-security.md',
+  'presets/agy/workflows/cc-security.md',
+  '.cursor/commands/cc/security.md',
+  '.agents/workflows/cc-security.md',
+] as const;
+
+/** Exact substrings copied from the shipped command body — weakening any of them fails. */
+const REQUIRED_SNIPPETS = [
+  '- Exploit or proof-of-concept development',
+  '- Malware authoring, or malware analysis intended for reuse',
+  '- Reverse engineering aimed at bypassing a control',
+  '- Red-team playbooks',
+  '- Any unauthorized-access procedure',
+  'If authorization is absent, unclear, or names a system the requester does not',
+  'own or operate, **STOP and refuse. Do not route the task.**',
+  'Redact secrets, tokens, and credentials from any evidence before it enters the',
+  'Scope is limited to the repository under analysis. Do not scan, probe, or',
+  'perform reconnaissance against third-party hosts.',
+  '**STOP here. Show the Task Card and wait for human confirmation.**',
+] as const;
+
+describe('cc-security safety gate text is identical in every command copy', () => {
+  for (const path of COMMAND_COPIES) {
+    for (const snippet of REQUIRED_SNIPPETS) {
+      test(`${path} keeps: ${snippet.slice(0, 48)}`, () => {
+        expect(readPreset(path)).toContain(snippet);
+      });
+    }
+  }
+});
+
+// ─── The offensive skill pack must never return ──────────────────────────────
+
+describe('no offensive security skill pack ships', () => {
+  for (const target of TARGETS) {
+    test(`presets/${target}/skills has no security-* directory`, () => {
+      const entries = readdirSync(join(PROJECT_ROOT, 'presets', target, 'skills'));
+      const offenders = entries.filter((name) => name.startsWith('security-'));
+      expect(offenders).toEqual([]);
+    });
+  }
 });
 
 // ─── Agent contract updates ─────────────────────────────────────────────────

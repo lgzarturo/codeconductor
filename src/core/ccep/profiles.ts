@@ -322,6 +322,7 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     phases: [
       { id: 'wayfinding', agent: 'repo-explorer', outputSchema: 'agent-output' },
       { id: 'intake', agent: 'task-coach', outputSchema: 'planner-output', stopGate: 'confirmation' },
+      { id: 'design', agent: 'architect', stopGate: 'approval' },
       { id: 'test', agent: 'tester' },
       { id: 'implement', agent: 'implementer', dependsOn: ['test'] },
       { id: 'review', agent: 'reviewer' },
@@ -329,8 +330,11 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     routing: {
       default: ['wayfinding', 'intake', 'test', 'implement'],
       riskRules: [
-        { when: { risk: 'low' }, then: ['wayfinding', 'test', 'implement'] },
-        { when: { risk: ['medium', 'high'] }, then: ['wayfinding', 'test', 'implement', 'review'] },
+        { when: { risk: 'low' }, then: ['wayfinding', 'intake', 'test', 'implement'] },
+        {
+          when: { risk: ['medium', 'high'] },
+          then: ['wayfinding', 'intake', 'design', 'test', 'implement', 'review'],
+        },
       ],
     },
     confirmationGate: baseGate,

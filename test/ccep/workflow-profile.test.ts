@@ -53,7 +53,7 @@ describe('ccep workflow profiles', () => {
     expect(highRule?.then).toContain('review');
   });
 
-  test('security profile mirrors fix risk-based routing with authorization gate', () => {
+  test('security profile keeps the authorization gate on every risk route', () => {
     const profile = loadWorkflowProfile('security');
 
     expect(profile.id).toBe('security');
@@ -61,14 +61,28 @@ describe('ccep workflow profiles', () => {
     expect(profile.taskCard?.requiredFields).toContain('authorization');
     expect(profile.routing.riskRules?.length).toBeGreaterThan(0);
 
+    const intake = profile.phases.find((p) => p.id === 'intake');
+    const design = profile.phases.find((p) => p.id === 'design');
+    expect(intake?.stopGate).toBe('confirmation');
+    expect(design?.agent).toBe('architect');
+    expect(design?.stopGate).toBe('approval');
+
     const lowRule = profile.routing.riskRules?.find((r) => r.when.risk === 'low');
     const highRule = profile.routing.riskRules?.find((r) =>
       Array.isArray(r.when.risk) ? r.when.risk.includes('high') : r.when.risk === 'high',
     );
 
-    expect(lowRule?.then).toContain('implement');
-    expect(lowRule?.then).not.toContain('review');
-    expect(highRule?.then).toContain('review');
+    // The intake phase carries the authorization stop gate — no route may skip it.
+    expect(profile.routing.default).toContain('intake');
+    expect(lowRule?.then).toEqual(['wayfinding', 'intake', 'test', 'implement']);
+    expect(highRule?.then).toEqual([
+      'wayfinding',
+      'intake',
+      'design',
+      'test',
+      'implement',
+      'review',
+    ]);
   });
 
   test('council profile defines SDD → TDD → implement → council review', () => {

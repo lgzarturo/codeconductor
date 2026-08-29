@@ -16,6 +16,9 @@ phases:
     agent: task-coach
     outputSchema: planner-output
     stopGate: confirmation
+  - id: design
+    agent: architect
+    stopGate: approval
   - id: test
     agent: tester
   - id: implement
@@ -35,6 +38,7 @@ routing:
         risk: low
       then:
         - wayfinding
+        - intake
         - test
         - implement
     - when:
@@ -43,6 +47,8 @@ routing:
           - high
       then:
         - wayfinding
+        - intake
+        - design
         - test
         - implement
         - review

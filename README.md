@@ -41,15 +41,15 @@ contracts, task cards, and risk-based routing.
 > - `npx cc-codeconductor goal` / `ingest` / `product` / `orchestrate` /
 >   `impact` / `verify` — Product OS (see
 >   [docs/v1.0.0-release-notes.md](docs/v1.0.0-release-notes.md))
-> - Slash commands after `install preset` — 18 CCEP workflows plus `/cc-ask`;
+> - Slash commands after `install preset` — 20 CCEP workflows plus `/cc-ask`;
 >   prefer `/cc-iterative`, `/cc-triage`, `/cc-handoff` for wayfinding;
->   `/cc-openspec` and `/cc-tdd-cycle` for delivery and TDD
-> - Slash commands after `install preset` — prefer `/cc-iterative`,
->   `/cc-triage`, `/cc-handoff`; `/cc-backlog` authors `BACKLOG.md`;
->   `/cc-openspec` runs delivery
+>   `/cc-backlog` authors `BACKLOG.md`; `/cc-openspec` and `/cc-tdd-cycle`
+>   for delivery and TDD
 > - `/cc-pagespeed --url <url>` — PageSpeed Insights / Core Web Vitals after
 >   `install preset`; `PAGESPEED_API_KEY` is optional but recommended for CrUX
 >   field data (see [docs/pagespeed-usage.md](docs/pagespeed-usage.md))
+> - `/cc-security` / `/cc:security` — authorized defensive security workflow
+>   with domain `security-*` skills and an authorization gate
 > - Stack-specific skill selection (`ts-next-drizzle`, `spring-kotlin-jpa`,
 >   `laravel-tall`, `python-data-api`)
 > - Council consensus: quorum, required confidence, `criticalFindingsPolicy`,

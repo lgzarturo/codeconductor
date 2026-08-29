@@ -42,6 +42,7 @@ const TDD_COMMANDS = new Set([
   'db-migration',
   'openspec',
   'iterative',
+  'security',
 ]);
 
 const TDD_ORDER_LINE =

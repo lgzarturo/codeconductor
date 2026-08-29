@@ -693,6 +693,7 @@ Other installed commands:
 | `/cc-api-contract` | API contract definition |
 | `/cc-db-migration` | Database migration workflow |
 | `/cc-pagespeed` | PageSpeed audit |
+| `/cc-security` / `/cc:security` | Authorized defensive security work |
 | `/cc-scorecard` | Agent scorecard evaluation |
 | `/cc-council` | Council-driven SDD/TDD/review |
 | `/cc-explore` / `/cc:explore` | Repo map and next-command suggestion |
@@ -702,6 +703,26 @@ Other installed commands:
 
 Use `/multitask` before parallel steps (e.g. review + docs) for concurrent
 subagent execution.
+
+---
+
+### `/cc:security` / `/cc-security [request]`
+
+Authorized **defensive** security work: pick a `security-*` domain skill,
+require an authorization statement, then route like `/cc-fix` (tests before
+implement; Reviewer on medium/high). High-risk work also uses
+`security-reviewer`.
+
+**Does not** produce exploit payloads, malware, or attack procedures.
+
+**Available in**: Claude Code (`/cc:security`), Cursor (`/cc-security` /
+`/cc:security`), OpenCode (`/cc-security`), AGY (`/cc-security`).
+
+**Task Card must include:** objective, domain, authorization, risk, scope.
+
+```text
+/cc-security authorized vuln assessment of staging checkout API (ticket SEC-214)
+```
 
 ---
 

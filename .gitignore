@@ -61,7 +61,8 @@ pnpm-lock.yaml
 
 # Planners
 _*.md
-.claude/
+.claude/*
+!.claude/CLAUDE.md
 .opencode/
 .codex/
 .remember/

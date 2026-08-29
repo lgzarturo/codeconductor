@@ -53,6 +53,13 @@ describe('recommendAskFlow', () => {
     expect(rec.slash).toBe('/cc:backlog');
   });
 
+  test('maps authorized security work to /cc:security', () => {
+    const rec = recommendAskFlow('authorized security hardening of the login API');
+    expect(rec.command).toBe('security');
+    expect(rec.slash).toBe('/cc:security');
+  });
+
+
   test('does not execute a workflow — only returns a recommendation', () => {
     const rec = recommendAskFlow('the build is broken');
     expect(rec).not.toHaveProperty('executed');
@@ -70,6 +77,7 @@ describe('ASK_FLOW_CATALOG stays aligned with shipped slash commands', () => {
       'tdd-cycle',
       'backlog',
       'openspec',
+      'security',
     ]);
     for (const flow of ASK_FLOW_CATALOG) {
       expect(

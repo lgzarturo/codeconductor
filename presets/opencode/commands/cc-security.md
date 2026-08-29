@@ -1,7 +1,7 @@
 ---
-description:
-  Run the authorized defensive security workflow — authorization gate,
-  risk-based routing, hardening, and review.
+description: >
+  Run the authorized defensive security workflow — domain security-* skills,
+  authorization gate, risk-based routing, hardening, and review.
 ---
 
 # Defensive Security Workflow
@@ -11,11 +11,12 @@ Security objective: $ARGUMENTS
 Provide the following information in $ARGUMENTS:
 
 - What must be reviewed or hardened, and why
-- Domain: `web-app`, `api`, `cloud-config`, `dependency-supply-chain`, or
-  `secrets`
+- Domain: a `security-*` skill id (recon, vuln-assessment, web, cloud, IR,
+  hunting, GRC, …) or `web-app` / `api` / `cloud-config` /
+  `dependency-supply-chain` / `secrets`
 - Authorization: who authorized this work on this target, and the scope boundary
-- Risk classification, if known
-- Scope: which files or modules are involved
+- Risk classification (`low`, `medium`, or `high`), if known
+- Scope: which files, modules, repos, or environments are in and out of bounds
 
 ---
 
@@ -37,6 +38,9 @@ hardening, detection coverage, dependency audit):
 Scope is limited to the repository under analysis. Do not scan, probe, or
 perform reconnaissance against third-party hosts.
 
+Do not proceed without an authorization statement. Do not produce exploit
+payloads, malware, or attack procedures.
+
 ---
 
 ## Step 0 — CCEP Bootstrap
@@ -48,6 +52,7 @@ Command: `security` (fixed for this workflow — do not infer from user text)
 3. Run: `npx cc-codeconductor ccep profile security --output json`
 4. After planner/intake JSON is available, run: `npx cc-codeconductor ccep evaluate --command security --input <planner.json> --output json`. If `stop` is true, show questions or risks and wait for human input.
 5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+   Canonical delivery order is test-before-implement whenever both phases apply.
 
 ---
 
@@ -56,7 +61,9 @@ Command: `security` (fixed for this workflow — do not infer from user text)
 If `graphify-out/graph.json` exists, run `graphify query "$ARGUMENTS"` (and
 `graphify path` / `graphify explain` when needed). Then invoke `repo-explorer`
 to map modules, conventions, and impact radius. Do not write code in this step.
-Record a Repo Map artifact before intake.
+Record a Repo Map artifact before intake. Load the matching `security-*` skill
+for the named domain (see `.claude/skills/security-*/SKILL.md`). Keep the OWASP
+`security` skill for application-security reviews.
 
 ---
 
@@ -67,8 +74,8 @@ Invoke `task-coach` with the security objective above.
 task-coach must produce a Task Card that includes:
 
 - Objective: what must be reviewed or hardened, in one sentence
-- Domain: `web-app`, `api`, `cloud-config`, `dependency-supply-chain`, or
-  `secrets`
+- Domain: which `security-*` skill applies, or `web-app` / `api` /
+  `cloud-config` / `dependency-supply-chain` / `secrets`
 - Authorization: who authorized this work on this target, and the scope boundary
 - Risk classification: `low`, `medium`, or `high`
 - Scope: which files or modules are likely affected
@@ -111,6 +118,8 @@ Invoke `architect` before implementation. architect must:
 - Flag any regression risk to adjacent components
 - Produce a Technical Plan
 
+On **high** risk, also invoke `security-reviewer` before Reviewer.
+
 **STOP here if high-risk. Show the Technical Plan and wait for human approval
 before continuing.**
 
@@ -148,7 +157,7 @@ Invoke `implementer` with the approved Technical Plan and the Task Card.
 Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
 implementer must follow the plan exactly. Any deviation requires a new Technical
-Plan approval. After implementation, run the full test suite.
+Plan approval. After implementation, run the full test suite. No exploit code.
 
 ---
 

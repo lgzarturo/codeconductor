@@ -687,6 +687,7 @@ Other installed commands:
 | `/cc-explore` / `/cc:explore` | Repo map and next-command suggestion |
 | `/cc-prototype` / `/cc:prototype` | Disposable spike (isolated worktree) |
 | `/cc-clarify` / `/cc:clarify` | Re-explain last deliverable |
+| `/cc-security` / `/cc:security` | Authorized defensive security review |
 
 Use `/multitask` before parallel steps (e.g. review + docs) for concurrent
 subagent execution.

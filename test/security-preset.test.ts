@@ -24,79 +24,23 @@ function frontmatterClosed(content: string): boolean {
   return secondDash > 0;
 }
 
-const SKILL_IDS = [
-  'security-recon',
-  'security-vuln-assessment',
-  'security-exploit-dev',
-  'security-reverse-engineering',
-  'security-malware-analysis',
-  'security-threat-hunting',
-  'security-incident-response',
-  'security-network',
-  'security-web',
-  'security-cloud',
-  'security-soc-automation',
-  'security-log-analysis',
-  'security-crypto',
-  'security-red-team',
-  'security-blue-team',
-  'security-ai-llm',
-  'security-mobile',
-  'security-ot-ics',
-  'security-grc',
-];
-
 const TARGETS = ['claude', 'opencode', 'cursor'] as const;
 
 // ─── SKILL.md files — existence and frontmatter ────────────────────────────
 
-describe('security skills — file existence across targets', () => {
-  for (const id of SKILL_IDS) {
-    for (const target of TARGETS) {
-      test(`presets/${target}/skills/${id}/SKILL.md exists`, () => {
-        expect(existsSync(join(PROJECT_ROOT, `presets/${target}/skills/${id}/SKILL.md`))).toBe(
-          true,
-        );
-      });
-    }
-  }
-});
+describe('security skill ships across targets', () => {
+  for (const target of TARGETS) {
+    const path = `presets/${target}/skills/security/SKILL.md`;
 
-describe('security skills — frontmatter and authorization contract', () => {
-  for (const id of SKILL_IDS) {
-    for (const target of TARGETS) {
-      const path = `presets/${target}/skills/${id}/SKILL.md`;
+    test(`presets/${target}/skills/security/SKILL.md still ships`, () => {
+      expect(existsSync(join(PROJECT_ROOT, path))).toBe(true);
+    });
 
-      test(`${path} has valid YAML frontmatter declaring name: ${id}`, () => {
-        const content = readPreset(path);
-        expect(hasFrontmatter(content)).toBe(true);
-        expect(frontmatterClosed(content)).toBe(true);
-        expect(content).toContain(`name: ${id}`);
-        expect(content).toContain('description:');
-      });
-
-      test(`${path} documents an authorization/scope disclaimer`, () => {
-        const content = readPreset(path);
-        expect(content).toMatch(/authoriz/i);
-      });
-
-      test(`${path} includes usable example prompts`, () => {
-        const content = readPreset(path);
-        expect(content).toMatch(/## How to Use/i);
-      });
-    }
-  }
-});
-
-describe('security skills — content is target-agnostic (verbatim copies)', () => {
-  for (const id of SKILL_IDS) {
-    test(`${id} SKILL.md is identical across claude, opencode, and cursor`, () => {
-      const claude = readPreset(`presets/claude/skills/${id}/SKILL.md`);
-      const opencode = readPreset(`presets/opencode/skills/${id}/SKILL.md`);
-      const cursor = readPreset(`presets/cursor/skills/${id}/SKILL.md`);
-
-      expect(opencode).toBe(claude);
-      expect(cursor).toBe(claude);
+    test(`${path} has valid YAML frontmatter with a description`, () => {
+      const content = readPreset(path);
+      expect(hasFrontmatter(content)).toBe(true);
+      expect(frontmatterClosed(content)).toBe(true);
+      expect(content).toContain('description:');
     });
   }
 });
@@ -162,13 +106,13 @@ describe('cc-security command — OpenCode', () => {
 
 // ─── Agent contract updates ─────────────────────────────────────────────────
 
-describe('agent contract updates reference the new security skills', () => {
-  const claudeMdPaths = ['CLAUDE.md', '.claude/CLAUDE.md', 'presets/claude/CLAUDE.md'];
+describe('agent contract updates reference the security skill', () => {
+  const claudeMdPaths = ['.claude/CLAUDE.md', 'presets/claude/CLAUDE.md'];
 
   for (const path of claudeMdPaths) {
-    test(`${path} maps security work to the security-* skills`, () => {
+    test(`${path} maps security work to the security skill`, () => {
       const content = readPreset(path);
-      expect(content).toContain('.claude/skills/security-');
+      expect(content).toContain('.claude/skills/security/SKILL.md');
     });
   }
 });

@@ -531,6 +531,8 @@ export const CanonicalTaskCardSchema = z.object({
   actualBehavior: z.string().optional(),
   expectedBehavior: z.string().optional(),
   reproductionSteps: z.array(z.string()).optional(),
+  domain: z.string().optional(),
+  authorization: z.string().optional(),
 });
 
 export const ProductGraphNodeSchema = z.object({
@@ -756,6 +758,7 @@ export const WorkflowCommandSchema = z.enum([
   'prototype',
   'handoff',
   'clarify',
+  'security',
 ]);
 
 export const CcepOutputFormatSchema = z.enum(['taskcard', 'plan', 'verdict']);

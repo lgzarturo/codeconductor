@@ -34,7 +34,7 @@ wrapper that runs parse + resolve in one call.
 ```
 feature  fix  refactor  review  test-plan  tdd-cycle
 api-contract  db-migration  pagespeed  openspec  backlog  scorecard
-council  iterative  explore  triage  prototype  handoff  clarify
+council  iterative  explore  triage  prototype  handoff  clarify  security
 ```
 
 Each command maps to a workflow profile. Bundled profiles live as YAML under

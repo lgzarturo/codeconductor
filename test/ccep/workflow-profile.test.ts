@@ -7,10 +7,10 @@ import {
 import { validateWorkflowProfile } from '../../src/validation/schemas';
 
 describe('ccep workflow profiles', () => {
-  test('registry contains a valid profile for each of the 19 commands', () => {
+  test('registry contains a valid profile for each of the 20 commands', () => {
     const profiles = loadAllWorkflowProfiles();
 
-    expect(profiles.size).toBe(19);
+    expect(profiles.size).toBe(20);
     for (const command of CCEP_COMMANDS) {
       expect(profiles.has(command)).toBe(true);
       const profile = profiles.get(command)!;

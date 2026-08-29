@@ -27,6 +27,25 @@ import {
   buildCostQualityMatrix,
   formatMatrixMarkdown,
 } from '../core/evaluation/cost-quality-matrix';
+import {
+  currentFingerprint,
+  harnessFingerprint,
+  loadHarnessCatalog,
+  parseComponentsFlag,
+  parseVariantId,
+  readActiveOverlay,
+} from '../core/evaluation/harness-catalog';
+import {
+  applyExperimentVariant,
+  listExperiments,
+  loadExperiment,
+  startHarnessExperiment,
+} from '../core/evaluation/harness-experiment';
+import {
+  buildAblationReport,
+  formatAblationMarkdown,
+  persistAblationReport,
+} from '../core/evaluation/ablation-report';
 import { loadBacklog } from '../core/openspec/backlog-parser';
 import type { OutputMode } from '../utils/logger';
 
@@ -50,6 +69,13 @@ export interface ScorecardOptions {
   readonly source?: string;
   readonly since?: string;
   readonly modelsFilter?: string[];
+  readonly experimentId?: string;
+  readonly variantId?: string;
+  readonly suiteTaskId?: string;
+  readonly suiteId?: string;
+  readonly suitePath?: string;
+  readonly components?: string;
+  readonly experimentAction?: string;
 }
 
 function contractVersion(): string {
@@ -85,6 +111,14 @@ export async function scorecardCommand(
       return handleMatrix(projectRoot);
     case 'compare-models':
       return handleCompareModels(projectRoot, options);
+    case 'catalog':
+      return handleCatalog(projectRoot);
+    case 'fingerprint':
+      return handleFingerprint(projectRoot);
+    case 'experiment':
+      return handleExperiment(projectRoot, options);
+    case 'ablation':
+      return handleAblation(projectRoot, options);
     default:
       return {
         code: 1,
@@ -92,7 +126,7 @@ export async function scorecardCommand(
           success: false,
           command: 'scorecard',
           errors: [
-            `Unknown subcommand: ${subcommand}. Use: create, show, record, list, aggregate, models, prompt-diff, regression, matrix, compare-models`,
+            `Unknown subcommand: ${subcommand}. Use: create, show, record, list, aggregate, models, prompt-diff, regression, matrix, compare-models, catalog, fingerprint, experiment, ablation`,
           ],
         },
       };
@@ -182,6 +216,17 @@ async function handleRecord(
   options: ScorecardOptions
 ): Promise<{ code: number; data?: unknown }> {
   const taskId = options.taskId ?? 'unknown-task';
+  const overlay = await readActiveOverlay(projectRoot);
+  const experimentId = options.experimentId ?? overlay?.experimentId;
+  const variantId = options.variantId ?? overlay?.variantId;
+  const suiteTaskId = options.suiteTaskId;
+  const disabled =
+    overlay?.disabledComponents ??
+    (variantId ? parseVariantId(variantId) : undefined);
+  const fingerprint =
+    experimentId || variantId
+      ? harnessFingerprint(disabled ?? [], overlay?.contractVersion ?? contractVersion(), overlay?.ccepProfile ?? 'feature')
+      : undefined;
   const outcome = {
     id: generateEvalId('out'),
     taskId,
@@ -196,6 +241,11 @@ async function handleRecord(
     costUsd: options.costUsd,
     tokensIn: options.tokens,
     durationMs: options.durationMs,
+    experimentId,
+    variantId,
+    suiteTaskId,
+    harnessFingerprint: fingerprint,
+    disabledComponents: disabled && disabled.length > 0 ? [...disabled] : disabled ? [] : undefined,
     status:
       options.verdict === 'PASS'
         ? ('pass' as const)
@@ -221,6 +271,9 @@ async function handleList(
     taskId: options.taskId,
     since: options.since,
     source: options.source as OutcomeFilter['source'],
+    experimentId: options.experimentId,
+    variantId: options.variantId,
+    suiteTaskId: options.suiteTaskId,
   };
   const result = await listOutcomes(projectRoot, filter);
   if (!result.success) {
@@ -236,7 +289,13 @@ async function handleAggregate(
   projectRoot: string,
   options: ScorecardOptions
 ): Promise<{ code: number; data?: unknown }> {
-  const filter: OutcomeFilter = { since: options.since, agent: options.agent, model: options.model };
+  const filter: OutcomeFilter = {
+    since: options.since,
+    agent: options.agent,
+    model: options.model,
+    experimentId: options.experimentId,
+    variantId: options.variantId,
+  };
   const list = await listOutcomes(projectRoot, filter);
   if (!list.success) {
     return { code: 1, data: { success: false, errors: [list.error.message] } };
@@ -349,6 +408,133 @@ async function handleCompareModels(
       markdown,
       path: templatePath,
       outcomeCount: outcomes.length,
+    },
+  };
+}
+
+async function handleCatalog(
+  projectRoot: string
+): Promise<{ code: number; data?: unknown }> {
+  const catalog = await loadHarnessCatalog(projectRoot);
+  return {
+    code: 0,
+    data: { success: true, command: 'scorecard catalog', catalog },
+  };
+}
+
+async function handleFingerprint(
+  projectRoot: string
+): Promise<{ code: number; data?: unknown }> {
+  const snap = await currentFingerprint(projectRoot, contractVersion());
+  return {
+    code: 0,
+    data: {
+      success: true,
+      command: 'scorecard fingerprint',
+      fingerprint: snap.fingerprint,
+      overlay: snap.overlay,
+      components: snap.states,
+    },
+  };
+}
+
+async function handleExperiment(
+  projectRoot: string,
+  options: ScorecardOptions
+): Promise<{ code: number; data?: unknown }> {
+  const action = options.experimentAction ?? 'list';
+  if (action === 'list') {
+    const experiments = await listExperiments(projectRoot);
+    return {
+      code: 0,
+      data: { success: true, command: 'scorecard experiment list', experiments, count: experiments.length },
+    };
+  }
+  if (action === 'show') {
+    if (!options.experimentId && !options.id) {
+      return { code: 1, data: { success: false, errors: ['Usage: scorecard experiment show <id>'] } };
+    }
+    const loaded = await loadExperiment(projectRoot, options.experimentId ?? options.id!);
+    if (!loaded.success) {
+      return { code: 1, data: { success: false, errors: [loaded.error.message] } };
+    }
+    return { code: 0, data: { success: true, command: 'scorecard experiment show', experiment: loaded.data } };
+  }
+  if (action === 'start') {
+    const parsed = parseComponentsFlag(options.components);
+    if (!parsed.success) {
+      return { code: 1, data: { success: false, errors: [parsed.error.message] } };
+    }
+    const started = await startHarnessExperiment(projectRoot, {
+      suiteId: options.suiteId ?? 'harness-v1',
+      suitePath: options.suitePath,
+      components: parsed.data,
+      contractVersion: contractVersion(),
+      experimentId: options.experimentId ?? options.id,
+    });
+    if (!started.success) {
+      return { code: 1, data: { success: false, errors: [started.error.message] } };
+    }
+    return {
+      code: 0,
+      data: { success: true, command: 'scorecard experiment start', experiment: started.data },
+    };
+  }
+  if (action === 'apply') {
+    const experimentId = options.experimentId ?? options.id;
+    const variantId = options.variantId;
+    if (!experimentId || !variantId) {
+      return {
+        code: 1,
+        data: { success: false, errors: ['Usage: scorecard experiment apply --id <exp> --variant baseline|minus:<id>'] },
+      };
+    }
+    const applied = await applyExperimentVariant(projectRoot, experimentId, variantId, contractVersion());
+    if (!applied.success) {
+      return { code: 1, data: { success: false, errors: [applied.error.message] } };
+    }
+    return {
+      code: 0,
+      data: {
+        success: true,
+        command: 'scorecard experiment apply',
+        experiment: applied.data,
+        variantId,
+      },
+    };
+  }
+  return {
+    code: 1,
+    data: {
+      success: false,
+      errors: ['Usage: scorecard experiment start|apply|list|show'],
+    },
+  };
+}
+
+async function handleAblation(
+  projectRoot: string,
+  options: ScorecardOptions
+): Promise<{ code: number; data?: unknown }> {
+  const filter: OutcomeFilter = {
+    since: options.since,
+    experimentId: options.experimentId ?? options.id,
+  };
+  const list = await listOutcomes(projectRoot, filter);
+  if (!list.success) {
+    return { code: 1, data: { success: false, errors: [list.error.message] } };
+  }
+  const report = await buildAblationReport(projectRoot, list.data, filter.experimentId);
+  const markdown = formatAblationMarkdown(report);
+  const path = await persistAblationReport(projectRoot, markdown);
+  return {
+    code: 0,
+    data: {
+      success: true,
+      command: 'scorecard ablation',
+      report,
+      markdown,
+      path,
     },
   };
 }

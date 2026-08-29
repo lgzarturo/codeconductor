@@ -22,6 +22,9 @@ export interface OutcomeFilter {
   backlogId?: string;
   since?: string;
   source?: TaskOutcomeInput['source'];
+  experimentId?: string;
+  variantId?: string;
+  suiteTaskId?: string;
 }
 
 /**
@@ -82,6 +85,9 @@ export async function listOutcomes(
       if (filter.backlogId && parsed.backlogId !== filter.backlogId) continue;
       if (filter.source && parsed.source !== filter.source) continue;
       if (filter.since && parsed.timestamp < filter.since) continue;
+      if (filter.experimentId && parsed.experimentId !== filter.experimentId) continue;
+      if (filter.variantId && parsed.variantId !== filter.variantId) continue;
+      if (filter.suiteTaskId && parsed.suiteTaskId !== filter.suiteTaskId) continue;
       outcomes.push(parsed);
     }
     return ok(outcomes);
@@ -136,6 +142,7 @@ export function aggregateOutcomes(outcomes: TaskOutcomeInput[]): {
   avgWeightedScore: number;
   byAgent: Record<string, { count: number; avgScore: number }>;
   byModel: Record<string, { count: number; avgScore: number; avgCost?: number; avgTokens?: number }>;
+  byVariant: Record<string, { count: number; avgScore: number }>;
 } {
   const withScore = outcomes.filter((o) => o.weightedScore !== undefined);
   const passed = outcomes.filter((o) => o.verdict === 'PASS' || o.status === 'pass');
@@ -146,10 +153,12 @@ export function aggregateOutcomes(outcomes: TaskOutcomeInput[]): {
 
   const byAgent: Record<string, { count: number; avgScore: number }> = {};
   const byModel: Record<string, { count: number; avgScore: number; avgCost?: number; avgTokens?: number }> = {};
+  const byVariant: Record<string, { count: number; avgScore: number }> = {};
   const agentScoreCounts: Record<string, number> = {};
   const modelScoreCounts: Record<string, number> = {};
   const modelCostCounts: Record<string, number> = {};
   const modelTokenCounts: Record<string, number> = {};
+  const variantScoreCounts: Record<string, number> = {};
 
   for (const o of outcomes) {
     if (!byAgent[o.agent]) byAgent[o.agent] = { count: 0, avgScore: 0 };
@@ -174,6 +183,15 @@ export function aggregateOutcomes(outcomes: TaskOutcomeInput[]): {
       byModel[o.model].avgTokens = (byModel[o.model].avgTokens ?? 0) + tokens;
       modelTokenCounts[o.model] = (modelTokenCounts[o.model] ?? 0) + 1;
     }
+
+    if (o.variantId) {
+      if (!byVariant[o.variantId]) byVariant[o.variantId] = { count: 0, avgScore: 0 };
+      byVariant[o.variantId].count++;
+      if (o.weightedScore !== undefined) {
+        byVariant[o.variantId].avgScore += o.weightedScore;
+        variantScoreCounts[o.variantId] = (variantScoreCounts[o.variantId] ?? 0) + 1;
+      }
+    }
   }
 
   for (const agent of Object.keys(byAgent)) {
@@ -188,6 +206,11 @@ export function aggregateOutcomes(outcomes: TaskOutcomeInput[]): {
     if (entry.avgCost !== undefined) entry.avgCost /= modelCostCounts[model]!;
     if (entry.avgTokens !== undefined) entry.avgTokens /= modelTokenCounts[model]!;
   }
+  for (const variant of Object.keys(byVariant)) {
+    const entry = byVariant[variant];
+    const scoreCount = variantScoreCounts[variant] ?? 0;
+    entry.avgScore = scoreCount > 0 ? entry.avgScore / scoreCount : 0;
+  }
 
   return {
     total: outcomes.length,
@@ -195,6 +218,7 @@ export function aggregateOutcomes(outcomes: TaskOutcomeInput[]): {
     avgWeightedScore: Math.round(avgWeightedScore * 1000) / 1000,
     byAgent,
     byModel,
+    byVariant,
   };
 }
 

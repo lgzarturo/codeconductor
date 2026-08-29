@@ -189,6 +189,7 @@ Published commands (package ${packageJson.version}):
   ccep                    CCEP contracts: parse/profile/validate/evaluate/consensus/taskcard
   openspec                OpenSpec loop: validate/scan/plan/status/next/start/done/block/archive
   scorecard               Record and aggregate evaluation outcomes
+                          (catalog / fingerprint / experiment / ablation)
 
 v1.0.0 (in this repo, not in published ${packageJson.version}):
   goal / cc-goal          Plan goal into task graph with dependencies
@@ -280,6 +281,9 @@ Examples:
   npx cc-codeconductor scorecard create --task BC-001 --from-diff
   npx cc-codeconductor scorecard models
   npx cc-codeconductor scorecard aggregate
+  npx cc-codeconductor scorecard catalog
+  npx cc-codeconductor scorecard experiment start --suite harness-v1 --components review
+  npx cc-codeconductor scorecard ablation --experiment <id>
   npx cc-codeconductor help
   npx cc-codeconductor ask "login fails with 500"
   npx cc-codeconductor cc-help --target opencode
@@ -677,6 +681,10 @@ export async function routeCommand(
         'regression',
         'matrix',
         'compare-models',
+        'catalog',
+        'fingerprint',
+        'experiment',
+        'ablation',
       ];
       if (subcommand && !validSubs.includes(subcommand)) {
         return unknownSubcommand(command, subcommand, validSubs);
@@ -696,7 +704,10 @@ export async function routeCommand(
         subcommand: scorecardSub,
         projectRoot,
         output: flags.output,
-        id: scorecardSub === 'show' ? args.rest?.[0] ?? (options.id as string) : (options.id as string),
+        id:
+          scorecardSub === 'show' || scorecardSub === 'ablation'
+            ? args.rest?.[0] ?? (options.id as string)
+            : (options.id as string),
         taskId: (options.task as string) ?? options.item as string,
         agent: options.agent as string,
         model: options.model as string,
@@ -718,6 +729,16 @@ export async function routeCommand(
         source: options.source as string,
         since: options.since as string,
         modelsFilter,
+        experimentId:
+          (options.experiment as string) ??
+          (scorecardSub === 'experiment' && args.rest?.[1] ? args.rest[1] : undefined) ??
+          (scorecardSub === 'ablation' ? (args.rest?.[0] as string | undefined) : undefined),
+        variantId: options.variant as string,
+        suiteTaskId: (options['suite-task'] as string) ?? (options.suiteTask as string),
+        suiteId: options.suite as string,
+        suitePath: (options['suite-path'] as string) ?? (options.suitePath as string),
+        components: options.components as string,
+        experimentAction: scorecardSub === 'experiment' ? args.rest?.[0] : undefined,
       } as ScorecardOptions);
     }
 

@@ -179,4 +179,68 @@ describe('outcome-store', () => {
 
     expect(agg.byModel['model-a'].avgTokens).toBe(50);
   });
+
+  test('listOutcomes filters by experiment and variant', async () => {
+    await appendOutcome(TEST_DIR, {
+      id: 'exp-1',
+      taskId: 'T1',
+      source: 'manual',
+      agent: 'reviewer',
+      model: 'model-a',
+      contractVersion: '1.0.0',
+      timestamp: '2026-08-28T00:00:00Z',
+      experimentId: 'abl-1',
+      variantId: 'minus:review',
+      suiteTaskId: 'fix-add-off-by-one',
+    });
+    await appendOutcome(TEST_DIR, {
+      id: 'exp-2',
+      taskId: 'T2',
+      source: 'manual',
+      agent: 'reviewer',
+      model: 'model-a',
+      contractVersion: '1.0.0',
+      timestamp: '2026-08-28T00:00:01Z',
+      experimentId: 'abl-1',
+      variantId: 'baseline',
+    });
+    const listed = await listOutcomes(TEST_DIR, { experimentId: 'abl-1', variantId: 'minus:review' });
+    expect(listed.success).toBe(true);
+    if (!listed.success) return;
+    expect(listed.data).toHaveLength(1);
+    expect(listed.data[0]?.id).toBe('exp-1');
+  });
+
+  test('aggregateOutcomes groups by variant', () => {
+    const agg = aggregateOutcomes([
+      {
+        id: '1',
+        taskId: 'T1',
+        source: 'manual',
+        agent: 'reviewer',
+        model: 'model-a',
+        contractVersion: '1.0.0',
+        timestamp: '2026-08-28T00:00:00Z',
+        variantId: 'baseline',
+        weightedScore: 2.4,
+        verdict: 'PASS',
+      },
+      {
+        id: '2',
+        taskId: 'T2',
+        source: 'manual',
+        agent: 'reviewer',
+        model: 'model-a',
+        contractVersion: '1.0.0',
+        timestamp: '2026-08-28T00:00:01Z',
+        variantId: 'minus:review',
+        weightedScore: 2.0,
+        verdict: 'REVISE',
+      },
+    ]);
+    expect(agg.byVariant.baseline.count).toBe(1);
+    expect(agg.byVariant.baseline.avgScore).toBe(2.4);
+    expect(agg.byVariant['minus:review'].avgScore).toBe(2.0);
+  });
 });
+

@@ -323,8 +323,24 @@ bun run dev scorecard aggregate --output json
 ```
 
 **Expected output:**
-- `total`, `passRate`, `avgWeightedScore`, `byAgent`, `byModel`
+- `total`, `passRate`, `avgWeightedScore`, `byAgent`, `byModel`, `byVariant`
 - Values at `0` when no outcomes have been recorded yet
+
+### catalog / experiment / ablation
+
+```bash
+bun run dev scorecard catalog --output json
+bun run dev scorecard fingerprint --output json
+bun run dev scorecard experiment start --suite harness-v1 --components review,wayfinding
+bun run dev scorecard experiment apply --id <exp> --variant minus:review
+bun run dev scorecard record --task fix-add-off-by-one --verdict PASS --score 2.4 --experiment <exp> --variant minus:review --suite-task fix-add-off-by-one
+bun run dev scorecard ablation --experiment <exp> --output json
+```
+
+The runner writes isolated run directories under
+`.codeconductor/evaluation/experiments/<id>/runs/`. Execute each `TASK.md`
+with the host agent, then record outcomes with `--experiment` and `--variant`.
+See [ADR-012](adr/adr-012-harness-ablation.md).
 
 ---
 

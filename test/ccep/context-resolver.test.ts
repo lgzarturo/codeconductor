@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseCommand } from '../../src/core/ccep/command-parser';
 import { resolveContext } from '../../src/core/ccep/context-resolver';
 import { loadWorkflowProfile } from '../../src/core/ccep/workflow-profile-loader';
+import { applyHarnessOverlay } from '../../src/core/evaluation/harness-catalog';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '../..');
 
@@ -55,4 +56,29 @@ describe('ccep context-resolver', () => {
 
     expect(context.project.name).toBe('loyalty-api');
   });
+
+  test('product_graph ablation skips graph knowledge even when a graph exists', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'ccep-ablate-graph-'));
+    await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'ablate-graph' }));
+    await mkdir(join(dir, '.codeconductor'), { recursive: true });
+    await writeFile(
+      join(dir, '.codeconductor', 'product-graph.json'),
+      JSON.stringify({
+        version: 1,
+        productName: 'secret-product',
+        nodes: [{ id: 'n1', type: 'domain', name: 'billing', data: {} }],
+        edges: [],
+      }),
+    );
+    await applyHarnessOverlay(dir, ['product_graph'], { variantId: 'minus:product_graph' });
+
+    const context = await resolveContext(
+      parseCommand('feature', 'Add invoice export', dir),
+      loadWorkflowProfile('feature'),
+      dir,
+    );
+    expect(context.knowledge).toEqual({});
+    expect(context.ast.source).not.toBe('product-graph');
+  });
 });
+

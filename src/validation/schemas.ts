@@ -1025,6 +1025,94 @@ export const TaskOutcomeSchema = z.object({
   tokensOut: z.number().optional(),
   costUsd: z.number().optional(),
   durationMs: z.number().optional(),
+  experimentId: z.string().optional(),
+  variantId: z.string().optional(),
+  suiteTaskId: z.string().optional(),
+  harnessFingerprint: z.string().optional(),
+  disabledComponents: z.array(z.string()).optional(),
+});
+
+export const HarnessComponentIdSchema = z.enum([
+  'wayfinding',
+  'intake',
+  'design',
+  'test_first',
+  'review',
+  'docs',
+  'confirmation_gates',
+  'compile_loop',
+  'council',
+  'product_graph',
+]);
+
+export const HarnessComponentLayerSchema = z.enum([
+  'phase',
+  'gate',
+  'loop',
+  'knowledge',
+  'council',
+]);
+
+export const HarnessToggleKindSchema = z.enum([
+  'ccep_phase',
+  'ccep_gates',
+  'config_loop',
+  'config_council',
+  'product_graph',
+]);
+
+export const HarnessCatalogEntrySchema = z.object({
+  id: HarnessComponentIdSchema,
+  layer: HarnessComponentLayerSchema,
+  label: z.string(),
+  defaultOn: z.boolean().default(true),
+  toggle: z.object({
+    kind: HarnessToggleKindSchema,
+    phaseId: z.string().optional(),
+  }),
+});
+
+export const HarnessCatalogSchema = z.object({
+  version: z.literal(1),
+  components: z.array(HarnessCatalogEntrySchema).min(1),
+});
+
+export const HarnessOverlaySchema = z.object({
+  experimentId: z.string().optional(),
+  variantId: z.string(),
+  disabledComponents: z.array(HarnessComponentIdSchema),
+  disableProductGraph: z.boolean().optional().default(false),
+  contractVersion: z.string().optional(),
+  ccepProfile: z.string().optional().default('feature'),
+});
+
+export const HarnessExperimentSchema = z.object({
+  id: z.string(),
+  suiteId: z.string(),
+  createdAt: z.string(),
+  contractVersion: z.string(),
+  components: z.array(HarnessComponentIdSchema),
+  variants: z.array(z.string()).min(1),
+  suiteTaskIds: z.array(z.string()),
+  suitePath: z.string().optional(),
+});
+
+export const HarnessSuiteTaskSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  type: z.enum(['feature', 'fix', 'refactor']),
+  risk: z.enum(['low', 'medium', 'high']).default('low'),
+  prompt: z.string(),
+  scope: z.string(),
+  acceptanceCriteria: z.array(z.string()).min(1),
+  testCommand: z.string().optional(),
+});
+
+export const HarnessSuiteSchema = z.object({
+  id: z.string(),
+  version: z.number().int().positive(),
+  fixtureDir: z.string().optional(),
+  tasks: z.array(HarnessSuiteTaskSchema).min(1),
 });
 
 export const EvaluationIndexSchema = z.object({
@@ -1089,6 +1177,13 @@ export type ScorecardRecordInput = z.infer<typeof ScorecardRecordSchema>;
 export type TaskOutcomeInput = z.infer<typeof TaskOutcomeSchema>;
 export type EvaluationIndexInput = z.infer<typeof EvaluationIndexSchema>;
 export type ExecutionProfileInput = z.infer<typeof ExecutionProfileSchema>;
+export type HarnessComponentIdInput = z.infer<typeof HarnessComponentIdSchema>;
+export type HarnessCatalogEntryInput = z.infer<typeof HarnessCatalogEntrySchema>;
+export type HarnessCatalogInput = z.infer<typeof HarnessCatalogSchema>;
+export type HarnessOverlayInput = z.infer<typeof HarnessOverlaySchema>;
+export type HarnessExperimentInput = z.infer<typeof HarnessExperimentSchema>;
+export type HarnessSuiteTaskInput = z.infer<typeof HarnessSuiteTaskSchema>;
+export type HarnessSuiteInput = z.infer<typeof HarnessSuiteSchema>;
 export type WorkflowCommandInput = z.infer<typeof WorkflowCommandSchema>;
 export type CommandEnvelopeInput = z.infer<typeof CommandEnvelopeSchema>;
 export type WorkflowProfileInput = z.infer<typeof WorkflowProfileSchema>;
@@ -1183,6 +1278,22 @@ export function validateScorecardRecord(data: unknown): ScorecardRecordInput {
 
 export function validateTaskOutcome(data: unknown): TaskOutcomeInput {
   return TaskOutcomeSchema.parse(data);
+}
+
+export function validateHarnessCatalog(data: unknown): HarnessCatalogInput {
+  return HarnessCatalogSchema.parse(data);
+}
+
+export function validateHarnessOverlay(data: unknown): HarnessOverlayInput {
+  return HarnessOverlaySchema.parse(data);
+}
+
+export function validateHarnessExperiment(data: unknown): HarnessExperimentInput {
+  return HarnessExperimentSchema.parse(data);
+}
+
+export function validateHarnessSuite(data: unknown): HarnessSuiteInput {
+  return HarnessSuiteSchema.parse(data);
 }
 
 export function validateCommandEnvelope(data: unknown): CommandEnvelopeInput {

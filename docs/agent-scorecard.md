@@ -246,3 +246,34 @@ deadline is close, even if the agent "tried hard", even if the evaluator wrote
 the Agent Contract. A PASS on a score of 1.6 is a lie that compounds.
 
 The feedback loop only works if the input is accurate. Score what you see.
+
+---
+
+## Harness ablation
+
+Scorecards measure the Deliverable. Ablation measures the **harness**: whether
+wayfinding, intake, design, test-first, review, docs, confirmation gates, the
+compile-fix loop, council, or product-graph knowledge actually change quality
+or cost when removed.
+
+See [ADR-012](adr/adr-012-harness-ablation.md). The CLI does not invoke a
+model. It materializes leave-one-out variants and compares tagged outcomes.
+
+```bash
+bun run dev scorecard catalog
+bun run dev scorecard fingerprint
+bun run dev scorecard experiment start --suite harness-v1 --components review,wayfinding
+bun run dev scorecard experiment apply --id <exp> --variant minus:review
+bun run dev scorecard record --task <suiteTaskId> --verdict PASS --score 2.4 --experiment <exp> --variant minus:review --suite-task <suiteTaskId>
+bun run dev scorecard ablation --experiment <exp>
+```
+
+**Cadence:** run `experiment start` after a prompt/contract bump, after adding
+or removing a phase or gate, or as a monthly harness review. `scorecard
+ablation --since` reuses already tagged outcomes without re-running tasks.
+
+Thresholds: `|Δ score| < 0.10` and `|Δ pass rate| < 5pp` → `no_change`.
+Otherwise `improves` (candidate to drop or simplify) or `degrades` (keep the
+component).
+
+Golden suite (this repo): `eval/suites/harness-v1/`.

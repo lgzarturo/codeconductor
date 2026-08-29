@@ -31,6 +31,10 @@ id_ed25519
 .codeconductor/sessions/
 .codeconductor/generated/
 .codeconductor/handoff.md
+.codeconductor/evaluation/experiments/
+.codeconductor/evaluation/ablation-last.md
+.codeconductor/evaluation/active-overlay.yml
+.codeconductor/evaluation/overlay-backup/
 
 # OS
 .DS_Store

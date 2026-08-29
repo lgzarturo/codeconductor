@@ -391,7 +391,7 @@ definition, or the DDD→SDD→TDD pipeline is triggered.
 When the active task touches stack-specific code, apply rules in `.cursor/skills/`.
 Invoke skills via `/skill-name` or let the agent auto-load scoped skills.
 
-Key skills: `security`, `django-orm`, `spring-boot-kotlin`, `nextjs-typescript`,
+Key skills: `security`, `security-*`, `django-orm`, `spring-boot-kotlin`, `nextjs-typescript`,
 `laravel-specialist`, `openspec`, `backlog`, `evaluation`, `multi-agent-orchestration`.
 
 ## Hard Rules (all agents)

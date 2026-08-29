@@ -45,6 +45,11 @@ export const ASK_FLOW_CATALOG: readonly AskFlow[] = [
     slash: '/cc:openspec',
     blurb: 'deliver a BACKLOG.md / OpenSpec tracer bullet',
   },
+  {
+    command: 'security',
+    slash: '/cc:security',
+    blurb: 'authorized defensive security work with an authorization gate',
+  },
 ];
 
 export interface AskRecommendation {
@@ -103,6 +108,27 @@ export function recommendAskFlow(problem: string): AskRecommendation {
     return pick(
       'openspec',
       'The request names OpenSpec or BACKLOG without authoring verbs, so /cc:openspec is the delivery loop.',
+    );
+  }
+
+  if (
+    includesAny(text, [
+      '/cc-security',
+      '/cc:security',
+      'authorized security',
+      'vulnerability assessment',
+      'vuln assessment',
+      'threat hunting',
+      'incident response',
+      'penetration test',
+      'pentest',
+      'purple team',
+      'security hardening',
+    ])
+  ) {
+    return pick(
+      'security',
+      'The request is authorized defensive security work, so /cc:security is the fit.',
     );
   }
 

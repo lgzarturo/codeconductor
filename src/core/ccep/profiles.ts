@@ -311,4 +311,28 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     routing: { default: ['re-explain'] },
     confirmationGate: { stopOnHighRisk: false, stopOnQuestions: true },
   },
+  security: {
+    id: 'security',
+    version: 1,
+    command: 'security',
+    taskCard: {
+      type: 'fix',
+      requiredFields: ['domain', 'authorization', 'risk', 'scope'],
+    },
+    phases: [
+      { id: 'wayfinding', agent: 'repo-explorer', outputSchema: 'agent-output' },
+      { id: 'intake', agent: 'task-coach', outputSchema: 'fix-intake-output', stopGate: 'confirmation' },
+      { id: 'test', agent: 'tester' },
+      { id: 'implement', agent: 'implementer', dependsOn: ['test'] },
+      { id: 'review', agent: 'reviewer' },
+    ],
+    routing: {
+      default: ['wayfinding', 'intake', 'test', 'implement'],
+      riskRules: [
+        { when: { risk: 'low' }, then: ['wayfinding', 'test', 'implement'] },
+        { when: { risk: ['medium', 'high'] }, then: ['wayfinding', 'test', 'implement', 'review'] },
+      ],
+    },
+    confirmationGate: baseGate,
+  },
 };

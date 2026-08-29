@@ -756,6 +756,7 @@ export const WorkflowCommandSchema = z.enum([
   'prototype',
   'handoff',
   'clarify',
+  'security',
 ]);
 
 export const CcepOutputFormatSchema = z.enum(['taskcard', 'plan', 'verdict']);

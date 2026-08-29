@@ -38,6 +38,8 @@ contracts, task cards, and risk-based routing.
 > - `/cc-pagespeed --url <url>` — PageSpeed Insights / Core Web Vitals after
 >   `install preset`; `PAGESPEED_API_KEY` is optional but recommended for CrUX
 >   field data (see [docs/pagespeed-usage.md](docs/pagespeed-usage.md))
+> - `/cc-security` / `/cc:security` — authorized defensive security workflow
+>   with domain `security-*` skills and an authorization gate
 > - Stack-specific skill selection (`ts-next-drizzle`, `spring-kotlin-jpa`,
 >   `laravel-tall`, `python-data-api`)
 > - Council consensus: confidence thresholds + `securityVeto` / `complianceVeto`

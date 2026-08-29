@@ -101,6 +101,12 @@ to test all current flow before publishing version v1.0.0 to npm.
 | `npx cc-codeconductor goal "…"`          | `bun run dev goal "…"`            |
 | `npx cc-codeconductor ccep parse …`      | `bun run dev ccep parse …`        |
 
+## Skills
+
+Authorized security work uses `/cc-security` plus the matching
+`.claude/skills/security-*` skill (for example `.claude/skills/security-web/SKILL.md`).
+The OWASP application-security skill remains `.claude/skills/security/SKILL.md`.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community

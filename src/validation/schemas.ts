@@ -747,6 +747,7 @@ export const WorkflowCommandSchema = z.enum([
   'db-migration',
   'pagespeed',
   'openspec',
+  'backlog',
   'scorecard',
   'council',
   'iterative',

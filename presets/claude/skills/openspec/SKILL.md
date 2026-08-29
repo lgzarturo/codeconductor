@@ -2,10 +2,14 @@
 name: openspec
 description:
   OpenSpec backlog format, state machine, and delivery workflow for CodeConductor.
-  Use when running /cc:openspec or editing BACKLOG.md.
+  Use when running /cc:openspec or delivering a BACKLOG.md item.
+  To create or append BACKLOG.md, use /cc:backlog (skill backlog).
 ---
 
 # OpenSpec / BACKLOG Skill
+
+Authoring (create or append `BACKLOG.md`, then `openspec validate` / `plan`) is
+`/cc:backlog` and skill `backlog`. This skill is **delivery**.
 
 ## BACKLOG.md contract
 

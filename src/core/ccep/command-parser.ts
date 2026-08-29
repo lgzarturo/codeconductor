@@ -26,6 +26,7 @@ const COMMAND_DEFAULTS: Record<
   'db-migration': { outputFormat: 'plan', needConfirmation: true, riskThreshold: 'high' },
   pagespeed: { outputFormat: 'verdict', needConfirmation: false, riskThreshold: 'low' },
   openspec: { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'medium' },
+  backlog: { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'medium' },
   scorecard: { outputFormat: 'verdict', needConfirmation: false, riskThreshold: 'low' },
   council: { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'medium' },
   iterative: { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'medium' },

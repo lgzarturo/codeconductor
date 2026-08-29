@@ -28,7 +28,7 @@ If `graphify-out/graph.json` exists, run `graphify query "$ARGUMENTS"`. Invoke `
 
 ## Step 2 — Suggest next command (orchestrator)
 
-Recommend exactly one next slash command (`/cc:feature`, `/cc:fix`, `/cc:refactor`, `/cc:review`, `/cc:triage`, …) with a one-sentence rationale. Do not start that workflow.
+Recommend exactly one next slash command (`/cc:feature`, `/cc:fix`, `/cc:refactor`, `/cc:review`, `/cc:backlog`, `/cc:openspec`, `/cc:triage`, …) with a one-sentence rationale. Do not start that workflow.
 
 ---
 

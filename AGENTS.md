@@ -392,7 +392,7 @@ When the active task touches stack-specific code, apply rules in `.cursor/skills
 Invoke skills via `/skill-name` or let the agent auto-load scoped skills.
 
 Key skills: `security`, `django-orm`, `spring-boot-kotlin`, `nextjs-typescript`,
-`laravel-specialist`, `openspec`, `evaluation`, `multi-agent-orchestration`.
+`laravel-specialist`, `openspec`, `backlog`, `evaluation`, `multi-agent-orchestration`.
 
 ## Hard Rules (all agents)
 
@@ -495,7 +495,7 @@ exceptions, or context here.
 
 ### OpenSpec
 
-OpenSpec is a **delivery loop** (validate-backlog → discover → design → test → implement → review) and the backlog tool for `BACKLOG.md`. Use `bun run dev openspec …` and `/cc-openspec`.
+OpenSpec is a **delivery loop** (validate-backlog → discover → design → test → implement → review) and the backlog tool for `BACKLOG.md`. Author with `/cc-backlog` (`bun run dev` locally). Deliver with `bun run dev openspec …` and `/cc-openspec`.
 
 ## Approach
 

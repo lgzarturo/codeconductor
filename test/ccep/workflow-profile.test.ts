@@ -7,10 +7,10 @@ import {
 import { validateWorkflowProfile } from '../../src/validation/schemas';
 
 describe('ccep workflow profiles', () => {
-  test('registry contains a valid profile for each of the 18 commands', () => {
+  test('registry contains a valid profile for each of the 19 commands', () => {
     const profiles = loadAllWorkflowProfiles();
 
-    expect(profiles.size).toBe(18);
+    expect(profiles.size).toBe(19);
     for (const command of CCEP_COMMANDS) {
       expect(profiles.has(command)).toBe(true);
       const profile = profiles.get(command)!;
@@ -104,6 +104,20 @@ describe('ccep workflow profiles', () => {
 
     expect(profile.phases[0]?.id).toBe('validate-backlog');
     expect(profile.phases.some((p) => p.agent === 'repo-explorer')).toBe(true);
+  });
+
+  test('backlog profile is wayfinding → intake → write → validate → plan', () => {
+    const profile = loadWorkflowProfile('backlog');
+
+    expect(profile.phases.map((p) => p.id)).toEqual([
+      'wayfinding',
+      'intake',
+      'write-backlog',
+      'validate-backlog',
+      'plan-changes',
+    ]);
+    expect(profile.confirmationGate.stopOnQuestions).toBe(true);
+    expect(profile.phases[1]?.stopGate).toBe('confirmation');
   });
 
   test('explore profile is map then suggest-next', () => {

@@ -80,6 +80,8 @@ Antigravity CLI loads custom slash commands from `.agents/workflows/*.md`. The f
 | `/cc-prototype`  | Disposable spike in an isolated worktree                         |
 | `/cc-handoff`    | Compact the session to `.codeconductor/` Markdown                |
 | `/cc-clarify`    | Re-explain the last deliverable in Task Card vocabulary          |
+| `/cc-backlog`    | Author or append BACKLOG.md and plan OpenSpec change folders   |
+| `/cc-openspec`   | OpenSpec delivery loop from BACKLOG.md                         |
 | `/cc-pagespeed`  | Performs a web performance and Core Web Vitals audit               |
 
 ---

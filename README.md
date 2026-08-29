@@ -34,7 +34,7 @@ contracts, task cards, and risk-based routing.
 >   backlog tool (`validate` / `scan` / `plan` / `status` / `next`)
 > - `npx cc-codeconductor scorecard …`
 > - Slash commands after `install preset` — prefer `/cc-iterative`, `/cc-triage`,
->   `/cc-handoff`; `/cc-openspec` runs the OpenSpec loop
+>   `/cc-handoff`; `/cc-backlog` authors `BACKLOG.md`; `/cc-openspec` runs delivery
 > - `/cc-pagespeed --url <url>` — PageSpeed Insights / Core Web Vitals after
 >   `install preset`; `PAGESPEED_API_KEY` is optional but recommended for CrUX
 >   field data (see [docs/pagespeed-usage.md](docs/pagespeed-usage.md))

@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { analyzeDiff } from '../complexity/complexity-auditor';
 import { computeCcGain, ccGainToScorecardImpact } from '../complexity/cc-gain';
 import type { CriterionId } from './scorecard-constants';
@@ -24,7 +24,7 @@ export function collectScorecardSignals(
 
   let diff = '';
   try {
-    diff = execSync('git diff HEAD', {
+    diff = execFileSync('git', ['diff', 'HEAD'], {
       cwd: projectRoot,
       encoding: 'utf-8',
       stdio: ['ignore', 'pipe', 'ignore'],

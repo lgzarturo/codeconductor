@@ -2,6 +2,8 @@
 
 **Stop prompting. Start orchestrating.**
 
+[![Socket Badge](https://badge.socket.dev/npm/package/cc-codeconductor/1.0.0)](https://badge.socket.dev/npm/package/cc-codeconductor/1.0.0)
+
 CodeConductor is an open-source framework for building structured, reproducible
 AI-assisted software engineering workflows.
 
@@ -264,6 +266,40 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
   orchestrator's dependency-order delegation loop
 - **Memory compression + escalation emitter** — keeps inter-agent context within
   token budget and surfaces guardrail breaches as escalation reports
+
+---
+
+## Supply chain
+
+Published **1.0.0** declares two production dependencies (`package.json`
+`dependencies`; same on
+[npm](https://www.npmjs.com/package/cc-codeconductor)). Neither has further
+npm transitive dependencies.
+
+```mermaid
+graph LR
+  cc["cc-codeconductor@1.0.0"]
+  zod["zod@^3.23.8"]
+  yaml["yaml@^2.4.5"]
+  cc --> zod
+  cc --> yaml
+```
+
+Expected runtime capabilities (user-invoked CLI commands, **not** `npm
+install`):
+
+- **Network** — `seo audit` / `seo llms` (`safeFetch` with SSRF guards);
+  `install lsp` binary downloads (pinned URL + SHA-256)
+- **Process spawn (no shell)** — git (`scorecard`, OpenSpec, loop guards);
+  `verify` / compile-check; `doctor`; `install lsp` (`tar` / `npm` / `pip`)
+
+There are no `preinstall` / `postinstall` lifecycle scripts. Socket may still
+flag network and shell **capability presence** in the published bundle; that is
+expected for this CLI and is not install-time execution.
+
+For live vulnerability scanning, dependency alerts, and runtime behavior
+analysis, see
+[Socket — cc-codeconductor dependencies](https://socket.dev/npm/package/cc-codeconductor/dependencies).
 
 ---
 

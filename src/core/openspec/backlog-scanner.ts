@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { BacklogItemInput } from '../../validation/schemas';
@@ -36,7 +36,7 @@ export async function scanBacklog(
 
     let fileChanged = true;
     try {
-      const diff = execSync(`git diff --name-only -- ${BACKLOG_FILENAME}`, {
+      const diff = execFileSync('git', ['diff', '--name-only', '--', BACKLOG_FILENAME], {
         cwd: projectRoot,
         encoding: 'utf-8',
         stdio: ['ignore', 'pipe', 'ignore'],

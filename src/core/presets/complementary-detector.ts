@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
@@ -22,8 +22,8 @@ export function detectComplementaryTools(): ComplementaryToolsStatus {
   const isCmdAvailable = (cmd: string): boolean => {
     try {
       // `cmd` is always a literal from detectComplementaryTools, never user input.
-      const command = process.platform === 'win32' ? `where ${cmd}` : `which ${cmd}`;
-      execSync(command, { stdio: 'ignore', timeout: 1000 });
+      const binary = process.platform === 'win32' ? 'where' : 'which';
+      execFileSync(binary, [cmd], { stdio: 'ignore', timeout: 1000 });
       return true;
     } catch {
       return false;

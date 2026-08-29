@@ -1,23 +1,19 @@
 /**
  * Integration tests for BC-006 — openspec validate functionality
- * 
+ *
  * Acceptance Criterion 3:
  * `cc openspec validate` confirma ausencia de ciclos y dependencias desconocidas sobre el BACKLOG.md actual del repo
- * 
+ *
  * These tests verify that the command runs successfully and detects:
  * - Dependency cycles (detectCycle in backlog-validator.ts)
  * - Unknown dependencies (UNKNOWN_DEPENDENCY error code)
  */
 
 import { describe, expect, test } from 'bun:test';
-import { spawn } from 'bun';
-import { resolve } from 'node:path';
+import { invokeCli } from '../../../helpers/invoke-cli';
 
 const PROJECT_ROOT = process.cwd();
 
-/**
- * Run `bun run src/cli/main.ts openspec validate --output json` and parse the output
- */
 async function runOpenspecValidate(): Promise<{
   success: boolean;
   valid: boolean;
@@ -25,27 +21,20 @@ async function runOpenspecValidate(): Promise<{
   recommendations: string[];
   itemCount: number;
   archiveCount: number;
+  exitCode: number;
 }> {
-  const proc = spawn({
-    cmd: ['bun', 'run', 'src/cli/main.ts', 'openspec', 'validate', '--output', 'json'],
-    cwd: PROJECT_ROOT,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  });
-
-  const output = await new Response(proc.stdout).text();
-  const exitCode = await proc.exited;
-
-  if (exitCode !== 0) {
-    throw new Error(`openspec validate exited with code ${exitCode}: ${output}`);
+  const result = await invokeCli(
+    ['openspec', 'validate', '--output', 'json'],
+    PROJECT_ROOT,
+  );
+  if (result.exitCode !== 0) {
+    throw new Error(`openspec validate exited with code ${result.exitCode}: ${result.stdout}`);
   }
-
-  return JSON.parse(output);
+  return { ...JSON.parse(result.stdout), exitCode: result.exitCode };
 }
 
 describe('openspec validate integration', () => {
   test('should validate the current BACKLOG.md without errors', async () => {
-    // Happy path: the repo's BACKLOG.md should be valid
     const result = await runOpenspecValidate();
 
     expect(result.success).toBe(true, 'openspec validate should report success');
@@ -54,7 +43,6 @@ describe('openspec validate integration', () => {
   });
 
   test('should report no dependency cycles in BACKLOG.md', async () => {
-    // Edge case: confirm absence of cycles explicitly
     const result = await runOpenspecValidate();
 
     const hasCycleError = result.errors.some((err) => /cycle|circular/i.test(err));
@@ -62,7 +50,6 @@ describe('openspec validate integration', () => {
   });
 
   test('should report no unknown dependencies in BACKLOG.md', async () => {
-    // Edge case: confirm absence of unknown dependencies
     const result = await runOpenspecValidate();
 
     const hasUnknownDepError = result.errors.some((err) => /unknown|not.{0,30}found|does.{0,30}not.{0,30}exist/i.test(err));
@@ -70,7 +57,6 @@ describe('openspec validate integration', () => {
   });
 
   test('should report item count and archive count in BACKLOG.md', async () => {
-    // Edge case: validate metadata about the backlog
     const result = await runOpenspecValidate();
 
     expect(typeof result.itemCount).toBe('number', 'result should include itemCount');
@@ -80,13 +66,10 @@ describe('openspec validate integration', () => {
   });
 
   test('should exit with code 0 on valid BACKLOG.md', async () => {
-    // Happy path: verify the process exit code matches success
-    const proc = spawn({
-      cmd: ['bun', 'run', 'src/cli/main.ts', 'openspec', 'validate', '--output', 'json'],
-      cwd: PROJECT_ROOT,
-    });
-
-    const exitCode = await proc.exited;
-    expect(exitCode).toBe(0, 'openspec validate should exit with code 0 on success');
+    const result = await invokeCli(
+      ['openspec', 'validate', '--output', 'json'],
+      PROJECT_ROOT,
+    );
+    expect(result.exitCode).toBe(0, 'openspec validate should exit with code 0 on success');
   });
 });

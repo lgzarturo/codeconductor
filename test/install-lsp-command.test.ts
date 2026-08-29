@@ -2,38 +2,18 @@
  * Integration tests for install lsp command.
  * Tests the full pipeline from CLI to file generation.
  */
-import { afterAll, beforeAll, beforeEach, describe, expect, setDefaultTimeout, test } from 'bun:test';
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-
-// Cold Bun CLI spawn + npm list -g can exceed the 5s default on GitHub Actions runners
-setDefaultTimeout(15_000);
+import { invokeCli } from './helpers/invoke-cli';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
-const CLI_CMD = [process.execPath, 'run', join(PROJECT_ROOT, 'src/cli/main.ts')];
 let CLI_ROOT: string;
 
-async function runCli(
-  args: string[]
-): Promise<{ exitCode: number; stdout: string; stderr: string }> {
-  const { spawn } = await import('bun');
-
-  const process = spawn({
-    cmd: [...CLI_CMD, ...args],
-    cwd: CLI_ROOT,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  });
-
-  const [stdout, stderr] = await Promise.all([
-    new Response(process.stdout).text(),
-    new Response(process.stderr).text(),
-  ]);
-
-  const exitCode = await process.exited;
-  return { exitCode, stdout, stderr };
+async function runCli(args: string[], cwd = CLI_ROOT) {
+  return invokeCli(args, cwd);
 }
 
 async function cleanup() {
@@ -77,12 +57,16 @@ describe('install lsp command', () => {
       expect(existsSync(join(CLI_ROOT, '.opencode', 'opencode.json'))).toBe(false);
     });
 
-    test('install lsp --target opencode --force can create config file', async () => {
-      // Without dry-run, files should be created (even if install might fail)
-      // We use --force to ensure existing files don't block
-      const result = await runCli(['install', 'lsp', '--target=opencode', '--force']);
-      // May fail due to actual LSP installation, but config attempt should be made
-      expect(result.exitCode === 0 || result.exitCode === 2 || result.exitCode === 1).toBe(true);
+    test('install lsp --target opencode --force --dry-run reports without installing', async () => {
+      const result = await runCli([
+        'install',
+        'lsp',
+        '--target=opencode',
+        '--force',
+        '--dry-run',
+      ]);
+      expect(result.exitCode).toBe(0);
+      expect(existsSync(join(CLI_ROOT, '.opencode', 'opencode.json'))).toBe(false);
     });
 
     test('install lsp --target=all generates configs for all targets', async () => {
@@ -365,20 +349,14 @@ describe('install lsp command', () => {
 
   describe('Error Handling', () => {
     test('returns error when no languages detected and no --lang provided', async () => {
-      // Create empty temp directory
       const tempDir = join(PROJECT_ROOT, 'test-empty-lsp');
       await mkdir(tempDir, { recursive: true });
-
-      const { spawn } = await import('bun');
-      const process = spawn({
-        cmd: ['bun', 'run', 'src/cli/main.ts', 'install', 'lsp', '--target=opencode'],
-        cwd: tempDir,
-      });
-      const exitCode = await process.exited;
-
-      await rm(tempDir, { recursive: true, force: true });
-
-      expect(exitCode).toBe(1);
+      try {
+        const result = await runCli(['install', 'lsp', '--target=opencode'], tempDir);
+        expect(result.exitCode).toBe(1);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
     });
 
     test('install lsp with invalid target shows error', async () => {

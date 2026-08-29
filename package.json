@@ -49,6 +49,7 @@
     "build:lib": "bun build src/index.ts --target=node --outfile=dist/library.js --packages=external",
     "build:types": "tsc -p tsconfig.lib.json --emitDeclarationOnly",
     "test": "bun test",
+    "test:fast": "bun run scripts/test-fast.ts",
     "typecheck": "tsc --noEmit",
     "lint": "bun run scripts/lint.ts",
     "check:coverage": "bun run scripts/check-coverage.ts",

@@ -4,29 +4,13 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
+import { invokeCli } from '../helpers/invoke-cli';
 
-const PROJECT_ROOT = resolve(import.meta.dir, '../..');
 let TEST_DIR: string;
-const CLI_CMD = [process.execPath, 'run', join(PROJECT_ROOT, 'src/cli/main.ts')];
 
-async function runCli(
-  args: string[],
-  cwd = TEST_DIR,
-): Promise<{ exitCode: number; stdout: string; stderr: string }> {
-  const { spawn } = await import('bun');
-  const child = spawn({
-    cmd: [...CLI_CMD, ...args],
-    cwd,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  });
-  const [stdout, stderr] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-  ]);
-  const exitCode = await child.exited;
-  return { exitCode, stdout, stderr };
+async function runCli(args: string[], cwd = TEST_DIR) {
+  return invokeCli(args, cwd);
 }
 
 describe('CLI: ccep command (end-to-end)', () => {

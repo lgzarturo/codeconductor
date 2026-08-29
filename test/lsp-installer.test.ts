@@ -4,6 +4,8 @@
  */
 import { describe, expect, test } from 'bun:test';
 import type { LspDefinition, LspInstallResult, LspInstallReport } from '../src/domain/lsp/lsp-definition';
+import { createLspInstaller } from '../src/core/lsp/lsp-installer';
+import { resolveLsps } from '../src/core/lsp/lsp-registry';
 
 // Test the domain types and structures directly
 describe('LspInstaller Domain Types', () => {
@@ -266,5 +268,17 @@ describe('Install Report Structure', () => {
     };
 
     expect(typeof report.allSucceeded).toBe('boolean');
+  });
+});
+
+describe('LspInstaller.installAll dry-run', () => {
+  test('does not probe npm/pip and reports would-install', async () => {
+    const installer = createLspInstaller();
+    const lsps = resolveLsps(['typescript']);
+    const report = await installer.installAll(lsps, { dryRun: true });
+    expect(report.results).toHaveLength(1);
+    expect(report.results[0]?.status).toBe('installed');
+    expect(report.results[0]?.version).toBeUndefined();
+    expect(report.allSucceeded).toBe(true);
   });
 });

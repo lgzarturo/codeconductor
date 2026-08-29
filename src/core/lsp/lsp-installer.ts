@@ -158,11 +158,10 @@ export class LspInstaller {
 
     for (const lsp of lsps) {
       if (options.dryRun) {
-        const status = await this.checkInstalled(lsp);
+        // Dry-run must not probe npm/pip (`checkInstalled`); report "would install".
         results.push({
           lspId: lsp.id,
-          status: status.installed ? 'already-installed' : 'installed',
-          version: status.version,
+          status: 'installed',
         });
       } else {
         const result = await this.installLsp(lsp);

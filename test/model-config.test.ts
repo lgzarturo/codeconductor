@@ -7,28 +7,14 @@ import { join, resolve } from 'node:path';
 import { copyFromManifest } from '../src/core/presets/file-copier';
 import { loadManifest, loadModelConfig } from '../src/core/presets/manifest-loader';
 import { ModelConfigSchema } from '../src/validation/schemas';
+import { invokeCli } from './helpers/invoke-cli';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
-const CLI_CMD = ['bun', 'run', join(PROJECT_ROOT, 'src/cli/main.ts')];
 const PRESETS_DIR = resolve(PROJECT_ROOT, 'presets');
 let TEST_DIR: string;
 
-async function runCli(
-  args: string[]
-): Promise<{ exitCode: number; stdout: string; stderr: string }> {
-  const { spawn } = await import('bun');
-  const process = spawn({
-    cmd: [...CLI_CMD, ...args],
-    cwd: TEST_DIR,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  });
-  const [stdout, stderr] = await Promise.all([
-    new Response(process.stdout).text(),
-    new Response(process.stderr).text(),
-  ]);
-  const exitCode = await process.exited;
-  return { exitCode, stdout, stderr };
+async function runCli(args: string[]) {
+  return invokeCli(args, TEST_DIR);
 }
 
 async function cleanup() {

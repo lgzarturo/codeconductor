@@ -8,27 +8,13 @@ import { calculateConfidence, detectProject } from '../src/core/detection/projec
 import { mergeManagedBlock } from '../src/core/filesystem/safe-merger';
 import { resolvePreset } from '../src/core/presets/preset-resolver';
 import { validatePromptChangelog } from '../src/core/prompts/changelog-discipline';
+import { invokeCli } from './helpers/invoke-cli';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
-const CLI_CMD = [process.execPath, 'run', join(PROJECT_ROOT, 'src/cli/main.ts')];
 let TEST_DIR: string;
 
-async function runCli(
-  args: string[]
-): Promise<{ exitCode: number; stdout: string; stderr: string }> {
-  const { spawn } = await import('bun');
-  const child = spawn({
-    cmd: [...CLI_CMD, ...args],
-    cwd: TEST_DIR,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  });
-  const [stdout, stderr] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-  ]);
-  const exitCode = await child.exited;
-  return { exitCode, stdout, stderr };
+async function runCli(args: string[]) {
+  return invokeCli(args, TEST_DIR);
 }
 
 async function cleanup() {

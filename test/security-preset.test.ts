@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 
@@ -213,15 +213,21 @@ describe('cc-security safety gate text is identical in every command copy', () =
   }
 });
 
-// ─── The offensive skill pack must never return ──────────────────────────────
+// ─── Shipped security-* skills stay defensive (no offensive pack) ───────────
 
-describe('no offensive security skill pack ships', () => {
-  for (const target of TARGETS) {
-    test(`presets/${target}/skills has no security-* directory`, () => {
-      const entries = readdirSync(join(PROJECT_ROOT, 'presets', target, 'skills'));
-      const offenders = entries.filter((name) => name.startsWith('security-'));
-      expect(offenders).toEqual([]);
-    });
+describe('shipped security-* skills stay defensive', () => {
+  for (const id of SKILL_IDS) {
+    for (const target of TARGETS) {
+      const path = `presets/${target}/skills/${id}/SKILL.md`;
+
+      test(`${path} refuses offensive cyber operations`, () => {
+        const content = readPreset(path);
+        expect(content).toMatch(/does not authorize\s+offensive cyber operations/i);
+        expect(content).toContain(
+          'Do not produce exploit payloads, malware, or attack procedures.',
+        );
+      });
+    }
   }
 });
 

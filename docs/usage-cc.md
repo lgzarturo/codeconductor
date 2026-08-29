@@ -33,7 +33,7 @@ $CC goal "Add user authentication"
 | Group | Requirement |
 | ----- | ----------- |
 | General | Bun installed, `bun install`, cwd = repo root |
-| Tests | `bun test` — current baseline: **1259 tests** |
+| Tests | `bun test` (full suite) or `bun run test:fast` (skips timeout/git-heavy files) |
 | `init` / scorecard | `bun run dev init` (idempotent; creates `.codeconductor/evaluation/`) |
 | `openspec` | `BACKLOG.md` in cwd — copy the fixture: `cp test/fixtures/backlog/BACKLOG.md .` |
 | `scorecard create --from-diff` | Git repo with staged or unstaged changes |
@@ -372,6 +372,8 @@ Recommended order (~5–10 min):
 ```bash
 # 1. Test suite
 bun test
+# Local loop (skips compile-timeout, nested bun test, and git-gate files):
+# bun run test:fast
 
 # 2. Setup
 bun run dev init

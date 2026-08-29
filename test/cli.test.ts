@@ -3,33 +3,13 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import packageJson from '../package.json';
+import { invokeCli, spawnCli } from './helpers/invoke-cli';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
-const CLI_CMD = ['bun', 'run', join(PROJECT_ROOT, 'src/cli/main.ts')];
 let CLI_ROOT: string;
 
-/**
- * Helper to run CLI command and get exit code + output
- */
-async function runCli(
-  args: string[]
-): Promise<{ exitCode: number; stdout: string; stderr: string }> {
-  const { spawn } = await import('bun');
-
-  const process = spawn({
-    cmd: [...CLI_CMD, ...args],
-    cwd: CLI_ROOT,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  });
-
-  const [stdout, stderr] = await Promise.all([
-    new Response(process.stdout).text(),
-    new Response(process.stderr).text(),
-  ]);
-
-  const exitCode = await process.exited;
-  return { exitCode, stdout, stderr };
+async function runCli(args: string[], cwd = CLI_ROOT) {
+  return invokeCli(args, cwd);
 }
 
 /**
@@ -236,23 +216,20 @@ describe('CLI', () => {
   });
 
   test('detect returns exit code 3 for empty project', async () => {
-    // Create empty temp directory inside project root
     const tempDir = join(PROJECT_ROOT, 'test-empty-temp');
     await mkdir(tempDir, { recursive: true });
+    try {
+      const result = await runCli(['detect'], tempDir);
+      expect(result.exitCode).toBe(3); // UNSUPPORTED_PROJECT
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
 
-    // Run detect using absolute path to CLI
-    const cliPath = join(PROJECT_ROOT, 'src/cli/main.ts');
-    const { spawn } = await import('bun');
-    const child = spawn({
-      cmd: [process.execPath, 'run', cliPath, 'detect'],
-      cwd: tempDir,
-    });
-    const exitCode = await child.exited;
-
-    // Clean up
-    await rm(tempDir, { recursive: true, force: true });
-
-    expect(exitCode).toBe(3); // UNSUPPORTED_PROJECT
+  test('--version via bun spawn still exits 0', async () => {
+    const result = await spawnCli(['--version'], CLI_ROOT);
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout.trim()).toBe(`${packageJson.name} v${packageJson.version}`);
   });
 
   test('install council --target claude generates files', async () => {

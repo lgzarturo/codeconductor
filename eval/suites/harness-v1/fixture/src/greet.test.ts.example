@@ -1,0 +1,6 @@
+import { expect, test } from 'bun:test';
+import { greet } from './greet';
+
+test('greet wraps a trimmed name', () => {
+  expect(greet('  Ada  ')).toBe('Hello, Ada!');
+});

@@ -54,6 +54,16 @@ export async function generateInsights(projectRoot: string): Promise<ProductInsi
         });
       }
     }
+
+    const tagged = outcomes.data.filter((o) => o.experimentId && o.variantId);
+    if (tagged.length > 0) {
+      const experiments = new Set(tagged.map((o) => o.experimentId));
+      insights.push({
+        type: 'harness_ablation',
+        message: `${experiments.size} harness experiment(s), ${tagged.length} tagged outcomes`,
+        confidence: 'medium',
+      });
+    }
   }
 
   const learnings = await parseChangelogLearnings(projectRoot);

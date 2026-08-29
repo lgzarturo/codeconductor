@@ -37,3 +37,8 @@ gates. Product OS goal orchestration is implemented-unreleased.
 
 Scorecards, outcome storage, aggregation, and regression commands are
 implemented in the published CLI.
+
+Harness ablation (`scorecard catalog|fingerprint|experiment|ablation`) is a
+protocol runner: it materializes variants and compares tagged outcomes. It
+does not invoke Cursor, Claude, or OpenCode. Combinatorial A/B and a CI
+token-spend loop are out of scope.

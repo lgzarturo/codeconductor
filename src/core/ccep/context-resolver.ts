@@ -12,6 +12,7 @@ import {
 import { parseCommand } from './command-parser';
 import { productGraphPath } from '../product-graph/paths';
 import { queryNodes } from '../product-graph/graph-store';
+import { isProductGraphDisabled } from '../evaluation/harness-catalog';
 
 const DEFAULT_POLICIES: ExecutionContextInput['policies'] = {
   architecture: 'modular',
@@ -21,6 +22,9 @@ const DEFAULT_POLICIES: ExecutionContextInput['policies'] = {
 };
 
 async function loadProductKnowledge(projectRoot: string): Promise<Record<string, unknown>> {
+  if (isProductGraphDisabled(projectRoot)) {
+    return {};
+  }
   const graphPath = productGraphPath(projectRoot);
   if (!existsSync(graphPath)) {
     return {};
@@ -50,6 +54,13 @@ async function loadProductKnowledge(projectRoot: string): Promise<Record<string,
 async function resolveAstSource(
   projectRoot: string,
 ): Promise<ExecutionContextInput['ast']> {
+  if (isProductGraphDisabled(projectRoot)) {
+    const graphifyPath = join(projectRoot, 'graphify-out', 'graph.json');
+    if (existsSync(graphifyPath)) {
+      return { source: 'graphify', confidence: 'medium' };
+    }
+    return { source: 'manual', confidence: 'low' };
+  }
   const graphPath = productGraphPath(projectRoot);
   if (existsSync(graphPath)) {
     return { source: 'product-graph', confidence: 'high' };

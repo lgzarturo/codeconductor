@@ -162,6 +162,24 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     routing: { default: ['validate-backlog', 'discover', 'design', 'test', 'implement', 'review'] },
     confirmationGate: baseGate,
   },
+  backlog: {
+    id: 'backlog',
+    version: 1,
+    command: 'backlog',
+    taskCard: {
+      type: 'feature',
+      requiredFields: ['title', 'type', 'risk', 'scope', 'context', 'acceptanceCriteria'],
+    },
+    phases: [
+      { id: 'wayfinding', agent: 'repo-explorer', outputSchema: 'agent-output' },
+      { id: 'intake', agent: 'task-coach', outputSchema: 'planner-output', stopGate: 'confirmation' },
+      { id: 'write-backlog', agent: 'docs' },
+      { id: 'validate-backlog', agent: 'orchestrator', type: 'cli-gate' },
+      { id: 'plan-changes', agent: 'orchestrator', type: 'cli-gate' },
+    ],
+    routing: { default: ['wayfinding', 'intake', 'write-backlog', 'validate-backlog', 'plan-changes'] },
+    confirmationGate: baseGate,
+  },
   scorecard: {
     id: 'scorecard',
     version: 1,

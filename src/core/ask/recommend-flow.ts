@@ -36,6 +36,11 @@ export const ASK_FLOW_CATALOG: readonly AskFlow[] = [
     blurb: 'one red-green-refactor cycle starting from a failing test',
   },
   {
+    command: 'backlog',
+    slash: '/cc:backlog',
+    blurb: 'create or append BACKLOG.md items and OpenSpec change folders',
+  },
+  {
     command: 'openspec',
     slash: '/cc:openspec',
     blurb: 'deliver a BACKLOG.md / OpenSpec tracer bullet',
@@ -64,10 +69,40 @@ export function recommendAskFlow(problem: string): AskRecommendation {
     return { command: flow.command, slash: flow.slash, reason };
   };
 
-  if (includesAny(text, ['openspec', 'backlog', 'tracer bullet', 'bc-'])) {
+  if (
+    includesAny(text, ['bc-', 'tracer bullet', 'openspec plan', 'openspec next']) ||
+    (text.includes('deliver') && includesAny(text, ['backlog', 'openspec', 'bc-']))
+  ) {
     return pick(
       'openspec',
-      'The request names OpenSpec, BACKLOG, or a BC-xxx item, so /cc:openspec is the delivery loop.',
+      'The request names OpenSpec delivery, a tracer bullet, or a BC-xxx item, so /cc:openspec is the delivery loop.',
+    );
+  }
+
+  if (
+    includesAny(text, [
+      'create backlog',
+      'write backlog',
+      'add to backlog',
+      'append to backlog',
+      'new backlog',
+      'author backlog',
+      'add a backlog',
+      'add backlog',
+    ]) ||
+    (text.includes('backlog') &&
+      includesAny(text, ['create', 'write', 'append', 'objetivo', 'objective', 'objectives']))
+  ) {
+    return pick(
+      'backlog',
+      'The request is to create or append BACKLOG.md, so /cc:backlog is the authoring loop.',
+    );
+  }
+
+  if (includesAny(text, ['openspec', 'backlog'])) {
+    return pick(
+      'openspec',
+      'The request names OpenSpec or BACKLOG without authoring verbs, so /cc:openspec is the delivery loop.',
     );
   }
 

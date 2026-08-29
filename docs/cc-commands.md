@@ -666,7 +666,8 @@ Primary CCEP loop (use these first):
 | `/cc-iterative` / `/cc:iterative` | Wayfinding, grilling, contracts, TDD, council, docs |
 | `/cc-triage` / `/cc:triage` | Classify request → destination workflow |
 | `/cc-handoff` / `/cc:handoff` | Compact session to gitignored `.codeconductor/sessions/handoff.md` |
-| `/cc-openspec` | OpenSpec delivery loop + backlog |
+| `/cc-backlog` / `/cc:backlog` | Author or append `BACKLOG.md` + plan OpenSpec folders |
+| `/cc-openspec` | OpenSpec delivery loop |
 
 Other installed commands:
 
@@ -752,6 +753,27 @@ the current working directory.
 ```
 
 See `docs/pagespeed-usage.md` for the complete usage guide.
+
+---
+
+### `/cc:backlog` / `/cc-backlog [objectives]`
+
+Authors `BACKLOG.md`: wayfinding, grilling, create or append items, `openspec
+validate`, then `openspec plan` for new IDs so `/cc-openspec` can deliver.
+Does not implement.
+
+**Available in**: Claude Code (`/cc:backlog`), OpenCode (`/cc-backlog`), AGY
+(`/cc-backlog`), Cursor (`/cc-backlog` / `/cc:backlog`).
+
+In consumer projects, `init` gitignores `BACKLOG.md`, `openspec/`, and
+`.codeconductor/openspec-state.json`. Do not commit those files.
+
+**Examples:**
+
+```bash
+/cc:backlog add auth session refresh with measurable acceptance
+/cc-backlog split the checkout rewrite into tracer-bullet items
+```
 
 ---
 

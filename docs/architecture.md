@@ -33,7 +33,7 @@ Three loops exist; they are not aliases.
 | Loop | Role | Status |
 | ---- | ---- | ------ |
 | **CCEP** | Canonical consumer workflow. Slash commands compile through profiles in `src/core/ccep/`. Prefer **iterative**, **triage**, and **handoff**; other commands are supporting profiles. | Shipped in 0.5.0 |
-| **OpenSpec** | Delivery loop **and** backlog tool: `openspec validate/scan/plan/status/next` plus `/cc-openspec`. Phases: validate-backlog → discover → design → test → implement → review. | Shipped in 0.5.0 |
+| **OpenSpec** | Authoring (`/cc-backlog`) plus delivery (`openspec validate/scan/plan/status/next` and `/cc-openspec`). Delivery phases: validate-backlog → discover → design → test → implement → review. | Shipped in 0.5.0 |
 | **`runWorkflowPipeline`** | Experimental 8-phase library API (`intake → … → compact`). Not a CLI runtime. | Experimental |
 | **Product OS / goal** | `goal`, `ingest`, `product`, `orchestrate`, `impact`, `verify` | Documented as **v1.0.0**, implemented-unreleased |
 

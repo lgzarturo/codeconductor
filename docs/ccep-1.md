@@ -56,6 +56,7 @@ Command-specific workflow phases (unchanged semantics)
 | `db-migration` | db-migration | Migration plan |
 | `pagespeed` | pagespeed | PSI report |
 | `openspec` | openspec | Delivery loop + backlog (`BACKLOG.md`) |
+| `backlog` | backlog | Author or append `BACKLOG.md` + OpenSpec change folders |
 | `scorecard` | scorecard | Agent evaluation |
 | `council` | council | Council verdict |
 | `iterative` | iterative | Wayfinding + contract + TDD + council |

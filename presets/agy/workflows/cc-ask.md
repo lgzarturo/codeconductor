@@ -36,10 +36,11 @@ The catalog is only:
 | `/cc:refactor` | structure, no behavior change |
 | `/cc:review` | inspect a diff/PR |
 | `/cc:tdd-cycle` | red → green → refactor |
+| `/cc:backlog` | create or append BACKLOG.md / objectives |
 | `/cc:openspec` | BACKLOG / BC-xxx delivery |
 
 If the CLI is unavailable, apply the same catalog and the same priority:
-openspec → tdd-cycle → review → refactor → fix → feature (default).
+backlog (author) vs openspec (deliver) → tdd-cycle → review → refactor → fix → feature (default).
 
 ---
 

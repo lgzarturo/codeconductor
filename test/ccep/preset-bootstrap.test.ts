@@ -16,6 +16,7 @@ const CURSOR_COMMAND_FILES: Record<string, string> = {
   'db-migration': 'db-migration.md',
   pagespeed: 'pagespeed.md',
   openspec: 'openspec.md',
+  backlog: 'backlog.md',
   scorecard: 'scorecard.md',
   council: 'council.md',
   iterative: 'iterative.md',

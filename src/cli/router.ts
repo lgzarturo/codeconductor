@@ -224,7 +224,7 @@ Orchestration loops:
   src/core/ccep/). Prefer /cc-iterative, /cc-triage, and /cc-handoff;
   other CCEP commands are supporting profiles.
   OpenSpec is a delivery loop (CLI openspec + /cc-openspec) on top of
-  BACKLOG.md — not only a scanner.
+  BACKLOG.md — not only a scanner. Author BACKLOG.md with /cc-backlog.
   runWorkflowPipeline() in src/core/pipeline/workflow-loop.ts is an
   experimental library-only 8-phase loop — not a shipped CLI runtime.
 

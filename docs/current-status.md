@@ -15,7 +15,7 @@ entry does not by itself mean that version was published.
 | SEO audit / `llms.txt` commands | shipped | yes |
 | Scorecard and outcome evaluation | shipped | yes |
 | CCEP parse/profile/resolve/compile/validate/evaluate/consensus/taskcard | shipped | yes |
-| OpenSpec loop (`validate/scan/plan/status/next/start/done/block/archive` + `/cc-openspec`) | shipped | yes |
+| OpenSpec loop (`validate/scan/plan/status/next/start/done/block/archive` + `/cc-backlog` + `/cc-openspec`) | shipped | yes |
 | Product graph, impact, orchestrate, verify | implemented, unreleased — **v1.0.0** | no |
 | Goal DAG planning/runtime | implemented, unreleased — **v1.0.0** | no |
 | 8-phase `runWorkflowPipeline` | experimental library API | no CLI runtime |

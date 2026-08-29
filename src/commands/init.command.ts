@@ -6,6 +6,7 @@ import { initWorkflowArtifacts } from '../core/ccep/workflow-init';
 import { detectProject } from '../core/detection/project-detector';
 import { POLICY_PATH, ROOT_PRESETS_DIR, SRC_PRESETS_DIR } from '../core/presets/package-paths';
 import { resolvePreset } from '../core/presets/preset-resolver';
+import { ensureOpenspecGitignore } from '../core/openspec/openspec-gitignore';
 import type { OutputMode } from '../utils/logger';
 
 export interface InitOptions {
@@ -112,6 +113,7 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
 
     const copiedPresets = await copyPresets(baseDir, presetsToCopy, force);
     const openspecCreated = await initOpenspecArtifacts(baseDir, force);
+    const gitignoreCreated = await ensureOpenspecGitignore(baseDir);
     const evalCreated = await initEvaluationArtifacts(baseDir, force);
     const workflowsCreated = await initWorkflowArtifacts(baseDir, force);
 
@@ -124,6 +126,7 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
           '.codeconductor/config.yml',
           ...copiedPresets,
           ...openspecCreated,
+          ...(gitignoreCreated ? [gitignoreCreated] : []),
           ...evalCreated,
           ...workflowsCreated,
         ],

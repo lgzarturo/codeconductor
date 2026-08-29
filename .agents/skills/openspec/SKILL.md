@@ -25,30 +25,12 @@ Each item: `### BC-001 | Short title` with Priority (P0–P3), Status, Type, Dep
 
 `TODO` → `READY` → `PLANNED` → `IN_PROGRESS` → `REVIEW` → `DONE` → Archive
 
-`BLOCKED` can return to `READY` when resolved. Reviewer rejection: `REVIEW` → `IN_PROGRESS`.
+## CLI
 
-## CLI commands
-
-```bash
-npx cc-codeconductor openspec validate
-npx cc-codeconductor openspec scan
-npx cc-codeconductor openspec plan BC-001
-npx cc-codeconductor openspec status
-npx cc-codeconductor openspec next
-```
-
-## OpenSpec folders
-
-Each item generates `openspec/changes/<slug>/` with `proposal.md`, `design.md`, `tasks.md`, `specs/`.
+`openspec validate | scan | plan | status | next`
 
 ## Agent phases
 
-| Phase | Agent |
-|-------|-------|
-| discover | repo-explorer |
-| design | architect |
-| test | tester |
-| implement | implementer |
-| review | reviewer |
+discover → repo-explorer, design → architect, test → tester, implement → implementer, review → reviewer.
 
-When Global `TDD required: yes`, test runs before implement.
+TDD required: test before implement.

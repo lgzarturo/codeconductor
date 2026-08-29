@@ -14,6 +14,7 @@ description: "Multi-agent council for code review and architecture decisions"
 - Product (product): requirements, ux, business-value
 - Delivery (delivery): delivery, testing, deployment
 - DataOps (data-ops): data, pipelines, analytics
+- Security Reviewer (security-reviewer): security, vulnerabilities, credentials, injection, auth, supply-chain
 - Devil (devil): review, edge-cases, failure-modes
 
 ## Usage

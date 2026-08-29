@@ -793,7 +793,7 @@ extending capabilities, apply `.claude/skills/find-skills/SKILL.md`.
 - Keep solutions simple and direct.
 - User instructions always override this file.
 - When using tools, be precise and minimal with context.
-{{LANGUAGE_INSTRUCTIONS}}
+- Prose/docs/code comments: be terse and direct. Prefer concrete nouns over abstract ones. Omit filler phrases ("note that", "please", "as mentioned"). One idea per sentence.
 
 ## Context Budget
 

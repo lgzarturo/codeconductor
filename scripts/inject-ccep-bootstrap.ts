@@ -37,6 +37,8 @@ const COMMANDS = [
   'prototype',
   'handoff',
   'clarify',
+  'security',
+  'backlog',
 ] as const;
 
 /**

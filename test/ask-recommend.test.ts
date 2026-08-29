@@ -59,6 +59,7 @@ describe('recommendAskFlow', () => {
     expect(rec.slash).toBe('/cc:security');
   });
 
+
   test('does not execute a workflow — only returns a recommendation', () => {
     const rec = recommendAskFlow('the build is broken');
     expect(rec).not.toHaveProperty('executed');

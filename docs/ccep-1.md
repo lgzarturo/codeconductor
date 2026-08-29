@@ -65,6 +65,7 @@ Command-specific workflow phases (unchanged semantics)
 | `prototype` | prototype | Isolated spike (not merge) |
 | `handoff` | handoff | Session compact to `.codeconductor/sessions/handoff.md` (gitignored) |
 | `clarify` | clarify | Restate last deliverable |
+| `security` | security | Authorized defensive security review + hardening |
 
 ## CLI
 

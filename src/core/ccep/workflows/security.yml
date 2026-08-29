@@ -14,7 +14,7 @@ phases:
     outputSchema: agent-output
   - id: intake
     agent: task-coach
-    outputSchema: fix-intake-output
+    outputSchema: planner-output
     stopGate: confirmation
   - id: test
     agent: tester

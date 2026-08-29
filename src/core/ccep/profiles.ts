@@ -321,7 +321,7 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     },
     phases: [
       { id: 'wayfinding', agent: 'repo-explorer', outputSchema: 'agent-output' },
-      { id: 'intake', agent: 'task-coach', outputSchema: 'fix-intake-output', stopGate: 'confirmation' },
+      { id: 'intake', agent: 'task-coach', outputSchema: 'planner-output', stopGate: 'confirmation' },
       { id: 'test', agent: 'tester' },
       { id: 'implement', agent: 'implementer', dependsOn: ['test'] },
       { id: 'review', agent: 'reviewer' },

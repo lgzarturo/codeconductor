@@ -50,6 +50,23 @@ const TARGETS = ['claude', 'opencode', 'cursor'] as const;
 
 // ─── SKILL.md files — existence and frontmatter ────────────────────────────
 
+describe('security skill ships across targets', () => {
+  for (const target of TARGETS) {
+    const path = `presets/${target}/skills/security/SKILL.md`;
+
+    test(`presets/${target}/skills/security/SKILL.md still ships`, () => {
+      expect(existsSync(join(PROJECT_ROOT, path))).toBe(true);
+    });
+
+    test(`${path} has valid YAML frontmatter with a description`, () => {
+      const content = readPreset(path);
+      expect(hasFrontmatter(content)).toBe(true);
+      expect(frontmatterClosed(content)).toBe(true);
+      expect(content).toContain('description:');
+    });
+  }
+});
+
 describe('security skills — file existence across targets', () => {
   for (const id of SKILL_IDS) {
     for (const target of TARGETS) {
@@ -169,6 +186,17 @@ describe('agent contract updates reference the new security skills', () => {
     test(`${path} maps security work to the security-* skills`, () => {
       const content = readPreset(path);
       expect(content).toContain('.claude/skills/security-');
+    });
+  }
+});
+
+describe('agent contract updates reference the security skill', () => {
+  const claudeMdPaths = ['.claude/CLAUDE.md', 'presets/claude/CLAUDE.md'];
+
+  for (const path of claudeMdPaths) {
+    test(`${path} maps security work to the security skill`, () => {
+      const content = readPreset(path);
+      expect(content).toContain('.claude/skills/security/SKILL.md');
     });
   }
 });

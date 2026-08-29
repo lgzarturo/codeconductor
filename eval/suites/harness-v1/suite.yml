@@ -1,0 +1,36 @@
+id: harness-v1
+version: 1
+fixtureDir: fixture
+tasks:
+  - id: fix-add-off-by-one
+    title: Fix add off-by-one
+    type: fix
+    risk: low
+    prompt: add(a, b) returns a + b + 1. It must return a + b.
+    scope: src/math.ts, src/math.test.ts
+    acceptanceCriteria:
+      - add(2, 3) returns 5
+      - Promote src/math.test.ts.example to src/math.test.ts and make it pass
+    testCommand: bun test src/math.test.ts
+  - id: feature-multiply
+    title: Add multiply helper
+    type: feature
+    risk: low
+    prompt: Add multiply(a, b) that returns the product of two numbers.
+    scope: src/math.ts, src/math.test.ts
+    acceptanceCriteria:
+      - multiply is exported from src/math.ts
+      - multiply(3, 4) returns 12
+      - A test covers the new function
+    testCommand: bun test src/math.test.ts
+  - id: refactor-greet
+    title: Extract greet name formatting
+    type: refactor
+    risk: low
+    prompt: Extract name formatting from greet() into formatName() without changing greet output.
+    scope: src/greet.ts, src/greet.test.ts
+    acceptanceCriteria:
+      - formatName is exported
+      - greet still returns Hello, <name>!
+      - Promote src/greet.test.ts.example to src/greet.test.ts and keep it passing
+    testCommand: bun test src/greet.test.ts

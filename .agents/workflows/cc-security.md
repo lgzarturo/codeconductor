@@ -1,25 +1,46 @@
 ---
 name: cc-security
 description: >
-  Run authorized defensive security work — domain skill, authorization gate,
-  risk-based routing, and optional Reviewer.
+  Run the authorized defensive security workflow — domain security-* skills,
+  authorization gate, risk-based routing, hardening, and review.
 ---
 
-# Security Workflow
+# Defensive Security Workflow
 
-Security request: $ARGUMENTS
+Security objective: $ARGUMENTS
 
 Provide the following information in $ARGUMENTS:
 
-- Objective (what must be assessed, hardened, or investigated)
-- Domain (recon, vuln-assessment, web, cloud, IR, hunting, GRC, …)
-- Authorization (who authorized the work, systems in scope, time window)
-- Risk (`low`, `medium`, or `high`)
-- Scope (repos, environments, assets that are in and out of bounds)
+- What must be reviewed or hardened, and why
+- Domain: a `security-*` skill id (recon, vuln-assessment, web, cloud, IR,
+  hunting, GRC, …) or `web-app` / `api` / `cloud-config` /
+  `dependency-supply-chain` / `secrets`
+- Authorization: who authorized this work on this target, and the scope boundary
+- Risk classification (`low`, `medium`, or `high`), if known
+- Scope: which files, modules, repos, or environments are in and out of bounds
 
-Do not proceed without an authorization statement. This workflow is defensive
-and owner-authorized only. Do not produce exploit payloads, malware, or attack
-procedures.
+---
+
+## Scope and authorization
+
+This workflow performs **authorized defensive security work only**: threat
+modeling, hardening, secure configuration, dependency and supply-chain review,
+secret hygiene, and detection coverage.
+
+Refuse outright and offer the defensive equivalent instead (threat model,
+hardening, detection coverage, dependency audit):
+
+- Exploit or proof-of-concept development
+- Malware authoring, or malware analysis intended for reuse
+- Reverse engineering aimed at bypassing a control
+- Red-team playbooks
+- Any unauthorized-access procedure
+
+Scope is limited to the repository under analysis. Do not scan, probe, or
+perform reconnaissance against third-party hosts.
+
+Do not proceed without an authorization statement. Do not produce exploit
+payloads, malware, or attack procedures.
 
 ---
 
@@ -47,17 +68,24 @@ for the named domain (see `.claude/skills/security-*/SKILL.md`). Keep the OWASP
 
 ---
 
-## Step 2 — Task Card validation (Task Coach role)
+## Step 2 — Task Card validation (task-coach)
 
-Adopt the **Task Coach** role as defined in `CLAUDE.md`.
+Invoke `task-coach` with the security objective above.
 
-Produce a Task Card that includes:
+task-coach must produce a Task Card that includes:
 
-- Objective
-- Domain (which `security-*` skill applies)
-- Authorization (approver, systems, window) — refuse if missing
+- Objective: what must be reviewed or hardened, in one sentence
+- Domain: which `security-*` skill applies, or `web-app` / `api` /
+  `cloud-config` / `dependency-supply-chain` / `secrets`
+- Authorization: who authorized this work on this target, and the scope boundary
 - Risk classification: `low`, `medium`, or `high`
-- Scope: in-bounds vs out-of-bounds assets
+- Scope: which files or modules are likely affected
+
+If authorization is absent, unclear, or names a system the requester does not
+own or operate, **STOP and refuse. Do not route the task.**
+
+Redact secrets, tokens, and credentials from any evidence before it enters the
+Task Card. Summarize logs; do not paste env files.
 
 **STOP here. Show the Task Card and wait for human confirmation.**
 
@@ -69,51 +97,84 @@ Read the risk field from the Task Card and follow the corresponding route.
 
 ### Low-risk route
 
-Applies when: the work is an isolated defensive check, existing tests cover the
-affected code, and no auth, secrets, or production access is involved.
+Applies when: the weakness is isolated, not exploitable in the current
+configuration, and no authentication, secret, or dependency boundary is
+involved.
 
-Route: Task Coach → Tester → Implementer
+Route: `task-coach` → `tester` → `implementer`
 
-Proceed to tests, then implementation. Do not require Reviewer.
+Proceed directly to Step 4 (tests), then Step 5a.
 
 ### Medium or high-risk route
 
-Applies when: the work touches auth, secrets, production, shared security
-controls, or the root cause is not yet understood.
+Applies when: the work touches authentication, authorization, secrets,
+cryptography, trust-boundary input validation, or a dependency upgrade.
 
-Route: Task Coach → Architect → Tester → Implementer → Reviewer
+Route: `task-coach` → `architect` → `tester` → `implementer` → `reviewer`
 
-On **high** risk, also invoke `security-reviewer` before Reviewer. Architect
-must produce a Technical Plan.
+Invoke `architect` before implementation. architect must:
+
+- Identify the weakness and the affected trust boundary
+- Define the hardening approach and affected files
+- Flag any regression risk to adjacent components
+- Produce a Technical Plan
+
+On **high** risk, also invoke `security-reviewer` before Reviewer.
 
 **STOP here if high-risk. Show the Technical Plan and wait for human approval
 before continuing.**
 
 ---
 
-## Step 4 — Regression tests (Tester role)
+## Step 4 — Tests (tester)
 
-Adopt the **Tester** role. Write or extend tests that fail before the hardening
-(RED) and pass after. Do not skip assertions.
+Invoke `tester` for all risk levels.
+
+tester must:
+
+1. Write a regression test that proves the weakness exists and confirm it fails
+   before any change (RED)
+2. Verify that existing tests still pass
+3. Produce a Coverage Summary: test added, case covered
 
 ---
 
-## Step 5 — Implementation (Implementer role)
+## Step 5a — Implementation, low-risk (implementer)
 
-Adopt the **Implementer** role. Create a Git Worktree before touching any file.
-Apply only the approved defensive change. No exploit code.
+Invoke `implementer` with the Task Card.
+Implementer creates a Git Worktree before touching any file; all edits happen inside it.
+
+implementer must:
+
+1. Apply the minimal hardening change — no unrelated changes
+2. Run the suite and make the RED regression test pass
+3. Produce an Implementation Summary: weakness, change applied, files changed
+
+---
+
+## Step 5b — Implementation, medium/high-risk (implementer)
+
+Invoke `implementer` with the approved Technical Plan and the Task Card.
+Implementer creates a Git Worktree before touching any file; all edits happen inside it.
+
+implementer must follow the plan exactly. Any deviation requires a new Technical
+Plan approval. After implementation, run the full test suite. No exploit code.
 
 ---
 
 ## Step 6 — Review (Reviewer role) — medium/high-risk only
 
-Adopt the **Reviewer** role. Produce a Review Report with CRITICAL / WARNING /
-SUGGESTION findings. If any CRITICAL findings exist, **STOP**.
+Invoke `reviewer` with the diff and Task Card. The Reviewer must apply the OWASP
+rules in the `security` skill.
+
+reviewer produces a Review Report with CRITICAL / WARNING / SUGGESTION findings.
+If any CRITICAL findings exist, **STOP**. Do not close the task until they are
+resolved.
 
 ---
 
 ## Completion
 
 Report: Task Card, Implementation Summary, regression test added, Review Report
-(if applicable). The work is complete only when tests pass and no CRITICAL
-review findings remain.
+(if applicable). The task is complete only when: the regression test passes, the
+full suite passes, and no CRITICAL review findings remain.

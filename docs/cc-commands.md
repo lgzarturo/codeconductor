@@ -627,6 +627,10 @@ Agent quality evaluation: scorecards, outcome tracking, regression checks, model
 | `regression` | Run regression checklist |
 | `matrix` | Generate cost/quality matrix |
 | `compare-models` | Model comparison report from outcomes |
+| `catalog` | List ablatable harness components |
+| `fingerprint` | Hash of the active harness overlay |
+| `experiment start\|apply\|list\|show` | Materialize leave-one-out variants (no LLM) |
+| `ablation` | Compare baseline vs minus-component outcomes |
 
 **Examples:**
 
@@ -637,6 +641,10 @@ npx cc-codeconductor scorecard models
 npx cc-codeconductor scorecard prompt-diff 0.4.0 0.5.0 --agent architect
 npx cc-codeconductor scorecard regression
 npx cc-codeconductor scorecard matrix --output json
+bun run dev scorecard catalog
+bun run dev scorecard experiment start --suite harness-v1 --components review
+bun run dev scorecard record --task fix-add-off-by-one --verdict PASS --score 2.4 --experiment <id> --variant baseline --suite-task fix-add-off-by-one
+bun run dev scorecard ablation --experiment <id>
 ```
 
 **State files:**
@@ -644,6 +652,9 @@ npx cc-codeconductor scorecard matrix --output json
 - `.codeconductor/evaluation/outcomes.jsonl`
 - `.codeconductor/evaluation/scorecards/*.json`
 - `.codeconductor/evaluation/execution-profile.yml`
+- `.codeconductor/evaluation/harness-catalog.yml` (optional override)
+- `.codeconductor/evaluation/experiments/<id>/`
+- `.codeconductor/evaluation/ablation-last.md`
 
 ---
 
@@ -688,6 +699,7 @@ Other installed commands:
 | `/cc-explore` / `/cc:explore` | Repo map and next-command suggestion |
 | `/cc-prototype` / `/cc:prototype` | Disposable spike (isolated worktree) |
 | `/cc-clarify` / `/cc:clarify` | Re-explain last deliverable |
+| `/cc-security` / `/cc:security` | Authorized defensive security review |
 
 Use `/multitask` before parallel steps (e.g. review + docs) for concurrent
 subagent execution.

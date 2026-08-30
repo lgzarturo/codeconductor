@@ -293,3 +293,9 @@ Invoke skill `evaluation` and run `scorecard record` with agent `reviewer`, mode
 - Never issue vague findings ("this could be better") — every finding must name
   the exact location and the specific required action.
 - Never run `git push` or `git commit`.
+
+## Composition
+
+Invoke via `/cc-review` or the orchestrator. Do not invoke other agents.
+Invoke skill `evaluation`. Deliverable is incomplete without
+`scorecard create --from-diff` and a recorded PASS|REVISE|REJECT.

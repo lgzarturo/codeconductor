@@ -37,7 +37,7 @@ permission:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-sonnet-5 | Default — code implementation |
-| OpenCode Go | opencode-go/mimo-v2.5-pro | Best — reasoning for code |
+| OpenCode Go | opencode-go/mimo-v2.5 | Best — reasoning for code |
 | Gemini | gemini-3.7-flash | Alternative |
 | Codex | gpt-5.6-terra | Alternative |
 | Cursor | composer-2.5-fast | Primary |

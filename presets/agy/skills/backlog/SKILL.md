@@ -1,96 +1,61 @@
 ---
 name: backlog
 description: >
-  Author BACKLOG.md and OpenSpec change folders for CodeConductor.
-  Trigger: /cc-backlog, /cc:backlog, creating or appending backlog items,
-  writing BACKLOG.md, or preparing work for /cc-openspec.
+  Guides agents through authoring BACKLOG.md and OpenSpec change folders.
+  Use when running /cc-backlog or /cc:backlog, creating or appending backlog
+  items, or preparing work for /cc-openspec. Delivery is skill openspec.
 ---
 
 # Backlog authoring
 
-Use this skill to **create or append** `BACKLOG.md` and generate OpenSpec
-change docs. Delivery of an existing item is `/cc-openspec` (skill `openspec`).
+## Overview
 
-## BACKLOG.md contract
+Create or append `BACKLOG.md`, then `openspec validate` / `plan`. Do not deliver
+the item here.
 
-Canonical template: `presets/templates/BACKLOG.md` (or the installed copy).
-Required sections:
+## When to Use
 
-- `## Global` — Product, Strategy, Policy, Review required, TDD required
-- `## Items` — active entries
-- `## Archive` — completed entries (never re-execute; never rewrite)
+- `/cc-backlog`, first backlog in a repo, or appending `### BC-xxx` items
 
-Each item: `### BC-001 | Short title` with Priority (P0–P3), Status, Type,
-Depends on, Description, Scope, Out of scope, Acceptance (measurable checklist).
+**NOT** for executing an item (`openspec`) or for scorecards (`evaluation`).
 
-Status after grilling: `READY`. `openspec plan` then moves the item to `PLANNED`.
+## Process
 
-## Create vs append
+1. If `graphify-out/graph.json` exists, `graphify query "<objectives>"`. Then
+   `repo-explorer`. Scope names real files.
+2. Invoke `task-coach`. One grilling question per assumption. Reject vague
+   acceptance ("improve UX"). At most 3 `[NEEDS CLARIFICATION]`.
+3. `ccep evaluate --command backlog`. If `stop`, wait for the human.
+4. Create `BACKLOG.md` from `presets/templates/BACKLOG.md` or append under
+   `## Items`. Do not rewrite `## Global` or `## Archive`.
+5. Next ID = max numeric suffix in Items + Archive + 1, zero-padded (`BC-013`).
+6. `bun run dev openspec validate` (or `npx cc-codeconductor`). Fix until valid.
+7. `openspec plan BC-xxx` for each **new** item this run. Then tell the user
+   to run `/cc-openspec`.
 
-- **No `BACKLOG.md`:** create it from the template. Set Global `Product` from
-  `package.json` `name` when present.
-- **File exists:** append new `### BC-xxx` blocks under `## Items`. Do not
-  rewrite `## Global` or `## Archive`.
+Required sections: `## Global`, `## Items`, `## Archive`. Each item:
+`### BC-001 | Title` with Priority, Status (`READY` after grilling), Type,
+Depends on, Description, Scope, Out of scope, Acceptance.
 
-Next ID = max numeric suffix across Items and Archive, plus one, zero-padded
-to three digits (`BC-013` after `BC-012`).
+Local artifacts (`BACKLOG.md`, `openspec/`, `.codeconductor/openspec-state.json`)
+are gitignored in consumer projects. Do not `git add` them.
 
-## Wayfinding (before Scope)
+## Common Rationalizations
 
-If `graphify-out/graph.json` exists, run `graphify query "<objectives>"` (and
-`graphify path` / `graphify explain` when needed). Then invoke `repo-explorer`.
-Scope must name real files or modules. Do not write `BACKLOG.md` in this step.
+| Rationalization | Reality |
+| --- | --- |
+| This fix is small; skip the Task Card | Every item needs measurable acceptance. |
+| I'll validate later | Do not plan until `openspec validate` passes. |
+| Archive can be rewritten | Archive is history. Never rewrite or re-execute. |
 
-## Grilling (before write)
+## Red Flags
 
-Invoke `task-coach`. One grilling question per assumption. Reject vague
-acceptance ("improve UX", "fix bugs"). Criteria must be measurable (same rules
-as `openspec validate` / `VAGUE_ACCEPTANCE`).
+- Acceptance that cannot fail a check
+- Editing `openspec-state.json` by hand
+- Planning an invalid backlog
 
-Unresolved questions go in `questionsForUser`. At most 3
-`[NEEDS CLARIFICATION: …]` markers; put the rest in Assumptions. Run
-`ccep evaluate --command backlog`. If `stop` is true, **STOP** and wait for
-the human.
+## Verification
 
-`openspec plan` turns each acceptance line into `FR-###` / `SC-###` with
-Given/When/Then. Keep acceptance measurable.
-
-Do not write items until the gate passes.
-
-## Validate loop
-
-After writing:
-
-```bash
-npx cc-codeconductor openspec validate
-```
-
-Local CodeConductor dogfood: `bun run dev openspec validate`.
-
-If invalid: list errors and recommendations, show the canonical structure,
-fix the file, re-validate. Do not plan until valid.
-
-## Plan new items only
-
-For each **new** `BC-xxx` this run:
-
-```bash
-npx cc-codeconductor openspec plan BC-xxx
-```
-
-That writes `openspec/changes/<slug>/` (`proposal.md`, `design.md`, `tasks.md`,
-`specs/`). Then tell the user to run `/cc-openspec` (optionally with the ID).
-
-## Local artifacts — do not version
-
-In consumer projects these paths are gitignored (see `init`):
-
-- `BACKLOG.md`
-- `openspec/`
-- `.codeconductor/openspec-state.json`
-
-Do **not** `git add` them. Do not edit `openspec-state.json` by hand.
-
-## Delivery
-
-Format and state machine: skill `openspec`. Authoring is this skill.
+- [ ] `openspec validate` exit 0
+- [ ] New items have `FR`/`SC`-ready measurable acceptance
+- [ ] User pointed at `/cc-openspec` for delivery

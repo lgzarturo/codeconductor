@@ -288,3 +288,6 @@ The TDD cycle is complete when:
 
 If the behavior requires additional test cases, start a new `/tdd-cycle` with
 the next scenario. One cycle = one behavior.
+
+Skill: `testing-tdd`. Evidence from the verification runner only — handmade TDD
+JSON is rejected. Optional gate: `bun run dev scorecard suite-run --suite workflow-gates`.

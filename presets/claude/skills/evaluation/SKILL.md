@@ -1,52 +1,65 @@
 ---
 name: evaluation
 description:
-  Agent scorecard criteria, outcome tracking, model profiles, and evaluation CLI.
-  Use when running /cc:scorecard or measuring deliverable quality.
+  Guides agents through scorecards, outcomes, model profiles, and eval suites.
+  Use when running /cc-scorecard or /cc:scorecard, measuring a deliverable, or
+  checking workflow gates with suite-run.
 ---
 
-# Evaluation Skill
+# Evaluation
 
-## Scorecard criteria (8 weighted)
+## Overview
 
-See `docs/agent-scorecard.md`. Pass threshold: weighted score >= 2.0, no criterion at 0.
+A scorecard measures the deliverable against eight weighted criteria. Spec
+quality checklists are reviewer-owned. "Seems right" is not a verdict.
 
-## CLI
+Pass threshold: weighted score >= 2.0 and no criterion at 0.
 
-```bash
-npx cc-codeconductor scorecard create --task BC-001 --from-diff
-npx cc-codeconductor scorecard record --task BC-001 --verdict PASS --score 2.5
-npx cc-codeconductor scorecard list
-npx cc-codeconductor scorecard aggregate
-npx cc-codeconductor scorecard models
-npx cc-codeconductor scorecard regression
-npx cc-codeconductor scorecard matrix
-npx cc-codeconductor scorecard compare-models
-npx cc-codeconductor scorecard prompt-diff 0.4.0 0.5.0 --agent architect
+## When to Use
+
+- After implement/review, before `openspec archive`
+- Comparing models or prompt versions
+- Proving the workflow tools still work (`suite-run`)
+
+**NOT** for rewriting specs (reviewer checklist) or for implementing code.
+
+## Process
+
+Local: `bun run dev`. Published: `npx cc-codeconductor`.
+
+```text
+scorecard create --task BC-001 --from-diff
+scorecard record --task BC-001 --verdict PASS --score 2.5
+scorecard list | aggregate | models | regression | matrix | compare-models
+scorecard prompt-diff 0.4.0 0.5.0 --agent architect
+scorecard experiment start --suite harness-v1
+scorecard suite-run --suite workflow-gates
+scorecard suite-run --suite hook-guardrails
+scorecard suite-run --suite scorecard-signals
 ```
 
-## Outcome tracking
+`openspec analyze` can auto-suggest `acceptance` / `tests` on `--from-diff`.
+Archive needs PASS when review is required.
 
-Append-only: `.codeconductor/evaluation/outcomes.jsonl`
+Outcomes append to `.codeconductor/evaluation/outcomes.jsonl`.
 
-Record after each phase (openspec) and after review gate with agent, model, verdict, optional cost/tokens.
+## Common Rationalizations
 
-## Execution profiles
+| Rationalization | Reality |
+| --- | --- |
+| I'll fill the scorecard by hand without a diff | Use `--from-diff` and runner evidence. |
+| Suites are optional toys | `suite-run` is the workflow tool that proves gates. |
+| Handmade TDD JSON is fine | The runner rejects it. |
 
-`.codeconductor/evaluation/execution-profile.yml` — `balanced`, `quality`, `economical`.
+## Red Flags
 
-Use `scorecard models` before OpenSpec execute loop to show phase → agent → model.
+- PASS with a criterion at 0
+- Archive without a recorded scorecard when review is required
+- Declaring the workflow ready without `suite-run` or `scorecard record`
 
-## Spec-quality checklist vs scorecard
+## Verification
 
-- **Checklist (English):** completeness, clarity, testable requirements.
-  Reviewer-owned. Agents must not self-check `[x]` on reviewer checklists.
-- **Scorecard (deliverable):** 8 weighted criteria. `openspec analyze`
-  auto-suggests `acceptance` from FR/SC coverage and `tests` = 0 when TDD is
-  required without verification-runner evidence.
-
-`openspec archive` needs a PASS scorecard when review is required.
-
-## Verdicts
-
-PASS / REVISE / REJECT — see scorecard calculator rules in docs.
+- [ ] Scorecard created from diff (or explicit scores)
+- [ ] Verdict PASS / REVISE / REJECT recorded
+- [ ] For process changes: `scorecard suite-run --suite hook-guardrails` (and
+      `workflow-gates` / `scorecard-signals` when those gates changed)

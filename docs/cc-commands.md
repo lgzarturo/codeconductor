@@ -635,6 +635,7 @@ Agent quality evaluation: scorecards, outcome tracking, regression checks, model
 | `fingerprint` | Hash of the active harness overlay |
 | `experiment start\|apply\|list\|show` | Materialize leave-one-out variants (no LLM) |
 | `ablation` | Compare baseline vs minus-component outcomes |
+| `suite-run --suite <id>` | Run suite `testCommand`s (no LLM) and append outcomes |
 
 **Examples:**
 
@@ -649,7 +650,23 @@ bun run dev scorecard catalog
 bun run dev scorecard experiment start --suite harness-v1 --components review
 bun run dev scorecard record --task fix-add-off-by-one --verdict PASS --score 2.4 --experiment <id> --variant baseline --suite-task fix-add-off-by-one
 bun run dev scorecard ablation --experiment <id>
+bun run dev scorecard suite-run --suite hook-guardrails
+bun run dev scorecard suite-run --suite workflow-gates
+bun run dev scorecard suite-run --suite scorecard-signals
 ```
+
+### `npx cc-codeconductor hook <event>`
+
+OS-agnostic agent hooks (Node, no bash). Events: `pre-tool`, `post-tool`,
+`session-start`. Claude format writes deny messages to stderr and exits 2.
+`--format=agy` prints `{action, error}` JSON.
+
+```bash
+bun run dev hook pre-tool --command "git push --force"
+bun run dev hook session-start
+```
+
+See [hooks.md](hooks.md).
 
 **State files:**
 

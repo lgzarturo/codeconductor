@@ -9,6 +9,9 @@ entries:
     dest: .claude/settings.json
     strategy: overwrite
     globalStrategy: merge-json
+  - src: shared/invoke-hook.cjs
+    dest: .claude/hooks/invoke-hook.cjs
+    strategy: overwrite
   - src: claude/claude.json
     dest: .claude.json
     strategy: merge-json

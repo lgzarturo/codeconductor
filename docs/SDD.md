@@ -70,6 +70,10 @@ limits before it can sprawl.
 
 ---
 
+Workflow skills (`openspec`, `testing-tdd`, `evaluation`) invoke the CLI
+(`openspec validate`, `scorecard create --from-diff`, `hook pre-tool`,
+`scorecard suite-run`). They do not embed bash. See [hooks.md](hooks.md).
+
 ## TDD contract
 
 The pipeline enforces test-first mechanically:

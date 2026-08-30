@@ -197,3 +197,6 @@ npx cc-codeconductor scorecard regression
 Example: if the combined verdict is `blocked` (either axis found CRITICAL), record with `--verdict REJECT`.
 
 Map each review outcome for trend tracking and decision audit.
+
+Skill: `evaluation`. "Looks fine" is not a verdict. Run
+`scorecard create --from-diff` and record PASS|REVISE|REJECT.

@@ -34,6 +34,10 @@ If `openspec status` reports an active change folder:
 
 Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
 
+Skills: `using-cc-skills`, `openspec`, `testing-tdd`, `evaluation`.
+Do not skip `openspec analyze` when a change folder is active.
+"I'll add tests later" is not allowed — tester before implementer.
+
 ---
 
 

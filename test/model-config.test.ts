@@ -203,7 +203,7 @@ describe('loadModelConfig', () => {
   test('claude config has implementer models for all providers', async () => {
     const config = await loadModelConfig('claude');
     expect(config.agents.implementer.claude).toBe('claude-sonnet-5');
-    expect(config.agents.implementer.opencode).toBe('opencode-go/mimo-v2.5-pro');
+    expect(config.agents.implementer.opencode).toBe('opencode-go/mimo-v2.5');
     expect(config.agents.implementer.codex).toBe('gpt-5.6-terra');
     expect(config.agents.implementer.gemini).toBe('gemini-3.7-flash');
     expect(config.agents.implementer.cursor).toBe('composer-2.5-fast');
@@ -354,7 +354,7 @@ describe('copyFromManifest with modelConfig', () => {
       expect(configResult?.action).toBe('merged');
       expect(content.custom).toBe(true);
       expect(content.permission.bash['custom *']).toBe('allow');
-      expect(content.model).toBe('opencode-go/qwen3.7-max');
+      expect(content.model).toBe('opencode-go/qwen3.7-plus');
     } finally {
       await rm(tempDir, { recursive: true, force: true });
     }
@@ -535,9 +535,9 @@ describe('Manifest template flag', () => {
     }
   });
 
-  test('claude manifest has exactly 7 entries', async () => {
+  test('claude manifest has exactly 8 entries', async () => {
     const manifest = await loadManifest('claude');
-    expect(manifest.entries.length).toBe(7);
+    expect(manifest.entries.length).toBe(8);
   });
 
 
@@ -873,7 +873,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
 
     const content = await readFile(join(TEST_DIR, '.opencode', 'agents', 'docs.md'), 'utf-8');
     // opencode install: frontmatter has opencode model for docs
-    expect(content).toContain('qwen3.7-plus');
+    expect(content).toContain('hy3');
     expect(content).not.toContain('{{MODEL}}');
   });
 });

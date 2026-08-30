@@ -344,6 +344,9 @@ bun run dev scorecard experiment start --suite harness-v1 --components review,wa
 bun run dev scorecard experiment apply --id <exp> --variant minus:review
 bun run dev scorecard record --task fix-add-off-by-one --verdict PASS --score 2.4 --experiment <exp> --variant minus:review --suite-task fix-add-off-by-one
 bun run dev scorecard ablation --experiment <exp> --output json
+bun run dev scorecard suite-run --suite hook-guardrails
+bun run dev hook pre-tool --command "git status"
+bun run dev hook session-start
 ```
 
 The runner writes isolated run directories under

@@ -1,0 +1,21 @@
+id: workflow-gates
+version: 1
+tasks:
+  - id: spec-requires-rfc2119
+    title: Vague spec without RFC 2119 fails quality gate
+    type: feature
+    risk: medium
+    prompt: openspec validate must reject specs that omit MUST/SHALL and FR/SC ids.
+    scope: src/core/openspec/spec-quality.ts
+    acceptanceCriteria:
+      - assessSpecMarkdown on a placeholder spec is invalid
+    testCommand: bun test eval/suites/workflow-gates/checks.test.ts
+  - id: deny-skip-tdd
+    title: Destructive git is still denied during implement
+    type: fix
+    risk: high
+    prompt: Implementer cannot reset --hard to hide a red suite.
+    scope: src/core/hooks/hook-runner.ts
+    acceptanceCriteria:
+      - git reset --hard is deny
+    testCommand: hook:deny git reset --hard

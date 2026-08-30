@@ -1,0 +1,30 @@
+id: hook-guardrails
+version: 1
+tasks:
+  - id: deny-force-push
+    title: Hook denies git push --force
+    type: fix
+    risk: high
+    prompt: Agent must not force-push.
+    scope: src/core/hooks/hook-runner.ts
+    acceptanceCriteria:
+      - evaluateCommand("git push --force") is deny
+    testCommand: hook:deny git push --force
+  - id: deny-env-read
+    title: Hook denies reading .env
+    type: fix
+    risk: high
+    prompt: Agent must not cat secrets.
+    scope: src/core/hooks/hook-runner.ts
+    acceptanceCriteria:
+      - evaluateCommand("cat .env") is deny
+    testCommand: hook:deny cat .env
+  - id: allow-git-status
+    title: Hook allows git status
+    type: fix
+    risk: low
+    prompt: Read-only git status is allowed.
+    scope: src/core/hooks/hook-runner.ts
+    acceptanceCriteria:
+      - evaluateCommand("git status") is allow
+    testCommand: hook:allow git status

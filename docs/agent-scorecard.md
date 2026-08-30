@@ -283,3 +283,13 @@ Otherwise `improves` (candidate to drop or simplify) or `degrades` (keep the
 component).
 
 Golden suite (this repo): `eval/suites/harness-v1/`.
+
+Process suites (no LLM — `scorecard suite-run`):
+
+| Suite | Proves |
+| --- | --- |
+| `hook-guardrails` | deny force-push / `.env`; allow `git status` |
+| `workflow-gates` | spec quality + TDD git guard |
+| `scorecard-signals` | handmade TDD evidence rejected |
+
+Loop: `suite-run` or `experiment start` → agent work → `scorecard record` → `ablation`.

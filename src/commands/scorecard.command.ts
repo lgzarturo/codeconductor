@@ -23,6 +23,7 @@ import {
 import { loadOpenspecState } from '../core/openspec/openspec-state';
 import { analyzeChangeFolder } from '../core/openspec/spec-analyzer';
 import { hasTddRunnerEvidence } from '../core/verification/verification-runner';
+import { runHarnessSuiteTasks } from '../core/evaluation/suite-run';
 import { resolvePhaseModels } from '../core/evaluation/execution-profile';
 import { diffPromptVersions, formatPromptDiffMarkdown } from '../core/evaluation/prompt-diff';
 import { runRegressionChecklist } from '../core/evaluation/regression-checklist';
@@ -123,6 +124,8 @@ export async function scorecardCommand(
       return handleExperiment(projectRoot, options);
     case 'ablation':
       return handleAblation(projectRoot, options);
+    case 'suite-run':
+      return handleSuiteRun(projectRoot, options);
     default:
       return {
         code: 1,
@@ -130,7 +133,7 @@ export async function scorecardCommand(
           success: false,
           command: 'scorecard',
           errors: [
-            `Unknown subcommand: ${subcommand}. Use: create, show, record, list, aggregate, models, prompt-diff, regression, matrix, compare-models, catalog, fingerprint, experiment, ablation`,
+            `Unknown subcommand: ${subcommand}. Use: create, show, record, list, aggregate, models, prompt-diff, regression, matrix, compare-models, catalog, fingerprint, experiment, ablation, suite-run`,
           ],
         },
       };
@@ -574,4 +577,31 @@ async function handleAblation(
       path,
     },
   };
+}
+
+async function handleSuiteRun(
+  projectRoot: string,
+  options: ScorecardOptions
+): Promise<{ code: number; data?: unknown }> {
+  const suiteId = options.suiteId ?? options.taskId ?? 'harness-v1';
+  try {
+    const result = await runHarnessSuiteTasks(projectRoot, suiteId, options.suitePath);
+    return {
+      code: result.failed > 0 ? 1 : 0,
+      data: {
+        success: result.failed === 0,
+        command: 'scorecard suite-run',
+        ...result,
+      },
+    };
+  } catch (e) {
+    return {
+      code: 1,
+      data: {
+        success: false,
+        command: 'scorecard suite-run',
+        errors: [e instanceof Error ? e.message : String(e)],
+      },
+    };
+  }
 }

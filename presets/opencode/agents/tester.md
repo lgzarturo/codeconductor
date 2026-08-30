@@ -285,3 +285,9 @@ and confirmed failing; list the failing test paths in `artifacts` so the
 - Never mock real behavior that could be tested with an in-memory alternative.
 - Never declare coverage complete when any acceptance criterion lacks a test.
 - Never run `git push` or `git commit`.
+
+## Composition
+
+Invoke via `/cc-tdd-cycle`, `/cc-feature`, or the orchestrator (test before
+implement). Do not invoke other agents. Invoke skill `testing-tdd`.
+Deliverable is incomplete without `captureTddSuiteEvidence` when TDD is required.

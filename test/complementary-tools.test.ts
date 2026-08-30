@@ -132,7 +132,7 @@ safety:
     const destPath = join(TEST_DIR, 'opencode.jsonc');
     
     const initialConfig = JSON.stringify({
-      model: 'opencode-go/qwen3.7-max',
+      model: 'opencode-go/qwen3.7-plus',
       mcp: {}
     }, null, 2);
     

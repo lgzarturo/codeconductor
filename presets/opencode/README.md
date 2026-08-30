@@ -17,30 +17,33 @@ providers)** models.
 | `claude-sonnet-4-6`         | Balanced, general purpose       | Default for most agents         |
 | `claude-haiku-4-5-20251001` | Fast, lightweight               | Task Coach, Docs, Repo Explorer |
 
-### OpenCode Go Models (Chinese Providers)
+### OpenCode Go models
 
-| Model             | Provider        | Strength                         | Best For                   |
-| ----------------- | --------------- | -------------------------------- | -------------------------- |
-| `deepseek-v4-pro` | DeepSeek        | Reasoning complejo, arquitectura | Architect, orchestrator    |
-| `mimo-v2.5-pro`   | MiniMax         | Razonamiento matemático, código  | Implementer                |
-| `minimax-m2.7`    | MiniMax         | Tareas equilibradas              | Tester, orchestrator       |
-| `qwen3.6-plus`    | Qwen            | Rápido, eficiente                | Reviewer, Task Coach, Docs |
-| `kimi-k2-6`       | Kimi (Moonshot) | Conversación natural             | Task Coach, Docs           |
+Canonical slugs live in `src/presets/models/*.yml`. Production roles never use
+`muse-spark-1.2-contributor` (trains on prompts). `ox-alpha-free` is an optional
+fallback, not a default.
+
+| Model | Best for |
+| --- | --- |
+| `deepseek-v4-pro` | Architect |
+| `kimi-k3` | Security reviewer |
+| `qwen3.8-max` | Reviewer, contract-builder |
+| `glm-5.3` | Devil, complexity-auditor |
+| `mimo-v2.5` | Implementer |
+| `minimax-m3` | Tester |
+| `qwen3.7-plus` | Orchestrator (TUI default) |
+| `gpt-5.6-luna` | Task coach, planner |
+| `deepseek-v4-flash` | Goal planner |
+| `longcat-2.0` | Repo explorer |
+| `hy3` | Docs |
 
 ---
 
 ## Agent Model Matrix
 
-| Agent             | Claude (Default)            | OpenCode Go (Recommended) | Alternative       |
-| ----------------- | --------------------------- | ------------------------- | ----------------- |
-| **Orchestrator**  | `claude-sonnet-4-6`         | `deepseek-v4-pro`         | `minimax-m2.7`    |
-| **Architect**     | `claude-opus-4-7`           | `deepseek-v4-pro`         | `mimo-v2.5-pro`   |
-| **Implementer**   | `claude-sonnet-4-6`         | `mimo-v2.5-pro`           | `minimax-m2.7`    |
-| **Tester**        | `claude-sonnet-4-6`         | `minimax-m2.7`            | `deepseek-v4-pro` |
-| **Reviewer**      | `claude-sonnet-4-6`         | `qwen3.6-plus`            | `minimax-m2.7`    |
-| **Task Coach**    | `claude-haiku-4-5-20251001` | `qwen3.6-plus`            | `kimi-k2.6`       |
-| **Docs**          | `claude-haiku-4-5-20251001` | `qwen3.6-plus`            | `kimi-k2.6`       |
-| **Repo Explorer** | `claude-haiku-4-5-20251001` | `qwen3.6-plus`            | `kimi-k2.6`       |
+See `skills/cc-update-preset-models/references/role-map.md`. OpenCode column
+examples: architect `deepseek-v4-pro`, implementer `mimo-v2.5`, tester
+`minimax-m3`, reviewer `qwen3.8-max`.
 
 ---
 
@@ -93,7 +96,7 @@ The following paths are denied by default:
 
 ### Medium Tasks (Implementation, testing)
 
-**Recommended:** `mimo-v2.5-pro` or `minimax-m2.7` (OpenCode Go) or
+**Recommended:** `mimo-v2.5` or `minimax-m3` (OpenCode Go) or
 `claude-sonnet-4-6` (Claude)
 
 - Implementer code writing
@@ -165,7 +168,7 @@ export KIMI_API_KEY="your-key"
 | ------------------------------- | -------------------------------------------------- |
 | Complex reasoning, architecture | OpenCode Go (`deepseek-v4-pro`) or Claude (`opus`) |
 | Fast iteration, simple tasks    | OpenCode Go (`qwen3.6-plus`) or Claude (`haiku`)   |
-| Code implementation             | OpenCode Go (`mimo-v2.5-pro`) or Claude (`sonnet`) |
+| Code implementation             | OpenCode Go (`mimo-v2.5`) or Claude (`sonnet`) |
 | Budget constraints              | OpenCode Go (generally lower cost)                 |
 | Availability issues             | Switch to alternative from the matrix              |
 

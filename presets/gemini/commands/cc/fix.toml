@@ -39,6 +39,9 @@ If `openspec status` reports an active change folder:
 
 Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
 
+Skills: `testing-tdd`, `evaluation`. Record `scorecard create --from-diff`.
+A small fix still needs a Task Card and a failing regression test first.
+
 ---
 
 

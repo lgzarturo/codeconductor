@@ -189,7 +189,8 @@ Published commands (package ${packageJson.version}):
   ccep                    CCEP contracts: parse/profile/validate/evaluate/consensus/taskcard
   openspec                OpenSpec loop: validate/scan/plan/analyze/status/next/start/done/block/archive
   scorecard               Record and aggregate evaluation outcomes
-                          (catalog / fingerprint / experiment / ablation)
+                          (catalog / fingerprint / experiment / ablation / suite-run)
+  hook                    OS-agnostic agent hooks: pre-tool / post-tool / session-start
 
 v1.0.0 (in this repo, not in published ${packageJson.version}):
   goal / cc-goal          Plan goal into task graph with dependencies
@@ -670,6 +671,30 @@ export async function routeCommand(
       } as OpenspecOptions);
     }
 
+    case 'hook': {
+      const validHookEvents = ['pre-tool', 'post-tool', 'session-start'] as const;
+      if (subcommand && !validHookEvents.includes(subcommand as (typeof validHookEvents)[number])) {
+        return unknownSubcommand(command, subcommand, [...validHookEvents]);
+      }
+      const event = validHookEvents.includes(subcommand as (typeof validHookEvents)[number])
+        ? (subcommand as (typeof validHookEvents)[number])
+        : 'pre-tool';
+      const formatRaw = options.format;
+      const format =
+        formatRaw === 'agy' || formatRaw === 'claude' ? formatRaw : undefined;
+      const { hookCommand, readStdinText } = await import('../commands/hook.command');
+      const stdinText = await readStdinText();
+      return hookCommand({
+        event,
+        projectRoot,
+        output: flags.output,
+        format,
+        command: typeof options.command === 'string' ? options.command : undefined,
+        filePath: typeof options.file === 'string' ? options.file : undefined,
+        stdinText,
+      });
+    }
+
     case 'scorecard':
     case 'cc-scorecard': {
       const validSubs = [
@@ -687,6 +712,7 @@ export async function routeCommand(
         'fingerprint',
         'experiment',
         'ablation',
+        'suite-run',
       ];
       if (subcommand && !validSubs.includes(subcommand)) {
         return unknownSubcommand(command, subcommand, validSubs);

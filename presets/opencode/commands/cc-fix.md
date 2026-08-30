@@ -162,3 +162,6 @@ resolved.
 Report: Task Card, Implementation Summary, regression test added, Review Report
 (if applicable). The fix is complete only when: the regression test passes, the
 full suite passes, and no CRITICAL review findings remain.
+
+Skills: `testing-tdd`, `evaluation`. Record `scorecard create --from-diff`.
+A small fix still needs a Task Card and a failing regression test first.

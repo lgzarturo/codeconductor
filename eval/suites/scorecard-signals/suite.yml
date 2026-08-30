@@ -1,0 +1,12 @@
+id: scorecard-signals
+version: 1
+tasks:
+  - id: handmade-tdd-rejected
+    title: Handmade TDD evidence JSON is rejected
+    type: fix
+    risk: medium
+    prompt: Scorecard tests criterion stays 0 without verification-runner capture.
+    scope: src/core/verification/verification-runner.ts
+    acceptanceCriteria:
+      - loadTddSuiteEvidence rejects JSON that was not captured by the runner
+    testCommand: bun test eval/suites/scorecard-signals/checks.test.ts

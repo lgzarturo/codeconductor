@@ -144,4 +144,7 @@ npx cc-codeconductor scorecard regression
 ```
 
 Map merge recommendation to scorecard verdict. Record outcome for trend tracking.
+
+Skills: `evaluation`. Handmade TDD JSON is rejected. Run `scorecard suite-run`
+or `scorecard record` before declaring the review closed.
 """

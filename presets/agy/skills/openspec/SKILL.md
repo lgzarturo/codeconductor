@@ -1,42 +1,66 @@
 ---
 name: openspec
 description:
-  OpenSpec backlog format, state machine, and delivery workflow for CodeConductor.
-  Use when running /cc-openspec or delivering a BACKLOG.md item.
-  To create or append BACKLOG.md, use /cc-backlog (skill backlog).
+  Guides agents through OpenSpec delivery from BACKLOG.md (validate, analyze,
+  test-before-implement, scorecard, archive). Use when running /cc-openspec,
+  /cc:openspec, or delivering an existing backlog item. Authoring BACKLOG.md
+  is skill backlog, not this skill.
 ---
 
-# OpenSpec / BACKLOG Skill
+# OpenSpec delivery
 
-Authoring (create or append `BACKLOG.md`, then `openspec validate` / `plan`) is
-`/cc-backlog` and skill `backlog`. This skill is **delivery**.
+## Overview
 
-## BACKLOG.md contract
+This skill delivers an existing `BACKLOG.md` item. It is a workflow with CLI
+gates, not a reference doc. Specs describe WHAT; `design.md` describes HOW.
 
-`BACKLOG.md` at repo root is the operational queue. Required sections:
+## When to Use
 
-- `## Global` — Product, Strategy, Policy, Review required, TDD required
-- `## Items` — active backlog entries
-- `## Archive` — completed entries (do not re-execute)
+- `/cc-openspec` or `openspec next` / `plan` / `done` / `archive`
+- An item is `READY` or later and must move through the state machine
 
-Each item: `### BC-001 | Short title` with Priority (P0–P3), Status, Type, Depends on, Description, Scope, Out of scope, Acceptance (measurable checklist).
+**NOT** for creating `BACKLOG.md` (use skill `backlog`) or for stack-specific
+coding rules.
 
-## Status machine
+## Process
 
-`TODO` → `READY` → `PLANNED` → `IN_PROGRESS` → `REVIEW` → `DONE` → Archive
+Local CLI is `bun run dev`. Published package is `npx cc-codeconductor`.
 
-## CLI
+1. `openspec validate` — must pass before delivery.
+2. `openspec plan BC-xxx` if the item is not yet `PLANNED`.
+3. `openspec analyze --output json` — CRITICAL findings exit 1. Do not implement.
+4. Phases: discover (`repo-explorer`) → design (`architect`) → test (`tester`) →
+   implement (`implementer`) → review (`reviewer`). If Global `TDD required: yes`,
+   test runs before implement.
+5. `openspec done` on test/implement requires `captureTddSuiteEvidence`. Handmade
+   evidence JSON is rejected.
+6. `scorecard create --task BC-xxx --from-diff` then record a verdict.
+7. `openspec archive` only after human review when `Review required: yes` and
+   the scorecard is PASS.
 
-`openspec validate | scan | plan | analyze | status | next | done | archive`
+Status machine: `TODO` → `READY` → `PLANNED` → `IN_PROGRESS` → `REVIEW` → `DONE`
+→ Archive. `BLOCKED` returns to `READY`. Reviewer rejection: `REVIEW` →
+`IN_PROGRESS`.
 
-## Agent phases
+## Common Rationalizations
 
-discover → repo-explorer, design → architect, test → tester, implement → implementer, review → reviewer.
+| Rationalization | Reality |
+| --- | --- |
+| Validate is bureaucracy | `openspec validate` is the gate. Skipping it is a defect. |
+| I'll add tests after green | Global TDD required means tester before implementer. |
+| I'll write the evidence JSON myself | Handmade TDD JSON is rejected. Use the verification runner. |
+| The item is small; skip analyze | `openspec analyze` CRITICAL still stops implement. |
 
-TDD required: test before implement.
+## Red Flags
 
-## Spec quality gates
+- Implementing while analyze reports CRITICAL
+- Archive without a PASS scorecard when review is required
+- Acceptance like "improve UX" with no measurable check
 
-Active change: RFC 2119, Given/When/Then, `FR-###` / `SC-###`. Analyze is
-read-only. `done` on test/implement needs verification-runner evidence.
-`archive` needs a PASS scorecard when review is required.
+## Verification
+
+- [ ] `openspec validate` exit 0
+- [ ] `openspec analyze --output json` has no CRITICAL
+- [ ] TDD evidence from the runner when TDD is required
+- [ ] `scorecard create --from-diff` recorded
+- [ ] Suite check (optional): `bun run dev scorecard suite-run --suite workflow-gates`

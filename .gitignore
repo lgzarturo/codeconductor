@@ -73,3 +73,8 @@ _*.md
 # Graphify
 graphify-out/
 .git/hooks/pre-commit
+
+# CodeConductor OpenSpec (local operational artifacts)
+BACKLOG.md
+openspec/
+.codeconductor/openspec-state.json

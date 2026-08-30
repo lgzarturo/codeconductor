@@ -257,3 +257,9 @@ Rules under CCEP-1:
 - Never approve your own plan — the human approves before implementation starts.
 - If scope expands during design, flag it as a separate task, not an extension
   of the current one.
+
+## Composition
+
+Invoke via `/cc-feature`, `/cc-openspec`, or the orchestrator. Do not invoke
+other agents. If an OpenSpec change folder is active, invoke skill `openspec`
+and run `openspec analyze --output json` before implementation is allowed.

@@ -11,15 +11,3 @@ entries:
     dest: .codex/prompts/v1.0.0
     strategy: overwrite
     template: true
-  - src: claude/skills/openspec
-    dest: .codex/skills/openspec
-    strategy: overwrite
-  - src: claude/skills/backlog
-    dest: .codex/skills/backlog
-    strategy: overwrite
-  - src: claude/skills/evaluation
-    dest: .codex/skills/evaluation
-    strategy: overwrite
-  - src: cursor/skills/testing-tdd
-    dest: .codex/skills/testing-tdd
-    strategy: overwrite

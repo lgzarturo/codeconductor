@@ -30,7 +30,7 @@ permission:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-opus-5 | Primary — contract design |
-| OpenCode Go | opencode-go/qwen3.7-plus | Primary |
+| OpenCode Go | opencode-go/qwen3.8-max | Primary |
 | Gemini | gemini-3.1-pro-preview | Alternative |
 | Codex | gpt-5.6-sol | Alternative |
 | Cursor | claude-sonnet-5-thinking-high | Primary |

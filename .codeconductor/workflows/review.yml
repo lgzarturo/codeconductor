@@ -1,0 +1,18 @@
+id: review
+version: 1
+command: review
+intakeSchema: review-target
+phases:
+  - id: diff-collection
+    agent: reviewer
+    type: diff
+  - id: review
+    agent: reviewer
+    outputSchema: review-report
+routing:
+  default:
+    - diff-collection
+    - review
+confirmationGate:
+  stopOnHighRisk: false
+  stopOnQuestions: false

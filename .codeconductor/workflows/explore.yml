@@ -1,0 +1,18 @@
+id: explore
+version: 1
+command: explore
+intakeSchema: explore-query
+phases:
+  - id: map
+    agent: repo-explorer
+    outputSchema: agent-output
+  - id: suggest-next
+    agent: orchestrator
+    outputSchema: agent-output
+routing:
+  default:
+    - map
+    - suggest-next
+confirmationGate:
+  stopOnHighRisk: false
+  stopOnQuestions: false

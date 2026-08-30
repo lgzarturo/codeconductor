@@ -25,7 +25,7 @@ permission:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-sonnet-5 | Primary — complexity audit |
-| OpenCode Go | opencode-go/qwen3.7-plus | Primary |
+| OpenCode Go | opencode-go/glm-5.3 | Primary |
 | Gemini | gemini-3.7-flash | Alternative |
 | Codex | gpt-5.6-terra | Alternative |
 | Cursor | claude-sonnet-5-thinking-high | Primary |

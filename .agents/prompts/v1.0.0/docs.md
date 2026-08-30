@@ -32,7 +32,7 @@ permission:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-haiku-4-5-20251001 | Fast — documentation |
-| OpenCode Go | opencode-go/qwen3.7-plus | Best — efficient docs |
+| OpenCode Go | opencode-go/hy3 | Best — efficient docs |
 | Gemini | gemini-3.7-flash | Alternative |
 | Codex | gpt-5.6-luna | Alternative |
 | Cursor | claude-4.5-haiku-thinking | Primary |

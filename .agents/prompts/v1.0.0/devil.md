@@ -27,7 +27,7 @@ permission:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-opus-5 | Primary — adversarial reasoning |
-| OpenCode Go | opencode-go/deepseek-v4-pro | Primary |
+| OpenCode Go | opencode-go/glm-5.3 | Primary |
 | Gemini | gemini-3.1-pro-preview | Alternative |
 | Codex | gpt-5.6-sol | Alternative |
 | Cursor | claude-opus-5-thinking-high | Primary |

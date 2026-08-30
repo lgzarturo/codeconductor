@@ -81,7 +81,7 @@ work:
 | Backlog      | `$cc-backlog`                                      |
 | OpenSpec     | `$cc-openspec`                                     |
 | Scorecard    | `$cc-scorecard`                                    |
-| PageSpeed    | `$cc-pagespeed`                                    |
+| PageSpeed    | `$cc-pagespeed` or "PageSpeed audit"               |
 
 ---
 

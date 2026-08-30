@@ -1,0 +1,22 @@
+id: scorecard
+version: 1
+command: scorecard
+intakeSchema: scorecard-task-id
+phases:
+  - id: analyze
+    agent: orchestrator
+    type: cli-gate
+  - id: create
+    agent: orchestrator
+    type: cli-gate
+  - id: evaluate
+    agent: reviewer
+    outputSchema: scorecard-record
+routing:
+  default:
+    - analyze
+    - create
+    - evaluate
+confirmationGate:
+  stopOnHighRisk: false
+  stopOnQuestions: false

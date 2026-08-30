@@ -1,0 +1,35 @@
+id: openspec
+version: 1
+command: openspec
+intakeSchema: openspec-backlog-item
+phases:
+  - id: validate-backlog
+    agent: orchestrator
+    type: cli-gate
+  - id: discover
+    agent: repo-explorer
+  - id: design
+    agent: architect
+  - id: analyze
+    agent: orchestrator
+    type: cli-gate
+  - id: test
+    agent: tester
+  - id: implement
+    agent: implementer
+    dependsOn:
+      - test
+  - id: review
+    agent: reviewer
+routing:
+  default:
+    - validate-backlog
+    - discover
+    - design
+    - analyze
+    - test
+    - implement
+    - review
+confirmationGate:
+  stopOnHighRisk: true
+  stopOnQuestions: true

@@ -31,7 +31,7 @@ permission:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-haiku-4-5-20251001 | Fast — exploration |
-| OpenCode Go | opencode-go/deepseek-v4-flash | Primary |
+| OpenCode Go | opencode-go/longcat-2.0 | Primary |
 | Gemini | gemini-3.7-flash | Alternative |
 | Codex | gpt-5.6-luna | Alternative |
 | Cursor | composer-2.5-fast | Primary |

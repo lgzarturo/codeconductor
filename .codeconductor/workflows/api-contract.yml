@@ -1,0 +1,22 @@
+id: api-contract
+version: 1
+command: api-contract
+taskCard:
+  type: feature
+  requiredFields:
+    - scope
+    - acceptanceCriteria
+phases:
+  - id: contract
+    agent: contract-builder
+    outputSchema: api-contract
+  - id: design
+    agent: architect
+    outputSchema: technical-plan
+routing:
+  default:
+    - contract
+    - design
+confirmationGate:
+  stopOnHighRisk: true
+  stopOnQuestions: true

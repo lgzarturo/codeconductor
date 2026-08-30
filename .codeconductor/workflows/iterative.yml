@@ -1,0 +1,53 @@
+id: iterative
+version: 1
+command: iterative
+taskCard:
+  type: feature
+  requiredFields:
+    - title
+    - type
+    - risk
+    - scope
+    - context
+    - acceptanceCriteria
+phases:
+  - id: wayfinding
+    agent: repo-explorer
+    outputSchema: agent-output
+  - id: intake
+    agent: task-coach
+    outputSchema: planner-output
+    stopGate: confirmation
+  - id: contract
+    agent: contract-builder
+    outputSchema: api-contract
+  - id: design
+    agent: architect
+    outputSchema: technical-plan
+    stopGate: approval
+  - id: test
+    agent: tester
+    dependsOn:
+      - design
+  - id: implement
+    agent: implementer
+    dependsOn:
+      - test
+  - id: council-review
+    skill: council
+    outputSchema: council-verdict
+  - id: docs
+    agent: docs
+routing:
+  default:
+    - wayfinding
+    - intake
+    - contract
+    - design
+    - test
+    - implement
+    - council-review
+    - docs
+confirmationGate:
+  stopOnHighRisk: true
+  stopOnQuestions: true

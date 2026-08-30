@@ -1,0 +1,14 @@
+id: clarify
+version: 1
+command: clarify
+intakeSchema: clarify-deliverable
+phases:
+  - id: re-explain
+    agent: task-coach
+    outputSchema: planner-output
+routing:
+  default:
+    - re-explain
+confirmationGate:
+  stopOnHighRisk: false
+  stopOnQuestions: true

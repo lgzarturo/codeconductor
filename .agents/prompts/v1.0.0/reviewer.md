@@ -28,7 +28,7 @@ permission:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-opus-5 | Default — code review |
-| OpenCode Go | opencode-go/qwen3.7-plus | Best — efficient reviews |
+| OpenCode Go | opencode-go/qwen3.8-max | Best — efficient reviews |
 | Gemini | gemini-3.1-pro-preview | Alternative |
 | Codex | gpt-5.6-sol | Alternative |
 | Cursor | claude-sonnet-5-thinking-high | Primary |
@@ -293,3 +293,9 @@ Invoke skill `evaluation` and run `scorecard record` with agent `reviewer`, mode
 - Never issue vague findings ("this could be better") — every finding must name
   the exact location and the specific required action.
 - Never run `git push` or `git commit`.
+
+## Composition
+
+Invoke via `/cc-review` or the orchestrator. Do not invoke other agents.
+Invoke skill `evaluation`. Deliverable is incomplete without
+`scorecard create --from-diff` and a recorded PASS|REVISE|REJECT.

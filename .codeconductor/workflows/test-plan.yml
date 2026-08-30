@@ -1,0 +1,22 @@
+id: test-plan
+version: 1
+command: test-plan
+taskCard:
+  type: test
+  requiredFields:
+    - scope
+    - acceptanceCriteria
+phases:
+  - id: intake
+    agent: task-coach
+    outputSchema: planner-output
+  - id: plan
+    agent: tester
+    outputSchema: test-plan
+routing:
+  default:
+    - intake
+    - plan
+confirmationGate:
+  stopOnHighRisk: true
+  stopOnQuestions: true

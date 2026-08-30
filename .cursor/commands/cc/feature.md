@@ -23,6 +23,24 @@ Command: `feature` (fixed for this workflow — do not infer from user text)
 
 ---
 
+## Step 0b — OpenSpec quality gates
+
+If `openspec status` reports an active change folder:
+
+1. Run: `npx cc-codeconductor openspec validate --output json`
+2. Run: `npx cc-codeconductor openspec analyze --output json`
+3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
+4. Next command spelling on this runner: `/cc:feature`
+
+Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
+
+Skills: `using-cc-skills`, `openspec`, `testing-tdd`, `evaluation`.
+Do not skip `openspec analyze` when a change folder is active.
+"I'll add tests later" is not allowed — tester before implementer.
+
+---
+
+
 ## Step 1 — Wayfinding (repo-explorer)
 
 If `graphify-out/graph.json` exists, run `graphify query "$ARGUMENTS"` (and

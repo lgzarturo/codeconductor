@@ -10,7 +10,7 @@ description: >
 
 ## Overview
 
-Create or append `BACKLOG.md`, then `openspec validate` / `plan`. Do not deliver
+Create vs append `BACKLOG.md`, then `openspec validate` / `plan`. Do not deliver
 the item here.
 
 ## When to Use

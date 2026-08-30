@@ -1,4 +1,4 @@
-import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { appendFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import {
   EvaluationIndexSchema,
@@ -115,6 +115,47 @@ export async function saveScorecard(
   } catch (e) {
     return err(e instanceof Error ? e : new Error(String(e)));
   }
+}
+
+/**
+ * List saved scorecards, optionally filtered by backlog id or verdict.
+ */
+export async function listScorecards(
+  projectRoot: string,
+  filter: { backlogId?: string; verdict?: ScorecardRecordInput['verdict'] } = {},
+): Promise<Result<ScorecardRecordInput[], Error>> {
+  try {
+    const dir = resolve(projectRoot, EVAL_DIR, SCORECARDS_DIR);
+    let files: string[];
+    try {
+      files = await readdir(dir);
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === 'ENOENT') return ok([]);
+      throw e;
+    }
+    const records: ScorecardRecordInput[] = [];
+    for (const file of files) {
+      if (!file.endsWith('.json')) continue;
+      const parsed = ScorecardRecordSchema.parse(
+        JSON.parse(await readFile(resolve(dir, file), 'utf-8')),
+      );
+      if (filter.backlogId && parsed.backlogId !== filter.backlogId) continue;
+      if (filter.verdict && parsed.verdict !== filter.verdict) continue;
+      records.push(parsed);
+    }
+    records.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return ok(records);
+  } catch (e) {
+    return err(e instanceof Error ? e : new Error(String(e)));
+  }
+}
+
+export async function hasPassingScorecard(
+  projectRoot: string,
+  backlogId: string,
+): Promise<boolean> {
+  const listed = await listScorecards(projectRoot, { backlogId, verdict: 'PASS' });
+  return listed.success && listed.data.length > 0;
 }
 
 /**

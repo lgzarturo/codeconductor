@@ -736,6 +736,26 @@ export const OpenspecStateSchema = z.object({
   itemSnapshots: z.record(z.string(), z.string()).optional().default({}),
 });
 
+export const SpecAnalyzeFindingSchema = z.object({
+  severity: z.enum(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']),
+  code: z.string(),
+  message: z.string(),
+});
+
+export const SpecAnalyzeReportSchema = z.object({
+  changePath: z.string(),
+  frIds: z.array(z.string()),
+  scIds: z.array(z.string()),
+  mappedFr: z.array(z.string()),
+  mappedSc: z.array(z.string()),
+  mappedToTests: z.array(z.string()),
+  frCoveragePct: z.number(),
+  scCoveragePct: z.number(),
+  testCoveragePct: z.number(),
+  findings: z.array(SpecAnalyzeFindingSchema),
+  stop: z.boolean(),
+});
+
 // ─── CCEP-1 (CodeConductor Execution Protocol) Schemas ───────────────────────
 
 export const WorkflowCommandSchema = z.enum([
@@ -1175,6 +1195,7 @@ export type OpenspecTaskCardPhaseInput = z.infer<typeof OpenspecTaskCardPhaseSch
 export type OpenspecTaskCardStatusInput = z.infer<typeof OpenspecTaskCardStatusSchema>;
 export type OpenspecTaskCardInput = z.infer<typeof OpenspecTaskCardSchema>;
 export type OpenspecStateInput = z.infer<typeof OpenspecStateSchema>;
+export type SpecAnalyzeReportInput = z.infer<typeof SpecAnalyzeReportSchema>;
 export type ScorecardVerdictInput = z.infer<typeof ScorecardVerdictSchema>;
 export type ScorecardCriterionInput = z.infer<typeof ScorecardCriterionSchema>;
 export type ScorecardRecordInput = z.infer<typeof ScorecardRecordSchema>;

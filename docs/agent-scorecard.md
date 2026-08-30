@@ -80,6 +80,12 @@ Contract version:** v0.1.0 **Date:** [YYYY-MM-DD] **Evaluator:** [human name or
 
 ## Scoring Guidance
 
+`scorecard create --from-diff` overlays OpenSpec analyze when a change folder
+exists: `acceptance` follows FR/SC coverage (0 if FR coverage < 50%; 3 if
+both are 100%), and `tests` is 0 when Global TDD is required without
+verification-runner evidence. Spec-quality checklists (English completeness)
+are reviewer-owned and are not this scorecard.
+
 ### 1. Acceptance Criteria Met (30%)
 
 Score each acceptance criterion in the Task Card as met or not. This criterion

@@ -16,9 +16,13 @@ import {
   type OutcomeFilter,
 } from '../core/evaluation/outcome-store';
 import {
+  applyAnalyzeSignals,
   collectScorecardSignals,
   criteriaFromSignals,
 } from '../core/evaluation/scorecard-signals';
+import { loadOpenspecState } from '../core/openspec/openspec-state';
+import { analyzeChangeFolder } from '../core/openspec/spec-analyzer';
+import { hasTddRunnerEvidence } from '../core/verification/verification-runner';
 import { resolvePhaseModels } from '../core/evaluation/execution-profile';
 import { diffPromptVersions, formatPromptDiffMarkdown } from '../core/evaluation/prompt-diff';
 import { runRegressionChecklist } from '../core/evaluation/regression-checklist';
@@ -151,7 +155,40 @@ async function handleCreate(
         scopeFiles = item.scope.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
       }
     }
-    const hints = collectScorecardSignals(projectRoot, scopeFiles);
+    let hints = collectScorecardSignals(projectRoot, scopeFiles);
+    const state = await loadOpenspecState(projectRoot);
+    const backlogId = options.taskId?.startsWith('BC-') ? options.taskId : undefined;
+    const changePath =
+      backlogId && state.success ? state.data.changePaths[backlogId] : undefined;
+    if (changePath && !changePath.includes('/archive/')) {
+      const tddRequired = backlog.success ? backlog.data.global.tddRequired : false;
+      const cards = state.success
+        ? state.data.taskCards.filter((c) => c.backlogId === backlogId)
+        : [];
+      let hasEvidence: boolean | undefined;
+      if (cards.some((c) => c.phase === 'test' || c.phase === 'implement')) {
+        hasEvidence = false;
+        for (const card of cards) {
+          if (
+            (card.phase === 'test' || card.phase === 'implement') &&
+            (await hasTddRunnerEvidence(projectRoot, card.id))
+          ) {
+            hasEvidence = true;
+            break;
+          }
+        }
+      }
+      const analyze = await analyzeChangeFolder(projectRoot, changePath, {
+        tddRequired,
+        hasTddEvidence: hasEvidence,
+      });
+      hints = applyAnalyzeSignals(hints, {
+        frCoveragePct: analyze.frCoveragePct,
+        scCoveragePct: analyze.scCoveragePct,
+        tddRequired,
+        hasTddEvidence: hasEvidence,
+      });
+    }
     criteria = criteriaFromSignals(hints);
     findings = hints.findings;
   }

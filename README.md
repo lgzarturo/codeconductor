@@ -601,6 +601,7 @@ Zod schema for that role. `consensus` exit codes: `0` APPROVED, `1` REJECTED,
 npx cc-codeconductor openspec validate
 npx cc-codeconductor openspec scan
 npx cc-codeconductor openspec plan BC-001
+npx cc-codeconductor openspec analyze --output json
 npx cc-codeconductor openspec status
 npx cc-codeconductor openspec next
 npx cc-codeconductor openspec start BC-001-discover
@@ -609,8 +610,9 @@ npx cc-codeconductor openspec block BC-001-implement --reason "waiting on design
 npx cc-codeconductor openspec archive BC-001
 ```
 
-Subcommands: `validate` / `scan` / `plan` / `status` / `next` / `start` / `done`
-/ `block` / `archive`. Illegal status transitions fail closed. See
+Subcommands: `validate` / `scan` / `plan` / `analyze` / `status` / `next` /
+`start` / `done` / `block` / `archive`. `analyze` is read-only coverage
+(FR/SC → tasks → tests). Illegal status transitions fail closed. See
 [docs/SDD.md](docs/SDD.md) and the OpenSpec skill.
 
 #### Product OS — `ingest` / `product` / `orchestrate` / `impact` / `verify`

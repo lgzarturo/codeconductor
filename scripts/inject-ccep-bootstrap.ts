@@ -1,45 +1,35 @@
 #!/usr/bin/env bun
 /**
- * Inject CCEP Bootstrap (Step 0) into slash-command presets across runners.
- * Idempotent — skips files that already contain the bootstrap block.
+ * Inject CCEP Bootstrap (Step 0) and OpenSpec quality gates into slash-command
+ * presets across runners. Idempotent.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import {
+  SDD_DELIVERY_COMMANDS,
+  SDD_GATE_HEADING,
+  WORKFLOW_COMMANDS,
+} from '../src/core/presets/workflow-commands';
+import { formatCcCommand, type CommandSurface } from '../src/core/presets/command-invocation';
 
 const ROOT = join(import.meta.dir, '..');
 
-const RUNNER_PATHS: Array<{ dir: string; resolve: (cmd: string) => string }> = [
-  { dir: 'presets/cursor/commands/cc', resolve: (cmd) => `${cmd}.md` },
-  { dir: 'presets/claude/commands/cc', resolve: (cmd) => `${cmd}.md` },
-  { dir: 'presets/opencode/commands', resolve: (cmd) => `cc-${cmd}.md` },
+const RUNNER_PATHS: Array<{
+  dir: string;
+  resolve: (cmd: string) => string;
+  surface: CommandSurface;
+}> = [
+  { dir: 'presets/cursor/commands/cc', resolve: (cmd) => `${cmd}.md`, surface: 'colon' },
+  { dir: 'presets/claude/commands/cc', resolve: (cmd) => `${cmd}.md`, surface: 'colon' },
+  { dir: 'presets/opencode/commands', resolve: (cmd) => `cc-${cmd}.md`, surface: 'hyphen' },
   {
     dir: 'presets/agy/workflows',
     resolve: (cmd) => (cmd === 'council' ? 'cc-council.md' : `cc-${cmd}.md`),
+    surface: 'hyphen',
   },
 ];
 
-const COMMANDS = [
-  'feature',
-  'fix',
-  'refactor',
-  'review',
-  'test-plan',
-  'tdd-cycle',
-  'api-contract',
-  'db-migration',
-  'pagespeed',
-  'openspec',
-  'scorecard',
-  'council',
-  'iterative',
-  'explore',
-  'triage',
-  'prototype',
-  'handoff',
-  'clarify',
-  'security',
-  'backlog',
-] as const;
+const COMMANDS = WORKFLOW_COMMANDS;
 
 /**
  * Workflows that carry both a test and an implementation phase. Only these get
@@ -74,6 +64,44 @@ Command: \`${cmd}\` (fixed for this workflow — do not infer from user text)${c
 ---
 
 `;
+}
+
+function sddGates(cmd: string, invoke: string): string {
+  return `${SDD_GATE_HEADING}
+
+If \`openspec status\` reports an active change folder:
+
+1. Run: \`npx cc-codeconductor openspec validate --output json\`
+2. Run: \`npx cc-codeconductor openspec analyze --output json\`
+3. If analyze \`stop\` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
+4. Next command spelling on this runner: \`${invoke}\`
+
+Local development: \`bun run dev <same argv>\`. Published package: \`npx cc-codeconductor\`.
+
+---
+
+`;
+}
+
+function injectSddGates(content: string, cmd: string, invoke: string): string {
+  if (!SDD_DELIVERY_COMMANDS.has(cmd as (typeof WORKFLOW_COMMANDS)[number])) {
+    return content;
+  }
+  if (content.includes(SDD_GATE_HEADING)) {
+    return content;
+  }
+  const block = sddGates(cmd, invoke);
+  const marker =
+    '5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.';
+  const idx = content.indexOf(marker);
+  if (idx === -1) {
+    return `${content.trimEnd()}\n\n${block}`;
+  }
+  const after = content.indexOf('\n---\n', idx);
+  if (after === -1) {
+    return `${content.trimEnd()}\n\n${block}`;
+  }
+  return `${content.slice(0, after + 5)}\n${block}${content.slice(after + 5)}`;
 }
 
 function injectBootstrap(content: string, cmd: string): string {
@@ -139,7 +167,11 @@ for (const runner of RUNNER_PATHS) {
       continue;
     }
     const before = readFileSync(filePath, 'utf-8');
-    const after = injectBootstrap(before, cmd);
+    const after = injectSddGates(
+      injectBootstrap(before, cmd),
+      cmd,
+      formatCcCommand(cmd, runner.surface),
+    );
     if (after !== before) {
       writeFileSync(filePath, after);
       updated++;
@@ -148,3 +180,4 @@ for (const runner of RUNNER_PATHS) {
 }
 
 console.log(`CCEP bootstrap: ${updated} file(s) updated`);
+

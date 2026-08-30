@@ -41,6 +41,9 @@ runner) — do not hand-edit JSON under `.codeconductor/evidence/`.
 
 Do not advance phases until that evidence exists.
 
+When delivering a BACKLOG item, `openspec done` on the test or implement card
+uses the same runner evidence.
+
 ---
 
 ## Phase 1 — RED (Tester role)

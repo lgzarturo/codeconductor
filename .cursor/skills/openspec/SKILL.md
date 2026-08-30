@@ -35,6 +35,7 @@ Each item: `### BC-001 | Short title` with Priority (P0–P3), Status, Type, Dep
 npx cc-codeconductor openspec validate
 npx cc-codeconductor openspec scan
 npx cc-codeconductor openspec plan BC-001
+npx cc-codeconductor openspec analyze --output json
 npx cc-codeconductor openspec status
 npx cc-codeconductor openspec next
 ```
@@ -54,3 +55,17 @@ Each item generates `openspec/changes/<slug>/` with `proposal.md`, `design.md`, 
 | review | reviewer |
 
 When Global `TDD required: yes`, test runs before implement.
+
+## Spec quality gates
+
+`openspec validate` also checks the **active** change folder: RFC 2119,
+Given/When/Then, `FR-###` / `SC-###`, max 3 `[NEEDS CLARIFICATION]`.
+
+`openspec analyze` is read-only coverage (FR/SC → tasks → tests). CRITICAL
+findings exit 1 — do not implement.
+
+`openspec done` on test/implement requires `captureTddSuiteEvidence` when
+`TDD required: yes`. Handmade evidence JSON is rejected.
+
+`openspec archive` requires a PASS scorecard for the backlog id when
+`Review required: yes`. Specs describe WHAT; `design.md` describes HOW.

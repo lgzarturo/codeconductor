@@ -8,3 +8,18 @@ entries:
     dest: .gemini/prompts/v1.0.0
     strategy: overwrite
     template: true
+  - src: gemini/commands
+    dest: .gemini/commands
+    strategy: overwrite
+  - src: claude/skills/openspec
+    dest: .gemini/skills/openspec
+    strategy: overwrite
+  - src: claude/skills/backlog
+    dest: .gemini/skills/backlog
+    strategy: overwrite
+  - src: claude/skills/evaluation
+    dest: .gemini/skills/evaluation
+    strategy: overwrite
+  - src: cursor/skills/testing-tdd
+    dest: .gemini/skills/testing-tdd
+    strategy: overwrite

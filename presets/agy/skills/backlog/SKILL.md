@@ -47,8 +47,13 @@ Invoke `task-coach`. One grilling question per assumption. Reject vague
 acceptance ("improve UX", "fix bugs"). Criteria must be measurable (same rules
 as `openspec validate` / `VAGUE_ACCEPTANCE`).
 
-Unresolved questions go in `questionsForUser`. Run `ccep evaluate --command
-backlog`. If `stop` is true, **STOP** and wait for the human.
+Unresolved questions go in `questionsForUser`. At most 3
+`[NEEDS CLARIFICATION: …]` markers; put the rest in Assumptions. Run
+`ccep evaluate --command backlog`. If `stop` is true, **STOP** and wait for
+the human.
+
+`openspec plan` turns each acceptance line into `FR-###` / `SC-###` with
+Given/When/Then. Keep acceptance measurable.
 
 Do not write items until the gate passes.
 

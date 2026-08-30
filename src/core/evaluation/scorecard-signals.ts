@@ -80,6 +80,56 @@ export function collectScorecardSignals(
   return { criteriaOverrides: overrides, findings };
 }
 
+export interface AnalyzeSignalInput {
+  readonly frCoveragePct: number;
+  readonly scCoveragePct: number;
+  readonly tddRequired?: boolean;
+  readonly hasTddEvidence?: boolean;
+}
+
+/**
+ * Overlay OpenSpec analyze coverage onto acceptance/tests criteria.
+ */
+export function applyAnalyzeSignals(
+  hints: ScorecardSignalHints,
+  analyze: AnalyzeSignalInput,
+): ScorecardSignalHints {
+  const criteriaOverrides = { ...hints.criteriaOverrides };
+  const findings = [...hints.findings];
+
+  if (analyze.frCoveragePct < 50) {
+    criteriaOverrides.acceptance = {
+      score: 0,
+      notes: `FR coverage ${analyze.frCoveragePct}%`,
+      autoSuggested: true,
+    };
+    findings.push(`Acceptance auto-suggested 0: FR coverage ${analyze.frCoveragePct}%.`);
+  } else if (analyze.frCoveragePct === 100 && analyze.scCoveragePct === 100) {
+    criteriaOverrides.acceptance = {
+      score: 3,
+      notes: 'All FR/SC mapped to tasks',
+      autoSuggested: true,
+    };
+  } else {
+    criteriaOverrides.acceptance = {
+      score: 2,
+      notes: `FR coverage ${analyze.frCoveragePct}%, SC coverage ${analyze.scCoveragePct}%`,
+      autoSuggested: true,
+    };
+  }
+
+  if (analyze.tddRequired && analyze.hasTddEvidence === false) {
+    criteriaOverrides.tests = {
+      score: 0,
+      notes: 'TDD required but no verification-runner evidence',
+      autoSuggested: true,
+    };
+    findings.push('Tests auto-suggested 0: missing verification-runner evidence.');
+  }
+
+  return { criteriaOverrides, findings };
+}
+
 /**
  * Build criteria array merging defaults with signal hints.
  */

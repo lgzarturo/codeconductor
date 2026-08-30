@@ -586,11 +586,14 @@ and return the next executable card.
 
 | Subcommand | Description |
 | ---------- | ----------- |
-| `validate` | Validate BACKLOG.md format and business rules (mandatory gate) |
+| `validate` | BACKLOG.md rules plus spec quality on the **active** change (RFC 2119, GWT, FR/SC) |
 | `scan` | Git diff + item-level change detection vs last snapshot |
-| `plan [BC-id]` | Generate TaskCards and `openspec/changes/<slug>/` for an item |
+| `plan [BC-id]` | Generate TaskCards and `openspec/changes/<slug>/` with FR/SC specs |
+| `analyze` | Read-only FR/SC → tasks → tests coverage; exit 1 on CRITICAL |
 | `status` | Active item, next READY item, task card counts |
 | `next` | JSON for the next pending TaskCard (respects dependencies) |
+| `done` | Mark a card done; test/implement require verification-runner evidence when TDD is on |
+| `archive` | Cards done + PASS scorecard when review is required |
 
 **Examples:**
 
@@ -598,6 +601,7 @@ and return the next executable card.
 npx cc-codeconductor openspec validate
 npx cc-codeconductor openspec scan
 npx cc-codeconductor openspec plan BC-001
+npx cc-codeconductor openspec analyze --output json
 npx cc-codeconductor openspec status --output json
 npx cc-codeconductor openspec next --output json
 ```

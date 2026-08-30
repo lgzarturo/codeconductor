@@ -10,6 +10,9 @@ phases:
     agent: repo-explorer
   - id: design
     agent: architect
+  - id: analyze
+    agent: orchestrator
+    type: cli-gate
   - id: test
     agent: tester
   - id: implement
@@ -23,6 +26,7 @@ routing:
     - validate-backlog
     - discover
     - design
+    - analyze
     - test
     - implement
     - review

@@ -20,6 +20,8 @@ Command: `scorecard` (fixed for this workflow — do not infer from user text)
 
 ---
 
+If a change folder exists, run `npx cc-codeconductor openspec analyze --output json` first. `--from-diff` overlays FR/SC coverage onto `acceptance` and TDD evidence onto `tests`.
+
 1. `npx cc-codeconductor scorecard create --task <id> --from-diff`
 2. Complete criteria per docs/agent-scorecard.md
 3. `scorecard regression` if needed

@@ -61,6 +61,7 @@ describe('CC-05 canonical test-before-implement', () => {
       'validate-backlog',
       'discover',
       'design',
+      'analyze',
       'test',
       'implement',
       'review',

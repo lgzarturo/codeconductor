@@ -66,8 +66,31 @@ describe('core/openspec/openspec-generator', () => {
       expect(proposal).toContain('# Proposal: Add Search');
       expect(proposal).toContain('more conversions');
 
+      const spec = await readFile(join(base, 'specs', 'delta.md'), 'utf-8');
+      expect(spec).toContain('FR-001');
+      expect(spec).toContain('SC-001');
+      expect(spec).toContain('MUST');
+      expect(spec).toContain('GIVEN');
+      expect(spec).toMatch(/WHEN/);
+      expect(spec).toContain('THEN');
+      expect(spec).not.toContain('(To be completed');
+
       const tasks = await readFile(join(base, 'tasks.md'), 'utf-8');
       expect(tasks).toContain('BC-002-implement');
+      expect(tasks).toContain('FR-001');
+    });
+
+    test('tddRequired writes test tasks before implement tasks for each FR', async () => {
+      const root = await mkdtemp(join(ROOT, 'tdd-'));
+      await generateOpenspecChange(root, ITEM, CARDS, { tddRequired: true });
+      const tasks = await readFile(
+        join(root, 'openspec', 'changes', 'bc-002-add-search', 'tasks.md'),
+        'utf-8',
+      );
+      const testIdx = tasks.indexOf('Write failing test for FR-001');
+      const implIdx = tasks.indexOf('Implement FR-001');
+      expect(testIdx).toBeGreaterThan(-1);
+      expect(implIdx).toBeGreaterThan(testIdx);
     });
   });
 

@@ -3,6 +3,15 @@ import { basename, resolve } from 'node:path';
 import type { BacklogItemInput, OpenspecTaskCardInput } from '../../validation/schemas';
 import { buildChangeSlug } from './backlog-planner';
 
+export interface OpenspecTasksOptions {
+  readonly tddRequired?: boolean;
+  readonly acceptanceCriteria?: string[];
+}
+
+function pad3(n: number): string {
+  return String(n).padStart(3, '0');
+}
+
 function proposalContent(item: BacklogItemInput): string {
   return `# Proposal: ${item.title}
 
@@ -18,8 +27,8 @@ ${item.businessValue ? `**Business value:** ${item.businessValue}` : ''}
 
 ## Capabilities
 
-- **New Capabilities:** (to be refined in design phase)
-- **Modified Capabilities:** (to be refined in design phase)
+- **New Capabilities:** ${item.title}
+- **Modified Capabilities:** none
 
 ## Impact
 
@@ -29,12 +38,12 @@ ${item.risks ? `Risks: ${item.risks}` : 'See design.md for technical impact.'}
 `;
 }
 
-function designPlaceholder(item: BacklogItemInput): string {
+function designContent(item: BacklogItemInput): string {
   return `# Design: ${item.title}
 
 ## Approach
 
-(To be completed in design phase.)
+Deliver "${item.title}" inside ${item.scope}. The architect MUST refine files and risks before implementation.
 
 ## Files Affected
 
@@ -43,32 +52,106 @@ ${item.scope}
 ## Acceptance Criteria
 
 ${item.acceptanceCriteria.map((c) => `- ${c}`).join('\n')}
+
+## Complexity Tracking
+
+| Violation | Why needed | Simpler alternative rejected |
+| --------- | ---------- | ---------------------------- |
+| none | — | — |
 `;
 }
 
-export function tasksMarkdown(cards: OpenspecTaskCardInput[]): string {
-  return tasksContent(cards);
+function specDelta(item: BacklogItemInput): string {
+  const criteria =
+    item.acceptanceCriteria.length > 0
+      ? item.acceptanceCriteria
+      : [`${item.title} is delivered`];
+  const blocks = criteria.map((criterion, index) => {
+    const n = pad3(index + 1);
+    return `### Requirement: FR-${n} ${criterion}
+
+The system MUST ${criterion}.
+
+#### Scenario: SC-${n} ${criterion}
+
+- GIVEN the current behavior in ${item.scope}
+- WHEN this change is applied
+- THEN ${criterion}
+`;
+  });
+  return `# Delta Spec: ${item.title}
+
+## ADDED Requirements
+
+${blocks.join('\n')}
+`;
+}
+
+export function tasksMarkdown(
+  cards: OpenspecTaskCardInput[],
+  options: OpenspecTasksOptions = {},
+): string {
+  return tasksContent(cards, options);
 }
 
 export async function writeTasksMarkdown(
   projectRoot: string,
   changePath: string,
   cards: OpenspecTaskCardInput[],
+  options: OpenspecTasksOptions = {},
 ): Promise<void> {
   await mkdir(resolve(projectRoot, changePath), { recursive: true });
-  await writeFile(resolve(projectRoot, changePath, 'tasks.md'), tasksContent(cards), 'utf-8');
+  await writeFile(
+    resolve(projectRoot, changePath, 'tasks.md'),
+    tasksContent(cards, options),
+    'utf-8',
+  );
 }
 
-function tasksContent(cards: OpenspecTaskCardInput[]): string {
-  const implCards = cards.filter((c) => c.phase === 'implement' || c.phase === 'test');
-  const lines = ['# Implementation Tasks', ''];
-  for (const card of implCards) {
+function tasksContent(
+  cards: OpenspecTaskCardInput[],
+  options: OpenspecTasksOptions = {},
+): string {
+  const criteria = options.acceptanceCriteria ?? [];
+  const lines = [
+    '# Implementation Tasks',
+    '',
+    '## Setup',
+    '',
+    '- [ ] Confirm scope and OpenSpec change folder',
+    '',
+    '## Foundational',
+    '',
+    '- [ ] Read existing conventions in scope',
+    '',
+    '## Requirements',
+    '',
+  ];
+
+  if (criteria.length === 0) {
+    lines.push('- [ ] Implementation tasks (generated after plan)');
+  } else {
+    for (const [index, criterion] of criteria.entries()) {
+      const n = pad3(index + 1);
+      if (options.tddRequired) {
+        lines.push(`- [ ] Write failing test for FR-${n} (${criterion})`);
+      }
+      lines.push(`- [ ] Implement FR-${n} (${criterion})`);
+      lines.push(`- [ ] Verify SC-${n}`);
+    }
+  }
+
+  const phaseCards = cards.filter((c) => c.phase === 'implement' || c.phase === 'test');
+  lines.push('', '## Phase cards', '');
+  for (const card of phaseCards) {
     const checked = card.status === 'done' ? 'x' : ' ';
     lines.push(`- [${checked}] ${card.title} (${card.id})`);
   }
-  if (implCards.length === 0) {
+  if (phaseCards.length === 0) {
     lines.push('- [ ] Implementation tasks (generated after plan)');
   }
+
+  lines.push('', '## Polish', '', '- [ ] Run openspec analyze and scorecard create --from-diff');
   return lines.join('\n');
 }
 
@@ -78,23 +161,21 @@ function tasksContent(cards: OpenspecTaskCardInput[]): string {
 export async function generateOpenspecChange(
   projectRoot: string,
   item: BacklogItemInput,
-  taskCards: OpenspecTaskCardInput[]
+  taskCards: OpenspecTaskCardInput[],
+  options: OpenspecTasksOptions = {},
 ): Promise<string> {
   const slug = buildChangeSlug(item);
   const changeDir = resolve(projectRoot, 'openspec', 'changes', slug);
   await mkdir(resolve(changeDir, 'specs'), { recursive: true });
+  const taskOpts: OpenspecTasksOptions = {
+    tddRequired: options.tddRequired,
+    acceptanceCriteria: options.acceptanceCriteria ?? item.acceptanceCriteria,
+  };
 
   await writeFile(resolve(changeDir, 'proposal.md'), proposalContent(item), 'utf-8');
-  await writeFile(resolve(changeDir, 'design.md'), designPlaceholder(item), 'utf-8');
-  await writeFile(resolve(changeDir, 'tasks.md'), tasksContent(taskCards), 'utf-8');
-
-  const specStub = `# Delta Spec: ${item.title}
-
-## ADDED Requirements
-
-${item.acceptanceCriteria.map((c) => `- ${c}`).join('\n')}
-`;
-  await writeFile(resolve(changeDir, 'specs', 'delta.md'), specStub, 'utf-8');
+  await writeFile(resolve(changeDir, 'design.md'), designContent(item), 'utf-8');
+  await writeFile(resolve(changeDir, 'tasks.md'), tasksContent(taskCards, taskOpts), 'utf-8');
+  await writeFile(resolve(changeDir, 'specs', 'delta.md'), specDelta(item), 'utf-8');
 
   return `openspec/changes/${slug}`;
 }

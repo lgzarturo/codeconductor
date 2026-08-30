@@ -27,10 +27,14 @@ Each item: `### BC-001 | Short title` with Priority (P0–P3), Status, Type, Dep
 
 ## CLI
 
-`openspec validate | scan | plan | status | next`
+`openspec validate | scan | plan | analyze | status | next | done | archive`
 
 ## Agent phases
 
-discover → repo-explorer, design → architect, test → tester, implement → implementer, review → reviewer.
+discover → repo-explorer, design → architect, analyze → cli-gate, test → tester, implement → implementer, review → reviewer.
 
 TDD required: test before implement.
+
+Active change: RFC 2119, Given/When/Then, `FR-###` / `SC-###`. Analyze is
+read-only. `done` on test/implement needs verification-runner evidence.
+`archive` needs a PASS scorecard when review is required.

@@ -37,6 +37,16 @@ Record after each phase (openspec) and after review gate with agent, model, verd
 
 Use `scorecard models` before OpenSpec execute loop to show phase → agent → model.
 
+## Spec-quality checklist vs scorecard
+
+- **Checklist (English):** completeness, clarity, testable requirements.
+  Reviewer-owned. Agents must not self-check `[x]` on reviewer checklists.
+- **Scorecard (deliverable):** 8 weighted criteria. `openspec analyze`
+  auto-suggests `acceptance` from FR/SC coverage and `tests` = 0 when TDD is
+  required without verification-runner evidence.
+
+`openspec archive` needs a PASS scorecard when review is required.
+
 ## Verdicts
 
 PASS / REVISE / REJECT — see scorecard calculator rules in docs.

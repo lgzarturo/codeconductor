@@ -92,3 +92,12 @@ The pipeline enforces test-first mechanically:
 - Phase 7 aggregates reviewer verdicts through the **council consensus engine**
   (`docs/council-steering.md`): security/compliance vetoes and confidence
   thresholds can turn an apparent majority into `REJECTED` or `ESCALATED`.
+
+---
+
+## Production path (CCEP + OpenSpec)
+
+This 8-phase pipeline is **library-only**. Shipped delivery is CCEP slash
+commands plus `openspec validate` / `analyze` / `plan` / `done` / `archive`.
+Specs use `FR-###` / `SC-###` and Given/When/Then. Policy lives in
+`BACKLOG.md` `## Global` and `AGENTS.md` — not a second constitution file.

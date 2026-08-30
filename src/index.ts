@@ -40,6 +40,7 @@ export {
   validateEvidenceIds,
   captureTddSuiteEvidence,
   loadTddSuiteEvidence,
+  hasTddRunnerEvidence,
 } from './core/verification/verification-runner';
 export type {
   RunVerificationOptions,

@@ -20,6 +20,20 @@ Command: `api-contract` (fixed for this workflow — do not infer from user text
 
 ---
 
+## Step 0b — OpenSpec quality gates
+
+If `openspec status` reports an active change folder:
+
+1. Run: `npx cc-codeconductor openspec validate --output json`
+2. Run: `npx cc-codeconductor openspec analyze --output json`
+3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
+4. Next command spelling on this runner: `/cc:api-contract`
+
+Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
+
+---
+
+
 ## Step 1 — Task Card validation (Task Coach role)
 
 Adopt the **Task Coach** role as defined in `CLAUDE.md`.

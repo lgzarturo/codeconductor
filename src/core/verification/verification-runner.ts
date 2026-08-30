@@ -352,8 +352,8 @@ export async function gateTaskCompletion(
   return ok(true);
 }
 
-const TDD_EVIDENCE_SOURCE = 'cc verify';
-const TDD_CAPTURED_BY = 'verification-runner';
+export const TDD_EVIDENCE_SOURCE = 'cc verify';
+export const TDD_CAPTURED_BY = 'verification-runner';
 
 export interface CaptureTddSuiteOptions extends RunVerificationOptions {
   /** Allowlisted test command (`bun test`, `npm test`, …). */
@@ -485,4 +485,22 @@ export async function loadTddSuiteEvidence(
   }
 
   return ok({ capturedBy, suiteFailed, suitePassed });
+}
+
+/**
+ * True when the verification runner stored TDD evidence for this task.
+ * Handmade JSON (wrong source/type/capturedBy) does not count.
+ */
+export async function hasTddRunnerEvidence(
+  projectRoot: string,
+  taskId: string,
+): Promise<boolean> {
+  const collected = await collectTaskEvidence(projectRoot, taskId);
+  if (!collected.success) return false;
+  return collected.data.records.some(
+    (ev) =>
+      ev.type === 'tdd' &&
+      ev.source === TDD_EVIDENCE_SOURCE &&
+      ev.data?.capturedBy === TDD_CAPTURED_BY,
+  );
 }

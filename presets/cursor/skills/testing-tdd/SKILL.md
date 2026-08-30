@@ -53,6 +53,10 @@ quality:
 **Red**: Write a test that describes one behavior you want. Run it. It must
 fail — if it passes without implementation, the test is not testing anything.
 
+Do not mark verify or `openspec done` (test/implement) unless
+`captureTddSuiteEvidence` wrote a record (`capturedBy: verification-runner`).
+Handmade JSON under `.codeconductor/evidence/` is rejected.
+
 **Green**: Write the simplest code that makes the test pass. Do not optimize.
 Do not add features. Just pass the test.
 

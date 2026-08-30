@@ -64,20 +64,24 @@ Skipping any step is not an optimization. It is a defect.
 
 ## Trigger Phrases
 
-Codex does not load custom slash commands from this preset. Use these natural
-language patterns to activate each workflow:
+Invoke workflows as Codex skills (`$cc-feature`, `$cc-openspec`, …). Custom
+prompts under `~/.codex/prompts` are deprecated. Natural-language phrases still
+work:
 
-| Workflow     | Trigger phrase                                     |
+| Workflow     | Skill / trigger                                    |
 | ------------ | -------------------------------------------------- |
-| Full feature | "Run the feature workflow for: [description]"      |
-| Bug fix      | "Run the fix workflow for: [description]"          |
-| Refactor     | "Run the refactor workflow for: [scope]"           |
-| API contract | "Run the API contract workflow for: [change]"      |
-| DB migration | "Run the database migration workflow for: [scope]" |
-| Code review  | "Run a structured review of: [target]"             |
-| Test plan    | "Create a test plan for: [scope]"                  |
-| Task intake  | "Help me define a Task Card for: [vague request]"  |
-| PageSpeed    | "Run a PageSpeed audit for: [url]"                 |
+| Full feature | `$cc-feature` or "Run the feature workflow for:"   |
+| Bug fix      | `$cc-fix`                                          |
+| Refactor     | `$cc-refactor`                                     |
+| API contract | `$cc-api-contract`                                 |
+| DB migration | `$cc-db-migration`                                 |
+| Code review  | `$cc-review`                                       |
+| Test plan    | `$cc-test-plan`                                    |
+| TDD cycle    | `$cc-tdd-cycle`                                    |
+| Backlog      | `$cc-backlog`                                      |
+| OpenSpec     | `$cc-openspec`                                     |
+| Scorecard    | `$cc-scorecard`                                    |
+| PageSpeed    | `$cc-pagespeed`                                    |
 
 ---
 

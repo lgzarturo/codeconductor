@@ -13,6 +13,11 @@ import {
   writeTasksMarkdown,
   archiveChangeFolder,
 } from '../core/openspec/openspec-generator';
+import { assessChangeFolder } from '../core/openspec/spec-quality';
+import { analyzeChangeFolder } from '../core/openspec/spec-analyzer';
+import { SpecAnalyzeReportSchema } from '../validation/schemas';
+import { hasTddRunnerEvidence } from '../core/verification/verification-runner';
+import { hasPassingScorecard } from '../core/evaluation/outcome-store';
 import {
   loadOpenspecState,
   writeOpenspecState,
@@ -43,7 +48,7 @@ export interface OpenspecOptions {
 }
 
 const KNOWN_SUBCOMMANDS =
-  'validate, scan, plan, status, next, start, done, block, archive';
+  'validate, scan, plan, analyze, status, next, start, done, block, archive';
 
 /**
  * Openspec CLI — validate, scan, plan, status, next, start, done, block, archive
@@ -61,6 +66,8 @@ export async function openspecCommand(
       return handleScan(projectRoot);
     case 'plan':
       return handlePlan(projectRoot, itemId);
+    case 'analyze':
+      return handleAnalyze(projectRoot, itemId);
     case 'status':
       return handleStatus(projectRoot);
     case 'next':
@@ -160,14 +167,38 @@ async function handleValidate(projectRoot: string): Promise<{ code: number; data
   }
 
   const report = validateBacklog(loadResult.data);
+  const errors = report.errors.map((e) => e.message);
+  const recommendations = [...report.recommendations];
+  let specValid = true;
+
+  const stateResult = await loadOpenspecState(projectRoot);
+  const activeId = stateResult.success ? stateResult.data.activeItemId : undefined;
+  const changePath =
+    activeId && stateResult.success
+      ? stateResult.data.changePaths[activeId]
+      : undefined;
+  if (changePath && !changePath.includes('/archive/')) {
+    const specReport = await assessChangeFolder(projectRoot, changePath);
+    specValid = specReport.valid;
+    for (const issue of specReport.issues.filter((i) => i.severity === 'error')) {
+      errors.push(`${issue.path}: ${issue.message}`);
+    }
+    if (specReport.stopForClarify) {
+      recommendations.push(
+        'Spec has [NEEDS CLARIFICATION] markers — run ccep evaluate and wait for human input.',
+      );
+    }
+  }
+
+  const valid = report.valid && specValid;
   return {
-    code: report.valid ? 0 : 1,
+    code: valid ? 0 : 1,
     data: {
-      success: report.valid,
+      success: valid,
       command: 'openspec validate',
-      valid: report.valid,
-      errors: report.errors.map((e) => e.message),
-      recommendations: report.recommendations,
+      valid,
+      errors,
+      recommendations,
       itemCount: loadResult.data.items.length,
       archiveCount: loadResult.data.archive.length,
     },
@@ -267,7 +298,10 @@ async function handlePlan(
   );
   const taskCards = planned.cards;
   await ensureOpenspecConfig(projectRoot);
-  const changePath = await generateOpenspecChange(projectRoot, item, taskCards);
+  const changePath = await generateOpenspecChange(projectRoot, item, taskCards, {
+    tddRequired: doc.global.tddRequired,
+    acceptanceCriteria: item.acceptanceCriteria,
+  });
 
   const newState = {
     ...existingState,
@@ -312,6 +346,78 @@ async function handlePlan(
       taskCards,
       invalidatedCards: planned.invalidatedCards,
       tddImpact: planned.tddImpact,
+    },
+  };
+}
+
+async function handleAnalyze(
+  projectRoot: string,
+  itemId?: string,
+): Promise<{ code: number; data?: unknown }> {
+  const command = 'openspec analyze';
+  const stateResult = await loadOpenspecState(projectRoot);
+  if (!stateResult.success) {
+    return fail(command, [stateResult.error.message]);
+  }
+  const targetId = itemId ?? stateResult.data.activeItemId;
+  if (!targetId) {
+    return fail(command, ['No active change. Run openspec plan or pass an item id.']);
+  }
+  const changePath = stateResult.data.changePaths[targetId];
+  if (!changePath || changePath.includes('/archive/')) {
+    return fail(command, [`No active change folder for ${targetId}`]);
+  }
+
+  const backlog = await loadBacklog(projectRoot);
+  const tddRequired = backlog.success ? backlog.data.global.tddRequired : false;
+  const policyParts: string[] = [];
+  for (const name of ['AGENTS.md', 'BACKLOG.md'] as const) {
+    try {
+      policyParts.push(await readFile(resolve(projectRoot, name), 'utf-8'));
+    } catch {
+      // optional
+    }
+  }
+
+  const cards = itemCards(stateResult.data, targetId);
+  const tddCards = cards.filter((c) => c.phase === 'test' || c.phase === 'implement');
+  let hasTddEvidence: boolean | undefined;
+  if (tddCards.length > 0) {
+    hasTddEvidence = false;
+    for (const card of tddCards) {
+      if (await hasTddRunnerEvidence(projectRoot, card.id)) {
+        hasTddEvidence = true;
+        break;
+      }
+    }
+  }
+
+  const report = await analyzeChangeFolder(projectRoot, changePath, {
+    tddRequired,
+    policyText: policyParts.join('\n'),
+    hasTddEvidence,
+  });
+  const data = SpecAnalyzeReportSchema.parse({
+    changePath: report.changePath,
+    frIds: report.frIds,
+    scIds: report.scIds,
+    mappedFr: report.mappedFr,
+    mappedSc: report.mappedSc,
+    mappedToTests: report.mappedToTests,
+    frCoveragePct: report.frCoveragePct,
+    scCoveragePct: report.scCoveragePct,
+    testCoveragePct: report.testCoveragePct,
+    findings: report.findings,
+    stop: report.stop,
+  });
+
+  return {
+    code: report.stop ? 1 : 0,
+    data: {
+      success: !report.stop,
+      command,
+      ...data,
+      stopForClarify: report.quality.stopForClarify,
     },
   };
 }
@@ -500,6 +606,17 @@ async function handleDone(
   const itemLoaded = await loadItemOrFail(projectRoot, card.backlogId, command);
   if (!itemLoaded.ok) return itemLoaded.response;
 
+  const backlog = await loadBacklog(projectRoot);
+  const tddRequired = backlog.success ? backlog.data.global.tddRequired : false;
+  if (tddRequired && (card.phase === 'test' || card.phase === 'implement')) {
+    const evidenced = await hasTddRunnerEvidence(projectRoot, cardId);
+    if (!evidenced) {
+      return fail(command, [
+        `Card ${cardId} (${card.phase}) requires verification-runner TDD evidence. Run captureTddSuiteEvidence before openspec done.`,
+      ]);
+    }
+  }
+
   const state = setTaskCardStatus(loaded.state, cardId, 'done');
   const cards = itemCards(state, card.backlogId);
   const doneCount = cards.filter((c) => c.status === 'done').length;
@@ -511,7 +628,10 @@ async function handleDone(
 
   const changePath = state.changePaths[card.backlogId];
   if (changePath) {
-    await writeTasksMarkdown(projectRoot, changePath, cards);
+    await writeTasksMarkdown(projectRoot, changePath, cards, {
+      tddRequired,
+      acceptanceCriteria: itemLoaded.item.acceptanceCriteria,
+    });
   }
 
   const nextStatus: BacklogStatusInput = allDone ? 'REVIEW' : 'IN_PROGRESS';
@@ -605,6 +725,12 @@ async function handleArchive(
     if (!reviewCard || reviewCard.status !== 'done') {
       return fail(command, [
         `Cannot archive ${itemId}: global.reviewRequired needs the review phase card done`,
+      ]);
+    }
+    const passed = await hasPassingScorecard(projectRoot, itemId);
+    if (!passed) {
+      return fail(command, [
+        `Cannot archive ${itemId}: global.reviewRequired needs a PASS scorecard for this backlog id`,
       ]);
     }
   }

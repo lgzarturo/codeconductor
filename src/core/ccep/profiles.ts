@@ -155,11 +155,12 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
       { id: 'validate-backlog', agent: 'orchestrator', type: 'cli-gate' },
       { id: 'discover', agent: 'repo-explorer' },
       { id: 'design', agent: 'architect' },
+      { id: 'analyze', agent: 'orchestrator', type: 'cli-gate' },
       { id: 'test', agent: 'tester' },
       { id: 'implement', agent: 'implementer', dependsOn: ['test'] },
       { id: 'review', agent: 'reviewer' },
     ],
-    routing: { default: ['validate-backlog', 'discover', 'design', 'test', 'implement', 'review'] },
+    routing: { default: ['validate-backlog', 'discover', 'design', 'analyze', 'test', 'implement', 'review'] },
     confirmationGate: baseGate,
   },
   backlog: {
@@ -186,10 +187,11 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     command: 'scorecard',
     intakeSchema: 'scorecard-task-id',
     phases: [
+      { id: 'analyze', agent: 'orchestrator', type: 'cli-gate' },
       { id: 'create', agent: 'orchestrator', type: 'cli-gate' },
       { id: 'evaluate', agent: 'reviewer', outputSchema: 'scorecard-record' },
     ],
-    routing: { default: ['create', 'evaluate'] },
+    routing: { default: ['analyze', 'create', 'evaluate'] },
     confirmationGate: { stopOnHighRisk: false, stopOnQuestions: false },
   },
   council: {

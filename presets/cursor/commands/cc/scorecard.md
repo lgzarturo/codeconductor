@@ -26,6 +26,8 @@ Command: `scorecard` (fixed for this workflow — do not infer from user text)
 
 Use `$ARGUMENTS` as task id (e.g. `BC-001`) or read active item from `npx cc-codeconductor openspec status`.
 
+If a change folder exists, run `npx cc-codeconductor openspec analyze --output json` first. `--from-diff` overlays FR/SC coverage onto `acceptance` and TDD evidence onto `tests`.
+
 ---
 
 ## Step 2 — Create scorecard with auto-signals

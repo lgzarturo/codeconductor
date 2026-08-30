@@ -266,6 +266,15 @@ bun run dev openspec plan BC-001
 - Exit code: `0`
 - Creates artifacts under `openspec/changes/bc-001-first-backlog-item/` (proposal, tasks, specs)
 
+### analyze
+
+```bash
+bun run dev openspec analyze --output json
+```
+
+**Expected output:** FR/SC → task → test coverage. Exit code `1` when findings
+include `CRITICAL` (for example TDD required but an FR has no test task).
+
 ### status
 
 ```bash
@@ -389,6 +398,7 @@ bun run dev ccep compile --command feature "Add CRUD" --phase intake --output js
 bun run dev openspec validate --output json
 bun run dev openspec scan --output json
 bun run dev openspec plan BC-001
+bun run dev openspec analyze --output json
 bun run dev openspec status --output json
 bun run dev openspec next --output json
 bun run dev scorecard create --task BC-001 --from-diff --output json

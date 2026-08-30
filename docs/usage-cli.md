@@ -169,7 +169,9 @@ npx cc-codeconductor install preset --target opencode --force
 | ---------- | ---------------------------------------------------------------- |
 | `opencode` | `.opencode/AGENTS.md`, `.opencode/commands/`, etc.               |
 | `claude`   | `.claude/AGENTS.md`, `.claude/skills/`, etc.                     |
-| `codex`    | `.codex/config.toml`, `.codex/AGENTS.md`, etc.                   |
+| `cursor`   | `AGENTS.md`, `.cursor/commands/cc/*.md` (`/cc:name`)             |
+| `codex`    | `.codex/AGENTS.md`, `.codex/skills/cc-*/SKILL.md` (`$cc-name`)    |
+| `gemini`   | `.gemini/commands/cc/*.toml` (`/cc:name`), `.gemini/skills/`     |
 | `agy`      | `.agents/AGENTS.md`, `.agents/skills/`, `.agents/workflows/`, etc. |
 
 ---
@@ -265,6 +267,28 @@ npx cc-codeconductor update --force
 # Preview actions without writing
 npx cc-codeconductor update --dry-run
 ```
+
+---
+
+### `openspec` — Backlog delivery and spec quality
+
+Requires `BACKLOG.md` at the project root. Local dogfood: `bun run dev openspec …`.
+
+```bash
+npx cc-codeconductor openspec validate
+npx cc-codeconductor openspec analyze --output json
+npx cc-codeconductor openspec plan BC-001
+npx cc-codeconductor openspec done --card <id>
+npx cc-codeconductor openspec archive
+```
+
+`validate` also checks the **active** change folder (RFC 2119, Given/When/Then,
+`FR-###` / `SC-###`, max 3 `[NEEDS CLARIFICATION]`). `analyze` is read-only
+coverage (FR/SC → tasks → tests) and exits 1 on CRITICAL. With
+`TDD required: yes`, `done` on test/implement needs verification-runner
+evidence. With `Review required: yes`, `archive` needs a PASS scorecard.
+
+See [`cc-commands.md`](cc-commands.md) for the full subcommand table.
 
 ---
 

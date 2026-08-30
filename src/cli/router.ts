@@ -187,7 +187,7 @@ Published commands (package ${packageJson.version}):
   cc-help                 Show preset inventory (skills, subagents, commands)
   debt-harvest / harvest  Scan source files for deferred debt items
   ccep                    CCEP contracts: parse/profile/validate/evaluate/consensus/taskcard
-  openspec                OpenSpec loop: validate/scan/plan/status/next/start/done/block/archive
+  openspec                OpenSpec loop: validate/scan/plan/analyze/status/next/start/done/block/archive
   scorecard               Record and aggregate evaluation outcomes
                           (catalog / fingerprint / experiment / ablation)
 
@@ -272,6 +272,7 @@ Examples:
   npx cc-codeconductor openspec validate
   npx cc-codeconductor openspec scan
   npx cc-codeconductor openspec plan BC-001
+  npx cc-codeconductor openspec analyze
   npx cc-codeconductor openspec status
   npx cc-codeconductor openspec next
   npx cc-codeconductor openspec start BC-001-discover
@@ -638,6 +639,7 @@ export async function routeCommand(
         'validate',
         'scan',
         'plan',
+        'analyze',
         'status',
         'next',
         'start',

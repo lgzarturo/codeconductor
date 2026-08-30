@@ -1,10 +1,34 @@
 import { afterAll, describe, expect, test } from 'bun:test';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { openspecCommand } from '../../../src/commands/openspec.command';
+import { buildScorecardRecord, createDefaultCriteria } from '../../../src/core/evaluation/scorecard-calculator';
+import { saveScorecard } from '../../../src/core/evaluation/outcome-store';
+import {
+  TDD_CAPTURED_BY,
+  TDD_EVIDENCE_SOURCE,
+} from '../../../src/core/verification/verification-runner';
 import type { OpenspecTaskCardInput } from '../../../src/validation/schemas';
+
+async function writeTddEvidence(root: string, taskId: string): Promise<void> {
+  const dir = join(root, '.codeconductor', 'evidence');
+  await mkdir(dir, { recursive: true });
+  const id = `ev-tdd-${taskId}-life`;
+  await writeFile(
+    join(dir, `${id.replace(/[^A-Za-z0-9_-]/g, '_')}.json`),
+    JSON.stringify({
+      id,
+      source: TDD_EVIDENCE_SOURCE,
+      type: 'tdd',
+      timestamp: new Date().toISOString(),
+      relatedTask: taskId,
+      confidence: 0.9,
+      data: { capturedBy: TDD_CAPTURED_BY, suiteFailed: true, suitePassed: false },
+    }),
+  );
+}
 
 const FIXTURE = join(import.meta.dir, '../../fixtures/backlog/BACKLOG.md');
 
@@ -121,11 +145,27 @@ describe('openspec start/done/block/archive', () => {
     expect(early.code).toBe(1);
 
     for (const card of cards) {
+      if (card.phase === 'test' || card.phase === 'implement') {
+        await writeTddEvidence(root, card.id);
+      }
       const start = await run(root, 'start', card.id);
       expect(start.code).toBe(0);
       const done = await run(root, 'done', card.id);
       expect(done.code).toBe(0);
     }
+
+    await saveScorecard(
+      root,
+      buildScorecardRecord({
+        id: 'sc-pass-life',
+        taskId: 'BC-001',
+        agent: 'reviewer',
+        contractVersion: 'test',
+        criteria: createDefaultCriteria(),
+        backlogId: 'BC-001',
+        source: 'openspec',
+      }),
+    );
 
     const archived = await run(root, 'archive', 'BC-001');
     expect(archived.code).toBe(0);

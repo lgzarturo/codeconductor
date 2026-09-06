@@ -19,12 +19,14 @@ entries:
   - src: agy/hooks.json
     dest: .agents/hooks.json
     strategy: overwrite
+    globalStrategy: skip
   - src: agy/mcp_config.json
     dest: .agents/mcp_config.json
     strategy: overwrite
   - src: agy/scripts
     dest: .agents/scripts
     strategy: overwrite
+    globalStrategy: skip
   - src: opencode/skills
     dest: .agents/skills
     strategy: overwrite

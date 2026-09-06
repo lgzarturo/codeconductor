@@ -21,6 +21,14 @@ not.
 
 Claude: deny → stderr + exit 2. Agy: JSON `{ "action": "deny", "error": "…" }`.
 
+## Fail-Open Semantics & Per-Project Scope
+
+- **Fail-Open Policy**: If `cc-codeconductor` is not installed or cannot execute (e.g. runner error, timeout, missing binary), `invoke-hook.cjs` fails open:
+  - `agy`: Outputs `{"action":"allow"}` (for `pre-tool`) or `{}` (for `post-tool` / `session-start`) with exit status 0. The agent is never blocked.
+  - `claude`: Exits with status 0.
+- **Child Process Timeout**: All hook strategy child processes time out after 10,000 ms (10 seconds), triggering fail-open behavior instead of hanging.
+- **Per-Project Scope**: `agy/hooks.json` and `agy/scripts` specify `globalStrategy: skip` in the manifest. Hooks and scripts are only installed into project repositories (`.agents/hooks.json` and `.agents/scripts/`), never globally (`~/.gemini/config/`).
+
 ## Privacy (OpenCode Go)
 
 Do not assign `opencode-go/muse-spark-1.2-contributor` to a production role

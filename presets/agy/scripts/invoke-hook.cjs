@@ -5,9 +5,18 @@ const { spawnSync } = require('node:child_process');
 const { existsSync } = require('node:fs');
 const { join, resolve } = require('node:path');
 
-const event = process.argv[2] || 'pre-tool';
-const extra = process.argv.slice(3);
-const isAgy = extra.includes('--format=agy');
+const VALID_EVENTS = ['pre-tool', 'post-tool', 'session-start'];
+const SPAWN_TIMEOUT = 10000;
+
+const rawArgs = process.argv.slice(1);
+const args = rawArgs.filter((arg) => {
+  if (VALID_EVENTS.includes(arg) || arg.startsWith('-')) return true;
+  return false;
+});
+
+const event = args.find((a) => VALID_EVENTS.includes(a)) || 'pre-tool';
+const extra = args.filter((a) => a !== event);
+const isAgy = process.argv.some((a) => a === '--format=agy') || extra.includes('--format=agy');
 
 function findProjectRoot() {
   const candidates = [
@@ -38,6 +47,7 @@ function canRun(bin) {
       encoding: 'utf8',
       windowsHide: true,
       stdio: 'ignore',
+      timeout: SPAWN_TIMEOUT,
     });
     return result.status === 0;
   } catch {
@@ -45,27 +55,37 @@ function canRun(bin) {
   }
 }
 
-function run(bin, args) {
-  const result = spawnSync(bin, args, {
-    cwd: projectRoot,
-    stdio: 'inherit',
-    windowsHide: true,
-    env: process.env,
-  });
-  if (result.error) {
+function tryRun(bin, runArgs) {
+  try {
+    const result = spawnSync(bin, runArgs, {
+      cwd: projectRoot,
+      stdio: 'inherit',
+      windowsHide: true,
+      env: process.env,
+      timeout: SPAWN_TIMEOUT,
+    });
+    if (result.error) {
+      return false;
+    }
+    if (result.status === 0) {
+      process.exit(0);
+    }
+    if (!isAgy && result.status === 2) {
+      process.exit(2);
+    }
+    return false;
+  } catch {
     return false;
   }
-  if (isAgy && result.status !== 0) {
-    return false;
-  }
-  process.exit(result.status === null ? 1 : result.status);
 }
 
-function fallbackAgy() {
-  if (event === 'post-tool') {
-    process.stdout.write('{}\n');
-  } else if (event === 'pre-tool') {
-    process.stdout.write('{"action":"allow"}\n');
+function fallback() {
+  if (isAgy) {
+    if (event === 'post-tool' || event === 'session-start') {
+      process.stdout.write('{}\n');
+    } else {
+      process.stdout.write('{"decision":"allow"}\n');
+    }
   }
   process.exit(0);
 }
@@ -73,28 +93,23 @@ function fallbackAgy() {
 try {
   const srcMain = join(projectRoot, 'src', 'cli', 'main.ts');
   if (existsSync(srcMain) && canRun('bun')) {
-    run('bun', ['run', srcMain, 'hook', event, ...extra]);
+    tryRun('bun', ['run', srcMain, 'hook', event, ...extra]);
   }
 
   const packaged = join(projectRoot, 'node_modules', 'cc-codeconductor', 'dist', 'index.js');
   if (existsSync(packaged)) {
-    run(process.execPath, [packaged, 'hook', event, ...extra]);
+    tryRun(process.execPath, [packaged, 'hook', event, ...extra]);
   }
 
   const localDist = join(projectRoot, 'dist', 'index.js');
   if (existsSync(localDist)) {
-    run(process.execPath, [localDist, 'hook', event, ...extra]);
+    tryRun(process.execPath, [localDist, 'hook', event, ...extra]);
   }
 
-  if (!run('npx', ['--no-install', 'cc-codeconductor', 'hook', event, ...extra])) {
-    if (isAgy) {
-      fallbackAgy();
-    }
-    process.exit(1);
-  }
+  tryRun('npx', ['--no-install', 'cc-codeconductor', 'hook', event, ...extra]);
 } catch {
-  if (isAgy) {
-    fallbackAgy();
-  }
-  process.exit(1);
+  // Ignore errors in runner attempts
 }
+
+fallback();
+

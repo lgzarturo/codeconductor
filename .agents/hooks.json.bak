@@ -1,0 +1,30 @@
+{
+  "code-formatter": {
+    "enabled": true,
+    "PostToolUse": [
+      {
+        "matcher": "write_to_file|replace_file_content|multi_replace_file_content",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const fs=require('fs'),p=fs.existsSync('scripts/invoke-hook.cjs')?'scripts/invoke-hook.cjs':'.agents/scripts/invoke-hook.cjs';require(require('path').resolve(p))\" post-tool --format=agy"
+          }
+        ]
+      }
+    ]
+  },
+  "safety-gate": {
+    "enabled": true,
+    "PreToolUse": [
+      {
+        "matcher": "run_command|write_to_file|replace_file_content|multi_replace_file_content|view_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const fs=require('fs'),p=fs.existsSync('scripts/invoke-hook.cjs')?'scripts/invoke-hook.cjs':'.agents/scripts/invoke-hook.cjs';require(require('path').resolve(p))\" pre-tool --format=agy"
+          }
+        ]
+      }
+    ]
+  }
+}

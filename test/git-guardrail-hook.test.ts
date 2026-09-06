@@ -310,6 +310,6 @@ describe('Hook runner — extra policy and agy format', () => {
       JSON.stringify({ toolName: 'run_command', arguments: { CommandLine: 'git push' } })
     );
     expect(evaluatePreTool(input).action).toBe('deny');
-    expect(JSON.parse(formatHookOutput(evaluatePreTool(input), 'agy')).action).toBe('deny');
+    expect(JSON.parse(formatHookOutput(evaluatePreTool(input), 'agy')).decision).toBe('deny');
   });
 });

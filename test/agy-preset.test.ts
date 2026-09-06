@@ -115,6 +115,11 @@ describe('Antigravity CLI (agy) Manifest and Model Config', () => {
     expect(destDirs).toContain('.agents/skills');
     expect(destDirs).toContain('.agents/agents');
     expect(destDirs).toContain('.agents/prompts/v1.0.0');
+    const hooksEntry = manifest.entries.find(e => e.src === 'agy/hooks.json');
+    expect(hooksEntry?.globalStrategy).toBe('skip');
+
+    const scriptsEntry = manifest.entries.find(e => e.src === 'agy/scripts');
+    expect(scriptsEntry?.globalStrategy).toBe('skip');
   });
 
   test('model config loads successfully and contains tools mapping', async () => {
@@ -157,7 +162,7 @@ describe('Antigravity CLI (agy) Hooks Runner', () => {
     });
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout.trim());
-    expect(parsed.action).toBe('allow');
+    expect(parsed.decision).toBe('allow');
   });
 
   test('PreToolUse hook command executes from project root and returns allow JSON', () => {
@@ -172,7 +177,7 @@ describe('Antigravity CLI (agy) Hooks Runner', () => {
     });
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout.trim());
-    expect(parsed.action).toBe('allow');
+    expect(parsed.decision).toBe('allow');
   });
 
   test('PreToolUse hook correctly blocks access to sensitive .env paths', () => {
@@ -187,7 +192,7 @@ describe('Antigravity CLI (agy) Hooks Runner', () => {
     });
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout.trim());
-    expect(parsed.action).toBe('deny');
+    expect(parsed.decision).toBe('deny');
   });
 });
 

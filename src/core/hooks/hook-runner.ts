@@ -142,12 +142,12 @@ export function evaluatePreTool(input: PreToolInput): HookVerdict {
 export function formatHookOutput(verdict: HookVerdict, format: HookFormat): string {
   if (format === 'agy') {
     if (verdict.action === 'deny') {
-      return JSON.stringify({ action: 'deny', error: verdict.message });
+      return JSON.stringify({ decision: 'deny', error: verdict.message });
     }
     if (verdict.action === 'ask') {
-      return JSON.stringify({ action: 'ask' });
+      return JSON.stringify({ decision: 'ask' });
     }
-    return JSON.stringify({ action: 'allow' });
+    return JSON.stringify({ decision: 'allow' });
   }
   return '';
 }

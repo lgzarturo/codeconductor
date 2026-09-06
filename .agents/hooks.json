@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"const fs=require('fs'),p=fs.existsSync('scripts/invoke-hook.cjs')?'scripts/invoke-hook.cjs':'.agents/scripts/invoke-hook.cjs';require(require('path').resolve(p))\" post-tool --format=agy"
+            "command": "node -e \"const fs=require('fs'),p=['scripts/invoke-hook.cjs','.agents/scripts/invoke-hook.cjs'].find(f=>fs.existsSync(f));if(p)require(require('path').resolve(p));else{if(process.argv.includes('--format=agy')){process.stdout.write(process.argv.includes('post-tool')?'{}\\n':'{\\\"decision\\\":\\\"allow\\\"}\\n');}process.exit(0);}\" post-tool --format=agy"
           }
         ]
       }
@@ -21,7 +21,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"const fs=require('fs'),p=fs.existsSync('scripts/invoke-hook.cjs')?'scripts/invoke-hook.cjs':'.agents/scripts/invoke-hook.cjs';require(require('path').resolve(p))\" pre-tool --format=agy"
+            "command": "node -e \"const fs=require('fs'),p=['scripts/invoke-hook.cjs','.agents/scripts/invoke-hook.cjs'].find(f=>fs.existsSync(f));if(p)require(require('path').resolve(p));else{if(process.argv.includes('--format=agy')){process.stdout.write(process.argv.includes('post-tool')?'{}\\n':'{\\\"decision\\\":\\\"allow\\\"}\\n');}process.exit(0);}\" pre-tool --format=agy"
           }
         ]
       }

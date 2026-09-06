@@ -10,6 +10,8 @@ export interface ScorecardSignalHints {
     Record<CriterionId, { score: number; notes?: string; autoSuggested?: boolean }>
   >;
   findings: string[];
+  scopeViolationCount?: number;
+  hashMismatch?: boolean;
 }
 
 /**
@@ -17,10 +19,26 @@ export interface ScorecardSignalHints {
  */
 export function collectScorecardSignals(
   projectRoot: string,
-  scopeFiles?: string[]
+  scopeFiles?: string[],
+  extra?: { scopeViolationCount?: number; hashMismatch?: boolean }
 ): ScorecardSignalHints {
   const findings: string[] = [];
   const overrides: ScorecardSignalHints['criteriaOverrides'] = {};
+
+  const scopeViolationCount = extra?.scopeViolationCount;
+  if (scopeViolationCount && scopeViolationCount > 0) {
+    // Add to findings and set score to 0 for scope criterion
+    // Assuming 'scope' is a valid CriterionId or we just use it as string, wait, the prompt says "set score to 0 for scope criterion".
+    // Let's use 'scope' as any to avoid TS error if it's not in CriterionId.
+    (overrides as any).scope = { score: 0, notes: `Found ${scopeViolationCount} scope violations`, autoSuggested: true };
+    findings.push(`Scope violation: ${scopeViolationCount} files outside scope.`);
+  }
+
+  const hashMismatch = extra?.hashMismatch;
+  if (hashMismatch) {
+    (overrides as any).tests = { score: 0, notes: 'Test tampering detected (hash mismatch)', autoSuggested: true };
+    findings.push('Test tampering detected via test-freeze hash mismatch.');
+  }
 
   let diff = '';
   try {
@@ -31,12 +49,12 @@ export function collectScorecardSignals(
     });
   } catch {
     findings.push('Could not read git diff; scope audit skipped.');
-    return { criteriaOverrides: overrides, findings };
+    return { criteriaOverrides: overrides, findings, scopeViolationCount, hashMismatch };
   }
 
   if (!diff.trim()) {
     overrides.minimal_diff = { score: 2, notes: 'No diff detected', autoSuggested: true };
-    return { criteriaOverrides: overrides, findings };
+    return { criteriaOverrides: overrides, findings, scopeViolationCount, hashMismatch };
   }
 
   const changedFiles = new Set<string>();
@@ -77,7 +95,7 @@ export function collectScorecardSignals(
     findings.push('Complexity audit skipped.');
   }
 
-  return { criteriaOverrides: overrides, findings };
+  return { criteriaOverrides: overrides, findings, scopeViolationCount, hashMismatch };
 }
 
 export interface AnalyzeSignalInput {

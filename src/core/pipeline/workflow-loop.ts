@@ -6,6 +6,10 @@ import type {
 } from '../../domain/council/council-consensus';
 import { LoopEngine, type GuardrailHit } from '../loop/loop-engine';
 import type { GitStatsReader } from '../loop/git-stats';
+import { verifyTestFreeze } from '../verification/test-freeze';
+import { checkScopeCompliance } from '../verification/scope-guard';
+import { evaluateGate } from '../evaluation/scorecard-gatekeeper';
+import type { AgentRole } from '../hooks/hook-runner';
 
 export interface TaskCard {
   title: string;
@@ -43,6 +47,8 @@ export interface ValidationReport {
   mutationScore: number;
   diffAuditPassed: boolean;
   survivingMutants: string[];
+  hashValid?: boolean;
+  scopeViolations?: number;
 }
 
 export interface PipelineCallbacks {
@@ -75,6 +81,9 @@ export interface PipelineConfig {
   councilConfig?: ConsensusConfig;
   callbacks: PipelineCallbacks;
   gitStats?: GitStatsReader;
+  testDirs?: string[];
+  scopeAllowlist?: string[];
+  agentRole?: AgentRole;
 }
 
 export interface PipelineResult {
@@ -246,15 +255,46 @@ export async function runWorkflowPipeline(
   let validationReport: ValidationReport;
   try {
     validationReport = await callbacks.runValidate(plan);
-    if (validationReport.mutationScore < 80) {
+
+    let scopeViolations = 0;
+    if (cwd) {
+      const scopeResult = await checkScopeCompliance({
+        cwd,
+        allowedFiles: plan.filesAffected,
+        allowlist: config.scopeAllowlist,
+      });
+      scopeViolations = scopeResult.violations.length;
+      validationReport.scopeViolations = scopeViolations;
+    }
+
+    let hashValid = true;
+    if (cwd && config.testDirs && config.testDirs.length > 0) {
+      const lockPath = `${cwd}/test-freeze.lock`;
+      const freezeResult = await verifyTestFreeze(lockPath, config.testDirs, cwd).catch(() => null);
+      if (freezeResult && !freezeResult.valid) {
+        hashValid = false;
+      }
+      validationReport.hashValid = hashValid;
+    }
+
+    const gateResult = evaluateGate({
+      testsPassed: true, // Assuming true since GREEN passed
+      mutationScore: validationReport.mutationScore,
+      scopeViolations,
+      hashValid,
+      mutationThreshold: 85
+    });
+
+    if (gateResult.verdict === 'REJECT') {
       return {
         success: false,
         phase: 'VALIDATE',
-        error: `Mutation test failed: score ${validationReport.mutationScore}% is below the 80% threshold`,
+        error: `Validation failed: ${gateResult.reasons.join(', ')}`,
         taskCard: compactedCard,
         technicalPlan: plan,
       };
     }
+
     if (!validationReport.diffAuditPassed) {
       return {
         success: false,

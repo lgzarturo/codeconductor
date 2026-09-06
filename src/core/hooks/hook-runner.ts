@@ -3,6 +3,54 @@
  * Hosts call `cc-codeconductor hook <event>` via Node.
  */
 
+export type AgentRole = 'tester' | 'implementer' | 'reviewer' | 'architect';
+
+export interface RoleAccessResult {
+  allowed: boolean;
+  reason?: string;
+}
+
+const DEFAULT_PROTECTED_PATTERNS = [
+  'tests/', 'test/', 'specs/', 'contracts/',
+  '.test.', '.spec.', '_test.', '_spec.',
+];
+
+export function evaluateRoleAccess(
+  role: AgentRole,
+  filePath: string,
+  protectedDirs?: string[],
+): RoleAccessResult {
+  const patterns = protectedDirs ?? DEFAULT_PROTECTED_PATTERNS;
+  
+  switch (role) {
+    case 'implementer':
+      // Implementer cannot write to test/spec directories
+      if (patterns.some(p => filePath.includes(p))) {
+        return { allowed: false, reason: `SecurityViolation: File '${filePath}' is READ-ONLY for the Implementer role.` };
+      }
+      return { allowed: true };
+    
+    case 'tester':
+      // Tester can only write to test directories
+      if (!patterns.some(p => filePath.includes(p))) {
+        return { allowed: false, reason: `SecurityViolation: Tester role can only modify test files. '${filePath}' is outside test scope.` };
+      }
+      return { allowed: true };
+    
+    case 'reviewer':
+    case 'architect':
+      // Reviewer and architect cannot write any source files
+      // (architect can write docs/md — check for .md extension)
+      if (role === 'architect' && (filePath.endsWith('.md') || filePath.includes('docs/'))) {
+        return { allowed: true };
+      }
+      return { allowed: false, reason: `SecurityViolation: ${role} role has no write access to '${filePath}'.` };
+    
+    default:
+      return { allowed: true };
+  }
+}
+
 export type HookEvent = 'pre-tool' | 'post-tool' | 'session-start';
 export type HookFormat = 'claude' | 'agy';
 export type HookAction = 'allow' | 'ask' | 'deny';

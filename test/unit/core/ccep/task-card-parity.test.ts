@@ -8,8 +8,8 @@ describe('taskCard YAML ↔ WORKFLOW_PROFILES parity', () => {
     (command) => WORKFLOW_PROFILES[command].taskCard !== undefined,
   );
 
-  test('twelve profiles declare taskCard', () => {
-    expect(commands).toHaveLength(12);
+  test('thirteen profiles declare taskCard', () => {
+    expect(commands).toHaveLength(13);
   });
 
   for (const command of commands) {

@@ -41,6 +41,7 @@ const TDD_COMMANDS = new Set([
   'feature',
   'fix',
   'tdd-cycle',
+  'spec-mutation',
   'db-migration',
   'openspec',
   'iterative',

@@ -12,6 +12,7 @@ const CURSOR_COMMAND_FILES: Record<string, string> = {
   review: 'review.md',
   'test-plan': 'test-plan.md',
   'tdd-cycle': 'tdd-cycle.md',
+  'spec-mutation': 'spec-mutation.md',
   'api-contract': 'api-contract.md',
   'db-migration': 'db-migration.md',
   pagespeed: 'pagespeed.md',

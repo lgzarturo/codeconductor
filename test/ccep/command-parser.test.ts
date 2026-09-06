@@ -11,8 +11,8 @@ import {
 const PROJECT_ROOT = resolve(import.meta.dir, '../..');
 
 describe('ccep command-parser', () => {
-  test('exports all 20 supported workflow commands', () => {
-    expect(CCEP_COMMANDS).toHaveLength(20);
+  test('exports all 21 supported workflow commands', () => {
+    expect(CCEP_COMMANDS).toHaveLength(21);
     expect(CCEP_COMMANDS).toContain('feature');
     expect(CCEP_COMMANDS).toContain('fix');
     expect(CCEP_COMMANDS).toContain('council');

@@ -36,6 +36,11 @@ export const ASK_FLOW_CATALOG: readonly AskFlow[] = [
     blurb: 'one red-green-refactor cycle starting from a failing test',
   },
   {
+    command: 'spec-mutation',
+    slash: '/cc:spec-mutation',
+    blurb: 'spec-locked TDD with a mutation-testing gate before merge',
+  },
+  {
     command: 'backlog',
     slash: '/cc:backlog',
     blurb: 'create or append BACKLOG.md items and OpenSpec change folders',
@@ -129,6 +134,24 @@ export function recommendAskFlow(problem: string): AskRecommendation {
     return pick(
       'security',
       'The request is authorized defensive security work, so /cc:security is the fit.',
+    );
+  }
+
+  if (
+    includesAny(text, [
+      'mutation testing',
+      'mutation test',
+      'mutant',
+      'stryker',
+      'pitest',
+      'mutmut',
+      'spec-mutation',
+      'gherkin',
+    ])
+  ) {
+    return pick(
+      'spec-mutation',
+      'The request involves mutation testing or a Gherkin-locked spec gate, which is the /cc:spec-mutation contract.',
     );
   }
 

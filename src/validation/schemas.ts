@@ -765,6 +765,7 @@ export const WorkflowCommandSchema = z.enum([
   'review',
   'test-plan',
   'tdd-cycle',
+  'spec-mutation',
   'api-contract',
   'db-migration',
   'pagespeed',

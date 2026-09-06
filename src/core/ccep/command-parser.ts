@@ -22,6 +22,7 @@ const COMMAND_DEFAULTS: Record<
   review: { outputFormat: 'verdict', needConfirmation: false, riskThreshold: 'low' },
   'test-plan': { outputFormat: 'plan', needConfirmation: true, riskThreshold: 'low' },
   'tdd-cycle': { outputFormat: 'taskcard', needConfirmation: false, riskThreshold: 'medium' },
+  'spec-mutation': { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'high' },
   'api-contract': { outputFormat: 'plan', needConfirmation: true, riskThreshold: 'high' },
   'db-migration': { outputFormat: 'plan', needConfirmation: true, riskThreshold: 'high' },
   pagespeed: { outputFormat: 'verdict', needConfirmation: false, riskThreshold: 'low' },

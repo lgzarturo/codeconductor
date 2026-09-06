@@ -75,6 +75,7 @@ describe('ASK_FLOW_CATALOG stays aligned with shipped slash commands', () => {
       'refactor',
       'review',
       'tdd-cycle',
+      'spec-mutation',
       'backlog',
       'openspec',
       'security',

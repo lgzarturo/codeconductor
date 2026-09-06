@@ -108,6 +108,28 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     routing: { default: ['test', 'implement', 'refactor'] },
     confirmationGate: { stopOnHighRisk: false, stopOnQuestions: true },
   },
+  'spec-mutation': {
+    id: 'spec-mutation',
+    version: 1,
+    command: 'spec-mutation',
+    taskCard: {
+      type: 'feature',
+      requiredFields: ['title', 'type', 'risk', 'scope', 'context', 'acceptanceCriteria'],
+    },
+    phases: [
+      { id: 'refine', agent: 'task-coach', outputSchema: 'planner-output', stopGate: 'confirmation' },
+      { id: 'spec', agent: 'contract-builder', outputSchema: 'api-contract', stopGate: 'approval' },
+      { id: 'test', agent: 'tester', dependsOn: ['spec'], requires: 'red-state' },
+      { id: 'implement', agent: 'implementer', dependsOn: ['test'], requires: 'green-state' },
+      { id: 'judge', agent: 'reviewer', outputSchema: 'review-report', dependsOn: ['implement'] },
+      { id: 'mutation', agent: 'tester', dependsOn: ['judge'] },
+      { id: 'review', agent: 'reviewer', dependsOn: ['mutation'] },
+    ],
+    routing: {
+      default: ['refine', 'spec', 'test', 'implement', 'judge', 'mutation', 'review'],
+    },
+    confirmationGate: baseGate,
+  },
   'api-contract': {
     id: 'api-contract',
     version: 1,

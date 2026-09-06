@@ -72,6 +72,7 @@ Antigravity CLI loads custom slash commands from `.agents/workflows/*.md`. The f
 | `/cc-review`     | Runs a structured, multi-perspective code review and audit         |
 | `/cc-test-plan`  | Generates a structured test plan for a given scope                 |
 | `/cc-tdd-cycle`  | Runs a Test-Driven Development (TDD) cycle                         |
+| `/cc-spec-mutation` | Spec-locked TDD with SHA-256 freeze and mutation-testing gate   |
 | `/cc-api-contract`| Handles API contract modification and validation                  |
 | `/cc-db-migration`| Coordinates database schema migrations safely                      |
 | `/cc-iterative`  | Advanced iterative workflow — wayfinding, grilling, TDD, council |

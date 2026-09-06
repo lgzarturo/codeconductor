@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, test } from 'bun:test';
@@ -131,3 +132,62 @@ describe('Antigravity CLI (agy) Manifest and Model Config', () => {
     expect(tools.WebFetch.agy).toBe('read_url_content / read_browser_page');
   });
 });
+
+describe('Antigravity CLI (agy) Hooks Runner', () => {
+  const hooksConfig = JSON.parse(readPreset('presets/agy/hooks.json'));
+  const preToolCmd = hooksConfig['safety-gate']?.PreToolUse?.[0]?.hooks?.[0]?.command;
+  const postToolCmd = hooksConfig['code-formatter']?.PostToolUse?.[0]?.hooks?.[0]?.command;
+
+  test('hooks.json specifies valid PreToolUse and PostToolUse commands', () => {
+    expect(preToolCmd).toBeDefined();
+    expect(preToolCmd).toContain('invoke-hook.cjs');
+    expect(postToolCmd).toBeDefined();
+    expect(postToolCmd).toContain('invoke-hook.cjs');
+  });
+
+  test('PreToolUse hook command executes from .agents directory and returns allow JSON', () => {
+    const input = JSON.stringify({
+      toolName: 'run_command',
+      arguments: { CommandLine: 'ls -la' },
+    });
+    const result = spawnSync('sh', ['-c', preToolCmd], {
+      cwd: join(PROJECT_ROOT, '.agents'),
+      input,
+      encoding: 'utf-8',
+    });
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout.trim());
+    expect(parsed.action).toBe('allow');
+  });
+
+  test('PreToolUse hook command executes from project root and returns allow JSON', () => {
+    const input = JSON.stringify({
+      toolName: 'view_file',
+      arguments: { AbsolutePath: join(PROJECT_ROOT, 'README.md') },
+    });
+    const result = spawnSync('sh', ['-c', preToolCmd], {
+      cwd: PROJECT_ROOT,
+      input,
+      encoding: 'utf-8',
+    });
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout.trim());
+    expect(parsed.action).toBe('allow');
+  });
+
+  test('PreToolUse hook correctly blocks access to sensitive .env paths', () => {
+    const input = JSON.stringify({
+      toolName: 'view_file',
+      arguments: { AbsolutePath: join(PROJECT_ROOT, '.env') },
+    });
+    const result = spawnSync('sh', ['-c', preToolCmd], {
+      cwd: join(PROJECT_ROOT, '.agents'),
+      input,
+      encoding: 'utf-8',
+    });
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout.trim());
+    expect(parsed.action).toBe('deny');
+  });
+});
+

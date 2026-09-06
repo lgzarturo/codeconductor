@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .agents/scripts/invoke-hook.cjs post-tool --format=agy"
+            "command": "node -e \"const fs=require('fs'),p=fs.existsSync('scripts/invoke-hook.cjs')?'scripts/invoke-hook.cjs':'.agents/scripts/invoke-hook.cjs';require(require('path').resolve(p))\" post-tool --format=agy"
           }
         ]
       }
@@ -21,7 +21,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .agents/scripts/invoke-hook.cjs pre-tool --format=agy"
+            "command": "node -e \"const fs=require('fs'),p=fs.existsSync('scripts/invoke-hook.cjs')?'scripts/invoke-hook.cjs':'.agents/scripts/invoke-hook.cjs';require(require('path').resolve(p))\" pre-tool --format=agy"
           }
         ]
       }

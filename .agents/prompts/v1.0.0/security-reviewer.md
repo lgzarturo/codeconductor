@@ -5,7 +5,7 @@ description:
   authority on auth, payment, credentials, injection, and supply-chain paths.
 effort: high
 mode: subagent
-model: "gemini-3.1-pro-preview"
+model: "gemini-3.1-pro"
 temperature: 0.1
 tools: view_file, list_dir, grep_search, run_command
 permission:

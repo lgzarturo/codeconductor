@@ -5,7 +5,7 @@ description:
   invented architecture — and runs tests before declaring done.
 effort: medium
 mode: subagent
-model: "gemini-3.7-flash"
+model: "claude-sonnet-4.6-thinking"
 temperature: 0.1
 tools: view_file, write_to_file, replace_file_content / multi_replace_file_content, run_command, list_dir, grep_search
 permission:

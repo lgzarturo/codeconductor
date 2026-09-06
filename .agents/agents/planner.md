@@ -5,7 +5,7 @@ description:
   intake role. No code.
 effort: low
 mode: subagent
-model: "gemini-3.7-flash"
+model: "gemini-3.8-flash"
 temperature: 0.1
 tools: view_file, list_dir, grep_search
 permission:

@@ -5,7 +5,7 @@ description:
   surface the strongest objections before code ships. Never writes code.
 effort: high
 mode: subagent
-model: "gemini-3.1-pro-preview"
+model: "gemini-3.1-pro"
 temperature: 0.2
 tools: view_file, list_dir, grep_search, run_command
 permission:

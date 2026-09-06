@@ -279,7 +279,10 @@ export function renderTemplate(content: string, modelConfig: ModelConfig, filePa
 
     if (sectionMatch) {
       for (const section of sectionMatch) {
+        const targetModel =
+          agentModels[modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor' | 'agy'];
         const renderedSection = section
+          .replace(/\{\{MODEL\}\}/g, targetModel ?? '')
           .replace(/\{\{MODEL_CLAUDE\}\}/g, agentModels.claude ?? '')
           .replace(/\{\{MODEL_OPENCODE\}\}/g, agentModels.opencode ?? '')
           .replace(/\{\{MODEL_CODEX\}\}/g, agentModels.codex ?? '')

@@ -78,9 +78,10 @@ describe('Antigravity CLI (agy) Preset — AGENTS.md content', () => {
     expect(content).toContain('### repo-explorer');
   });
 
-  test('references MODEL_GEMINI placeholder', () => {
+  test('references MODEL placeholder', () => {
     const content = readPreset('presets/agy/AGENTS.md');
-    expect(content).toContain('{{MODEL_GEMINI}}');
+    expect(content).toContain('{{MODEL}}');
+    expect(content).not.toContain('{{MODEL_GEMINI}}');
   });
 });
 

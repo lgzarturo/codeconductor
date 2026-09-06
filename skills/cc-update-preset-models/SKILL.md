@@ -33,7 +33,10 @@ tablas `{{MODEL_*}}`. Ejecutar cuando cambien los catálogos de los runners.
 `{{MODEL_GROK}}`.
 
 Las **seis** YAMLs deben compartir las mismas columnas cruzadas. Solo
-[`agy.yml`](../../src/presets/models/agy.yml) añade `agy:` (copia de `gemini:`).
+[`agy.yml`](../../src/presets/models/agy.yml) añade `agy:`, que usa el
+catálogo **nativo de Antigravity** (no es copia de `gemini:`): high-effort →
+`gemini-3.1-pro`, medium → `claude-sonnet-4.6-thinking`, low →
+`gemini-3.8-flash` (fuente: antigravity.google/docs/models).
 La columna `cursor:` son **slugs de Cursor**, nunca IDs de GPT.
 
 Archivos: `src/presets/models/{opencode,claude,codex,gemini,cursor,agy}.yml`
@@ -79,7 +82,8 @@ Ajustar el mapa si el catálogo cambió de familia; conservar **tres niveles**
 1. Construir un dict de 14 roles con las 6 columnas (`claude`, `opencode`,
    `codex`, `gemini`, `cursor`, `grok`).
 2. Copiarlo a los seis archivos; preservar `permissions:` (opencode) y
-   `tools:` (el resto). En agy, `agy:` = `gemini:`.
+   `tools:` (el resto). En agy, `agy:` usa el catálogo nativo de Antigravity
+   según el esfuerzo del rol (ver nota arriba), no la columna `gemini:`.
 3. Conservar el comentario de cabecera de cada archivo.
 4. No mezclar slugs: Claude CLI = IDs API (`claude-opus-5`); Cursor =
    `claude-opus-5-thinking-high`.

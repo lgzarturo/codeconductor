@@ -1,6 +1,6 @@
 ---
 name: cc-review
-description: CRITICAL, WARNING, and SUGGESTION findings; CRITICAL findings block merge.
+description: Run a structured code review — produces a Review Report with CRITICAL, WARNING, and SUGGESTION findings; CRITICAL findings block merge.
 ---
 
 # review

@@ -1,6 +1,6 @@
 ---
 name: cc-test-plan
-description: unit, integration, contract, and edge cases without writing implementation code.
+description: Generate a structured test plan for a feature or module — covers unit, integration, contract, and edge cases without writing implementation code.
 ---
 
 # test-plan

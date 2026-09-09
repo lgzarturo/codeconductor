@@ -1,6 +1,6 @@
 ---
 name: cc-iterative
-description: Relentless Grilling, contract and spec design, TDD, council review, and docs.
+description: Run the advanced iterative workflow — Wayfinding AST discovery, Relentless Grilling, contract and spec design, TDD, council review, and docs.
 ---
 
 # iterative
@@ -33,7 +33,7 @@ If `openspec status` reports an active change folder:
 1. Run: `npx cc-codeconductor openspec validate --output json`
 2. Run: `npx cc-codeconductor openspec analyze --output json`
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
-4. Next command spelling on this runner: `/cc:iterative`
+4. Next command spelling on this runner: `$cc-iterative`
 
 Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
 

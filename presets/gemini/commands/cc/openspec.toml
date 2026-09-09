@@ -1,4 +1,4 @@
-description = "orchestrate agents by phase, review gate, and update backlog state."
+description = "Run OpenSpec backlog delivery — validate BACKLOG.md, plan TaskCards, orchestrate agents by phase, review gate, and update backlog state."
 
 prompt = """
 # OpenSpec Backlog Workflow

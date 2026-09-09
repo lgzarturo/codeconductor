@@ -7,6 +7,7 @@ import {
   WORKFLOW_COMMANDS,
 } from '../../src/core/presets/workflow-commands';
 import { formatCcCommand } from '../../src/core/presets/command-invocation';
+import { descriptionFrom, readNormalizedSource } from '../../scripts/render-agent-commands';
 
 const ROOT = resolve(import.meta.dir, '../..');
 
@@ -73,9 +74,50 @@ describe('slash command parity (6 targets × workflows)', () => {
             expect(content).toContain(target.gate);
             expect(content).toContain('openspec analyze');
             expect(content).toContain(target.invoke(cmd));
+
+            // The cursor source's "Next command spelling" line bakes in
+            // cursor's own colon spelling of itself. Checking the correct
+            // spelling is present (above) does not prove the wrong one isn't
+            // ALSO present elsewhere in the same file — e.g. codex's "Invoke
+            // as `$cc-x`" header used to pass that check while the copied
+            // body still leaked cursor's `/cc:x` a few lines down.
+            if (target.invoke(cmd) !== formatCcCommand(cmd, 'colon')) {
+              expect(content).not.toContain(
+                `Next command spelling on this runner: \`${formatCcCommand(cmd, 'colon')}\``
+              );
+            }
           });
         }
       }
+    });
+  }
+});
+
+describe('generated description parity (gemini + codex derive from cursor)', () => {
+  // pagespeed.md carries no frontmatter in the cursor source, so its
+  // description legitimately falls back to the generic string — a
+  // documented gap in the source content, not a rendering defect.
+  const KNOWN_FALLBACK = new Set(['pagespeed']);
+
+  for (const cmd of WORKFLOW_COMMANDS) {
+    test(`${cmd} gemini/codex description matches the canonical cursor source`, async () => {
+      const source = readNormalizedSource(cmd);
+      expect(source).toBeDefined();
+      const expected = descriptionFrom(source as string, cmd);
+
+      if (!KNOWN_FALLBACK.has(cmd)) {
+        // This is exactly the assertion that would have caught the
+        // description-truncation bug: a folded "[cc: alias] ..." YAML block
+        // used to get filtered down to its tail, or silently fell back to
+        // this generic string when the frontmatter fence didn't match CRLF.
+        expect(expected).not.toBe(`CodeConductor ${cmd} workflow`);
+      }
+
+      const toml = await readFile(join(ROOT, `presets/gemini/commands/cc/${cmd}.toml`), 'utf-8');
+      expect(toml.split('\n')[0]).toBe(`description = ${JSON.stringify(expected)}`);
+
+      const skill = await readFile(join(ROOT, `presets/codex/skills/cc-${cmd}/SKILL.md`), 'utf-8');
+      expect(skill).toContain(`description: ${expected}\n`);
     });
   }
 });

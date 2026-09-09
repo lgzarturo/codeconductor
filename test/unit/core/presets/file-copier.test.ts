@@ -10,6 +10,7 @@ import {
   listFilesRecursive,
   mergeDeep,
   renderTemplate,
+  resolveAgyGlobalEntry,
   resolveEntryFiles,
 } from '../../../../src/core/presets/file-copier';
 import {
@@ -481,6 +482,34 @@ describe('core/presets/file-copier', () => {
       expect(second).toEqual(first);
       expect(second.every((r) => r.action === 'written')).toBe(true);
       expect(await readFile(join(base, 'agents', 'a.md'), 'utf-8')).toBe('a');
+    });
+  });
+
+  describe('resolveAgyGlobalEntry', () => {
+    test('routes antigravity-cli/settings.json to ~/.gemini, not ~/.gemini/config', () => {
+      const home = '/home/user';
+      const { baseDir, entry } = resolveAgyGlobalEntry(
+        { src: 'agy/settings.json', dest: 'antigravity-cli/settings.json', strategy: 'skip' },
+        home
+      );
+
+      expect(baseDir).toBe(join(home, '.gemini'));
+      expect(entry.dest).toBe('antigravity-cli/settings.json');
+      // Resolving dest against baseDir must land directly under ~/.gemini,
+      // never nested inside ~/.gemini/config — that nesting is what made
+      // every real (non-dry-run) write refuse the path as escaping its root.
+      expect(join(baseDir, entry.dest)).toBe(join(home, '.gemini', 'antigravity-cli', 'settings.json'));
+    });
+
+    test('strips the .agents/ prefix and routes everything else to ~/.gemini/config', () => {
+      const home = '/home/user';
+      const { baseDir, entry } = resolveAgyGlobalEntry(
+        { src: 'agy/rules', dest: '.agents/rules', strategy: 'overwrite' },
+        home
+      );
+
+      expect(baseDir).toBe(join(home, '.gemini', 'config'));
+      expect(entry.dest).toBe('rules');
     });
   });
 });

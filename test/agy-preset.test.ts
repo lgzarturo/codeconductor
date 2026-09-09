@@ -108,7 +108,7 @@ describe('Antigravity CLI (agy) Manifest and Model Config', () => {
     expect(destDirs).toContain('.agents/AGENTS.md');
     expect(destDirs).toContain('.agents/rules');
     expect(destDirs).toContain('.agents/workflows');
-    expect(destDirs).toContain('.agents/../antigravity-cli/settings.json');
+    expect(destDirs).toContain('antigravity-cli/settings.json');
     expect(destDirs).toContain('.agents/hooks.json');
     expect(destDirs).toContain('.agents/mcp_config.json');
     expect(destDirs).toContain('.agents/scripts');

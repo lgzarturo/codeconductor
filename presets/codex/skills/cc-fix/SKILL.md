@@ -1,6 +1,6 @@
 ---
 name: cc-fix
-description: validation, implementation, testing, and optional review.
+description: Run the bug fix workflow — risk-based routing through task validation, implementation, testing, and optional review.
 ---
 
 # fix
@@ -41,7 +41,7 @@ If `openspec status` reports an active change folder:
 1. Run: `npx cc-codeconductor openspec validate --output json`
 2. Run: `npx cc-codeconductor openspec analyze --output json`
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
-4. Next command spelling on this runner: `/cc:fix`
+4. Next command spelling on this runner: `$cc-fix`
 
 Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
 
@@ -163,3 +163,6 @@ Report: Task Card, Implementation Summary, regression test added, Review Report
 
 The fix is complete only when: the regression test passes, the full suite
 passes, and no CRITICAL review findings remain.
+
+Skills: `testing-tdd`, `evaluation`. Record `scorecard create --from-diff`.
+A small fix still needs a Task Card and a failing regression test first.

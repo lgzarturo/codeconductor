@@ -1,6 +1,6 @@
 ---
 name: cc-api-contract
-description: compatibility constraints, contract tests, documentation, and review.
+description: Run the API contract workflow for public interface changes, compatibility constraints, contract tests, documentation, and review.
 ---
 
 # api-contract
@@ -30,7 +30,7 @@ If `openspec status` reports an active change folder:
 1. Run: `npx cc-codeconductor openspec validate --output json`
 2. Run: `npx cc-codeconductor openspec analyze --output json`
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
-4. Next command spelling on this runner: `/cc:api-contract`
+4. Next command spelling on this runner: `$cc-api-contract`
 
 Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
 

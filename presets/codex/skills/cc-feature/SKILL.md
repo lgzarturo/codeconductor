@@ -1,6 +1,6 @@
 ---
 name: cc-feature
-description: implementation, testing, review, and documentation.
+description: Run the full feature workflow — task validation, technical design, implementation, testing, review, and documentation.
 ---
 
 # feature
@@ -33,9 +33,13 @@ If `openspec status` reports an active change folder:
 1. Run: `npx cc-codeconductor openspec validate --output json`
 2. Run: `npx cc-codeconductor openspec analyze --output json`
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
-4. Next command spelling on this runner: `/cc:feature`
+4. Next command spelling on this runner: `$cc-feature`
 
 Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
+
+Skills: `using-cc-skills`, `openspec`, `testing-tdd`, `evaluation`.
+Do not skip `openspec analyze` when a change folder is active.
+"I'll add tests later" is not allowed — tester before implementer.
 
 ---
 

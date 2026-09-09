@@ -1,6 +1,6 @@
 ---
 name: cc-refactor
-description: test verification, risk-based implementation, and scope enforcement.
+description: Run the refactor workflow — mandatory architectural justification, test verification, risk-based implementation, and scope enforcement.
 ---
 
 # refactor

@@ -36,4 +36,4 @@ Invoke `implementer` in a Git worktree that is not a merge candidate. Label the 
 
 ## Completion
 
-Report bounds, worktree path, and what was learned. Recommend `/cc:feature` or `/cc:fix` if the spike should become real work.
+Report bounds, worktree path, and what was learned. Recommend `/cc-feature` or `/cc-fix` if the spike should become real work.

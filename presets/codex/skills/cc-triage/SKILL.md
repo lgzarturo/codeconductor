@@ -1,6 +1,6 @@
 ---
 name: cc-triage
-description: CodeConductor triage workflow
+description: Classify a request into type, risk, and the destination CodeConductor command.
 ---
 
 # triage

@@ -1,6 +1,6 @@
 ---
 name: cc-tdd-cycle
-description: test first, implement the minimum code to pass it, then refactor with the suite green.
+description: Run a structured Red-Green-Refactor TDD cycle — write a failing test first, implement the minimum code to pass it, then refactor with the suite green.
 ---
 
 # tdd-cycle
@@ -40,7 +40,7 @@ If `openspec status` reports an active change folder:
 1. Run: `npx cc-codeconductor openspec validate --output json`
 2. Run: `npx cc-codeconductor openspec analyze --output json`
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
-4. Next command spelling on this runner: `/cc:tdd-cycle`
+4. Next command spelling on this runner: `$cc-tdd-cycle`
 
 Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
 

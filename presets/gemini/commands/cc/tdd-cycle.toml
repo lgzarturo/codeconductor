@@ -1,4 +1,4 @@
-description = "test first, implement the minimum code to pass it, then refactor with the suite green."
+description = "Run a structured Red-Green-Refactor TDD cycle — write a failing test first, implement the minimum code to pass it, then refactor with the suite green."
 
 prompt = """
 # TDD Cycle — Red → Green → Refactor
@@ -258,7 +258,4 @@ The TDD cycle is complete when:
 
 If the behavior requires additional test cases, start a new `/tdd-cycle` with
 the next scenario. One cycle = one behavior.
-
-Skill: `testing-tdd`. Evidence from the verification runner only — handmade TDD
-JSON is rejected. Optional gate: `bun run dev scorecard suite-run --suite workflow-gates`.
 """

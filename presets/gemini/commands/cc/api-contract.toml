@@ -1,4 +1,4 @@
-description = "compatibility constraints, contract tests, documentation, and review."
+description = "Run the API contract workflow for public interface changes, compatibility constraints, contract tests, documentation, and review."
 
 prompt = """
 # API Contract Workflow

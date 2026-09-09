@@ -143,7 +143,7 @@ tester produces the plan in this format:
 Show the Test Plan to the human before any tests are written.
 
 The Test Plan is an artifact for review and approval. Writing test code is a
-separate action — invoke `/cc:feature` or add a test task to the board to
+separate action — invoke `/cc-feature` or add a test task to the board to
 implement from this plan.
 
 ---

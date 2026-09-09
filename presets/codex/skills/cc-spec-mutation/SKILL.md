@@ -1,6 +1,6 @@
 ---
 name: cc-spec-mutation
-description: into an immutable Gherkin contract (SHA-256 frozen), implement under the three laws of TDD, pass a judge audit, and merge only if every mutant dies.
+description: Spec-locked TDD with a mutation-testing gate — refine the intent into an immutable Gherkin contract (SHA-256 frozen), implement under the three laws of TDD, pass a judge audit, and merge only if every mutant dies.
 ---
 
 # spec-mutation
@@ -40,7 +40,7 @@ If `openspec status` reports an active change folder:
 1. Run: `npx cc-codeconductor openspec validate --output json`
 2. Run: `npx cc-codeconductor openspec analyze --output json`
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
-4. Next command spelling on this runner: `/cc:spec-mutation`
+4. Next command spelling on this runner: `$cc-spec-mutation`
 
 Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
 
@@ -103,7 +103,7 @@ aborts the pipeline with scorecard 0 (Specification Gaming).
 
 ## Stage 3 — TDD under the three laws (`tdd_craftsman`)
 
-Delegates to the `/cc:tdd-cycle` state machine (`tddCycleStateMachine` in
+Delegates to the `$cc-tdd-cycle` state machine (`tddCycleStateMachine` in
 `domain/loop`). Evidence must be captured with `captureTddSuiteEvidence` — do
 not hand-edit JSON under `.codeconductor/evidence/`.
 

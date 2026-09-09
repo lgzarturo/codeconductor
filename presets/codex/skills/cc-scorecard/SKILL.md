@@ -1,6 +1,6 @@
 ---
 name: cc-scorecard
-description: checklist, and aggregate stats.
+description: Evaluate deliverable quality — scorecard, outcome tracking, regression checklist, and aggregate stats.
 ---
 
 # scorecard

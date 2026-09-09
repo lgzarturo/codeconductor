@@ -259,5 +259,5 @@ The TDD cycle is complete when:
 **Cycle status**: complete | blocked (reason)
 ```
 
-If the behavior requires additional test cases, start a new `/cc:tdd-cycle` with
+If the behavior requires additional test cases, start a new `/cc-tdd-cycle` with
 the next scenario. One cycle = one behavior.

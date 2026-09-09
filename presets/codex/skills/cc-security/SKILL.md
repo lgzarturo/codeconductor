@@ -1,6 +1,6 @@
 ---
 name: cc-security
-description: security-* skills, authorization gate, risk-based routing, hardening, and review.
+description: Run the authorized defensive security workflow — domain security-* skills, authorization gate, risk-based routing, hardening, and review.
 ---
 
 # security

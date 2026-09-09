@@ -1,4 +1,4 @@
-description = "Relentless Grilling, contract and spec design, TDD, council review, and docs."
+description = "Run the advanced iterative workflow — Wayfinding AST discovery, Relentless Grilling, contract and spec design, TDD, council review, and docs."
 
 prompt = """
 # Advanced Iterative Workflow

@@ -1,4 +1,4 @@
-description = "implementation, testing, review, and documentation."
+description = "Run the full feature workflow — task validation, technical design, implementation, testing, review, and documentation."
 
 prompt = """
 # Feature Workflow

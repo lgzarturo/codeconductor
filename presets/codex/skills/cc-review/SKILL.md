@@ -150,3 +150,7 @@ npx cc-codeconductor scorecard regression
 ```
 
 Map merge recommendation to scorecard verdict. Record outcome for trend tracking.
+
+## Next
+
+Approved: merge. Blocked: return the findings to `$cc-fix` or `$cc-feature`.

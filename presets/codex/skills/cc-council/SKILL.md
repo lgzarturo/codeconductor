@@ -90,3 +90,7 @@ If APPROVED (no CRITICAL findings):
 ## Completion
 
 Deliver the complete Council Verdict. The feature is only complete when tests pass and the council explicitly approves the implementation according to the specification.
+
+## Next
+
+Approved: merge. Blocked: return the findings to `$cc-fix` or `$cc-feature`.

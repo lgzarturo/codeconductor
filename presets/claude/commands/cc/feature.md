@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Run the full feature workflow — task validation, technical design,
+  Run the full feature workflow — task validation, technical design,
   implementation, testing, review, and documentation.
 ---
 
@@ -158,3 +158,7 @@ Report the following:
 
 The feature is complete only when: all tests pass, no CRITICAL review findings
 remain, and documentation reflects the implemented behavior.
+
+## Next
+
+Run `/cc:review` on the diff before merging.

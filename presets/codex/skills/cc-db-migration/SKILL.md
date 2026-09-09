@@ -86,3 +86,7 @@ Invoke the `reviewer` subagent via the Task tool.
 
 Block on missing migration tests, missing data-risk notes, undocumented
 deployment sequencing, or model/migration drift.
+
+## Next
+
+Run `$cc-review` on the diff before merging.

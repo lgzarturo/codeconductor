@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Recommend one CodeConductor slash command from a natural-language
+  Recommend one CodeConductor slash command from a natural-language
   problem. Does not start that workflow.
 ---
 

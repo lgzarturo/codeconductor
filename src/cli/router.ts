@@ -13,6 +13,7 @@ import type { ScorecardOptions } from '../commands/scorecard.command';
 import type { HelpOptions } from '../commands/help.command';
 import type { SeoAuditOptions, SeoLlmsOptions } from '../domain/seo/seo-types';
 import type { UpdateOptions } from '../commands/update.command';
+import type { MigrateOptions } from '../commands/migrate.command';
 import type { IngestOptions } from '../commands/ingest.command';
 import type { ProductOptions } from '../commands/product.command';
 import type { OrchestrateOptions } from '../commands/orchestrate.command';
@@ -182,6 +183,8 @@ Published commands (package ${packageJson.version}):
   seo llms                Generate llms.txt from a URL or sitemap
   doctor                  Validate configuration and generated files
   update                  Update installed presets
+  migrate                 Repair a Claude Code settings.json: rewrite invalid
+                          Write(path) permission rules to Edit(path) and dedupe
   help                    Show general CLI usage and command list
   ask                     Recommend a /cc: slash command from a natural-language problem
   cc-help                 Show preset inventory (skills, subagents, commands)
@@ -257,6 +260,9 @@ Examples:
   npx cc-codeconductor install lsp --target claude --dry-run
   npx cc-codeconductor doctor
   npx cc-codeconductor update --dry-run
+  npx cc-codeconductor migrate --dry-run
+  npx cc-codeconductor migrate --global
+  npx cc-codeconductor migrate --file .claude/settings.local.json
   npx cc-codeconductor seo audit --url https://example.com
   npx cc-codeconductor seo audit --sitemap https://example.com/sitemap.xml
   npx cc-codeconductor seo audit --sitemap https://example.com/sitemap.xml --format markdown
@@ -465,6 +471,17 @@ export async function routeCommand(
         global: options.global === true || options.global === 'true',
         output: flags.output,
       } as UpdateOptions);
+    }
+
+    case 'migrate': {
+      const { migrateCommand } = await import('../commands/migrate.command');
+      return migrateCommand({
+        projectRoot,
+        dryRun: flags.dryRun,
+        global: options.global === true || options.global === 'true',
+        output: flags.output,
+        file: options.file as string | undefined,
+      } as MigrateOptions);
     }
 
     case 'help':

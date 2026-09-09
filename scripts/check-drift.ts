@@ -7,14 +7,23 @@
  */
 import { spawnSync } from 'node:child_process';
 import { renderAll } from './render-agent-commands';
+import { WORKFLOW_COMMANDS } from '../src/core/presets/workflow-commands';
 
 renderAll();
 
-const result = spawnSync(
-  'git',
-  ['diff', '--exit-code', '--', 'presets/gemini/commands/cc', 'presets/codex/skills/cc-*'],
-  { encoding: 'utf-8' }
-);
+// Scoped to exactly the files renderAll() writes — not the whole directory,
+// which also holds hand-maintained siblings like ask.toml/cc-ask (not a
+// WORKFLOW_COMMAND). A directory-level pathspec would flag a legitimate
+// manual edit to one of those as "drift" even though the generator never
+// touches them.
+const generatedPaths = WORKFLOW_COMMANDS.flatMap((cmd) => [
+  `presets/gemini/commands/cc/${cmd}.toml`,
+  `presets/codex/skills/cc-${cmd}/SKILL.md`,
+]);
+
+const result = spawnSync('git', ['diff', '--exit-code', '--', ...generatedPaths], {
+  encoding: 'utf-8',
+});
 
 if (result.status !== 0) {
   process.stderr.write(

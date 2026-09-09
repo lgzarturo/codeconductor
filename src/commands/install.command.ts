@@ -4,6 +4,8 @@ import { basename, dirname, resolve, sep } from 'node:path';
 import { createAgyInstaller } from '../adapters/agy/agy-installer';
 import { createClaudeInstaller } from '../adapters/claude/claude-installer';
 import { createCodexInstaller } from '../adapters/codex/codex-installer';
+import { createCursorInstaller } from '../adapters/cursor/cursor-installer';
+import { createGeminiInstaller } from '../adapters/gemini/gemini-installer';
 import { createOpenCodeInstaller } from '../adapters/opencode/opencode-installer';
 import { loadConfig } from '../core/config/config-loader';
 import { detectProject } from '../core/detection/project-detector';
@@ -85,8 +87,13 @@ export async function installCommand(
           installer = createCodexInstaller(spec);
           break;
         case 'gemini':
+          installer = createGeminiInstaller(spec);
+          break;
         case 'agy':
           installer = createAgyInstaller(spec);
+          break;
+        case 'cursor':
+          installer = createCursorInstaller(spec);
           break;
         default:
           continue;
@@ -94,7 +101,13 @@ export async function installCommand(
 
       const generatedFiles = await installer.generate();
 
-      const isAgyGlobal = (t === 'agy' || t === 'gemini') && isGlobal;
+      // agy (Antigravity CLI) is the one target whose global config lives
+      // under a nested provider path instead of directly at $HOME — its
+      // generated paths are prefixed with `.agents/` and need that prefix
+      // stripped once redirected there. Every other target's generated
+      // paths are already native to that target (`.gemini/...`,
+      // `.cursor/...`) and resolve correctly straight under $HOME.
+      const isAgyGlobal = t === 'agy' && isGlobal;
       const targetBase = isAgyGlobal ? resolve(homedir(), '.gemini', 'config') : baseDir;
 
       // Anchor relative paths to baseDir

@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Classify a request into type, risk, and the destination CodeConductor command.
+  Classify a request into type, risk, and the destination CodeConductor command.
 ---
 
 # Triage Workflow

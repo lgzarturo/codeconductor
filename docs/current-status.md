@@ -2,7 +2,7 @@
 
 This file is the canonical shipped/planned matrix for the repository.
 
-**Published package version:** `1.1.0` (from `package.json`)
+**Published package version:** `1.2.0` (from `package.json`)
 
 Code present in the repository but assigned to a later release is
 **implemented, unreleased**. A release-note filename or historical roadmap
@@ -10,8 +10,8 @@ entry does not by itself mean that version was published.
 
 | Capability | Repository status | Published in 0.5.0 |
 | ---------- | ----------------- | ------------------- |
-| Core CLI (`init`, `detect`, `install`, `doctor`, `update`) | shipped | yes |
-| Preset and council installation | shipped | yes |
+| Core CLI (`init`, `detect`, `install`, `doctor`, `update`, `migrate`) | shipped | yes |
+| Preset and council installation (6 targets: agy, claude, codex, cursor, gemini, opencode) | shipped | yes |
 | SEO audit / `llms.txt` commands | shipped | yes |
 | Scorecard and outcome evaluation | shipped | yes |
 | Harness ablation (leave-one-out catalog + experiment + report) | implemented, unreleased — **v1.0.0** | no |
@@ -24,6 +24,15 @@ entry does not by itself mean that version was published.
 | Full stack-specific asset pruning/replacement | planned | no |
 | Kotlin LSP binary download | disabled pending pinned URL + SHA-256 | no |
 | Policy compiler / uniform target enforcement | planned | no |
+
+## Harness standard
+
+Skill and command frontmatter, cross-target invocation syntax, and how to add
+a new target are documented in [docs/harness-spec.md](harness-spec.md) (CCHS
+v1). `cc migrate` repairs a Claude Code `settings.json` left with invalid
+`Write(path)` permission rules from before that fix — those never matched
+(Claude Code only applies `Edit(path)`), and a plain reinstall can't remove
+one already on disk (array-union merge).
 
 ## Help contracts
 

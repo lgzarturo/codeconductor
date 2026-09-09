@@ -165,3 +165,7 @@ full suite passes, and no CRITICAL review findings remain.
 
 Skills: `testing-tdd`, `evaluation`. Record `scorecard create --from-diff`.
 A small fix still needs a Task Card and a failing regression test first.
+
+## Next
+
+Run `/cc-review` on the diff before merging.

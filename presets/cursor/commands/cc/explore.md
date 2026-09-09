@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Map the repository and recommend the next CodeConductor slash command. Read-only.
+  Map the repository and recommend the next CodeConductor slash command. Read-only.
 ---
 
 # Explore Workflow

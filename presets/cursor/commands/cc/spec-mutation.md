@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Spec-locked TDD with a mutation-testing gate — refine the intent
+  Spec-locked TDD with a mutation-testing gate — refine the intent
   into an immutable Gherkin contract (SHA-256 frozen), implement under the
   three laws of TDD, pass a judge audit, and merge only if every mutant dies.
 ---
@@ -188,3 +188,7 @@ The orchestrator keeps a persistent counter per Task Card. If the
 - [ ] Judge verdict PASS (compile clean, traceability complete, scope clean).
 - [ ] Mutation runner exits 0 with `total_mutants_killed == total_points`.
 - [ ] Scorecard records the kill rate and iteration count (≤ 3).
+
+## Next
+
+Run `/cc:review` on the diff before merging.

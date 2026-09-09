@@ -1,5 +1,14 @@
 target: gemini
 entries:
+  - src: gemini/GEMINI.md
+    dest: GEMINI.md
+    strategy: merge-managed
+    globalStrategy: merge-managed
+    template: true
+  - src: gemini/settings.json
+    dest: .gemini/settings.json
+    strategy: overwrite
+    globalStrategy: merge-json
   - src: opencode/agents
     dest: .gemini/agents
     strategy: overwrite
@@ -11,15 +20,6 @@ entries:
   - src: gemini/commands
     dest: .gemini/commands
     strategy: overwrite
-  - src: claude/skills/openspec
-    dest: .gemini/skills/openspec
-    strategy: overwrite
-  - src: claude/skills/backlog
-    dest: .gemini/skills/backlog
-    strategy: overwrite
-  - src: claude/skills/evaluation
-    dest: .gemini/skills/evaluation
-    strategy: overwrite
-  - src: cursor/skills/testing-tdd
-    dest: .gemini/skills/testing-tdd
+  - src: opencode/skills
+    dest: .gemini/skills
     strategy: overwrite

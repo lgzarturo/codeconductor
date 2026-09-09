@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Run the advanced iterative workflow — Wayfinding AST discovery,
+  Run the advanced iterative workflow — Wayfinding AST discovery,
   Relentless Grilling, contract and spec design, TDD, council review, and docs.
 ---
 

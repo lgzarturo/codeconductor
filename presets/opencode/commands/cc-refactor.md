@@ -158,3 +158,7 @@ and after, Review Report (if applicable).
 The refactor is complete only when: all pre-existing tests still pass, the
 implementation matches the approved plan exactly, and no CRITICAL review
 findings remain.
+
+## Next
+
+Run `/cc-review` on the diff before merging.

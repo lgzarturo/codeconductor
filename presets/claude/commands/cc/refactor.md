@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Run the refactor workflow — mandatory architectural justification,
+  Run the refactor workflow — mandatory architectural justification,
   test verification, risk-based implementation, and scope enforcement.
 ---
 
@@ -297,3 +297,7 @@ findings remain.
 If using expand-migrate-contract: completion occurs only after all batches
 (expand, migrate, contract) are DONE and no BLOCKED items remain in the
 sequencing chain.
+
+## Next
+
+Run `/cc:review` on the diff before merging.

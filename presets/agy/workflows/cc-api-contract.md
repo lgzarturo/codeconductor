@@ -95,3 +95,7 @@ or docs/OpenAPI drift.
 
 Report the final Task Card, Technical Plan, implementation summary, test report,
 review report, docs updated, compatibility impact, and residual risks.
+
+## Next
+
+Run `/cc-review` on the diff before merging.

@@ -85,3 +85,7 @@ Invoke the `reviewer` subagent via the Task tool.
 
 Block on missing contract tests, undocumented breaking changes, or docs/OpenAPI
 drift.
+
+## Next
+
+Run `$cc-review` on the diff before merging.

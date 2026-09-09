@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Author BACKLOG.md — wayfinding, grilling, create or append items,
+  Author BACKLOG.md — wayfinding, grilling, create or append items,
   validate with openspec, and plan OpenSpec change folders for /cc:openspec.
 ---
 

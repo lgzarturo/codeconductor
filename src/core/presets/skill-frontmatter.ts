@@ -1,5 +1,10 @@
 import { parse } from 'yaml';
-import { SkillFrontmatterSchema, type SkillFrontmatter } from '../../validation/schemas';
+import {
+  CommandFrontmatterSchema,
+  SkillFrontmatterSchema,
+  type CommandFrontmatter,
+  type SkillFrontmatter,
+} from '../../validation/schemas';
 
 export interface SkillFrontmatterError {
   readonly kind: 'missing' | 'invalid-yaml' | 'schema';
@@ -10,28 +15,61 @@ export type SkillFrontmatterResult =
   | { readonly ok: true; readonly frontmatter: SkillFrontmatter }
   | { readonly ok: false; readonly error: SkillFrontmatterError };
 
-/**
- * Parse and validate a SKILL.md's frontmatter block against
- * SkillFrontmatterSchema. Shared by the frontmatter-parity test and
- * `cc doctor` so both apply the exact same rule.
- */
-export function parseSkillFrontmatter(content: string): SkillFrontmatterResult {
+export type CommandFrontmatterResult =
+  | { readonly ok: true; readonly frontmatter: CommandFrontmatter }
+  | { readonly ok: false; readonly error: SkillFrontmatterError };
+
+function parseFrontmatterFence(
+  content: string
+): { readonly ok: true; readonly data: unknown } | { readonly ok: false; readonly error: SkillFrontmatterError } {
   const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!fmMatch) {
     return { ok: false, error: { kind: 'missing', message: 'No YAML frontmatter fence found' } };
   }
-
-  let parsed: unknown;
   try {
-    parsed = parse(fmMatch[1]);
+    return { ok: true, data: parse(fmMatch[1]) };
   } catch (e) {
     return {
       ok: false,
       error: { kind: 'invalid-yaml', message: e instanceof Error ? e.message : String(e) },
     };
   }
+}
 
-  const result = SkillFrontmatterSchema.safeParse(parsed);
+/**
+ * Parse and validate a SKILL.md's frontmatter block against
+ * SkillFrontmatterSchema. Shared by the frontmatter-parity test and
+ * `cc doctor` so both apply the exact same rule.
+ */
+export function parseSkillFrontmatter(content: string): SkillFrontmatterResult {
+  const fence = parseFrontmatterFence(content);
+  if (!fence.ok) return fence;
+
+  const result = SkillFrontmatterSchema.safeParse(fence.data);
+  if (!result.success) {
+    return {
+      ok: false,
+      error: {
+        kind: 'schema',
+        message: result.error.issues.map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`).join('; '),
+      },
+    };
+  }
+
+  return { ok: true, frontmatter: result.data };
+}
+
+/**
+ * Parse and validate a slash command's frontmatter block against
+ * CommandFrontmatterSchema (CCHS v1 — docs/harness-spec.md). Only applies to
+ * the Markdown-based targets (cursor/claude/opencode/agy); Gemini's `.toml`
+ * commands and Codex's `SKILL.md`-shaped commands use their own formats.
+ */
+export function parseCommandFrontmatter(content: string): CommandFrontmatterResult {
+  const fence = parseFrontmatterFence(content);
+  if (!fence.ok) return fence;
+
+  const result = CommandFrontmatterSchema.safeParse(fence.data);
   if (!result.success) {
     return {
       ok: false,

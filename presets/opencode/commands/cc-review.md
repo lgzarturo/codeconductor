@@ -151,3 +151,7 @@ If no CRITICAL findings exist:
 
 Deliver the complete Review Report. Never summarize or omit findings. Every
 finding must include a location and an actionable description.
+
+## Next
+
+Approved: merge. Blocked: return the findings to `/cc-fix` or `/cc-feature`.

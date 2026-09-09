@@ -42,13 +42,6 @@ export const DEFAULT_COUNCIL_AGENTS: CouncilAgentSpec[] = [
     focus: ['architecture', 'design-patterns', 'code-structure'],
   },
   {
-    id: 'security',
-    role: 'Security',
-    context: 'repo-readonly',
-    modelHint: 'security-reasoning',
-    focus: ['security', 'vulnerabilities', 'compliance'],
-  },
-  {
     id: 'product',
     role: 'Product',
     context: 'prompt-only',
@@ -74,7 +67,15 @@ export const DEFAULT_COUNCIL_AGENTS: CouncilAgentSpec[] = [
     role: 'Security Reviewer',
     context: 'repo-readonly',
     modelHint: 'security-reasoning',
-    focus: ['security', 'vulnerabilities', 'credentials', 'injection', 'auth', 'supply-chain'],
+    focus: [
+      'security',
+      'vulnerabilities',
+      'compliance',
+      'credentials',
+      'injection',
+      'auth',
+      'supply-chain',
+    ],
   },
   {
     id: 'devil',

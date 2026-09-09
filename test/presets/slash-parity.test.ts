@@ -8,6 +8,7 @@ import {
 } from '../../src/core/presets/workflow-commands';
 import { formatCcCommand } from '../../src/core/presets/command-invocation';
 import { descriptionFrom, readNormalizedSource } from '../../scripts/render-agent-commands';
+import { parseCommandFrontmatter } from '../../src/core/presets/skill-frontmatter';
 
 const ROOT = resolve(import.meta.dir, '../..');
 
@@ -118,6 +119,34 @@ describe('generated description parity (gemini + codex derive from cursor)', () 
 
       const skill = await readFile(join(ROOT, `presets/codex/skills/cc-${cmd}/SKILL.md`), 'utf-8');
       expect(skill).toContain(`description: ${expected}\n`);
+    });
+  }
+});
+
+describe('command frontmatter validates against CommandFrontmatterSchema (CCHS v1)', () => {
+  // Only the Markdown-based targets have a YAML frontmatter fence to parse.
+  // Gemini's `.toml` commands and Codex's SKILL.md-shaped commands use their
+  // own formats and are covered elsewhere.
+  const MARKDOWN_TARGETS = TARGETS.filter((t) =>
+    ['cursor', 'claude', 'opencode', 'agy'].includes(t.name)
+  );
+
+  // pagespeed.md carries no frontmatter in the cursor source (see the
+  // description-parity describe block above) — a documented gap, not
+  // something this test exists to catch.
+  const KNOWN_NO_FRONTMATTER = new Set(['pagespeed']);
+
+  for (const target of MARKDOWN_TARGETS) {
+    describe(target.name, () => {
+      for (const cmd of WORKFLOW_COMMANDS) {
+        if (KNOWN_NO_FRONTMATTER.has(cmd)) continue;
+
+        test(`${cmd} frontmatter is valid`, async () => {
+          const content = await readFile(join(ROOT, target.file(cmd)), 'utf-8');
+          const parsed = parseCommandFrontmatter(content);
+          expect(parsed.ok).toBe(true);
+        });
+      }
     });
   }
 });

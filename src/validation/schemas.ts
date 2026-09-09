@@ -193,6 +193,30 @@ export const SkillFrontmatterSchema = z
 export type SkillFrontmatter = z.infer<typeof SkillFrontmatterSchema>;
 
 /**
+ * Command frontmatter — every shipped `.md` command currently carries only
+ * `description`. The other fields are part of the CCHS v1 standard
+ * (docs/harness-spec.md) and are optional here on purpose: Claude Code,
+ * Cursor, and Pi already read `argument-hint`/`allowed-tools`/`model` when
+ * present, but adding them to the 126 existing command files is a separate,
+ * opt-in migration this schema does not force.
+ */
+export const CommandFrontmatterSchema = z
+  .object({
+    description: z
+      .string()
+      .trim()
+      .min(1, 'description must not be empty')
+      .max(1024, 'description must be 1024 characters or fewer'),
+    'argument-hint': z.string().trim().min(1).optional(),
+    'allowed-tools': z.string().trim().min(1).optional(),
+    model: z.string().trim().min(1).optional(),
+    'disable-model-invocation': z.boolean().optional(),
+  })
+  .passthrough();
+
+export type CommandFrontmatter = z.infer<typeof CommandFrontmatterSchema>;
+
+/**
  * Type exports
  */
 export type InstallStrategy = z.infer<typeof InstallStrategySchema>;
@@ -225,6 +249,13 @@ export function validateProjectProfile(data: unknown): ProjectProfileInput {
  */
 export function validateSkillFrontmatter(data: unknown): SkillFrontmatter {
   return SkillFrontmatterSchema.parse(data);
+}
+
+/**
+ * Validate command frontmatter
+ */
+export function validateCommandFrontmatter(data: unknown): CommandFrontmatter {
+  return CommandFrontmatterSchema.parse(data);
 }
 
 /**

@@ -251,9 +251,21 @@ describe('CLI', () => {
     expect(result.exitCode).toBe(0);
 
     const { existsSync } = await import('node:fs');
-    // Gemini target uses agy installer and generates under .agents/
-    expect(existsSync(join(CLI_ROOT, '.agents', 'skills', 'council', 'SKILL.md'))).toBe(true);
-    expect(existsSync(join(CLI_ROOT, '.agents', 'workflows', 'cc-council.md'))).toBe(true);
+    // Gemini has its own installer and generates natively under .gemini/
+    expect(existsSync(join(CLI_ROOT, '.gemini', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.gemini', 'commands', 'cc', 'council.toml'))).toBe(true);
+  });
+
+  test('install council --target cursor generates files', async () => {
+    await runCli(['init', '--force']);
+
+    const result = await runCli(['install', 'council', '--target=cursor', '--force']);
+    expect(result.exitCode).toBe(0);
+
+    const { existsSync } = await import('node:fs');
+    // Cursor target creates files in .cursor/skills/, .cursor/agents/ and .cursor/commands/
+    expect(existsSync(join(CLI_ROOT, '.cursor', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.cursor', 'commands', 'cc', 'council.md'))).toBe(true);
   });
 
   test('install council --target codex generates files', async () => {
@@ -280,6 +292,8 @@ describe('CLI', () => {
     expect(existsSync(join(CLI_ROOT, '.claude', 'commands', 'cc-council.md'))).toBe(true);
     expect(existsSync(join(CLI_ROOT, '.codex', 'config.toml'))).toBe(true);
     expect(existsSync(join(CLI_ROOT, '.agents', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.gemini', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.cursor', 'skills', 'council', 'SKILL.md'))).toBe(true);
   });
 
   test('install with --dry-run does not write files', async () => {

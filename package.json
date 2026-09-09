@@ -54,6 +54,8 @@
     "lint": "bun run scripts/lint.ts",
     "check:coverage": "bun run scripts/check-coverage.ts",
     "check:prompt-changelog": "bun run scripts/check-prompt-changelog.ts",
+    "check:drift": "bun run scripts/check-drift.ts",
+    "render:commands": "bun run scripts/render-agent-commands.ts",
     "release:patch": "bash release.sh patch",
     "release:minor": "bash release.sh minor",
     "release:major": "bash release.sh major",

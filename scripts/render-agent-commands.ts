@@ -38,35 +38,33 @@ function tomlEscapePrompt(prompt: string): string {
   return prompt.replace(/\\/g, '\\\\').replace(/"""/g, "'''");
 }
 
-function writeGemini(cmd: string, md: string): void {
-  const dest = join(ROOT, 'presets/gemini/commands/cc', `${cmd}.toml`);
-  mkdirSync(dirname(dest), { recursive: true });
+/**
+ * The cursor source recommends other commands inline — "the next `/cc:x`
+ * command", "Delegates to `/cc:tdd-cycle`" — always in cursor's own colon
+ * spelling, copied verbatim. That spelling doesn't exist on Codex; rewrite
+ * every backtick-wrapped `/cc:<name>` (including the bare `/cc:` form) to
+ * the $cc- spelling actually used on this runner.
+ */
+export function rewriteCodexCrossReferences(body: string): string {
+  return body.replace(/`\/cc:([a-z0-9-]*)`/g, (_match, name: string) => `\`$cc-${name}\``);
+}
+
+export function renderGeminiToml(cmd: string, md: string): string {
   const description = descriptionFrom(md, cmd);
   const prompt = tomlEscapePrompt(bodyFrom(md).replaceAll('$ARGUMENTS', '{{args}}'));
-  const toml = `description = ${JSON.stringify(description)}
+  return `description = ${JSON.stringify(description)}
 
 prompt = """
 ${prompt}
 """
 `;
-  writeFileSync(dest, toml);
 }
 
-function writeCodex(cmd: string, md: string): void {
-  const dest = join(ROOT, 'presets/codex/skills', `cc-${cmd}`, 'SKILL.md');
-  mkdirSync(dirname(dest), { recursive: true });
+export function renderCodexSkill(cmd: string, md: string): string {
   const description = descriptionFrom(md, cmd);
   const invoke = formatCcCommand(cmd, 'dollar');
-  // The cursor source recommends other commands inline — "the next `/cc:x`
-  // command", "Delegates to `/cc:tdd-cycle`" — always in cursor's own colon
-  // spelling, copied verbatim. That spelling doesn't exist on Codex; rewrite
-  // every backtick-wrapped `/cc:<name>` (including the bare `/cc:` form) to
-  // the $cc- spelling actually used on this runner.
-  const body = bodyFrom(md).replace(
-    /`\/cc:([a-z0-9-]*)`/g,
-    (_match, name: string) => `\`$cc-${name}\``
-  );
-  const skill = `---
+  const body = rewriteCodexCrossReferences(bodyFrom(md));
+  return `---
 name: cc-${cmd}
 description: ${description}
 ---
@@ -77,7 +75,18 @@ Invoke as \`${invoke}\`. The user request follows the skill mention.
 
 ${body}
 `;
-  writeFileSync(dest, skill);
+}
+
+function writeGemini(cmd: string, md: string): void {
+  const dest = join(ROOT, 'presets/gemini/commands/cc', `${cmd}.toml`);
+  mkdirSync(dirname(dest), { recursive: true });
+  writeFileSync(dest, renderGeminiToml(cmd, md));
+}
+
+function writeCodex(cmd: string, md: string): void {
+  const dest = join(ROOT, 'presets/codex/skills', `cc-${cmd}`, 'SKILL.md');
+  mkdirSync(dirname(dest), { recursive: true });
+  writeFileSync(dest, renderCodexSkill(cmd, md));
 }
 
 /**

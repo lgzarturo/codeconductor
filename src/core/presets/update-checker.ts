@@ -1,9 +1,10 @@
 import { stat, readFile } from 'node:fs/promises';
-import { resolve, join } from 'node:path';
+import { resolve, join, basename, dirname } from 'node:path';
 import { homedir } from 'node:os';
 import { parse } from 'yaml';
 import { loadManifest, loadModelConfig, PRESETS_DIR } from './manifest-loader';
 import { renderTemplate, resolveEntryFiles, mergeDeep } from './file-copier';
+import { parseSkillFrontmatter, skillIdentifier } from './skill-frontmatter';
 import { loadConfig } from '../config/config-loader';
 import { mergeManagedBlock, MANAGED_BEGIN_MARKER, MANAGED_END_MARKER } from '../filesystem/safe-merger';
 import { ROOT_PRESETS_DIR, SRC_PRESETS_DIR, POLICY_PATH } from './package-paths';
@@ -154,6 +155,87 @@ export async function validateAgentMarkers(
           }
         } catch {
           // File does not exist, ignore
+        }
+      }
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Validate SKILL.md frontmatter for every skill CodeConductor's own manifest
+ * installs: parseable YAML, a non-empty name/description, and an identifier
+ * (id if present, else name) matching the skill's own directory.
+ *
+ * Scoped to manifest entries whose dest lands under a `skills` path segment,
+ * resolved the same way validateAgentMarkers resolves managed files — a
+ * blind glob over the installed skills/ directory would also flag unrelated
+ * third-party skills a user happens to have installed alongside ours.
+ */
+export async function validateSkillFrontmatterFiles(
+  basePath: string,
+  isGlobal: boolean
+): Promise<Array<{ path: string; error: string }>> {
+  const targetsToCheck: Array<'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'> = [
+    'opencode',
+    'claude',
+    'codex',
+    'gemini',
+    'cursor',
+    'agy',
+  ];
+
+  const results: Array<{ path: string; error: string }> = [];
+
+  for (const target of targetsToCheck) {
+    const isInstalled = await isTargetInstalled(target, basePath, isGlobal);
+    if (!isInstalled) continue;
+
+    let manifest;
+    try {
+      manifest = await loadManifest(target);
+    } catch {
+      continue;
+    }
+
+    for (const entry of manifest.entries) {
+      if (!entry.dest.split(/[\\/]/).includes('skills')) continue;
+
+      let resolvedEntry = entry;
+      let targetBaseDir = basePath;
+      if (target === 'agy' && isGlobal) {
+        targetBaseDir = join(homedir(), '.gemini', 'config');
+        resolvedEntry = {
+          ...entry,
+          dest: entry.dest.replace(/^\.agents\/?/, ''),
+        };
+      }
+
+      const files = await resolveEntryFiles(resolvedEntry, PRESETS_DIR, targetBaseDir);
+      for (const { dest } of files) {
+        if (basename(dest) !== 'SKILL.md') continue;
+
+        let content: string;
+        try {
+          content = await readFile(dest, 'utf-8');
+        } catch {
+          continue; // manifest declares it but install hasn't produced it here
+        }
+
+        const parsed = parseSkillFrontmatter(content);
+        if (!parsed.ok) {
+          results.push({ path: dest, error: `${parsed.error.kind}: ${parsed.error.message}` });
+          continue;
+        }
+
+        const dir = basename(dirname(dest));
+        const ident = skillIdentifier(parsed.frontmatter);
+        if (ident !== dir) {
+          results.push({
+            path: dest,
+            error: `identifier "${ident}" does not match its directory "${dir}"`,
+          });
         }
       }
     }

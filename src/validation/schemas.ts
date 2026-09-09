@@ -169,6 +169,30 @@ export const ModelConfigSchema = z.object({
 export type ModelConfig = z.infer<typeof ModelConfigSchema>;
 
 /**
+ * Skill frontmatter — the minimal invariant every SKILL.md must satisfy
+ * regardless of which frontmatter convention it otherwise follows: the bare
+ * `{name, description}` form used by most `cc-*` and `security-*` skills, or
+ * the extended `{id, name, description, version, license, metadata, ...}`
+ * form used by language/stack skills (where `name` is a human-readable title
+ * and `id` is the kebab-case identifier). Extra fields are accepted but not
+ * required here — normalizing every skill onto one shape is a separate,
+ * larger migration than this schema exists to gate.
+ */
+export const SkillFrontmatterSchema = z
+  .object({
+    name: z.string().trim().min(1, 'name must not be empty'),
+    description: z
+      .string()
+      .trim()
+      .min(1, 'description must not be empty')
+      .max(1024, 'description must be 1024 characters or fewer'),
+    id: z.string().trim().min(1).optional(),
+  })
+  .passthrough();
+
+export type SkillFrontmatter = z.infer<typeof SkillFrontmatterSchema>;
+
+/**
  * Type exports
  */
 export type InstallStrategy = z.infer<typeof InstallStrategySchema>;
@@ -194,6 +218,13 @@ export function validateCouncilSpec(data: unknown): CouncilSpecInput {
  */
 export function validateProjectProfile(data: unknown): ProjectProfileInput {
   return ProjectProfileSchema.parse(data);
+}
+
+/**
+ * Validate skill frontmatter
+ */
+export function validateSkillFrontmatter(data: unknown): SkillFrontmatter {
+  return SkillFrontmatterSchema.parse(data);
 }
 
 /**

@@ -2,7 +2,15 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { configExists, loadConfig } from '../core/config/config-loader';
 import { loadTargetSecurityCompatibility } from '../core/security/target-compatibility';
-import { checkUpdates, validateAgentFileSizes, validateAgentMarkers, detectComplementaryTools } from '../core/presets/update-checker';
+import {
+  checkUpdates,
+  validateAgentFileSizes,
+  validateAgentMarkers,
+  validateSkillFrontmatterFiles,
+  detectComplementaryTools,
+} from '../core/presets/update-checker';
+import { loadManifest, loadModelConfig } from '../core/presets/manifest-loader';
+import { INDIVIDUAL_TARGETS } from '../core/runner/runner-target';
 import type { OutputMode } from '../utils/logger';
 
 export interface DoctorOptions {
@@ -178,6 +186,87 @@ export async function doctorCommand(
         name: 'agent-file-markers',
         status: 'pass',
         message: 'All agent files have valid managed markers',
+      });
+    }
+
+    // Manifests must parse against InstallManifestSchema for every target —
+    // loadManifest() already validates internally; a thrown parse error here
+    // means a hand-edited manifest is broken before anyone tries to install it.
+    const manifestErrors: string[] = [];
+    for (const target of INDIVIDUAL_TARGETS) {
+      try {
+        await loadManifest(target);
+      } catch (e) {
+        manifestErrors.push(`${target}: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+    if (manifestErrors.length > 0) {
+      checks.push({
+        name: 'manifest-schema',
+        status: 'fail',
+        message: `Invalid manifest(s): ${manifestErrors.join('; ')}`,
+      });
+    } else {
+      checks.push({
+        name: 'manifest-schema',
+        status: 'pass',
+        message: `All ${INDIVIDUAL_TARGETS.length} target manifests are valid`,
+      });
+    }
+
+    // Cross-target model config parity — a role added to one target's
+    // models/*.yml and missed in another silently falls back to an empty
+    // model name for that target at render time.
+    const modelConfigs = await Promise.all(
+      INDIVIDUAL_TARGETS.map(async (target) => {
+        try {
+          const agents = (await loadModelConfig(target)).agents;
+          return { target, agents };
+        } catch {
+          return null;
+        }
+      })
+    );
+    const loadedConfigs = modelConfigs.filter((c): c is NonNullable<(typeof modelConfigs)[number]> => c !== null);
+    const allRoles = new Set(loadedConfigs.flatMap((c) => Object.keys(c.agents)));
+    const roleGaps: string[] = [];
+    for (const role of allRoles) {
+      const missingIn = loadedConfigs.filter((c) => !(role in c.agents)).map((c) => c.target);
+      if (missingIn.length > 0) {
+        roleGaps.push(`${role} missing in ${missingIn.join(', ')}`);
+      }
+    }
+    if (roleGaps.length > 0) {
+      checks.push({
+        name: 'model-config-parity',
+        status: 'warn',
+        message: `Role parity gaps across target model configs: ${roleGaps.join('; ')}`,
+      });
+    } else {
+      checks.push({
+        name: 'model-config-parity',
+        status: 'pass',
+        message: `All ${allRoles.size} agent roles are defined for every target`,
+      });
+    }
+
+    // Installed skill frontmatter — same rule the frontmatter-parity test
+    // enforces on the preset sources, applied here to what actually landed
+    // in this project after install.
+    const skillFrontmatterLocal = await validateSkillFrontmatterFiles(projectRoot, false);
+    const skillFrontmatterGlobal = await validateSkillFrontmatterFiles(homedir(), true);
+    const allSkillFrontmatterErrors = [...skillFrontmatterLocal, ...skillFrontmatterGlobal];
+    if (allSkillFrontmatterErrors.length > 0) {
+      checks.push({
+        name: 'skill-frontmatter',
+        status: 'warn',
+        message: `Invalid skill frontmatter: ${allSkillFrontmatterErrors.map((f) => `${f.path} (${f.error})`).join(', ')}`,
+      });
+    } else {
+      checks.push({
+        name: 'skill-frontmatter',
+        status: 'pass',
+        message: 'All installed skills have valid frontmatter',
       });
     }
 

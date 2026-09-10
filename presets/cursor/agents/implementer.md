@@ -5,7 +5,7 @@ model: "{{MODEL}}"
 readonly: false
 is_background: false
 ---
-# Agent Contract — implementer v0.5.0
+# Agent Contract — implementer v1.0.0
 
 ## Role
 
@@ -142,7 +142,7 @@ criteria:
 
 ---
 
-## Post-implementation evaluation (v0.5.0)
+## Post-implementation evaluation (v1.0.0)
 
 When the orchestrator invokes the Evaluation Gate, wait for scorecard verdict
 before considering the task complete. On **REVISE**, address findings and re-run

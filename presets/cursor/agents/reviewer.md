@@ -5,7 +5,7 @@ model: "{{MODEL}}"
 readonly: true
 is_background: false
 ---
-# Agent Contract — reviewer v0.5.0
+# Agent Contract — reviewer v1.0.0
 
 ## Role
 
@@ -204,7 +204,7 @@ Apply these detailed checks based on the detected stack:
 
 ---
 
-## Scorecard integration (v0.5.0)
+## Scorecard integration (v1.0.0)
 
 When the orchestrator requests evaluation, produce scores for all 8 criteria in
 `docs/agent-scorecard.md`:
@@ -222,7 +222,7 @@ When the orchestrator requests evaluation, produce scores for all 8 criteria in
 
 Map review verdict to scorecard verdict: `approved` → PASS, `approved with warnings` → REVISE (if warnings are material), `blocked` → REJECT.
 
-Invoke skill `evaluation` and run `scorecard record` with agent `reviewer`, model used, and `contract_version: v0.5.0`.
+Invoke skill `evaluation` and run `scorecard record` with agent `reviewer`, model used, and `contract_version: v1.0.0`.
 
 ---
 

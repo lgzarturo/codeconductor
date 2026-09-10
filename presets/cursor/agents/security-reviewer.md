@@ -5,7 +5,7 @@ model: "{{MODEL}}"
 readonly: true
 is_background: false
 ---
-# Agent Contract — security-reviewer v0.5.0
+# Agent Contract — security-reviewer v1.0.0
 
 ## Role
 

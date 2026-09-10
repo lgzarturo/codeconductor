@@ -5,6 +5,36 @@ export interface CouncilAgentConfig {
   readonly content: string;
 }
 
+/** JSON-stringify a value for a YAML scalar — quotes and escapes it safely. Shared by every council generator that emits YAML frontmatter. */
+export function yamlString(value: string): string {
+  return JSON.stringify(value);
+}
+
+/**
+ * The permission block for a council agent's frontmatter, keyed only by
+ * whether it can read the repo. Shared by agy and opencode — the two
+ * targets whose council agents carry a permission block in this exact shape.
+ */
+export function generatePermissionBlock(context: CouncilAgentSpec['context']): string {
+  if (context === 'repo-readonly') {
+    return `  read: allow
+  edit: deny
+  bash: deny
+  glob: allow
+  grep: allow
+  webfetch: deny
+  websearch: deny`;
+  }
+
+  return `  read: deny
+  edit: deny
+  bash: deny
+  glob: deny
+  grep: deny
+  webfetch: deny
+  websearch: deny`;
+}
+
 interface RoleProfile {
   readonly responsibilities: readonly string[];
   readonly checklist: readonly string[];

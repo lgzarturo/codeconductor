@@ -1,5 +1,9 @@
 import type { GeneratedFile } from '../../core/generation/generated-file';
-import { generateAgentContent } from '../../domain/council/council-agent';
+import {
+  generateAgentContent,
+  generatePermissionBlock,
+  yamlString,
+} from '../../domain/council/council-agent';
 import type { CouncilSpec } from '../../domain/council/council-spec';
 
 /**
@@ -70,26 +74,6 @@ ${generatePermissionBlock(agent.context)}
 ${generateAgentContent(agent)}`;
 }
 
-function generatePermissionBlock(context: CouncilSpec['agents'][number]['context']): string {
-  if (context === 'repo-readonly') {
-    return `  read: allow
-  edit: deny
-  bash: deny
-  glob: allow
-  grep: allow
-  webfetch: deny
-  websearch: deny`;
-  }
-
-  return `  read: deny
-  edit: deny
-  bash: deny
-  glob: deny
-  grep: deny
-  webfetch: deny
-  websearch: deny`;
-}
-
 function generateCouncilWorkflow(spec: CouncilSpec): string {
   return `---
 name: cc-council
@@ -156,8 +140,4 @@ If APPROVED (no CRITICAL findings):
 
 Deliver the complete Council Verdict. The feature is only complete when tests pass and the council explicitly approves the implementation according to the specification.
 `;
-}
-
-function yamlString(value: string): string {
-  return JSON.stringify(value);
 }

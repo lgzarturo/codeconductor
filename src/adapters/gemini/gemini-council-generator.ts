@@ -1,5 +1,5 @@
 import type { GeneratedFile } from '../../core/generation/generated-file';
-import { generateAgentContent } from '../../domain/council/council-agent';
+import { generateAgentContent, yamlString } from '../../domain/council/council-agent';
 import type { CouncilSpec } from '../../domain/council/council-spec';
 
 /**
@@ -110,8 +110,4 @@ ${prompt}
 
 function tomlEscapePrompt(prompt: string): string {
   return prompt.replace(/\\/g, '\\\\').replace(/"""/g, "'''");
-}
-
-function yamlString(value: string): string {
-  return JSON.stringify(value);
 }

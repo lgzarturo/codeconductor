@@ -1,6 +1,19 @@
+import type { LspInstallResult } from '../../domain/lsp/lsp-definition';
+
 export interface LspCommandConfig {
   readonly command: string;
   readonly args: readonly string[];
+}
+
+/**
+ * The one piece every *-lsp-generator.ts shares verbatim: drop failed
+ * installs before rendering. What comes after (JSON/YAML/TOML shape, file
+ * path) genuinely differs per target and stays in each generator.
+ */
+export function filterSuccessfulLsps(
+  installedLsps: readonly LspInstallResult[]
+): readonly LspInstallResult[] {
+  return installedLsps.filter((lsp) => lsp.status !== 'failed');
 }
 
 export type LanguageServerConfig = Record<string, LspCommandConfig>;

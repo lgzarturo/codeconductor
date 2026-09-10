@@ -1,5 +1,5 @@
 import type { GeneratedFile } from '../../core/generation/generated-file';
-import { generateAgentContent } from '../../domain/council/council-agent';
+import { generateAgentContent, yamlString } from '../../domain/council/council-agent';
 import type { CouncilSpec } from '../../domain/council/council-spec';
 
 /**
@@ -120,8 +120,4 @@ If APPROVED (no CRITICAL findings):
 
 Deliver the complete Council Verdict. The feature is only complete when tests pass and the council explicitly approves the implementation according to the specification.
 `;
-}
-
-function yamlString(value: string): string {
-  return JSON.stringify(value);
 }

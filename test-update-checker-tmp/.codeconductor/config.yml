@@ -1,0 +1,15 @@
+version: 0.3.0
+project:
+  name: test-project
+  profile: node
+defaults:
+  target: agy
+  overwrite: true
+  locale: en
+presets:
+  council:
+    enabled: true
+    version: 0.3.0
+safety:
+  destructiveCommands: []
+  secretPatterns: []

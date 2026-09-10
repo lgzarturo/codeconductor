@@ -240,6 +240,36 @@ export async function doctorCommand(
       });
     }
 
+    // Skills registry must parse against SkillsRegistrySchema
+    const { readFile } = await import('node:fs/promises');
+    const { SkillsRegistrySchema } = await import('../validation/schemas');
+    const { SKILLS_REGISTRY_PATH } = await import('../core/presets/package-paths');
+    try {
+      const registryContent = await readFile(SKILLS_REGISTRY_PATH, 'utf-8');
+      const registryData = JSON.parse(registryContent);
+      const registryResult = SkillsRegistrySchema.safeParse(registryData);
+      if (registryResult.success) {
+        const skillCount = Object.keys(registryResult.data.skills).length;
+        checks.push({
+          name: 'skills-registry',
+          status: 'pass',
+          message: `Skills registry is valid (${skillCount} skills)`,
+        });
+      } else {
+        checks.push({
+          name: 'skills-registry',
+          status: 'fail',
+          message: `Skills registry validation failed: ${registryResult.error.message}`,
+        });
+      }
+    } catch (e) {
+      checks.push({
+        name: 'skills-registry',
+        status: 'fail',
+        message: `Skills registry error: ${e instanceof Error ? e.message : String(e)}`,
+      });
+    }
+
     // Cross-target model config parity — a role added to one target's
     // models/*.yml and missed in another silently falls back to an empty
     // model name for that target at render time.

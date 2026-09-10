@@ -1,6 +1,5 @@
 ---
 id: seo-analytics-injector
-version: 1.0.0
 name: SEO Analytics Injector
 description: >
   Verifies and injects Google Tag Manager (GTM), GA4 event triggers, and optimized meta tags.

@@ -1,6 +1,5 @@
 ---
 id: tdd-mutation-tester
-version: 1.0.0
 name: TDD Mutation Tester
 description: >
   Performs simple mutation testing to verify test coverage and assertions.

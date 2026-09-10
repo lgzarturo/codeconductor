@@ -140,16 +140,43 @@ stay hand-maintained; the matrix's job is mechanical rewrites of boilerplate
 inconsistent with its own declared style), not merging genuinely divergent
 authored content.
 
-## 5. Versioning — planned, not yet implemented
+## 5. Versioning
 
-Skill versioning currently lives in the extended frontmatter's `version`
-field, which `update-checker.ts` still reads directly. The standing plan is a
-repo-root `skills-registry.json` (sibling to `skills-lock.json`, which already
-tracks third-party skill hashes) as the single source of version truth,
-letting `version` (and `id`, which only duplicates `name`) drop out of
-`SKILL.md` entirely. Deferred for now: it requires migrating all 384 shipped
-`SKILL.md` files in the same pass, which is Fase 2 territory and carries its
-own review risk independent of this spec.
+Skill versioning has moved from the extended frontmatter's `version` field to a
+centralized `skills-registry.json` at the repo root (sibling to `skills-lock.json`,
+which tracks third-party skill hashes). The registry is the single source of
+skill version truth, validated by `SkillsRegistrySchema` (`src/validation/schemas.ts`)
+and loaded/cached by `getLatestSkillVersion()` in `src/core/presets/update-checker.ts`.
+
+**Schema:**
+
+```json
+{
+  "version": 1,
+  "skills": {
+    "skill-id": { "version": "1.0.0" }
+  }
+}
+```
+
+**Migration:**
+
+The one-time `scripts/migrate-skill-versions.ts` (idempotent, wired into CI) extracted
+the `version` field from 280 extended-shape `SKILL.md` files (249 under `presets/*/skills/`
+and 31 under `skills/`) and populated the registry. The script preserves exact byte
+offsets and line-ending style (CRLF or LF) when removing the frontmatter field.
+
+**What changed in SKILL.md:**
+
+- `version` field removed from extended frontmatter across all 280 files.
+- `id` field deliberately retained — it is not a duplicate of `name`; `skillIdentifier()`
+  returns `id` when present (kebab-case identifier) or falls back to `name` for bare-shape
+  skills where `id` does not exist.
+
+**Validation:**
+
+`cc doctor` validates the registry against `SkillsRegistrySchema` and reports skill count
+on success or detailed validation errors on failure.
 
 ## Adding a new target
 

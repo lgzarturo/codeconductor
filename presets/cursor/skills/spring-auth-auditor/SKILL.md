@@ -1,6 +1,5 @@
 ---
 id: spring-auth-auditor
-version: 1.0.0
 name: Spring Auth Auditor
 description: >
   Secures Spring Security filters, JWT validations, OAuth2 setups, and CORS/CSRF headers.

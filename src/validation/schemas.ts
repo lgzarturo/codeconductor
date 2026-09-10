@@ -1470,3 +1470,25 @@ export function validateProductEvent(data: unknown): ProductEventInput {
   return ProductEventSchema.parse(data);
 }
 
+/**
+ * Skills registry schema — the bundled registry mapping skill IDs to their versions
+ */
+export const SkillsRegistrySchema = z.object({
+  version: z.literal(1),
+  skills: z.record(
+    z.string().min(1).regex(/^[a-z0-9\-]+$/),
+    z.object({
+      version: z.string().min(1),
+    })
+  ),
+});
+
+export type SkillsRegistry = z.infer<typeof SkillsRegistrySchema>;
+
+/**
+ * Validate skills registry
+ */
+export function validateSkillsRegistry(data: unknown): SkillsRegistry {
+  return SkillsRegistrySchema.parse(data);
+}
+

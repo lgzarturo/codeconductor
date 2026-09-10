@@ -2,7 +2,11 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { migrateCommand, migratePermissionRules } from '../../../src/commands/migrate.command';
+import {
+  findOrphanedPromptVersions,
+  migrateCommand,
+  migratePermissionRules,
+} from '../../../src/commands/migrate.command';
 
 let base: string;
 
@@ -118,7 +122,7 @@ describe('migrateCommand', () => {
     expect((result.data as { changed: boolean }).changed).toBe(false);
   });
 
-  test('error case: missing settings.json returns a non-zero code with a clear message', async () => {
+  test('edge case: missing settings.json is not an error — many projects never had one', async () => {
     const result = await migrateCommand({
       projectRoot: join(base, 'does-not-exist'),
       global: false,
@@ -126,8 +130,11 @@ describe('migrateCommand', () => {
       output: 'json',
     });
 
-    expect(result.code).toBe(1);
-    expect((result.data as { errors: string[] }).errors[0]).toContain('settings.json');
+    expect(result.code).toBe(0);
+    const data = result.data as { settingsFileFound: boolean; changed: boolean; message?: string };
+    expect(data.settingsFileFound).toBe(false);
+    expect(data.changed).toBe(false);
+    expect(data.message).toContain('nothing to migrate');
   });
 
   test('error case: invalid JSON returns a non-zero code with a clear message', async () => {
@@ -164,5 +171,100 @@ describe('migrateCommand', () => {
     expect((result.data as { file: string }).file).toBe(customPath);
     const onDisk = JSON.parse(await readFile(customPath, 'utf-8'));
     expect(onDisk.permissions.allow).toEqual(['Edit(./x/**)']);
+  });
+});
+
+describe('findOrphanedPromptVersions / migrateCommand orphan cleanup', () => {
+  test('happy path: an orphaned version dir is found and removed, current version untouched', async () => {
+    const dir = join(base, 'orphan-happy');
+    const orphanDir = join(dir, '.claude', 'prompts', 'v0.4.0');
+    const currentDir = join(dir, '.claude', 'prompts', 'v1.0.0');
+    await mkdir(orphanDir, { recursive: true });
+    await mkdir(currentDir, { recursive: true });
+    await writeFile(join(orphanDir, 'orchestrator.md'), 'old contract');
+    await writeFile(join(currentDir, 'orchestrator.md'), 'current contract');
+
+    const found = await findOrphanedPromptVersions(dir, false);
+    expect(found).toEqual([{ target: 'claude', path: orphanDir, version: 'v0.4.0' }]);
+
+    const result = await migrateCommand({
+      projectRoot: dir,
+      global: false,
+      dryRun: false,
+      output: 'json',
+    });
+
+    expect(result.code).toBe(0);
+    const data = result.data as {
+      orphanedPromptVersions: unknown[];
+      orphanedPromptVersionsRemoved: boolean;
+      changed: boolean;
+    };
+    expect(data.orphanedPromptVersions).toHaveLength(1);
+    expect(data.orphanedPromptVersionsRemoved).toBe(true);
+    expect(data.changed).toBe(true);
+
+    const orphanStillExists = await readFile(join(orphanDir, 'orchestrator.md'), 'utf-8').then(
+      () => true,
+      () => false
+    );
+    expect(orphanStillExists).toBe(false);
+    const currentStillExists = await readFile(join(currentDir, 'orchestrator.md'), 'utf-8').then(
+      () => true,
+      () => false
+    );
+    expect(currentStillExists).toBe(true);
+  });
+
+  test('edge case: --dry-run reports the orphan without deleting it', async () => {
+    const dir = join(base, 'orphan-dry-run');
+    const orphanDir = join(dir, '.claude', 'prompts', 'v0.3.0');
+    await mkdir(orphanDir, { recursive: true });
+    await writeFile(join(orphanDir, 'orchestrator.md'), 'old contract');
+
+    const result = await migrateCommand({
+      projectRoot: dir,
+      global: false,
+      dryRun: true,
+      output: 'json',
+    });
+
+    const data = result.data as { orphanedPromptVersions: unknown[]; orphanedPromptVersionsRemoved: boolean };
+    expect(data.orphanedPromptVersions).toHaveLength(1);
+    expect(data.orphanedPromptVersionsRemoved).toBe(false);
+
+    const stillExists = await readFile(join(orphanDir, 'orchestrator.md'), 'utf-8').then(
+      () => true,
+      () => false
+    );
+    expect(stillExists).toBe(true);
+  });
+
+  test('error case: a project with only the current version reports no orphans', async () => {
+    const dir = join(base, 'orphan-clean');
+    const currentDir = join(dir, '.claude', 'prompts', 'v1.0.0');
+    await mkdir(currentDir, { recursive: true });
+    await writeFile(join(currentDir, 'orchestrator.md'), 'current contract');
+
+    const found = await findOrphanedPromptVersions(dir, false);
+    expect(found).toEqual([]);
+
+    const result = await migrateCommand({
+      projectRoot: dir,
+      global: false,
+      dryRun: false,
+      output: 'json',
+    });
+    const data = result.data as { orphanedPromptVersions: unknown[]; orphanedPromptVersionsRemoved: boolean };
+    expect(data.orphanedPromptVersions).toEqual([]);
+    expect(data.orphanedPromptVersionsRemoved).toBe(false);
+  });
+
+  test('a target with no prompts/ directory at all is skipped without error', async () => {
+    const dir = join(base, 'orphan-no-prompts-dir');
+    await mkdir(join(dir, '.claude'), { recursive: true }); // installed, but no prompts/ subdir yet
+
+    const found = await findOrphanedPromptVersions(dir, false);
+    expect(found).toEqual([]);
   });
 });

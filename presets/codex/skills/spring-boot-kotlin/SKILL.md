@@ -1,6 +1,5 @@
 ---
 id: spring-boot-kotlin
-version: 1.0.0
 name: Spring Boot + Kotlin
 description: >
   Provides expert knowledge of Spring Boot conventions, Kotlin idioms, and MVC

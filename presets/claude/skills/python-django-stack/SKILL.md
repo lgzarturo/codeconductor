@@ -1,6 +1,5 @@
 ---
 id: python-django-stack
-version: 1.0.0
 name: Python Django Stack
 description: >
   Python and Django conventions for multi-tenant SaaS POS projects:

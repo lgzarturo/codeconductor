@@ -29,6 +29,7 @@ import {
   validateReviewerOutput,
   validateRunnerTarget,
   validateScorecardRecord,
+  validateSkillsRegistry,
   validateTaskOutcome,
   validateWorkflowProfile,
 } from '../../../src/validation/schemas';
@@ -163,6 +164,8 @@ const executionContext = {
   outputSchema: 'agent-output',
 };
 
+const skillsRegistry = { version: 1, skills: { android: { version: '1.0.0' }, 'api-versioning': { version: '2.1.0' } } };
+
 const cases: Array<[string, (d: unknown) => unknown, unknown]> = [
   ['validateCouncilSpec', validateCouncilSpec, councilSpec],
   ['validateProjectProfile', validateProjectProfile, projectProfile],
@@ -203,6 +206,7 @@ const cases: Array<[string, (d: unknown) => unknown, unknown]> = [
     risk: 'low', agentType: 'implementer', status: 'ready', type: 'feature',
   }],
   ['validateProductEvent', validateProductEvent, { id: 'ev1', type: 'task.started', timestamp: '2026-07-26' }],
+  ['validateSkillsRegistry', validateSkillsRegistry, skillsRegistry],
 ];
 
 describe('validation/schemas', () => {
@@ -238,6 +242,31 @@ describe('validation/schemas', () => {
 
     test('validateWorkflowProfile rejects a profile whose id does not match its command', () => {
       expect(() => validateWorkflowProfile({ ...workflowProfile, id: 'fix' })).toThrow();
+    });
+
+    test('validateSkillsRegistry rejects missing version:1 literal', () => {
+      expect(() => validateSkillsRegistry({ skills: { android: { version: '1.0.0' } } })).toThrow();
+    });
+
+    test('validateSkillsRegistry rejects version field with non-literal value', () => {
+      expect(() => validateSkillsRegistry({ version: 2, skills: { android: { version: '1.0.0' } } })).toThrow();
+    });
+
+    test('validateSkillsRegistry rejects missing skills map', () => {
+      expect(() => validateSkillsRegistry({ version: 1 })).toThrow();
+    });
+
+    test('validateSkillsRegistry rejects skill with missing version field', () => {
+      expect(() => validateSkillsRegistry({ version: 1, skills: { android: {} } })).toThrow();
+    });
+
+    test('validateSkillsRegistry rejects skill with empty version string', () => {
+      expect(() => validateSkillsRegistry({ version: 1, skills: { android: { version: '' } } })).toThrow();
+    });
+
+    test('validateSkillsRegistry rejects skill id with uppercase or invalid characters', () => {
+      expect(() => validateSkillsRegistry({ version: 1, skills: { 'ANDROID': { version: '1.0.0' } } })).toThrow();
+      expect(() => validateSkillsRegistry({ version: 1, skills: { 'android_test': { version: '1.0.0' } } })).toThrow();
     });
   });
 

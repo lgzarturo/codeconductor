@@ -1,6 +1,5 @@
 ---
 id: schema-validator
-version: 1.0.0
 name: Schema.org Validator
 description: >
   Validates Schema.org structured data (JSON-LD, Microdata, RDFa) on hotel and hospitality websites.

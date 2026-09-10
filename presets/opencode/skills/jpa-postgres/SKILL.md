@@ -1,6 +1,5 @@
 ---
 id: jpa-postgres
-version: 1.0.0
 name: JPA + PostgreSQL
 description: >
   Provides expert knowledge of JPA entity design, relationship mapping, Flyway

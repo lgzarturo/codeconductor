@@ -1,6 +1,5 @@
 ---
 id: seo-audit
-version: 1.0.0
 name: SEO Technical Audit
 description: >
   Comprehensive technical SEO audit for hotel websites. Checks meta tags, headings,

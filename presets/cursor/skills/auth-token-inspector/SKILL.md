@@ -1,6 +1,5 @@
 ---
 id: auth-token-inspector
-version: 1.0.0
 name: Auth Token Inspector
 description: >
   Audits token storage mechanisms to prevent XSS-based JWT theft.

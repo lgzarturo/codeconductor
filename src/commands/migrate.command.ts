@@ -1,7 +1,10 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { OutputMode } from '../utils/logger';
+import { CURRENT_PRESET_VERSION } from '../core/presets/preset-resolver';
+import { getTargetInstallationPath, isTargetInstalled } from '../core/presets/update-checker';
+import { INDIVIDUAL_TARGETS, type IndividualRunnerTarget } from '../core/runner/runner-target';
 
 export interface MigrateOptions {
   readonly projectRoot: string;
@@ -84,62 +87,139 @@ function resolveSettingsPath(options: MigrateOptions): string {
   return join(base, '.claude', 'settings.json');
 }
 
+const VERSION_DIR_NAME = /^v\d+\.\d+\.\d+$/;
+
+export interface OrphanedPromptDir {
+  readonly target: IndividualRunnerTarget;
+  readonly path: string;
+  readonly version: string;
+}
+
 /**
- * `cc migrate` — repairs a Claude Code settings.json left over from before
- * A6/the `Write()` -> `Edit()` fix. Install-time merges can't remove a bad
- * rule that's already on disk (array-union merge), so this is a standalone
- * repair pass, not something a reinstall fixes on its own.
+ * A project's installed `prompts/` directory only ever gains files —
+ * `copyFromManifest` writes the current version's files but never removes an
+ * older version's directory a previous install created. Scans every
+ * installed target's `prompts/` directory for version subdirectories other
+ * than `CURRENT_PRESET_VERSION` and reports them as orphaned. `agy` and `pi`
+ * share `.agents/prompts/`, so it's only scanned once (`seenDirs`).
+ */
+export async function findOrphanedPromptVersions(
+  basePath: string,
+  isGlobal: boolean
+): Promise<OrphanedPromptDir[]> {
+  const found: OrphanedPromptDir[] = [];
+  const seenDirs = new Set<string>();
+
+  for (const target of INDIVIDUAL_TARGETS) {
+    const installed = await isTargetInstalled(target, basePath, isGlobal);
+    if (!installed) continue;
+
+    const installPath = getTargetInstallationPath(target, basePath, isGlobal);
+    const promptsDir = join(installPath, 'prompts');
+    if (seenDirs.has(promptsDir)) continue;
+    seenDirs.add(promptsDir);
+
+    let entries;
+    try {
+      entries = await readdir(promptsDir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      if (!entry.isDirectory() || !VERSION_DIR_NAME.test(entry.name)) continue;
+      if (entry.name === CURRENT_PRESET_VERSION) continue;
+      found.push({ target, path: join(promptsDir, entry.name), version: entry.name });
+    }
+  }
+
+  return found;
+}
+
+/**
+ * `cc migrate` — repairs two classes of leftover artifact a plain reinstall
+ * can't fix on its own:
+ *
+ * 1. A Claude Code settings.json left over from before A6/the `Write()` ->
+ *    `Edit()` fix (install-time merges can't remove a bad rule already on
+ *    disk — `mergeDeep`'s array-union merge only adds).
+ * 2. Orphaned `.{target}/prompts/v{old}/` directories from before a
+ *    project's manifest pointed at the current prompts version
+ *    (`copyFromManifest` only adds/overwrites the current version's files,
+ *    it never removes an older version's directory).
+ *
+ * A missing settings.json is not an error — many projects (Gemini/Cursor-only
+ * ones, for instance) never had one. Only invalid JSON in an existing file is.
  */
 export async function migrateCommand(
   options: MigrateOptions
 ): Promise<{ code: number; data?: unknown }> {
   const settingsPath = resolveSettingsPath(options);
 
-  let raw: string;
+  let raw: string | null = null;
   try {
     raw = await readFile(settingsPath, 'utf-8');
   } catch (error) {
-    return {
-      code: 1,
-      data: {
-        success: false,
-        command: 'migrate',
-        errors: [`Could not read ${settingsPath}: ${String(error)}`],
-      },
-    };
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      return {
+        code: 1,
+        data: {
+          success: false,
+          command: 'migrate',
+          errors: [`Could not read ${settingsPath}: ${String(error)}`],
+        },
+      };
+    }
+    // ENOENT: no settings.json in this project — nothing to repair there, not an error.
   }
 
-  let settings: Record<string, unknown>;
-  try {
-    settings = JSON.parse(raw);
-  } catch (error) {
-    return {
-      code: 1,
-      data: {
-        success: false,
-        command: 'migrate',
-        errors: [`${settingsPath} is not valid JSON: ${String(error)}`],
-      },
-    };
+  let rewritten: readonly RuleChange[] = [];
+  let duplicatesRemoved: readonly string[] = [];
+  let settingsChanged = false;
+
+  if (raw !== null) {
+    let settings: Record<string, unknown>;
+    try {
+      settings = JSON.parse(raw);
+    } catch (error) {
+      return {
+        code: 1,
+        data: {
+          success: false,
+          command: 'migrate',
+          errors: [`${settingsPath} is not valid JSON: ${String(error)}`],
+        },
+      };
+    }
+
+    const migration = migratePermissionRules(settings);
+    rewritten = migration.changes;
+    duplicatesRemoved = migration.duplicatesRemoved;
+    settingsChanged = migration.changes.length > 0 || migration.duplicatesRemoved.length > 0;
+
+    if (settingsChanged && !options.dryRun) {
+      await writeFile(settingsPath, `${JSON.stringify(migration.settings, null, 2)}\n`, 'utf-8');
+    }
   }
 
-  const { settings: migrated, changes, duplicatesRemoved } = migratePermissionRules(settings);
-
-  if (changes.length === 0 && duplicatesRemoved.length === 0) {
-    return {
-      code: 0,
-      data: {
-        success: true,
-        command: 'migrate',
-        file: settingsPath,
-        changed: false,
-        message: 'No Write(path) permission rules found — nothing to migrate.',
-      },
-    };
+  const basePath = options.global ? homedir() : options.projectRoot;
+  const orphanedPromptVersions = await findOrphanedPromptVersions(basePath, options.global);
+  let orphanedPromptVersionsRemoved = false;
+  if (orphanedPromptVersions.length > 0 && !options.dryRun) {
+    for (const dir of orphanedPromptVersions) {
+      await rm(dir.path, { recursive: true, force: true });
+    }
+    orphanedPromptVersionsRemoved = true;
   }
 
-  if (!options.dryRun) {
-    await writeFile(settingsPath, `${JSON.stringify(migrated, null, 2)}\n`, 'utf-8');
+  const changed = (settingsChanged && !options.dryRun) || orphanedPromptVersionsRemoved;
+
+  let message: string | undefined;
+  if (!settingsChanged && orphanedPromptVersions.length === 0) {
+    message =
+      raw === null
+        ? 'No settings.json found and no orphaned prompt version directories found — nothing to migrate.'
+        : 'No Write(path) permission rules and no orphaned prompt version directories found — nothing to migrate.';
   }
 
   return {
@@ -148,10 +228,18 @@ export async function migrateCommand(
       success: true,
       command: 'migrate',
       file: settingsPath,
-      changed: !options.dryRun,
+      settingsFileFound: raw !== null,
+      changed,
       dryRun: options.dryRun,
-      rewritten: changes.map((c) => ({ list: c.list, from: c.from, to: c.to })),
+      rewritten: rewritten.map((c) => ({ list: c.list, from: c.from, to: c.to })),
       duplicatesRemoved,
+      orphanedPromptVersions: orphanedPromptVersions.map((d) => ({
+        target: d.target,
+        path: d.path,
+        version: d.version,
+      })),
+      orphanedPromptVersionsRemoved,
+      ...(message ? { message } : {}),
     },
   };
 }

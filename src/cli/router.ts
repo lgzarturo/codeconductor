@@ -184,8 +184,10 @@ Published commands (package ${packageJson.version}):
   seo llms                Generate llms.txt from a URL or sitemap
   doctor                  Validate configuration and generated files
   update                  Update installed presets
-  migrate                 Repair a Claude Code settings.json: rewrite invalid
-                          Write(path) permission rules to Edit(path) and dedupe
+  migrate                 Repair leftover artifacts a reinstall can't fix:
+                          rewrite invalid Write(path) permission rules to
+                          Edit(path) and dedupe, and delete orphaned
+                          .{target}/prompts/v{old}/ directories
   help                    Show general CLI usage and command list
   ask                     Recommend a /cc: slash command from a natural-language problem
   cc-help                 Show preset inventory (skills, subagents, commands)

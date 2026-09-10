@@ -1,6 +1,5 @@
 ---
 id: astro
-version: 1.0.0
 name: Astro
 description: >
   Provides expert knowledge for building Astro 5+ sites with Islands Architecture, Content Collections, TypeScript, and performance-first rendering strategies.

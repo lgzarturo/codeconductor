@@ -1,6 +1,5 @@
 ---
 id: drizzle-schema-architect
-version: 1.0.0
 name: Drizzle Schema Architect
 description: >
   Generates strictly typed Drizzle ORM schemas for PostgreSQL with indexes, 

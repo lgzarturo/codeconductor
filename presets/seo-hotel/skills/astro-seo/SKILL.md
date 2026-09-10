@@ -1,6 +1,5 @@
 ---
 id: astro-seo
-version: 1.0.0
 name: Astro SEO Validator
 description: >
   SEO validation specific to Astro framework projects. Checks static generation,

@@ -1,6 +1,5 @@
 ---
 id: python
-version: 1.0.0
 name: Python
 description: >
   Python development best practices: clean code, patterns,

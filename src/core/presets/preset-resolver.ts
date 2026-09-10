@@ -27,7 +27,7 @@ export interface PresetResolution {
   readonly warnings: readonly string[];
 }
 
-const CURRENT_PRESET_VERSION = 'v1.0.0';
+export const CURRENT_PRESET_VERSION = 'v1.0.0';
 
 export function resolvePreset(
   target: Exclude<RunnerTargetInput, 'all'>,

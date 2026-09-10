@@ -1,6 +1,5 @@
 ---
 id: spring-boot-feature
-version: 1.0.0
 name: Spring Boot Feature Creation
 description: >
   Guides the creation of complete Spring Boot features following a structured,

@@ -29,10 +29,14 @@ entry does not by itself mean that version was published.
 
 Skill and command frontmatter, cross-target invocation syntax, and how to add
 a new target are documented in [docs/harness-spec.md](harness-spec.md) (CCHS
-v1). `cc migrate` repairs a Claude Code `settings.json` left with invalid
-`Write(path)` permission rules from before that fix — those never matched
-(Claude Code only applies `Edit(path)`), and a plain reinstall can't remove
-one already on disk (array-union merge).
+v1). `cc migrate` repairs two classes of leftover artifact a plain reinstall
+can't remove on its own: a Claude Code `settings.json` with invalid
+`Write(path)` permission rules from before that fix (Claude Code only applies
+`Edit(path)`, and `mergeDeep`'s array-union merge can't delete a bad rule
+already on disk), and orphaned `.{target}/prompts/v{old}/` directories left
+over from before a project's installed manifest pointed at the current
+prompts version (`copyFromManifest` only adds/overwrites the current
+version's files, it never removes an older version's directory).
 
 ## Help contracts
 

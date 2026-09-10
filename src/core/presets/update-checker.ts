@@ -1,14 +1,14 @@
 import { stat, readFile } from 'node:fs/promises';
 import { resolve, join, basename, dirname } from 'node:path';
 import { homedir } from 'node:os';
-import { parse } from 'yaml';
 import { loadManifest, loadModelConfig, PRESETS_DIR } from './manifest-loader';
 import { renderTemplate, resolveEntryFiles, mergeDeep } from './file-copier';
 import { parseSkillFrontmatter, skillIdentifier } from './skill-frontmatter';
 import { loadConfig } from '../config/config-loader';
 import { mergeManagedBlock, MANAGED_BEGIN_MARKER, MANAGED_END_MARKER } from '../filesystem/safe-merger';
-import { ROOT_PRESETS_DIR, SRC_PRESETS_DIR, POLICY_PATH } from './package-paths';
-import type { InstallStrategy } from '../../validation/schemas';
+import { ROOT_PRESETS_DIR, SRC_PRESETS_DIR, POLICY_PATH, SKILLS_REGISTRY_PATH } from './package-paths';
+import type { InstallStrategy, SkillsRegistry } from '../../validation/schemas';
+import { SkillsRegistrySchema } from '../../validation/schemas';
 import { INDIVIDUAL_TARGETS, type IndividualRunnerTarget } from '../runner/runner-target';
 
 export interface UpdateCheckResults {
@@ -271,29 +271,45 @@ export async function loadSkillsLock(basePath: string): Promise<Record<string, s
 }
 
 /**
- * Helper to read a bundled skill's version from frontmatter. Deliberately
- * not INDIVIDUAL_TARGETS: this scans presets/<target>/skills/, which does
- * not exist for pi — it shares opencode's skills (see presets/pi manifest),
- * so a scan under presets/pi/ would never find anything.
+ * Cached skills registry to avoid re-reading the file on every call
  */
-async function getLatestSkillVersion(skillId: string): Promise<string | null> {
-  const targets: readonly IndividualRunnerTarget[] = ['opencode', 'agy', 'claude', 'codex', 'gemini', 'cursor'];
-  for (const target of targets) {
-    const skillPath = resolve(ROOT_PRESETS_DIR, target, 'skills', skillId, 'SKILL.md');
-    try {
-      const content = await readFile(skillPath, 'utf-8');
-      const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-      if (fmMatch) {
-        const parsed = parse(fmMatch[1]);
-        if (parsed && parsed.id === skillId && parsed.version) {
-          return String(parsed.version);
-        }
-      }
-    } catch {
-      // try next
+let cachedRegistry: SkillsRegistry | undefined;
+let registryLoadAttempted = false;
+
+/**
+ * Helper to load and cache the skills registry
+ */
+async function loadSkillsRegistry(): Promise<SkillsRegistry | null> {
+  // Return cached result if already attempted
+  if (registryLoadAttempted) {
+    return cachedRegistry ?? null;
+  }
+
+  registryLoadAttempted = true;
+
+  try {
+    const content = await readFile(SKILLS_REGISTRY_PATH, 'utf-8');
+    const parsed = JSON.parse(content);
+    const result = SkillsRegistrySchema.safeParse(parsed);
+    if (result.success) {
+      cachedRegistry = result.data;
+      return cachedRegistry;
     }
+  } catch {
+    // No registry available
   }
   return null;
+}
+
+/**
+ * Helper to read a bundled skill's version from the skills registry.
+ */
+async function getLatestSkillVersion(skillId: string): Promise<string | null> {
+  const registry = await loadSkillsRegistry();
+  if (!registry) {
+    return null;
+  }
+  return registry.skills[skillId]?.version ?? null;
 }
 
 /**

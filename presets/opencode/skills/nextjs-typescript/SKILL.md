@@ -1,6 +1,5 @@
 ---
 id: nextjs-typescript
-version: 1.0.0
 name: Next.js + TypeScript
 description: >
   Provides expert knowledge for building Next.js 15+ applications with the App Router, TypeScript, Server Components, Server Actions, and TanStack Query.

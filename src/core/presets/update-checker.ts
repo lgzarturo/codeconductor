@@ -9,6 +9,7 @@ import { loadConfig } from '../config/config-loader';
 import { mergeManagedBlock, MANAGED_BEGIN_MARKER, MANAGED_END_MARKER } from '../filesystem/safe-merger';
 import { ROOT_PRESETS_DIR, SRC_PRESETS_DIR, POLICY_PATH } from './package-paths';
 import type { InstallStrategy } from '../../validation/schemas';
+import { INDIVIDUAL_TARGETS, type IndividualRunnerTarget } from '../runner/runner-target';
 
 export interface UpdateCheckResults {
   readonly hasUpdates: boolean;
@@ -22,7 +23,7 @@ export interface UpdateCheckResults {
  * Get installation directory path for a given target runner
  */
 export function getTargetInstallationPath(
-  target: 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy',
+  target: IndividualRunnerTarget,
   basePath: string,
   isGlobal: boolean
 ): string {
@@ -36,7 +37,7 @@ export function getTargetInstallationPath(
  * Check if a target is installed (e.g. its target directory exists)
  */
 export async function isTargetInstalled(
-  target: 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy',
+  target: IndividualRunnerTarget,
   basePath: string,
   isGlobal: boolean
 ): Promise<boolean> {
@@ -93,14 +94,7 @@ export async function validateAgentMarkers(
   basePath: string,
   isGlobal: boolean
 ): Promise<Array<{ path: string; error: string }>> {
-  const targetsToCheck: Array<'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'> = [
-    'opencode',
-    'claude',
-    'codex',
-    'gemini',
-    'cursor',
-    'agy',
-  ];
+  const targetsToCheck: readonly IndividualRunnerTarget[] = INDIVIDUAL_TARGETS;
 
   const results: Array<{ path: string; error: string }> = [];
 
@@ -177,14 +171,7 @@ export async function validateSkillFrontmatterFiles(
   basePath: string,
   isGlobal: boolean
 ): Promise<Array<{ path: string; error: string }>> {
-  const targetsToCheck: Array<'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'> = [
-    'opencode',
-    'claude',
-    'codex',
-    'gemini',
-    'cursor',
-    'agy',
-  ];
+  const targetsToCheck: readonly IndividualRunnerTarget[] = INDIVIDUAL_TARGETS;
 
   const results: Array<{ path: string; error: string }> = [];
 
@@ -284,17 +271,13 @@ export async function loadSkillsLock(basePath: string): Promise<Record<string, s
 }
 
 /**
- * Helper to read a bundled skill's version from frontmatter
+ * Helper to read a bundled skill's version from frontmatter. Deliberately
+ * not INDIVIDUAL_TARGETS: this scans presets/<target>/skills/, which does
+ * not exist for pi — it shares opencode's skills (see presets/pi manifest),
+ * so a scan under presets/pi/ would never find anything.
  */
 async function getLatestSkillVersion(skillId: string): Promise<string | null> {
-  const targets: Array<'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'> = [
-    'opencode',
-    'agy',
-    'claude',
-    'codex',
-    'gemini',
-    'cursor',
-  ];
+  const targets: readonly IndividualRunnerTarget[] = ['opencode', 'agy', 'claude', 'codex', 'gemini', 'cursor'];
   for (const target of targets) {
     const skillPath = resolve(ROOT_PRESETS_DIR, target, 'skills', skillId, 'SKILL.md');
     try {
@@ -329,14 +312,7 @@ export async function checkUpdates(
   const policyHasUpdate = await fileContentDiffers(localPolicy, POLICY_PATH);
 
   // 2. Check installed targets
-  const targetsToCheck: Array<'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'> = [
-    'opencode',
-    'claude',
-    'codex',
-    'gemini',
-    'cursor',
-    'agy',
-  ];
+  const targetsToCheck: readonly IndividualRunnerTarget[] = INDIVIDUAL_TARGETS;
 
   const targetResults: Array<{ target: string; hasUpdate: boolean; files: string[] }> = [];
 
@@ -352,7 +328,7 @@ export async function checkUpdates(
   }
 
   const checkTarget = async (
-    target: 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'
+    target: IndividualRunnerTarget
   ): Promise<{ target: string; hasUpdate: boolean; files: string[] } | null> => {
     const isInstalled = await isTargetInstalled(target, basePath, isGlobal);
     if (!isInstalled) {

@@ -11,7 +11,7 @@ entry does not by itself mean that version was published.
 | Capability | Repository status | Published in 0.5.0 |
 | ---------- | ----------------- | ------------------- |
 | Core CLI (`init`, `detect`, `install`, `doctor`, `update`, `migrate`) | shipped | yes |
-| Preset and council installation (6 targets: agy, claude, codex, cursor, gemini, opencode) | shipped | yes |
+| Preset and council installation (7 targets: agy, claude, codex, cursor, gemini, opencode, pi) | shipped | yes |
 | SEO audit / `llms.txt` commands | shipped | yes |
 | Scorecard and outcome evaluation | shipped | yes |
 | Harness ablation (leave-one-out catalog + experiment + report) | implemented, unreleased — **v1.0.0** | no |

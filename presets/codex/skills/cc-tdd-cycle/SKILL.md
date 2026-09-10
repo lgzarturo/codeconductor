@@ -74,7 +74,7 @@ Do not advance phases until that evidence exists.
 
 ## Phase 1 — RED (Tester role)
 
-Invoke the `tester` subagent via the Task tool.
+Adopt the `tester` role as defined in `AGENTS.md`.
 
 ### 1a — Scope clarification
 
@@ -130,7 +130,7 @@ confirmation.**
 
 ## Phase 2 — GREEN (Implementer role)
 
-Invoke the `implementer` subagent via the Task tool.
+Adopt the `implementer` role as defined in `AGENTS.md`.
 
 ### 2a — Read the failing test before writing any code
 
@@ -177,7 +177,7 @@ confirmation.**
 
 ## Phase 3 — REFACTOR (Implementer role, then Reviewer role)
 
-Invoke the `implementer` subagent via the Task tool.
+Adopt the `implementer` role as defined in `AGENTS.md`.
 
 ### 3a — Assess what needs cleaning
 
@@ -208,7 +208,7 @@ change and investigate.
 
 ### 3d — Review (Reviewer role)
 
-Invoke the `reviewer` subagent via the Task tool.
+Adopt the `reviewer` role as defined in `AGENTS.md`.
 
 Review only the refactored code against these axes:
 

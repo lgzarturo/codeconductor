@@ -44,7 +44,7 @@ Local development: `bun run dev <same argv>`. Published package: `npx cc-codecon
 
 If `graphify-out/graph.json` exists, run `graphify query "$ARGUMENTS"` (and
 `graphify path` / `graphify explain` when two modules or one concept need a
-scoped subgraph). Then invoke the `repo-explorer` subagent via the Task tool
+scoped subgraph). Then adopt the `repo-explorer` role as defined in `AGENTS.md`
 with that graph output.
 
 repo-explorer maps directory trees, conventions, god nodes, and affected
@@ -56,7 +56,7 @@ context.
 
 ## Step 2 — Relentless Grilling & Task Card (task-coach)
 
-Invoke the `task-coach` subagent via the Task tool.
+Adopt the `task-coach` role as defined in `AGENTS.md`.
 
 Produce a complete Task Card. The Task Card is ready when it contains: title,
 type, risk classification, scope, context, acceptance criteria, and
@@ -76,7 +76,7 @@ continuing.
 
 ## Step 3 — Contract & Technical Plan (contract-builder & architect)
 
-Invoke `contract-builder` then `architect` via the Task tool.
+Adopt the `contract-builder` role as defined in `AGENTS.md`, then the `architect` role as defined in `AGENTS.md`.
 
 1. Define API contracts, JSON Schemas, or TypeScript interfaces.
 2. Formulate the Technical Plan (chosen approach, affected files, trade-offs).
@@ -89,7 +89,7 @@ not proceed to tests until the plan is approved.**
 
 ## Step 4 — Test coverage (Tester role)
 
-Invoke the `tester` subagent via the Task tool.
+Adopt the `tester` role as defined in `AGENTS.md`.
 
 1. Write or extend failing tests for the new behavior before implementation (RED).
 2. Ensure all acceptance criteria from the Task Card have at least one test.
@@ -99,7 +99,7 @@ Invoke the `tester` subagent via the Task tool.
 
 ## Step 5 — Implementation (Implementer role)
 
-Invoke the `implementer` subagent via the Task tool.
+Adopt the `implementer` role as defined in `AGENTS.md`.
 
 Use the approved Technical Plan, contracts, and the failing tests.
 Implementer creates a Git Worktree before touching any file; all edits happen
@@ -132,7 +132,7 @@ If APPROVED (no CRITICAL findings), continue.
 
 ## Step 7 — Documentation (Docs role)
 
-Invoke the `docs` subagent via the Task tool when a public API, public module,
+Adopt the `docs` role as defined in `AGENTS.md` when a public API, public module,
 or user-visible behavior changed.
 
 Update: README (if applicable), OpenAPI spec (if applicable), CHANGELOG

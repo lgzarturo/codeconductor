@@ -12,6 +12,7 @@ import {
 import { copyFromManifest } from '../core/presets/file-copier';
 import { loadManifest, loadModelConfig, PRESETS_DIR } from '../core/presets/manifest-loader';
 import { SRC_PRESETS_DIR, POLICY_PATH } from '../core/presets/package-paths';
+import type { IndividualRunnerTarget } from '../core/runner/runner-target';
 
 export interface UpdateOptions {
   readonly dryRun: boolean;
@@ -133,7 +134,7 @@ export async function updateCommand(
     const locale = config?.defaults?.locale ?? 'en';
     for (const t of updateResults.targets) {
       if (t.hasUpdate) {
-        const targetName = t.target as 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy';
+        const targetName = t.target as IndividualRunnerTarget;
         const manifest = await loadManifest(targetName);
         const modelConfig = await loadModelConfig(targetName);
         const results = await copyFromManifest(

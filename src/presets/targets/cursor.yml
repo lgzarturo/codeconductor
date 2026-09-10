@@ -1,0 +1,11 @@
+target: cursor
+invocation: colon
+commandFormat: markdown
+contextFile: AGENTS.md
+# Has a Task tool and separately invocable subagent files (.cursor/agents/).
+subagentInvocationStyle: task-tool
+capabilities:
+  subagents: true
+  hooks: false
+  mcp: false
+  council: true

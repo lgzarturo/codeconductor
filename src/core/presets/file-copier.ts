@@ -251,7 +251,7 @@ export function renderTemplate(content: string, modelConfig: ModelConfig, filePa
   if (agentRole && modelConfig.agents[agentRole]) {
     const agentModels = modelConfig.agents[agentRole];
     const targetModel =
-      agentModels[modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor' | 'agy'];
+      agentModels[modelConfig.target];
     let result = templatedContent
       .replace(/\{\{MODEL\}\}/g, targetModel ?? '')
       .replace(/\{\{MODEL_CLAUDE\}\}/g, agentModels.claude ?? '')
@@ -302,7 +302,7 @@ export function renderTemplate(content: string, modelConfig: ModelConfig, filePa
     if (sectionMatch) {
       for (const section of sectionMatch) {
         const targetModel =
-          agentModels[modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor' | 'agy'];
+          agentModels[modelConfig.target];
         const renderedSection = section
           .replace(/\{\{MODEL\}\}/g, targetModel ?? '')
           .replace(/\{\{MODEL_CLAUDE\}\}/g, agentModels.claude ?? '')
@@ -338,7 +338,7 @@ export function renderTemplate(content: string, modelConfig: ModelConfig, filePa
 function substituteToolNames(content: string, modelConfig: ModelConfig): string {
   if (!modelConfig.tools && !modelConfig.permissions) return content;
 
-  const target = modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor' | 'agy';
+  const target = modelConfig.target;
 
   const fmMatch = content.match(/^---(\r?\n)([\s\S]*?)\r?\n---/);
   if (!fmMatch) return content;

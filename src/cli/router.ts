@@ -21,6 +21,7 @@ import type { ImpactOptions } from '../commands/impact.command';
 import type { VerifyOptions } from '../commands/verify.command';
 import type { AskOptions } from '../commands/ask.command';
 import type { OutputMode } from '../utils/logger';
+import { RUNNER_TARGETS } from '../core/runner/runner-target';
 
 /**
  * Parsed CLI arguments
@@ -213,7 +214,7 @@ Options:
   --output, -o            Output mode: human or json
   --lang                  Comma-separated list of languages (e.g., typescript,php,python)
   --locale                Instruction language for agent files: en (default) | es
-  --target                Runner target: opencode, claude, codex, gemini, cursor, agy, all
+  --target                Runner target: opencode, claude, codex, gemini, cursor, agy, pi, all
 
 Stack-specific presets (v0.4.0, registered in preset-registry):
   ts-next-drizzle         Next.js / Astro, Tailwind, Drizzle ORM, Bun, Postgres
@@ -397,7 +398,7 @@ export async function routeCommand(
 
     case 'install': {
       const isGlobal = options.global === true || options.global === 'true';
-      const VALID_TARGETS = ['opencode', 'claude', 'codex', 'gemini', 'cursor', 'agy', 'all'];
+      const VALID_TARGETS: readonly string[] = RUNNER_TARGETS;
       const VALID_INSTALL_SUBCOMMANDS = ['council', 'preset', 'lsp', ...VALID_TARGETS];
 
       if (subcommand && !VALID_INSTALL_SUBCOMMANDS.includes(subcommand)) {

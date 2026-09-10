@@ -1,0 +1,12 @@
+target: pi
+invocation: hyphen
+commandFormat: markdown
+contextFile: AGENTS.md
+# No Task tool or subagents (deliberate design choice, per pi's own docs) —
+# same style as opencode and agy, which share the reason.
+subagentInvocationStyle: invoke-with-context
+capabilities:
+  subagents: false
+  hooks: false
+  mcp: false
+  council: true

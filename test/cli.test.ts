@@ -268,6 +268,19 @@ describe('CLI', () => {
     expect(existsSync(join(CLI_ROOT, '.cursor', 'commands', 'cc', 'council.md'))).toBe(true);
   });
 
+  test('install council --target pi generates files', async () => {
+    await runCli(['init', '--force']);
+
+    const result = await runCli(['install', 'council', '--target=pi', '--force']);
+    expect(result.exitCode).toBe(0);
+
+    const { existsSync } = await import('node:fs');
+    // Pi target shares .agents/skills/ and .agents/agents/ with agy, and gets
+    // its own .pi/prompts/cc-council.md workflow command.
+    expect(existsSync(join(CLI_ROOT, '.agents', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.pi', 'prompts', 'cc-council.md'))).toBe(true);
+  });
+
   test('install council --target codex generates files', async () => {
     await runCli(['init', '--force']);
 
@@ -294,6 +307,7 @@ describe('CLI', () => {
     expect(existsSync(join(CLI_ROOT, '.agents', 'skills', 'council', 'SKILL.md'))).toBe(true);
     expect(existsSync(join(CLI_ROOT, '.gemini', 'skills', 'council', 'SKILL.md'))).toBe(true);
     expect(existsSync(join(CLI_ROOT, '.cursor', 'skills', 'council', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.pi', 'prompts', 'cc-council.md'))).toBe(true);
   });
 
   test('install with --dry-run does not write files', async () => {
@@ -652,6 +666,8 @@ describe('CLI', () => {
     expect(existsSync(join(CLI_ROOT, '.opencode', 'agents', 'architect.md'))).toBe(true);
     expect(existsSync(join(CLI_ROOT, '.claude', 'agents', 'orchestrator.md'))).toBe(true);
     expect(existsSync(join(CLI_ROOT, '.codex', 'AGENTS.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.pi', 'prompts', 'cc-feature.md'))).toBe(true);
+    expect(existsSync(join(CLI_ROOT, '.agents', 'agents', 'architect.md'))).toBe(true);
   });
 
   test('install preset --dry-run does not write files', async () => {

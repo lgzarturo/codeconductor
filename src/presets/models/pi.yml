@@ -1,0 +1,5 @@
+# Model configuration for Pi preset
+# Agent models live in roles.yml; loadModelConfig() merges this file with it.
+# Pi has no tools: frontmatter to substitute (see pi-council-generator.ts),
+# so unlike claude/codex/cursor/gemini/agy it carries no tools override either.
+target: pi

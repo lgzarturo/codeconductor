@@ -58,7 +58,7 @@ Show the diff summary (files changed, lines added/removed) before proceeding.
 
 ## Step 2 — Code review (Reviewer role)
 
-Invoke the `reviewer` subagent via the Task tool.
+Adopt the `reviewer` role as defined in `AGENTS.md`.
 
 Evaluate the diff against the following checklist:
 

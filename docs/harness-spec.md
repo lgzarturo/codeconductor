@@ -1,8 +1,8 @@
 # CodeConductor Harness Spec (CCHS v1)
 
 The contract every preset target (agy, claude, codex, cursor, gemini, opencode,
-and any future target) must satisfy to ship skills, slash commands, and agent
-prompts through CodeConductor. It exists so a new target can be added by
+pi, and any future target) must satisfy to ship skills, slash commands, and
+agent prompts through CodeConductor. It exists so a new target can be added by
 declaring how it differs from this baseline, instead of re-deriving frontmatter
 and invocation conventions from scratch.
 
@@ -84,7 +84,7 @@ mapping:
 | Family | Spelling | Targets |
 | --- | --- | --- |
 | Colon | `/cc:feature` | claude, cursor, gemini |
-| Hyphen | `/cc-feature` | opencode, agy |
+| Hyphen | `/cc-feature` | opencode, agy, pi |
 | Dollar | `$cc-feature` | codex |
 
 A command's own body must recommend *other* commands using its **own**
@@ -93,16 +93,52 @@ at a command that doesn't exist on that runner. This is what
 `test/presets/ask-parity.test.ts` and the "Next command spelling" checks in
 `slash-parity.test.ts` guard against.
 
-## 4. Target capability matrix — planned, not yet implemented
+## 4. Target capability matrix
 
-The plan behind this spec calls for `src/presets/targets/<target>.yml`
-declaring what each target actually supports (subagents, hooks, MCP, council),
-so instruction text like "invoke the X subagent via the Task tool" can be
-mechanically stripped for targets that have no Task tool (Gemini, Codex)
-instead of hand-editing prose per target. This does not exist yet — today
-those gaps are closed file-by-file as they're found (see CHANGELOG
-`[Unreleased]`). Building the capability matrix is Fase 2 (single-source +
-generation) scope, tracked separately; it is not part of this pass.
+`src/presets/targets/<target>.yml`, one per target, validated by
+`TargetCapabilitiesSchema` and loaded by `loadTargetCapabilities()`
+(`src/core/presets/manifest-loader.ts`), checked by `cc doctor` and by
+`test/unit/core/presets/target-capabilities.test.ts`:
+
+```yaml
+target: gemini
+invocation: colon # colon | hyphen | dollar — must match surfaceForRunner()
+commandFormat: toml # markdown | toml | skill
+contextFile: GEMINI.md
+subagentInvocationStyle: adopt-role # task-tool | adopt-role | invoke-with-context
+capabilities:
+  subagents: true
+  hooks: false
+  mcp: true
+  council: true
+```
+
+`capabilities` describes what CodeConductor's **own preset** installs/manages
+for that target, not the underlying tool's full native feature set — Cursor
+supports MCP natively, for instance, but CodeConductor's cursor preset ships
+no MCP config, so `mcp: false` here.
+
+`subagentInvocationStyle` is the one field actually driving generation today:
+`scripts/render-agent-commands.ts`'s `rewriteTaskToolInvocation()` uses it to
+rewrite cursor's "Invoke the `X` subagent via the Task tool" phrasing —
+accurate for Cursor and Claude Code, both of which have a Task tool — into
+"Adopt the `X` role as defined in `<contextFile>`" for Gemini and Codex, which
+don't. Left unrewritten, both derived targets told the model to use a tool
+that doesn't exist for them (34 occurrences across 21 commands).
+
+**What this matrix does not do**: drive a full single-source rewrite of
+command *prose* across cursor/claude/opencode/agy. Diffing all 21 commands
+across those 4 targets found real, deliberate content differences beyond
+invocation style — Claude's `refactor` command has an entire extra
+Blast Radius Assessment step (~135 lines) Cursor's doesn't; OpenCode's
+"Invoke `X` with `<context>`" phrasing carries per-step context Cursor's
+"via the Task tool" form doesn't state. Forcing these through one template
+would either silently drop real content or require a conditional-block
+templating language — out of scope here. Those 4 targets' command bodies
+stay hand-maintained; the matrix's job is mechanical rewrites of boilerplate
+(Task tool phrasing) and validation (catching a target that ships text
+inconsistent with its own declared style), not merging genuinely divergent
+authored content.
 
 ## 5. Versioning — planned, not yet implemented
 
@@ -120,6 +156,10 @@ own review risk independent of this spec.
 1. Confirm its command format (Markdown+frontmatter, TOML, or something else)
    and pick the invocation spelling family from §3 — reuse an existing one
    unless the target genuinely can't.
+1b. Add `src/presets/targets/<target>.yml` (§4) — this is what
+    `render-agent-commands.ts` needs to know whether to rewrite Task-tool
+    phrasing for it, and it's what `cc doctor` and
+    `target-capabilities.test.ts` validate against.
 2. Add a manifest under `src/presets/manifests/<target>.yml` following an
    existing one as a template.
 3. If the target supports council, add a `<target>-council-generator.ts` +

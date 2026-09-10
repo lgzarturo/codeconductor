@@ -59,7 +59,7 @@ Record a Repo Map artifact before intake.
 
 ## Step 2 — Task Card validation (Task Coach role)
 
-Invoke the `task-coach` subagent via the Task tool.
+Adopt the `task-coach` role as defined in `AGENTS.md`.
 
 Produce a Task Card that includes:
 
@@ -114,7 +114,7 @@ before continuing.**
 
 ## Step 4 — Regression tests (Tester role)
 
-Invoke the `tester` subagent via the Task tool. Apply for all risk levels.
+Adopt the `tester` role as defined in `AGENTS.md`. Apply for all risk levels.
 
 1. Write a regression test that reproduces the original bug and confirm it fails
    before any fix (RED).
@@ -125,7 +125,7 @@ Invoke the `tester` subagent via the Task tool. Apply for all risk levels.
 
 ## Step 5a — Implementation, low-risk (Implementer role)
 
-Invoke the `implementer` subagent via the Task tool. Use the Task Card.
+Adopt the `implementer` role as defined in `AGENTS.md`. Use the Task Card.
 Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
 1. Locate the defect using the reproduction steps.
@@ -137,7 +137,7 @@ Implementer creates a Git Worktree before touching any file; all edits happen in
 
 ## Step 5b — Implementation, medium/high-risk (Implementer role)
 
-Invoke the `implementer` subagent via the Task tool. Use the approved
+Adopt the `implementer` role as defined in `AGENTS.md`. Use the approved
 Technical Plan and the Task Card.
 Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
@@ -148,7 +148,7 @@ After implementation, run the full test suite.
 
 ## Step 6 — Review (Reviewer role) — medium/high-risk only
 
-Invoke the `reviewer` subagent via the Task tool. Use the diff and Task
+Adopt the `reviewer` role as defined in `AGENTS.md`. Use the diff and Task
 Card.
 
 Produce a Review Report with CRITICAL / WARNING / SUGGESTION findings. If any

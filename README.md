@@ -232,7 +232,7 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 
 ## Current Support
 
-- OpenCode, Claude, Codex, Gemini, Cursor, and Agy presets
+- OpenCode, Claude, Codex, Gemini, Cursor, Agy, and Pi presets
 - Claude Code-compatible preset (see
   [Claude Environment Options & Best Practices](docs/claude-env-options.md))
 - Spring Boot / Kotlin workflow
@@ -401,6 +401,7 @@ npx cc-codeconductor install preset --target opencode     # project-level
 npx cc-codeconductor install preset --target claude
 npx cc-codeconductor install preset --target codex
 npx cc-codeconductor install preset --target agy          # antigravity cli
+npx cc-codeconductor install preset --target pi            # pi.dev coding agent
 npx cc-codeconductor install preset --target all          # all targets
 
 npx cc-codeconductor install preset --target claude --global   # write to ~/.claude/
@@ -476,6 +477,7 @@ npx cc-codeconductor install council --target opencode     # project-level
 npx cc-codeconductor install council --target claude
 npx cc-codeconductor install council --target codex
 npx cc-codeconductor install council --target agy          # antigravity cli
+npx cc-codeconductor install council --target pi            # pi.dev coding agent
 npx cc-codeconductor install council --target all          # all targets
 
 npx cc-codeconductor install council --target claude --global  # write to ~/.claude/

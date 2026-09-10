@@ -49,9 +49,40 @@ export function rewriteCodexCrossReferences(body: string): string {
   return body.replace(/`\/cc:([a-z0-9-]*)`/g, (_match, name: string) => `\`$cc-${name}\``);
 }
 
+/**
+ * Cursor's source invokes a role with "Invoke the `X` subagent via the Task
+ * tool" — accurate on Cursor and Claude Code, both of which have a Task
+ * tool. Gemini CLI and Codex CLI don't (see src/presets/targets/*.yml); left
+ * as-is, both derived targets tell the model to use a tool that does not
+ * exist for them. Rewritten to the same "adopt the role" phrasing Claude's
+ * own hand-authored commands already use for the same reason, pointed at
+ * each target's own role-definition file.
+ */
+export function rewriteTaskToolInvocation(body: string, target: 'gemini' | 'codex'): string {
+  const roleDefinition = (role: string): string =>
+    target === 'gemini' ? `\`.gemini/agents/${role}.md\`` : '`AGENTS.md`';
+
+  return body
+    .replace(
+      /([Ii])nvoke the `([a-z-]+)` subagent via the Task tool/g,
+      (_match, leadingCase: string, role: string) => {
+        const verb = leadingCase === 'I' ? 'Adopt' : 'adopt';
+        return `${verb} the \`${role}\` role as defined in ${roleDefinition(role)}`;
+      }
+    )
+    .replace(
+      /([Ii])nvoke `([a-z-]+)` then `([a-z-]+)` via the Task tool/g,
+      (_match, leadingCase: string, role1: string, role2: string) => {
+        const verb = leadingCase === 'I' ? 'Adopt' : 'adopt';
+        return `${verb} the \`${role1}\` role as defined in ${roleDefinition(role1)}, then the \`${role2}\` role as defined in ${roleDefinition(role2)}`;
+      }
+    );
+}
+
 export function renderGeminiToml(cmd: string, md: string): string {
   const description = descriptionFrom(md, cmd);
-  const prompt = tomlEscapePrompt(bodyFrom(md).replaceAll('$ARGUMENTS', '{{args}}'));
+  const body = rewriteTaskToolInvocation(bodyFrom(md), 'gemini');
+  const prompt = tomlEscapePrompt(body.replaceAll('$ARGUMENTS', '{{args}}'));
   return `description = ${JSON.stringify(description)}
 
 prompt = """
@@ -63,7 +94,7 @@ ${prompt}
 export function renderCodexSkill(cmd: string, md: string): string {
   const description = descriptionFrom(md, cmd);
   const invoke = formatCcCommand(cmd, 'dollar');
-  const body = rewriteCodexCrossReferences(bodyFrom(md));
+  const body = rewriteTaskToolInvocation(rewriteCodexCrossReferences(bodyFrom(md)), 'codex');
   return `---
 name: cc-${cmd}
 description: ${description}

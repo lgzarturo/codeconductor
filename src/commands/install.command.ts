@@ -7,6 +7,7 @@ import { createCodexInstaller } from '../adapters/codex/codex-installer';
 import { createCursorInstaller } from '../adapters/cursor/cursor-installer';
 import { createGeminiInstaller } from '../adapters/gemini/gemini-installer';
 import { createOpenCodeInstaller } from '../adapters/opencode/opencode-installer';
+import { createPiInstaller } from '../adapters/pi/pi-installer';
 import { loadConfig } from '../core/config/config-loader';
 import { detectProject } from '../core/detection/project-detector';
 import { writeGeneratedFiles, type WriteOptions } from '../core/filesystem/file-writer';
@@ -14,7 +15,11 @@ import { copyFromManifest, type FileCopyResult } from '../core/presets/file-copi
 import { loadManifest, loadModelConfig, PRESETS_DIR } from '../core/presets/manifest-loader';
 import { loadCouncilPreset } from '../core/presets/preset-loader';
 import { resolvePreset, type PresetResolution } from '../core/presets/preset-resolver';
-import { getIndividualTargets, parseRunnerTarget } from '../core/runner/runner-target';
+import {
+  getIndividualTargets,
+  parseRunnerTarget,
+  type IndividualRunnerTarget,
+} from '../core/runner/runner-target';
 import { parseSkillFrontmatter, skillIdentifier } from '../core/presets/skill-frontmatter';
 import type { InstallManifest } from '../validation/schemas';
 import type { OutputMode } from '../utils/logger';
@@ -94,6 +99,9 @@ export async function installCommand(
           break;
         case 'cursor':
           installer = createCursorInstaller(spec);
+          break;
+        case 'pi':
+          installer = createPiInstaller(spec);
           break;
         default:
           continue;
@@ -270,12 +278,8 @@ export async function installPresetCommand(
     const postInstallWarnings: string[] = [];
 
     for (const t of targets) {
-      const manifest = await loadManifest(
-        t as 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'
-      );
-      const modelConfig = await loadModelConfig(
-        t as 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'
-      );
+      const manifest = await loadManifest(t as IndividualRunnerTarget);
+      const modelConfig = await loadModelConfig(t as IndividualRunnerTarget);
       const results = await copyFromManifest(
         manifest,
         PRESETS_DIR,

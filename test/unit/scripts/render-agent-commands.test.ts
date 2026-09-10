@@ -1,11 +1,17 @@
 import { describe, expect, test } from 'bun:test';
+import { readFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import {
   bodyFrom,
   descriptionFrom,
   renderCodexSkill,
   renderGeminiToml,
   rewriteCodexCrossReferences,
+  rewriteTaskToolInvocation,
 } from '../../../scripts/render-agent-commands';
+import { WORKFLOW_COMMANDS } from '../../../src/core/presets/workflow-commands';
+
+const ROOT = resolve(import.meta.dir, '../../..');
 
 /** Reproduces readNormalizedSource's CRLF→LF normalization on an inline fixture. */
 function normalize(md: string): string {
@@ -76,6 +82,44 @@ describe('scripts/render-agent-commands.ts', () => {
     });
   });
 
+  describe('rewriteTaskToolInvocation', () => {
+    test('rewrites the single-role form for gemini, pointing at its own agent file', () => {
+      expect(
+        rewriteTaskToolInvocation('Invoke the `architect` subagent via the Task tool.', 'gemini')
+      ).toBe('Adopt the `architect` role as defined in `.gemini/agents/architect.md`.');
+    });
+
+    test('rewrites the single-role form for codex, pointing at the monolithic AGENTS.md', () => {
+      expect(
+        rewriteTaskToolInvocation('Invoke the `architect` subagent via the Task tool.', 'codex')
+      ).toBe('Adopt the `architect` role as defined in `AGENTS.md`.');
+    });
+
+    test('preserves a lowercase mid-sentence "invoke"', () => {
+      expect(
+        rewriteTaskToolInvocation(
+          'Then invoke the `repo-explorer` subagent via the Task tool to map modules.',
+          'codex'
+        )
+      ).toBe('Then adopt the `repo-explorer` role as defined in `AGENTS.md` to map modules.');
+    });
+
+    test('rewrites the two-role "X then Y" form', () => {
+      expect(
+        rewriteTaskToolInvocation('Invoke `contract-builder` then `architect` via the Task tool.', 'gemini')
+      ).toBe(
+        'Adopt the `contract-builder` role as defined in `.gemini/agents/contract-builder.md`, ' +
+          'then the `architect` role as defined in `.gemini/agents/architect.md`.'
+      );
+    });
+
+    test('leaves text with no Task tool mention untouched', () => {
+      expect(rewriteTaskToolInvocation('Run the tests and report the result.', 'gemini')).toBe(
+        'Run the tests and report the result.'
+      );
+    });
+  });
+
   describe('renderGeminiToml', () => {
     test('produces the expected TOML with $ARGUMENTS rewritten to {{args}}', () => {
       const md = normalize(
@@ -105,5 +149,18 @@ describe('scripts/render-agent-commands.ts', () => {
           '# Thing\n\n4. Next command spelling on this runner: `$cc-thing`\n'
       );
     });
+  });
+
+  describe('generated Gemini/Codex commands never mention the Task tool', () => {
+    // Neither runner has one (src/presets/targets/{gemini,codex}.yml). Left
+    // unrewritten, the model is told to use a tool that does not exist for it.
+    for (const cmd of WORKFLOW_COMMANDS) {
+      test(`${cmd}: no "Task tool" mention in either rendered artifact`, async () => {
+        const toml = await readFile(join(ROOT, 'presets/gemini/commands/cc', `${cmd}.toml`), 'utf-8');
+        const skill = await readFile(join(ROOT, 'presets/codex/skills', `cc-${cmd}`, 'SKILL.md'), 'utf-8');
+        expect(toml).not.toContain('Task tool');
+        expect(skill).not.toContain('Task tool');
+      });
+    }
   });
 });

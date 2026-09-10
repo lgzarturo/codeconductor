@@ -9,7 +9,7 @@ import {
   validateSkillFrontmatterFiles,
   detectComplementaryTools,
 } from '../core/presets/update-checker';
-import { loadManifest, loadModelConfig } from '../core/presets/manifest-loader';
+import { loadManifest, loadModelConfig, loadTargetCapabilities } from '../core/presets/manifest-loader';
 import { INDIVIDUAL_TARGETS } from '../core/runner/runner-target';
 import type { OutputMode } from '../utils/logger';
 
@@ -211,6 +211,32 @@ export async function doctorCommand(
         name: 'manifest-schema',
         status: 'pass',
         message: `All ${INDIVIDUAL_TARGETS.length} target manifests are valid`,
+      });
+    }
+
+    // Target capability matrix must parse against TargetCapabilitiesSchema
+    // for every target — loadTargetCapabilities() already validates
+    // internally; a thrown error here means a hand-edited
+    // src/presets/targets/<target>.yml is broken.
+    const targetCapabilityErrors: string[] = [];
+    for (const target of INDIVIDUAL_TARGETS) {
+      try {
+        await loadTargetCapabilities(target);
+      } catch (e) {
+        targetCapabilityErrors.push(`${target}: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+    if (targetCapabilityErrors.length > 0) {
+      checks.push({
+        name: 'target-capabilities',
+        status: 'fail',
+        message: `Invalid target capability file(s): ${targetCapabilityErrors.join('; ')}`,
+      });
+    } else {
+      checks.push({
+        name: 'target-capabilities',
+        status: 'pass',
+        message: `All ${INDIVIDUAL_TARGETS.length} target capability files are valid`,
       });
     }
 

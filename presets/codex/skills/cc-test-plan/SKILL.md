@@ -52,7 +52,7 @@ question and wait for the answer.
 
 ## Step 2 — Test plan generation (Tester role, planning mode)
 
-Invoke the `tester` subagent via the Task tool.
+Adopt the `tester` role as defined in `AGENTS.md`.
 
 Produce a test plan document — not test code. The plan will be used as input
 when tests are actually written.

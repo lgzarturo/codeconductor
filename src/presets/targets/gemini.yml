@@ -1,0 +1,15 @@
+target: gemini
+invocation: colon
+commandFormat: toml
+contextFile: GEMINI.md
+# Commands are derived from presets/cursor/commands/cc/*.md by
+# scripts/render-agent-commands.ts, which rewrites cursor's "via the Task
+# tool" phrasing to this style — gemini has no Task tool, but does get
+# separate per-role agent files (.gemini/agents/), so the role definition it
+# points to is per-role rather than one bundled file.
+subagentInvocationStyle: adopt-role
+capabilities:
+  subagents: true
+  hooks: false
+  mcp: true
+  council: true

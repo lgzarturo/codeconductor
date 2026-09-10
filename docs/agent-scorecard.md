@@ -53,7 +53,7 @@ Contract version:** v0.1.0 **Date:** [YYYY-MM-DD] **Evaluator:** [human name or
 | 2   | Minimal diff (no scope creep)     | 20%    |             |       |
 | 3   | Tests present and passing         | 15%    |             |       |
 | 4   | No regressions introduced         | 15%    |             |       |
-| 5   | Code follows project conventions  | 10%    |             |       |
+| 5   | Code follows project conventions  | 5%     |             |       |
 | 6   | Documentation updated if required | 5%     |             |       |
 | 7   | Context discipline                | 5%     |             |       |
 | 8   | Complexity diffusion (cc-gain)    | 5%     |             |       |
@@ -97,8 +97,8 @@ scores the aggregate.
 - **3** — All criteria are met and the implementation handles edge cases not
   explicitly listed in the card.
 
-This is the heaviest criterion. A score of 0 here makes PASS mathematically
-impossible.
+This is the heaviest criterion. A score of 0 here triggers an explicit policy
+veto (REJECT verdict), regardless of the weighted score.
 
 ### 2. Minimal Diff (20%)
 
@@ -114,7 +114,7 @@ Evaluate whether the agent changed only what the Task Card required.
 
 Scope creep at score 0 is grounds for REJECT, not REVISE.
 
-### 3. Tests Present and Passing (20%)
+### 3. Tests Present and Passing (15%)
 
 Applies when the Task Card declares `Requires tests: yes`.
 
@@ -137,7 +137,7 @@ When `Requires tests: no`, score this criterion 2 (met by design) and note it.
 - **3** — Full test suite passes, and the evaluator verified behavior manually
   in at least one integration path.
 
-### 5. Code Follows Project Conventions (10%)
+### 5. Code Follows Project Conventions (5%)
 
 Evaluate against the project's established patterns: naming, package structure,
 error handling style, logging conventions.
@@ -215,7 +215,7 @@ weighted_score =
   (score_2 * 0.20) +
   (score_3 * 0.15) +
   (score_4 * 0.15) +
-  (score_5 * 0.10) +
+  (score_5 * 0.05) +
   (score_6 * 0.05) +
   (score_7 * 0.05) +
   (score_8 * 0.05)

@@ -9,8 +9,40 @@ import {
   createDefaultCriteria,
   PASS_THRESHOLD,
 } from '../src/core/evaluation/scorecard-calculator';
+import { SCORECARD_CRITERIA_DEF } from '../src/core/evaluation/scorecard-constants';
 
 describe('scorecard-calculator', () => {
+  test('scorecard criteria weights sum exactly to 1.0 (100%)', () => {
+    const totalWeight = SCORECARD_CRITERIA_DEF.reduce((sum, c) => sum + c.weight, 0);
+    expect(Math.round(totalWeight * 1000) / 1000).toBe(1.0);
+  });
+
+  test('maximum possible score is 3.0 when all criteria score 3', () => {
+    const criteria = SCORECARD_CRITERIA_DEF.map((def) => ({
+      id: def.id,
+      label: def.label,
+      weight: def.weight,
+      score: 3,
+    }));
+    expect(computeWeightedScore(criteria)).toBe(3.0);
+  });
+
+  test('baseline score is exactly 2.0 when all criteria score 2', () => {
+    const criteria = createDefaultCriteria();
+    expect(computeWeightedScore(criteria)).toBe(PASS_THRESHOLD);
+  });
+
+  test('acceptance=0 triggers REJECT even if other criteria score 3', () => {
+    const criteria = SCORECARD_CRITERIA_DEF.map((def) => ({
+      id: def.id,
+      label: def.label,
+      weight: def.weight,
+      score: def.id === 'acceptance' ? 0 : 3,
+    }));
+    const weighted = computeWeightedScore(criteria);
+    expect(weighted).toBe(2.1); // 3 * (1.0 - 0.3) = 2.10 >= PASS_THRESHOLD
+    expect(computeVerdict(criteria, weighted)).toBe('REJECT');
+  });
   test('computeWeightedScore applies weights', () => {
     const criteria = createDefaultCriteria({ acceptance: { score: 3 } });
     const score = computeWeightedScore(criteria);

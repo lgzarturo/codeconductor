@@ -57,16 +57,15 @@ describe('SKILL.md regression: no version field in frontmatter', () => {
         const content = await readFile(filePath, 'utf-8');
 
         // Extract frontmatter block (between first and second ---)
-        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
         if (!frontmatterMatch) {
           continue; // No frontmatter, skip
         }
 
         const frontmatter = frontmatterMatch[1];
 
-        // Check if frontmatter contains "version:" field
-        // This regex looks for the version field at line start or after whitespace
-        if (/^\s*version\s*:/m.test(frontmatter)) {
+        // Check if frontmatter contains top-level "version:" field
+        if (/^version\s*:/m.test(frontmatter)) {
           filesWithVersionField.push(filePath);
         }
       } catch {
@@ -80,5 +79,16 @@ describe('SKILL.md regression: no version field in frontmatter', () => {
         '\n'
       )}\nVersion should only be in skills-registry.json, not in individual SKILL.md files.`
     );
+  });
+
+  test('regex matches top-level version field but ignores nested version keys', () => {
+    const withTopLevel = '---\nname: foo\nversion: 1.0.0\n---\n# Foo';
+    const withNested = '---\nname: foo\nquality:\n  version: 0.1.0\n---\n# Foo';
+
+    const matchTopLevel = withTopLevel.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    const matchNested = withNested.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+
+    expect(/^version\s*:/m.test(matchTopLevel![1])).toBe(true);
+    expect(/^version\s*:/m.test(matchNested![1])).toBe(false);
   });
 });

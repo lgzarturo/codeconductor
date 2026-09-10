@@ -532,7 +532,7 @@ describe('CLI', () => {
     expect(hasRightPaths).toBe(true);
   });
 
-  test('install --global --target=gemini writes to .gemini/config with --dry-run', async () => {
+  test('install --global --target=gemini writes to home dir with --dry-run', async () => {
     await runCli(['init', '--force']);
 
     const result = await runCli([
@@ -548,8 +548,10 @@ describe('CLI', () => {
     const json = JSON.parse(result.stdout);
     expect(json.success).toBe(true);
 
-    const hasWrongPaths = json.written.some((path: string) => path.includes('.agents'));
-    const hasRightPaths = json.written.some((path: string) => path.includes('.gemini/config'));
+    const hasWrongPaths = json.written.some(
+      (path: string) => path.includes('.agents') || path.includes('.gemini/config')
+    );
+    const hasRightPaths = json.written.some((path: string) => path.includes('.gemini'));
 
     expect(hasWrongPaths).toBe(false);
     expect(hasRightPaths).toBe(true);

@@ -1040,11 +1040,12 @@ Contract version:** v0.1.0 **Date:** [YYYY-MM-DD] **Evaluator:** [human name or
 | --- | --------------------------------- | ------ | ----------- | ----- |
 | 1   | Acceptance criteria met           | 30%    |             |       |
 | 2   | Minimal diff (no scope creep)     | 20%    |             |       |
-| 3   | Tests present and passing         | 20%    |             |       |
+| 3   | Tests present and passing         | 15%    |             |       |
 | 4   | No regressions introduced         | 15%    |             |       |
-| 5   | Code follows project conventions  | 10%    |             |       |
+| 5   | Code follows project conventions  | 5%     |             |       |
 | 6   | Documentation updated if required | 5%     |             |       |
 | 7   | Context discipline                | 5%     |             |       |
+| 8   | Complexity diffusion (cc-gain)    | 5%     |             |       |
 
 **Weighted score:** [calculated] **Pass threshold:** 2.0
 

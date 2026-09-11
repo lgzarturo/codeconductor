@@ -1,0 +1,25 @@
+target: pi
+entries:
+  - src: pi/AGENTS.md
+    dest: AGENTS.md
+    strategy: merge-managed
+    globalStrategy: merge-managed
+    template: true
+  - src: pi/settings.json
+    dest: .pi/settings.json
+    strategy: overwrite
+    globalStrategy: merge-json
+  - src: opencode/commands
+    dest: .pi/prompts
+    strategy: overwrite
+  - src: opencode/skills
+    dest: .agents/skills
+    strategy: overwrite
+  - src: opencode/agents
+    dest: .agents/agents
+    strategy: overwrite
+    template: true
+  - src: opencode/prompts/v1.0.0
+    dest: .agents/prompts/v1.0.0
+    strategy: overwrite
+    template: true

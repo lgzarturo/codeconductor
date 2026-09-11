@@ -1,6 +1,6 @@
 ---
 name: cc-openspec
-description: orchestrate agents by phase, review gate, and update backlog state.
+description: Run OpenSpec backlog delivery — validate BACKLOG.md, plan TaskCards, orchestrate agents by phase, review gate, and update backlog state.
 ---
 
 # openspec
@@ -37,7 +37,7 @@ If `openspec status` reports an active change folder:
 1. Run: `npx cc-codeconductor openspec validate --output json`
 2. Run: `npx cc-codeconductor openspec analyze --output json`
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
-4. Next command spelling on this runner: `/cc:openspec`
+4. Next command spelling on this runner: `$cc-openspec`
 
 Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
 

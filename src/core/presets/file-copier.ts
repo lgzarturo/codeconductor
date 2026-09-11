@@ -82,6 +82,28 @@ async function fileExists(path: string): Promise<boolean> {
   }
 }
 
+/**
+ * Resolve the effective base directory and manifest entry for a global agy
+ * install. Antigravity CLI's real settings.json lives one level above the
+ * shared `~/.gemini/config` tree (see presets/agy/README.md), so it needs a
+ * distinct base — routing it through `.gemini/config` would put its `dest`
+ * outside that root and every contained write would refuse it. Every other
+ * agy entry keeps sharing `~/.gemini/config` with its `.agents/` prefix
+ * stripped.
+ */
+export function resolveAgyGlobalEntry(
+  entry: ManifestEntry,
+  homeDir: string
+): { readonly baseDir: string; readonly entry: ManifestEntry } {
+  const isAntigravityCliSettings = entry.dest.startsWith('antigravity-cli/');
+  return {
+    baseDir: join(homeDir, '.gemini', ...(isAntigravityCliSettings ? [] : ['config'])),
+    entry: isAntigravityCliSettings
+      ? entry
+      : { ...entry, dest: entry.dest.replace(/^\.agents\/?/, '') },
+  };
+}
+
 export async function resolveEntryFiles(
   entry: ManifestEntry,
   presetsDir: string,
@@ -229,7 +251,7 @@ export function renderTemplate(content: string, modelConfig: ModelConfig, filePa
   if (agentRole && modelConfig.agents[agentRole]) {
     const agentModels = modelConfig.agents[agentRole];
     const targetModel =
-      agentModels[modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor' | 'agy'];
+      agentModels[modelConfig.target];
     let result = templatedContent
       .replace(/\{\{MODEL\}\}/g, targetModel ?? '')
       .replace(/\{\{MODEL_CLAUDE\}\}/g, agentModels.claude ?? '')
@@ -280,7 +302,7 @@ export function renderTemplate(content: string, modelConfig: ModelConfig, filePa
     if (sectionMatch) {
       for (const section of sectionMatch) {
         const targetModel =
-          agentModels[modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor' | 'agy'];
+          agentModels[modelConfig.target];
         const renderedSection = section
           .replace(/\{\{MODEL\}\}/g, targetModel ?? '')
           .replace(/\{\{MODEL_CLAUDE\}\}/g, agentModels.claude ?? '')
@@ -316,15 +338,19 @@ export function renderTemplate(content: string, modelConfig: ModelConfig, filePa
 function substituteToolNames(content: string, modelConfig: ModelConfig): string {
   if (!modelConfig.tools && !modelConfig.permissions) return content;
 
-  const target = modelConfig.target as 'claude' | 'opencode' | 'codex' | 'gemini' | 'cursor' | 'agy';
+  const target = modelConfig.target;
 
-  const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  const fmMatch = content.match(/^---(\r?\n)([\s\S]*?)\r?\n---/);
   if (!fmMatch) return content;
 
-  const frontmatter = fmMatch[1];
+  // Reuse the file's own line ending for the `---` boundaries instead of a
+  // hardcoded '\n', so a CRLF source file does not come out with the
+  // frontmatter wrapper silently converted to LF while its body stays CRLF.
+  const eol = fmMatch[1];
+  const frontmatter = fmMatch[2];
   if (target === 'opencode' && modelConfig.permissions) {
     const updatedFrontmatter = frontmatter.replace(/^tools:\s*(.+)\r?\n?/m, '');
-    return content.replace(fmMatch[0], `---\n${updatedFrontmatter}\n---`);
+    return content.replace(fmMatch[0], `---${eol}${updatedFrontmatter}${eol}---`);
   }
 
   if (!modelConfig.tools) return content;
@@ -344,7 +370,7 @@ function substituteToolNames(content: string, modelConfig: ModelConfig): string 
     }
   );
 
-  return content.replace(fmMatch[0], `---\n${updatedFrontmatter}\n---`);
+  return content.replace(fmMatch[0], `---${eol}${updatedFrontmatter}${eol}---`);
 }
 
 function injectMcpServers(jsonString: string, filePath: string): string {
@@ -563,11 +589,9 @@ export async function copyFromManifest(
     let resolvedBaseDir = baseDir;
     let resolvedEntry = entry;
     if (manifest.target === 'agy' && isGlobal) {
-      resolvedBaseDir = join(homedir(), '.gemini', 'config');
-      resolvedEntry = {
-        ...entry,
-        dest: entry.dest.replace(/^\.agents\/?/, ''),
-      };
+      const resolved = resolveAgyGlobalEntry(entry, homedir());
+      resolvedBaseDir = resolved.baseDir;
+      resolvedEntry = resolved.entry;
     }
 
     const files = await resolveEntryFiles(resolvedEntry, presetsDir, resolvedBaseDir);

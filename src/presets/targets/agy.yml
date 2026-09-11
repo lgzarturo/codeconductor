@@ -1,0 +1,11 @@
+target: agy
+invocation: hyphen
+commandFormat: markdown
+contextFile: AGENTS.md
+# Same style as opencode — no Task tool, agents invoked directly with context.
+subagentInvocationStyle: invoke-with-context
+capabilities:
+  subagents: true
+  hooks: true
+  mcp: true
+  council: true

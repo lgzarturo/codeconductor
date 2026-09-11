@@ -1,6 +1,5 @@
 ---
 id: fastapi-pydantic-strict
-version: 1.0.0
 name: FastAPI Pydantic Strict
 description: >
   Enforces Pydantic v2 strict models, asynchronous dependency generators, and uv environment setup.

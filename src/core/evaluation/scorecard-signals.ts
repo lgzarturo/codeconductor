@@ -27,16 +27,21 @@ export function collectScorecardSignals(
 
   const scopeViolationCount = extra?.scopeViolationCount;
   if (scopeViolationCount && scopeViolationCount > 0) {
-    // Add to findings and set score to 0 for scope criterion
-    // Assuming 'scope' is a valid CriterionId or we just use it as string, wait, the prompt says "set score to 0 for scope criterion".
-    // Let's use 'scope' as any to avoid TS error if it's not in CriterionId.
-    (overrides as any).scope = { score: 0, notes: `Found ${scopeViolationCount} scope violations`, autoSuggested: true };
+    overrides.minimal_diff = {
+      score: 0,
+      notes: `Found ${scopeViolationCount} scope violations`,
+      autoSuggested: true,
+    };
     findings.push(`Scope violation: ${scopeViolationCount} files outside scope.`);
   }
 
   const hashMismatch = extra?.hashMismatch;
   if (hashMismatch) {
-    (overrides as any).tests = { score: 0, notes: 'Test tampering detected (hash mismatch)', autoSuggested: true };
+    overrides.tests = {
+      score: 0,
+      notes: 'Test tampering detected (hash mismatch)',
+      autoSuggested: true,
+    };
     findings.push('Test tampering detected via test-freeze hash mismatch.');
   }
 
@@ -53,7 +58,9 @@ export function collectScorecardSignals(
   }
 
   if (!diff.trim()) {
-    overrides.minimal_diff = { score: 2, notes: 'No diff detected', autoSuggested: true };
+    if (!overrides.minimal_diff) {
+      overrides.minimal_diff = { score: 2, notes: 'No diff detected', autoSuggested: true };
+    }
     return { criteriaOverrides: overrides, findings, scopeViolationCount, hashMismatch };
   }
 
@@ -74,7 +81,7 @@ export function collectScorecardSignals(
         autoSuggested: true,
       };
       findings.push(`Scope creep detected in ${outOfScope.length} file(s).`);
-    } else {
+    } else if (!overrides.minimal_diff) {
       overrides.minimal_diff = { score: 2, notes: 'Diff within declared scope', autoSuggested: true };
     }
   }

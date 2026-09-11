@@ -1,6 +1,6 @@
 ---
 name: cc-security
-description: security-* skills, authorization gate, risk-based routing, hardening, and review.
+description: Run the authorized defensive security workflow — domain security-* skills, authorization gate, risk-based routing, hardening, and review.
 ---
 
 # security
@@ -180,3 +180,7 @@ resolved.
 Report: Task Card, Implementation Summary, regression test added, Review Report
 (if applicable). The task is complete only when: the regression test passes, the
 full suite passes, and no CRITICAL review findings remain.
+
+## Next
+
+Run `$cc-review` on the diff before merging.

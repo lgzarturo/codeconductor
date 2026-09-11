@@ -19,7 +19,14 @@ Versioning ensures:
 - Projects can pin to a known-good contract version
 - New improvements can ship without breaking existing projects
 - The history of why each contract changed is preserved
-- Rollback is always possible — no version is ever deleted
+
+> **Amendment (v2.0.0 harness standardization):** no install path ever read
+> `prompts/v0.1.0`–`v0.6.0` to reinstall an old pinned contract — every
+> manifest and `preset-resolver.ts` only ever copy `prompts/v1.0.0`. Those six
+> pre-1.0.0 directories (52 files) were deleted from the repository; the
+> version-history table below is kept as the historical record. If a real
+> pin-to-old-version install path is ever built, it needs its own snapshot
+> mechanism (e.g. reading from git tags), not indefinite on-disk retention.
 
 ---
 
@@ -80,7 +87,7 @@ Follow these steps in order. Do not skip steps.
 ### 1. Create the new version directory
 
 ```bash
-cp -r presets/opencode/prompts/v0.1.0 presets/opencode/prompts/v0.2.0
+cp -r presets/opencode/prompts/v1.0.0 presets/opencode/prompts/v1.1.0
 ```
 
 Always copy from the previous version. Never start from scratch — contracts
@@ -110,14 +117,16 @@ describing:
 Copy or overwrite the affected files in `agents/` with the new version content.
 
 ```bash
-cp presets/opencode/prompts/v0.2.0/orchestrator.md presets/opencode/agents/orchestrator.md
+cp presets/opencode/prompts/v1.1.0/orchestrator.md presets/opencode/agents/orchestrator.md
 ```
 
-### 6. Never delete previous versions
+### 6. Retiring a previous version
 
-Projects in production reference specific versions. Deleting them breaks those
-projects. Mark versions as `deprecated` in the table — that is the extent of
-retirement.
+Mark the old version as `deprecated` in the table — nothing in the install
+path reads a version other than the current one, so a deprecated directory
+serves only as a historical reference. It may be deleted once no test or doc
+depends on its literal presence (see the amendment at the top of this file for
+the precedent).
 
 ---
 
@@ -195,8 +204,10 @@ Versions follow the same semver as `package.json`: `v{major}.{minor}.{patch}`.
 
 ## Core Rule
 
-**Never break an active contract. Deprecate, do not delete.**
+**Never break an active contract.**
 
-A project that pinned to `v0.1.0` must be able to reinstall from that version
-indefinitely. If a new version changes behavior incompatibly, the old version
-stays in the repository and the new version ships alongside it.
+If a new version changes behavior incompatibly, the new version ships
+alongside the active one and existing projects keep working until they
+opt into the upgrade. Pre-1.0.0 snapshots are no longer kept on disk
+indefinitely (see the amendment above) — `v1.0.0` is the only version
+shipped and the only one guaranteed reinstallable from this repository.

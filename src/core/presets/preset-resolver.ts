@@ -27,7 +27,7 @@ export interface PresetResolution {
   readonly warnings: readonly string[];
 }
 
-const CURRENT_PRESET_VERSION = 'v1.0.0';
+export const CURRENT_PRESET_VERSION = 'v1.0.0';
 
 export function resolvePreset(
   target: Exclude<RunnerTargetInput, 'all'>,
@@ -109,5 +109,7 @@ function resolveAssets(target: Exclude<RunnerTargetInput, 'all'>): string[] {
       return ['AGENTS.md', '.cursorignore', 'rules', 'commands', 'skills', 'agents', 'prompts/v1.0.0'];
     case 'agy':
       return ['AGENTS.md', 'rules', 'workflows', 'skills', 'prompts/v1.0.0'];
+    case 'pi':
+      return ['AGENTS.md', 'settings.json', 'prompts', 'skills', 'agents', 'prompts/v1.0.0'];
   }
 }

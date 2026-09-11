@@ -1,6 +1,5 @@
 ---
 id: tailwind-responsive-auditor
-version: 1.0.0
 name: Tailwind Responsive Auditor
 description: >
   Audits Tailwind CSS usage ensuring mobile-first responsive utilities and clean classes.

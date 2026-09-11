@@ -152,3 +152,7 @@ Report the following to the human:
 
 The feature is complete only when: all tests pass, no CRITICAL review findings
 remain, and documentation reflects the implemented behavior.
+
+## Next
+
+Run `/cc-review` on the diff before merging.

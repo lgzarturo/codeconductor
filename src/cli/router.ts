@@ -13,6 +13,7 @@ import type { ScorecardOptions } from '../commands/scorecard.command';
 import type { HelpOptions } from '../commands/help.command';
 import type { SeoAuditOptions, SeoLlmsOptions } from '../domain/seo/seo-types';
 import type { UpdateOptions } from '../commands/update.command';
+import type { MigrateOptions } from '../commands/migrate.command';
 import type { IngestOptions } from '../commands/ingest.command';
 import type { ProductOptions } from '../commands/product.command';
 import type { OrchestrateOptions } from '../commands/orchestrate.command';
@@ -20,6 +21,7 @@ import type { ImpactOptions } from '../commands/impact.command';
 import type { VerifyOptions } from '../commands/verify.command';
 import type { AskOptions } from '../commands/ask.command';
 import type { OutputMode } from '../utils/logger';
+import { RUNNER_TARGETS } from '../core/runner/runner-target';
 
 /**
  * Parsed CLI arguments
@@ -182,6 +184,10 @@ Published commands (package ${packageJson.version}):
   seo llms                Generate llms.txt from a URL or sitemap
   doctor                  Validate configuration and generated files
   update                  Update installed presets
+  migrate                 Repair leftover artifacts a reinstall can't fix:
+                          rewrite invalid Write(path) permission rules to
+                          Edit(path) and dedupe, and delete orphaned
+                          .{target}/prompts/v{old}/ directories
   help                    Show general CLI usage and command list
   ask                     Recommend a /cc: slash command from a natural-language problem
   cc-help                 Show preset inventory (skills, subagents, commands)
@@ -210,7 +216,7 @@ Options:
   --output, -o            Output mode: human or json
   --lang                  Comma-separated list of languages (e.g., typescript,php,python)
   --locale                Instruction language for agent files: en (default) | es
-  --target                Runner target: opencode, claude, codex, gemini, cursor, agy, all
+  --target                Runner target: opencode, claude, codex, gemini, cursor, agy, pi, all
 
 Stack-specific presets (v0.4.0, registered in preset-registry):
   ts-next-drizzle         Next.js / Astro, Tailwind, Drizzle ORM, Bun, Postgres
@@ -257,6 +263,9 @@ Examples:
   npx cc-codeconductor install lsp --target claude --dry-run
   npx cc-codeconductor doctor
   npx cc-codeconductor update --dry-run
+  npx cc-codeconductor migrate --dry-run
+  npx cc-codeconductor migrate --global
+  npx cc-codeconductor migrate --file .claude/settings.local.json
   npx cc-codeconductor seo audit --url https://example.com
   npx cc-codeconductor seo audit --sitemap https://example.com/sitemap.xml
   npx cc-codeconductor seo audit --sitemap https://example.com/sitemap.xml --format markdown
@@ -391,7 +400,7 @@ export async function routeCommand(
 
     case 'install': {
       const isGlobal = options.global === true || options.global === 'true';
-      const VALID_TARGETS = ['opencode', 'claude', 'codex', 'gemini', 'cursor', 'agy', 'all'];
+      const VALID_TARGETS: readonly string[] = RUNNER_TARGETS;
       const VALID_INSTALL_SUBCOMMANDS = ['council', 'preset', 'lsp', ...VALID_TARGETS];
 
       if (subcommand && !VALID_INSTALL_SUBCOMMANDS.includes(subcommand)) {
@@ -465,6 +474,17 @@ export async function routeCommand(
         global: options.global === true || options.global === 'true',
         output: flags.output,
       } as UpdateOptions);
+    }
+
+    case 'migrate': {
+      const { migrateCommand } = await import('../commands/migrate.command');
+      return migrateCommand({
+        projectRoot,
+        dryRun: flags.dryRun,
+        global: options.global === true || options.global === 'true',
+        output: flags.output,
+        file: options.file as string | undefined,
+      } as MigrateOptions);
     }
 
     case 'help':

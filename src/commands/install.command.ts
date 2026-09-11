@@ -1,17 +1,27 @@
+import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { resolve } from 'node:path';
+import { basename, dirname, resolve, sep } from 'node:path';
 import { createAgyInstaller } from '../adapters/agy/agy-installer';
 import { createClaudeInstaller } from '../adapters/claude/claude-installer';
 import { createCodexInstaller } from '../adapters/codex/codex-installer';
+import { createCursorInstaller } from '../adapters/cursor/cursor-installer';
+import { createGeminiInstaller } from '../adapters/gemini/gemini-installer';
 import { createOpenCodeInstaller } from '../adapters/opencode/opencode-installer';
+import { createPiInstaller } from '../adapters/pi/pi-installer';
 import { loadConfig } from '../core/config/config-loader';
 import { detectProject } from '../core/detection/project-detector';
 import { writeGeneratedFiles, type WriteOptions } from '../core/filesystem/file-writer';
-import { copyFromManifest } from '../core/presets/file-copier';
+import { copyFromManifest, type FileCopyResult } from '../core/presets/file-copier';
 import { loadManifest, loadModelConfig, PRESETS_DIR } from '../core/presets/manifest-loader';
 import { loadCouncilPreset } from '../core/presets/preset-loader';
 import { resolvePreset, type PresetResolution } from '../core/presets/preset-resolver';
-import { getIndividualTargets, parseRunnerTarget } from '../core/runner/runner-target';
+import {
+  getIndividualTargets,
+  parseRunnerTarget,
+  type IndividualRunnerTarget,
+} from '../core/runner/runner-target';
+import { parseSkillFrontmatter, skillIdentifier } from '../core/presets/skill-frontmatter';
+import type { InstallManifest } from '../validation/schemas';
 import type { OutputMode } from '../utils/logger';
 
 export interface InstallOptions {
@@ -82,8 +92,16 @@ export async function installCommand(
           installer = createCodexInstaller(spec);
           break;
         case 'gemini':
+          installer = createGeminiInstaller(spec);
+          break;
         case 'agy':
           installer = createAgyInstaller(spec);
+          break;
+        case 'cursor':
+          installer = createCursorInstaller(spec);
+          break;
+        case 'pi':
+          installer = createPiInstaller(spec);
           break;
         default:
           continue;
@@ -91,7 +109,13 @@ export async function installCommand(
 
       const generatedFiles = await installer.generate();
 
-      const isAgyGlobal = (t === 'agy' || t === 'gemini') && isGlobal;
+      // agy (Antigravity CLI) is the one target whose global config lives
+      // under a nested provider path instead of directly at $HOME — its
+      // generated paths are prefixed with `.agents/` and need that prefix
+      // stripped once redirected there. Every other target's generated
+      // paths are already native to that target (`.gemini/...`,
+      // `.cursor/...`) and resolve correctly straight under $HOME.
+      const isAgyGlobal = t === 'agy' && isGlobal;
       const targetBase = isAgyGlobal ? resolve(homedir(), '.gemini', 'config') : baseDir;
 
       // Anchor relative paths to baseDir
@@ -165,6 +189,58 @@ export async function installCommand(
 }
 
 /**
+ * Re-read every successfully written template file and check for a leaked
+ * `{{PLACEHOLDER}}` renderTemplate should have substituted, plus — for
+ * SKILL.md files — that the rendered frontmatter still validates. Scoped to
+ * `template: true` entries only: non-template files are copied verbatim, and
+ * their correctness is already covered at the source by the
+ * frontmatter-parity test, so re-checking a byte-identical copy here would
+ * be redundant.
+ */
+export async function verifyRenderedFiles(
+  manifest: InstallManifest,
+  baseDir: string,
+  results: FileCopyResult[]
+): Promise<string[]> {
+  const templatePrefixes = manifest.entries
+    .filter((e) => e.template === true)
+    .map((e) => resolve(baseDir, e.dest));
+
+  const warnings: string[] = [];
+  for (const r of results) {
+    if (r.dryRun || r.action === 'skipped' || r.action === 'error') continue;
+    const isTemplateFile = templatePrefixes.some((p) => r.dest === p || r.dest.startsWith(p + sep));
+    if (!isTemplateFile) continue;
+
+    let content: string;
+    try {
+      content = await readFile(r.dest, 'utf-8');
+    } catch {
+      continue;
+    }
+
+    const leaked = [...new Set(content.match(/\{\{[A-Z_]+\}\}/g) ?? [])];
+    if (leaked.length > 0) {
+      warnings.push(`${r.dest}: unresolved placeholder(s) ${leaked.join(', ')}`);
+    }
+
+    if (basename(r.dest) === 'SKILL.md') {
+      const parsed = parseSkillFrontmatter(content);
+      if (!parsed.ok) {
+        warnings.push(`${r.dest}: ${parsed.error.kind} — ${parsed.error.message}`);
+      } else {
+        const dir = basename(dirname(r.dest));
+        const ident = skillIdentifier(parsed.frontmatter);
+        if (ident !== dir) {
+          warnings.push(`${r.dest}: identifier "${ident}" does not match its directory "${dir}"`);
+        }
+      }
+    }
+  }
+  return warnings;
+}
+
+/**
  * Install full preset files via YAML manifests.
  * Supports overwrite / append / merge-json / skip strategies per entry.
  */
@@ -199,14 +275,11 @@ export async function installPresetCommand(
       dryRun?: boolean;
       error?: string;
     }> = [];
+    const postInstallWarnings: string[] = [];
 
     for (const t of targets) {
-      const manifest = await loadManifest(
-        t as 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'
-      );
-      const modelConfig = await loadModelConfig(
-        t as 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'
-      );
+      const manifest = await loadManifest(t as IndividualRunnerTarget);
+      const modelConfig = await loadModelConfig(t as IndividualRunnerTarget);
       const results = await copyFromManifest(
         manifest,
         PRESETS_DIR,
@@ -219,6 +292,10 @@ export async function installPresetCommand(
       );
       for (const r of results) {
         allFileResults.push({ target: t, ...r });
+      }
+
+      if (!dryRun) {
+        postInstallWarnings.push(...(await verifyRenderedFiles(manifest, baseDir, results)));
       }
     }
 
@@ -233,6 +310,7 @@ export async function installPresetCommand(
         targets,
         global: isGlobal,
         dryRun,
+        postInstallWarnings,
         locale,
         presetResolution,
         fileResults: allFileResults,

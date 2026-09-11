@@ -1,6 +1,5 @@
 ---
 id: api-versioning
-version: 1.0.0
 name: API Versioning
 description: >
   Provides expert knowledge for designing, implementing, and managing REST API

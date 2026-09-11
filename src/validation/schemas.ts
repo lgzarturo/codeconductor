@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { INDIVIDUAL_TARGETS, RUNNER_TARGETS } from '../core/runner/runner-target';
 
 /**
  * Council agent spec schema
@@ -84,7 +85,7 @@ export const CodeConductorConfigSchema = z.object({
     profile: z.string().optional(),
   }),
   defaults: z.object({
-    target: z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor', 'agy']),
+    target: z.enum(INDIVIDUAL_TARGETS),
     overwrite: z.boolean(),
     locale: z.enum(['en', 'es']).optional().default('en'),
   }),
@@ -105,15 +106,7 @@ export const CodeConductorConfigSchema = z.object({
 /**
  * Runner target schema
  */
-export const RunnerTargetSchema = z.enum([
-  'opencode',
-  'claude',
-  'codex',
-  'gemini',
-  'cursor',
-  'agy',
-  'all',
-]);
+export const RunnerTargetSchema = z.enum(RUNNER_TARGETS);
 
 /**
  * Install manifest schemas
@@ -135,7 +128,7 @@ export const ManifestEntrySchema = z.object({
 });
 
 export const InstallManifestSchema = z.object({
-  target: z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor', 'agy']),
+  target: z.enum(INDIVIDUAL_TARGETS),
   entries: z.array(ManifestEntrySchema),
 });
 
@@ -149,7 +142,7 @@ export const PermissionProviderNamesSchema = z.record(z.string(), z.string());
  * Model config schema — defines model names per provider per agent role
  */
 export const ModelConfigSchema = z.object({
-  target: z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor', 'agy']),
+  target: z.enum(INDIVIDUAL_TARGETS),
   agents: z.record(
     z.string(),
     z.object({
@@ -159,6 +152,7 @@ export const ModelConfigSchema = z.object({
       gemini: z.string().optional(),
       cursor: z.string().optional(),
       agy: z.string().optional(),
+      pi: z.string().optional(),
       grok: z.string().optional(),
     })
   ),
@@ -167,6 +161,87 @@ export const ModelConfigSchema = z.object({
 });
 
 export type ModelConfig = z.infer<typeof ModelConfigSchema>;
+
+/**
+ * Skill frontmatter — the minimal invariant every SKILL.md must satisfy
+ * regardless of which frontmatter convention it otherwise follows: the bare
+ * `{name, description}` form used by most `cc-*` and `security-*` skills, or
+ * the extended `{id, name, description, version, license, metadata, ...}`
+ * form used by language/stack skills (where `name` is a human-readable title
+ * and `id` is the kebab-case identifier). Extra fields are accepted but not
+ * required here — normalizing every skill onto one shape is a separate,
+ * larger migration than this schema exists to gate.
+ */
+export const SkillFrontmatterSchema = z
+  .object({
+    name: z.string().trim().min(1, 'name must not be empty'),
+    description: z
+      .string()
+      .trim()
+      .min(1, 'description must not be empty')
+      .max(1024, 'description must be 1024 characters or fewer'),
+    id: z.string().trim().min(1).optional(),
+  })
+  .passthrough();
+
+export type SkillFrontmatter = z.infer<typeof SkillFrontmatterSchema>;
+
+/**
+ * Command frontmatter — every shipped `.md` command currently carries only
+ * `description`. The other fields are part of the CCHS v1 standard
+ * (docs/harness-spec.md) and are optional here on purpose: Claude Code,
+ * Cursor, and Pi already read `argument-hint`/`allowed-tools`/`model` when
+ * present, but adding them to the 126 existing command files is a separate,
+ * opt-in migration this schema does not force.
+ */
+export const CommandFrontmatterSchema = z
+  .object({
+    description: z
+      .string()
+      .trim()
+      .min(1, 'description must not be empty')
+      .max(1024, 'description must be 1024 characters or fewer'),
+    'argument-hint': z.string().trim().min(1).optional(),
+    'allowed-tools': z.string().trim().min(1).optional(),
+    model: z.string().trim().min(1).optional(),
+    'disable-model-invocation': z.boolean().optional(),
+  })
+  .passthrough();
+
+export type CommandFrontmatter = z.infer<typeof CommandFrontmatterSchema>;
+
+/**
+ * Target capability matrix (CCHS v1, docs/harness-spec.md) — one
+ * `src/presets/targets/<target>.yml` per target, declaring facts a
+ * generator can act on mechanically instead of hand-editing prose per
+ * target. `capabilities` are scoped to what CodeConductor's own preset
+ * installs/manages for that target, not the underlying tool's full native
+ * feature set (e.g. Cursor supports MCP natively; CodeConductor's cursor
+ * preset doesn't ship an MCP config, so `mcp: false` here).
+ */
+export const TargetCapabilitiesSchema = z.object({
+  target: z.enum(INDIVIDUAL_TARGETS),
+  invocation: z.enum(['colon', 'hyphen', 'dollar']),
+  commandFormat: z.enum(['markdown', 'toml', 'skill']),
+  contextFile: z.string().trim().min(1),
+  /**
+   * How this target's rendered commands phrase "run this role now":
+   * - task-tool: "Invoke the `X` subagent via the Task tool." (has one)
+   * - adopt-role: "Adopt the `X` role as defined in `<contextFile>`." (roles
+   *   live in one bundled file, not separately invocable subagents)
+   * - invoke-with-context: "Invoke `X` with <step-specific context>." (no
+   *   Task tool; agents are called directly with whatever the step needs)
+   */
+  subagentInvocationStyle: z.enum(['task-tool', 'adopt-role', 'invoke-with-context']).optional(),
+  capabilities: z.object({
+    subagents: z.boolean(),
+    hooks: z.boolean(),
+    mcp: z.boolean(),
+    council: z.boolean(),
+  }),
+});
+
+export type TargetCapabilities = z.infer<typeof TargetCapabilitiesSchema>;
 
 /**
  * Type exports
@@ -194,6 +269,27 @@ export function validateCouncilSpec(data: unknown): CouncilSpecInput {
  */
 export function validateProjectProfile(data: unknown): ProjectProfileInput {
   return ProjectProfileSchema.parse(data);
+}
+
+/**
+ * Validate skill frontmatter
+ */
+export function validateSkillFrontmatter(data: unknown): SkillFrontmatter {
+  return SkillFrontmatterSchema.parse(data);
+}
+
+/**
+ * Validate command frontmatter
+ */
+export function validateCommandFrontmatter(data: unknown): CommandFrontmatter {
+  return CommandFrontmatterSchema.parse(data);
+}
+
+/**
+ * Validate a target capability matrix entry
+ */
+export function validateTargetCapabilities(data: unknown): TargetCapabilities {
+  return TargetCapabilitiesSchema.parse(data);
 }
 
 /**
@@ -1149,7 +1245,7 @@ export const ExecutionProfileNameSchema = z.enum(['balanced', 'quality', 'econom
 
 export const ExecutionProfileSchema = z.object({
   profile: ExecutionProfileNameSchema.default('balanced'),
-  target: z.enum(['opencode', 'claude', 'codex', 'gemini', 'cursor', 'agy']).optional(),
+  target: z.enum(INDIVIDUAL_TARGETS).optional(),
   overrides: z.record(z.string(), z.string()).optional().default({}),
   subagentPolicy: z
     .object({
@@ -1372,5 +1468,27 @@ export function validateCanonicalTaskCard(data: unknown): CanonicalTaskCardInput
 
 export function validateProductEvent(data: unknown): ProductEventInput {
   return ProductEventSchema.parse(data);
+}
+
+/**
+ * Skills registry schema — the bundled registry mapping skill IDs to their versions
+ */
+export const SkillsRegistrySchema = z.object({
+  version: z.literal(1),
+  skills: z.record(
+    z.string().min(1).regex(/^[a-z0-9\-]+$/),
+    z.object({
+      version: z.string().min(1),
+    })
+  ),
+});
+
+export type SkillsRegistry = z.infer<typeof SkillsRegistrySchema>;
+
+/**
+ * Validate skills registry
+ */
+export function validateSkillsRegistry(data: unknown): SkillsRegistry {
+  return SkillsRegistrySchema.parse(data);
 }
 

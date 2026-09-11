@@ -1,4 +1,4 @@
-description = "CodeConductor prototype workflow"
+description = "Disposable spike in an isolated worktree. Not a merge candidate."
 
 prompt = """
 # Prototype Workflow

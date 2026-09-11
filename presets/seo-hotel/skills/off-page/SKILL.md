@@ -1,6 +1,5 @@
 ---
 id: off-page
-version: 1.0.0
 name: SEO Off-Page & Marketing
 description: >
   Guidance for off-page SEO strategy specific to hotel and hospitality websites.

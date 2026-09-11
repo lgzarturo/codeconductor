@@ -1,6 +1,6 @@
 ---
 name: cc-fix
-description: validation, implementation, testing, and optional review.
+description: Run the bug fix workflow — risk-based routing through task validation, implementation, testing, and optional review.
 ---
 
 # fix
@@ -41,7 +41,7 @@ If `openspec status` reports an active change folder:
 1. Run: `npx cc-codeconductor openspec validate --output json`
 2. Run: `npx cc-codeconductor openspec analyze --output json`
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
-4. Next command spelling on this runner: `/cc:fix`
+4. Next command spelling on this runner: `$cc-fix`
 
 Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
 
@@ -59,7 +59,7 @@ Record a Repo Map artifact before intake.
 
 ## Step 2 — Task Card validation (Task Coach role)
 
-Invoke the `task-coach` subagent via the Task tool.
+Adopt the `task-coach` role as defined in `AGENTS.md`.
 
 Produce a Task Card that includes:
 
@@ -114,7 +114,7 @@ before continuing.**
 
 ## Step 4 — Regression tests (Tester role)
 
-Invoke the `tester` subagent via the Task tool. Apply for all risk levels.
+Adopt the `tester` role as defined in `AGENTS.md`. Apply for all risk levels.
 
 1. Write a regression test that reproduces the original bug and confirm it fails
    before any fix (RED).
@@ -125,7 +125,7 @@ Invoke the `tester` subagent via the Task tool. Apply for all risk levels.
 
 ## Step 5a — Implementation, low-risk (Implementer role)
 
-Invoke the `implementer` subagent via the Task tool. Use the Task Card.
+Adopt the `implementer` role as defined in `AGENTS.md`. Use the Task Card.
 Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
 1. Locate the defect using the reproduction steps.
@@ -137,7 +137,7 @@ Implementer creates a Git Worktree before touching any file; all edits happen in
 
 ## Step 5b — Implementation, medium/high-risk (Implementer role)
 
-Invoke the `implementer` subagent via the Task tool. Use the approved
+Adopt the `implementer` role as defined in `AGENTS.md`. Use the approved
 Technical Plan and the Task Card.
 Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
@@ -148,7 +148,7 @@ After implementation, run the full test suite.
 
 ## Step 6 — Review (Reviewer role) — medium/high-risk only
 
-Invoke the `reviewer` subagent via the Task tool. Use the diff and Task
+Adopt the `reviewer` role as defined in `AGENTS.md`. Use the diff and Task
 Card.
 
 Produce a Review Report with CRITICAL / WARNING / SUGGESTION findings. If any
@@ -163,3 +163,10 @@ Report: Task Card, Implementation Summary, regression test added, Review Report
 
 The fix is complete only when: the regression test passes, the full suite
 passes, and no CRITICAL review findings remain.
+
+Skills: `testing-tdd`, `evaluation`. Record `scorecard create --from-diff`.
+A small fix still needs a Task Card and a failing regression test first.
+
+## Next
+
+Run `$cc-review` on the diff before merging.

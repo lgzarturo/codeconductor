@@ -1,6 +1,5 @@
 ---
 id: python-fastapi-stack
-version: 1.0.0
 name: Python FastAPI Stack
 description: >
   FastAPI conventions for REST APIs: routers, Pydantic v2 schemas, dependency

@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Run a structured code review — produces a Review Report with
+  Run a structured code review — produces a Review Report with
   CRITICAL, WARNING, and SUGGESTION findings; CRITICAL findings block merge.
 ---
 
@@ -200,3 +200,7 @@ Map each review outcome for trend tracking and decision audit.
 
 Skill: `evaluation`. "Looks fine" is not a verdict. Run
 `scorecard create --from-diff` and record PASS|REVISE|REJECT.
+
+## Next
+
+Approved: merge. Blocked: return the findings to `/cc:fix` or `/cc:feature`.

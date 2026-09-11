@@ -1,0 +1,64 @@
+# Skills whose SKILL.md content is byte-identical across every target listed.
+# Canonical source: skills/<name>/SKILL.md. scripts/sync-shared-skills.ts copies
+# it out to presets/<target>/skills/<name>/SKILL.md for each target below —
+# do not hand-edit the presets/ copies; edit skills/<name>/SKILL.md and re-run
+# `bun run sync:skills`. check:drift catches an un-synced edit.
+skills:
+  - name: evaluation
+    targets: [claude, codex, cursor, opencode, agy]
+  - name: multi-agent-orchestration
+    targets: [claude, codex, cursor, opencode]
+  - name: openspec
+    targets: [claude, codex, cursor, opencode, agy]
+  - name: security-ai-llm
+    targets: [claude, cursor, opencode, agy]
+  - name: security-blue-team
+    targets: [claude, cursor, opencode, agy]
+  - name: security-cloud
+    targets: [claude, cursor, opencode, agy]
+  - name: security-crypto
+    targets: [claude, cursor, opencode, agy]
+  - name: security-exploit-dev
+    targets: [claude, cursor, opencode, agy]
+  - name: security-grc
+    targets: [claude, cursor, opencode, agy]
+  - name: security-incident-response
+    targets: [claude, cursor, opencode, agy]
+  - name: security-log-analysis
+    targets: [claude, cursor, opencode, agy]
+  - name: security-malware-analysis
+    targets: [claude, cursor, opencode, agy]
+  - name: security-mobile
+    targets: [claude, cursor, opencode, agy]
+  - name: security-network
+    targets: [claude, cursor, opencode, agy]
+  - name: security-ot-ics
+    targets: [claude, cursor, opencode, agy]
+  - name: security-recon
+    targets: [claude, cursor, opencode, agy]
+  - name: security-red-team
+    targets: [claude, cursor, opencode, agy]
+  - name: security-reverse-engineering
+    targets: [claude, cursor, opencode, agy]
+  - name: security-soc-automation
+    targets: [claude, cursor, opencode, agy]
+  - name: security-threat-hunting
+    targets: [claude, cursor, opencode, agy]
+  - name: security-vuln-assessment
+    targets: [claude, cursor, opencode, agy]
+  - name: security-web
+    targets: [claude, cursor, opencode, agy]
+  - name: testing-strategy
+    targets: [claude, codex]
+  - name: testing-tdd
+    targets: [claude, codex, cursor, opencode, agy]
+  - name: using-cc-skills
+    targets: [claude, codex, cursor, opencode, agy]
+  - name: workflow-orchestration-patterns
+    targets: [claude, codex, cursor, opencode]
+  - name: code-review
+    targets: [cursor, opencode]
+  - name: seo-analytics-injector
+    targets: [cursor, opencode]
+  - name: tdd-mutation-tester
+    targets: [cursor, opencode]

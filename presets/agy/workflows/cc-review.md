@@ -138,7 +138,7 @@ If any CRITICAL findings exist:
 - The Review Report status is **BLOCKED**
 - Report all CRITICAL findings to the human
 - Do not proceed until each CRITICAL finding is resolved
-- After resolution, invoke `/cc:review` again on the same target
+- After resolution, invoke `/cc-review` again on the same target
 
 If no CRITICAL findings exist:
 
@@ -152,3 +152,7 @@ If no CRITICAL findings exist:
 
 Deliver the complete Review Report. Never summarize or omit findings. Every
 finding must include a location and an actionable description.
+
+## Next
+
+Approved: merge. Blocked: return the findings to `/cc-fix` or `/cc-feature`.

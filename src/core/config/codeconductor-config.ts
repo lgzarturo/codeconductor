@@ -1,3 +1,5 @@
+import type { IndividualRunnerTarget } from '../runner/runner-target';
+
 /**
  * CodeConductor configuration interface
  */
@@ -8,7 +10,7 @@ export interface CodeConductorConfig {
     profile?: string;
   };
   defaults: {
-    target: 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy';
+    target: IndividualRunnerTarget;
     overwrite: boolean;
     locale: 'en' | 'es';
   };

@@ -1,0 +1,13 @@
+target: opencode
+invocation: hyphen
+commandFormat: markdown
+contextFile: README.md
+# No Task tool concept — commands call an agent directly with whatever
+# context that step needs ("Invoke `X` with <context>"), not through a
+# separate tool-call layer.
+subagentInvocationStyle: invoke-with-context
+capabilities:
+  subagents: true
+  hooks: false
+  mcp: false
+  council: true

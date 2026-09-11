@@ -5,7 +5,7 @@ model: "{{MODEL}}"
 readonly: true
 is_background: false
 ---
-# Agent Contract — architect v0.5.0
+# Agent Contract — architect v1.0.0
 
 ## Role
 

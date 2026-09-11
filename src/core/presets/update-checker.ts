@@ -1,13 +1,15 @@
 import { stat, readFile } from 'node:fs/promises';
-import { resolve, join } from 'node:path';
+import { resolve, join, basename, dirname } from 'node:path';
 import { homedir } from 'node:os';
-import { parse } from 'yaml';
 import { loadManifest, loadModelConfig, PRESETS_DIR } from './manifest-loader';
 import { renderTemplate, resolveEntryFiles, mergeDeep } from './file-copier';
+import { parseSkillFrontmatter, skillIdentifier } from './skill-frontmatter';
 import { loadConfig } from '../config/config-loader';
 import { mergeManagedBlock, MANAGED_BEGIN_MARKER, MANAGED_END_MARKER } from '../filesystem/safe-merger';
-import { ROOT_PRESETS_DIR, SRC_PRESETS_DIR, POLICY_PATH } from './package-paths';
-import type { InstallStrategy } from '../../validation/schemas';
+import { ROOT_PRESETS_DIR, SRC_PRESETS_DIR, POLICY_PATH, SKILLS_REGISTRY_PATH } from './package-paths';
+import type { InstallStrategy, SkillsRegistry } from '../../validation/schemas';
+import { SkillsRegistrySchema } from '../../validation/schemas';
+import { INDIVIDUAL_TARGETS, type IndividualRunnerTarget } from '../runner/runner-target';
 
 export interface UpdateCheckResults {
   readonly hasUpdates: boolean;
@@ -21,7 +23,7 @@ export interface UpdateCheckResults {
  * Get installation directory path for a given target runner
  */
 export function getTargetInstallationPath(
-  target: 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy',
+  target: IndividualRunnerTarget,
   basePath: string,
   isGlobal: boolean
 ): string {
@@ -35,7 +37,7 @@ export function getTargetInstallationPath(
  * Check if a target is installed (e.g. its target directory exists)
  */
 export async function isTargetInstalled(
-  target: 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy',
+  target: IndividualRunnerTarget,
   basePath: string,
   isGlobal: boolean
 ): Promise<boolean> {
@@ -92,14 +94,7 @@ export async function validateAgentMarkers(
   basePath: string,
   isGlobal: boolean
 ): Promise<Array<{ path: string; error: string }>> {
-  const targetsToCheck: Array<'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'> = [
-    'opencode',
-    'claude',
-    'codex',
-    'gemini',
-    'cursor',
-    'agy',
-  ];
+  const targetsToCheck: readonly IndividualRunnerTarget[] = INDIVIDUAL_TARGETS;
 
   const results: Array<{ path: string; error: string }> = [];
 
@@ -163,6 +158,80 @@ export async function validateAgentMarkers(
 }
 
 /**
+ * Validate SKILL.md frontmatter for every skill CodeConductor's own manifest
+ * installs: parseable YAML, a non-empty name/description, and an identifier
+ * (id if present, else name) matching the skill's own directory.
+ *
+ * Scoped to manifest entries whose dest lands under a `skills` path segment,
+ * resolved the same way validateAgentMarkers resolves managed files — a
+ * blind glob over the installed skills/ directory would also flag unrelated
+ * third-party skills a user happens to have installed alongside ours.
+ */
+export async function validateSkillFrontmatterFiles(
+  basePath: string,
+  isGlobal: boolean
+): Promise<Array<{ path: string; error: string }>> {
+  const targetsToCheck: readonly IndividualRunnerTarget[] = INDIVIDUAL_TARGETS;
+
+  const results: Array<{ path: string; error: string }> = [];
+
+  for (const target of targetsToCheck) {
+    const isInstalled = await isTargetInstalled(target, basePath, isGlobal);
+    if (!isInstalled) continue;
+
+    let manifest;
+    try {
+      manifest = await loadManifest(target);
+    } catch {
+      continue;
+    }
+
+    for (const entry of manifest.entries) {
+      if (!entry.dest.split(/[\\/]/).includes('skills')) continue;
+
+      let resolvedEntry = entry;
+      let targetBaseDir = basePath;
+      if (target === 'agy' && isGlobal) {
+        targetBaseDir = join(homedir(), '.gemini', 'config');
+        resolvedEntry = {
+          ...entry,
+          dest: entry.dest.replace(/^\.agents\/?/, ''),
+        };
+      }
+
+      const files = await resolveEntryFiles(resolvedEntry, PRESETS_DIR, targetBaseDir);
+      for (const { dest } of files) {
+        if (basename(dest) !== 'SKILL.md') continue;
+
+        let content: string;
+        try {
+          content = await readFile(dest, 'utf-8');
+        } catch {
+          continue; // manifest declares it but install hasn't produced it here
+        }
+
+        const parsed = parseSkillFrontmatter(content);
+        if (!parsed.ok) {
+          results.push({ path: dest, error: `${parsed.error.kind}: ${parsed.error.message}` });
+          continue;
+        }
+
+        const dir = basename(dirname(dest));
+        const ident = skillIdentifier(parsed.frontmatter);
+        if (ident !== dir) {
+          results.push({
+            path: dest,
+            error: `identifier "${ident}" does not match its directory "${dir}"`,
+          });
+        }
+      }
+    }
+  }
+
+  return results;
+}
+
+/**
  * Helper to check if two files differ in content
  */
 async function fileContentDiffers(pathA: string, pathB: string): Promise<boolean> {
@@ -202,33 +271,45 @@ export async function loadSkillsLock(basePath: string): Promise<Record<string, s
 }
 
 /**
- * Helper to read a bundled skill's version from frontmatter
+ * Cached skills registry to avoid re-reading the file on every call
  */
-async function getLatestSkillVersion(skillId: string): Promise<string | null> {
-  const targets: Array<'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'> = [
-    'opencode',
-    'agy',
-    'claude',
-    'codex',
-    'gemini',
-    'cursor',
-  ];
-  for (const target of targets) {
-    const skillPath = resolve(ROOT_PRESETS_DIR, target, 'skills', skillId, 'SKILL.md');
-    try {
-      const content = await readFile(skillPath, 'utf-8');
-      const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-      if (fmMatch) {
-        const parsed = parse(fmMatch[1]);
-        if (parsed && parsed.id === skillId && parsed.version) {
-          return String(parsed.version);
-        }
-      }
-    } catch {
-      // try next
+let cachedRegistry: SkillsRegistry | undefined;
+let registryLoadAttempted = false;
+
+/**
+ * Helper to load and cache the skills registry
+ */
+async function loadSkillsRegistry(): Promise<SkillsRegistry | null> {
+  // Return cached result if already attempted
+  if (registryLoadAttempted) {
+    return cachedRegistry ?? null;
+  }
+
+  registryLoadAttempted = true;
+
+  try {
+    const content = await readFile(SKILLS_REGISTRY_PATH, 'utf-8');
+    const parsed = JSON.parse(content);
+    const result = SkillsRegistrySchema.safeParse(parsed);
+    if (result.success) {
+      cachedRegistry = result.data;
+      return cachedRegistry;
     }
+  } catch {
+    // No registry available
   }
   return null;
+}
+
+/**
+ * Helper to read a bundled skill's version from the skills registry.
+ */
+async function getLatestSkillVersion(skillId: string): Promise<string | null> {
+  const registry = await loadSkillsRegistry();
+  if (!registry) {
+    return null;
+  }
+  return registry.skills[skillId]?.version ?? null;
 }
 
 /**
@@ -247,14 +328,7 @@ export async function checkUpdates(
   const policyHasUpdate = await fileContentDiffers(localPolicy, POLICY_PATH);
 
   // 2. Check installed targets
-  const targetsToCheck: Array<'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'> = [
-    'opencode',
-    'claude',
-    'codex',
-    'gemini',
-    'cursor',
-    'agy',
-  ];
+  const targetsToCheck: readonly IndividualRunnerTarget[] = INDIVIDUAL_TARGETS;
 
   const targetResults: Array<{ target: string; hasUpdate: boolean; files: string[] }> = [];
 
@@ -270,7 +344,7 @@ export async function checkUpdates(
   }
 
   const checkTarget = async (
-    target: 'opencode' | 'claude' | 'codex' | 'gemini' | 'cursor' | 'agy'
+    target: IndividualRunnerTarget
   ): Promise<{ target: string; hasUpdate: boolean; files: string[] } | null> => {
     const isInstalled = await isTargetInstalled(target, basePath, isGlobal);
     if (!isInstalled) {

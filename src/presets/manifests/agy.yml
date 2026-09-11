@@ -13,7 +13,7 @@ entries:
     strategy: overwrite
     template: true
   - src: agy/settings.json
-    dest: .agents/../antigravity-cli/settings.json
+    dest: antigravity-cli/settings.json
     strategy: skip
     globalStrategy: merge-json
   - src: agy/hooks.json

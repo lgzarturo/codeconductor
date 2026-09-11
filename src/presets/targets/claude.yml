@@ -1,0 +1,12 @@
+target: claude
+invocation: colon
+commandFormat: markdown
+contextFile: CLAUDE.md
+# Roles live in one bundled CLAUDE.md, not separate subagent files a command
+# can invoke directly — commands say "adopt the role", not "invoke it".
+subagentInvocationStyle: adopt-role
+capabilities:
+  subagents: true
+  hooks: true
+  mcp: false
+  council: true

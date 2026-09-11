@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Run the database migration workflow for schema/data changes,
+  Run the database migration workflow for schema/data changes,
   operational sequencing, tests, and review.
 ---
 
@@ -83,3 +83,7 @@ Invoke the `reviewer` subagent via the Task tool.
 
 Block on missing migration tests, missing data-risk notes, undocumented
 deployment sequencing, or model/migration drift.
+
+## Next
+
+Run `/cc:review` on the diff before merging.

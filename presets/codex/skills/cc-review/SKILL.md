@@ -1,6 +1,6 @@
 ---
 name: cc-review
-description: CRITICAL, WARNING, and SUGGESTION findings; CRITICAL findings block merge.
+description: Run a structured code review — produces a Review Report with CRITICAL, WARNING, and SUGGESTION findings; CRITICAL findings block merge.
 ---
 
 # review
@@ -58,7 +58,7 @@ Show the diff summary (files changed, lines added/removed) before proceeding.
 
 ## Step 2 — Code review (Reviewer role)
 
-Invoke the `reviewer` subagent via the Task tool.
+Adopt the `reviewer` role as defined in `AGENTS.md`.
 
 Evaluate the diff against the following checklist:
 
@@ -150,3 +150,7 @@ npx cc-codeconductor scorecard regression
 ```
 
 Map merge recommendation to scorecard verdict. Record outcome for trend tracking.
+
+## Next
+
+Approved: merge. Blocked: return the findings to `$cc-fix` or `$cc-feature`.

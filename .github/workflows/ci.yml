@@ -18,6 +18,7 @@ jobs:
       - run: bun run typecheck
       - run: bun run lint
       - run: bun run check:prompt-changelog
+      - run: bun run check:drift
       - run: bun test --coverage
       - run: bun run check:coverage
       - uses: actions/upload-artifact@v4

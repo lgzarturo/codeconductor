@@ -1,6 +1,6 @@
 import type { GeneratedFile } from '../../core/generation/generated-file';
 import type { LspConfigGenerator } from '../../core/lsp/lsp-config-generator';
-import { getLanguageServerConfig } from '../../core/lsp/lsp-config-utils';
+import { filterSuccessfulLsps, getLanguageServerConfig } from '../../core/lsp/lsp-config-utils';
 import type { RunnerTarget } from '../../core/runner/runner-target';
 import type { LspInstallResult } from '../../domain/lsp/lsp-definition';
 
@@ -12,7 +12,7 @@ export class GeminiLspGenerator implements LspConfigGenerator {
   readonly target: RunnerTarget = 'gemini';
 
   generate(installedLsps: readonly LspInstallResult[]): readonly GeneratedFile[] {
-    const successfulLsps = installedLsps.filter((lsp) => lsp.status !== 'failed');
+    const successfulLsps = filterSuccessfulLsps(installedLsps);
     if (successfulLsps.length === 0) {
       return [];
     }

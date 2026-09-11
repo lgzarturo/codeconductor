@@ -1,6 +1,5 @@
 ---
 id: geo-readiness
-version: 1.0.0
 name: GEO Readiness Checker
 description: >
   Validates AI-search readiness (Generative Engine Optimization) for hotel websites.

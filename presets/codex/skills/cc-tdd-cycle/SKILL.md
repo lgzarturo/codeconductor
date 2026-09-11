@@ -1,6 +1,6 @@
 ---
 name: cc-tdd-cycle
-description: test first, implement the minimum code to pass it, then refactor with the suite green.
+description: Run a structured Red-Green-Refactor TDD cycle — write a failing test first, implement the minimum code to pass it, then refactor with the suite green.
 ---
 
 # tdd-cycle
@@ -40,7 +40,7 @@ If `openspec status` reports an active change folder:
 1. Run: `npx cc-codeconductor openspec validate --output json`
 2. Run: `npx cc-codeconductor openspec analyze --output json`
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
-4. Next command spelling on this runner: `/cc:tdd-cycle`
+4. Next command spelling on this runner: `$cc-tdd-cycle`
 
 Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
 
@@ -74,7 +74,7 @@ Do not advance phases until that evidence exists.
 
 ## Phase 1 — RED (Tester role)
 
-Invoke the `tester` subagent via the Task tool.
+Adopt the `tester` role as defined in `AGENTS.md`.
 
 ### 1a — Scope clarification
 
@@ -130,7 +130,7 @@ confirmation.**
 
 ## Phase 2 — GREEN (Implementer role)
 
-Invoke the `implementer` subagent via the Task tool.
+Adopt the `implementer` role as defined in `AGENTS.md`.
 
 ### 2a — Read the failing test before writing any code
 
@@ -177,7 +177,7 @@ confirmation.**
 
 ## Phase 3 — REFACTOR (Implementer role, then Reviewer role)
 
-Invoke the `implementer` subagent via the Task tool.
+Adopt the `implementer` role as defined in `AGENTS.md`.
 
 ### 3a — Assess what needs cleaning
 
@@ -208,7 +208,7 @@ change and investigate.
 
 ### 3d — Review (Reviewer role)
 
-Invoke the `reviewer` subagent via the Task tool.
+Adopt the `reviewer` role as defined in `AGENTS.md`.
 
 Review only the refactored code against these axes:
 

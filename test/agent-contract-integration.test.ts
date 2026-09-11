@@ -127,15 +127,15 @@ describe('end-to-end: contract → render → validate → consensus', () => {
     expect(claudeResult.allValid).toBe(true);
     expect(opencodeResult.allValid).toBe(true);
 
-    // All agents approve except 'security' which applies veto
+    // All agents approve except 'security-reviewer' which applies veto
     const verdicts: CouncilVerdictInput[] = SPEC.agents.map((a) =>
-      a.id === 'security' ? vetoVerdict(a.id) : verdict(a.id, 'APPROVED'),
+      a.id === 'security-reviewer' ? vetoVerdict(a.id) : verdict(a.id, 'APPROVED'),
     );
 
     const consensus = councilConsensus(verdicts, MAJORITY_WITH_VETO);
     expect(consensus.status).toBe('REJECTED');
     expect(consensus.vetoApplied).toBe(true);
-    expect(consensus.vetoByAgentId).toBe('security');
+    expect(consensus.vetoByAgentId).toBe('security-reviewer');
     expect(consensus.approvedCount).toBe(SPEC.agents.length - 1);
     expect(consensus.rejectedCount).toBe(1);
   });

@@ -1,6 +1,5 @@
 ---
 id: django-orm
-version: 1.0.0
 name: Django ORM
 description: >
   Django ORM patterns for multi-tenant POS projects: efficient queries,

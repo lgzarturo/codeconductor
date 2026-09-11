@@ -1,6 +1,5 @@
 ---
 id: testing-strategy
-version: 1.0.0
 name: Testing Strategy
 description: >
   Provides expert knowledge of the testing pyramid, test design principles,

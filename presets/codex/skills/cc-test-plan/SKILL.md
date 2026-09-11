@@ -1,6 +1,6 @@
 ---
 name: cc-test-plan
-description: unit, integration, contract, and edge cases without writing implementation code.
+description: Generate a structured test plan for a feature or module — covers unit, integration, contract, and edge cases without writing implementation code.
 ---
 
 # test-plan
@@ -52,7 +52,7 @@ question and wait for the answer.
 
 ## Step 2 — Test plan generation (Tester role, planning mode)
 
-Invoke the `tester` subagent via the Task tool.
+Adopt the `tester` role as defined in `AGENTS.md`.
 
 Produce a test plan document — not test code. The plan will be used as input
 when tests are actually written.
@@ -151,3 +151,7 @@ Deliver the complete Test Plan document. Save it as
 
 This command produces a plan, not test files. No production code and no test
 code is written during this command.
+
+## Next
+
+Implement against this plan with `$cc-tdd-cycle` or `$cc-feature`.

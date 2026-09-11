@@ -1,6 +1,5 @@
 ---
 id: django-testing
-version: 1.0.0
 name: Django Testing
 description: >
   Testing patterns for multi-tenant Django POS projects using pytest-django,

@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "skills": {
+    "android": {
+      "version": "1.0.0"
+    },
+    "api-versioning": {
+      "version": "1.0.0"
+    },
+    "astro": {
+      "version": "1.0.0"
+    },
+    "astro-seo": {
+      "version": "1.0.0"
+    },
+    "auth-token-inspector": {
+      "version": "1.0.0"
+    },
+    "code-review": {
+      "version": "1.0.0"
+    },
+    "django-orm": {
+      "version": "1.0.0"
+    },
+    "django-testing": {
+      "version": "1.0.0"
+    },
+    "django-uv": {
+      "version": "1.0.0"
+    },
+    "drizzle-schema-architect": {
+      "version": "1.0.0"
+    },
+    "fastapi-pydantic-strict": {
+      "version": "1.0.0"
+    },
+    "geo-readiness": {
+      "version": "1.0.0"
+    },
+    "jpa-nplusone-detector": {
+      "version": "1.0.0"
+    },
+    "jpa-postgres": {
+      "version": "1.0.0"
+    },
+    "livewire-alpine-bridge": {
+      "version": "1.0.0"
+    },
+    "nextjs-typescript": {
+      "version": "1.0.0"
+    },
+    "off-page": {
+      "version": "1.0.0"
+    },
+    "pagespeed-perf": {
+      "version": "1.0.0"
+    },
+    "python": {
+      "version": "1.0.0"
+    },
+    "python-django-stack": {
+      "version": "1.0.0"
+    },
+    "python-fastapi-stack": {
+      "version": "1.0.0"
+    },
+    "schema-validator": {
+      "version": "1.0.0"
+    },
+    "security": {
+      "version": "1.0.0"
+    },
+    "seo-analytics-injector": {
+      "version": "1.0.0"
+    },
+    "seo-audit": {
+      "version": "1.0.0"
+    },
+    "spring-auth-auditor": {
+      "version": "1.0.0"
+    },
+    "spring-boot-feature": {
+      "version": "1.0.0"
+    },
+    "spring-boot-kotlin": {
+      "version": "1.0.0"
+    },
+    "spring-boot-testing-strategy": {
+      "version": "1.0.0"
+    },
+    "sqlalchemy": {
+      "version": "1.0.0"
+    },
+    "tailwind-responsive-auditor": {
+      "version": "1.0.0"
+    },
+    "tdd-mutation-tester": {
+      "version": "1.0.0"
+    },
+    "testing-strategy": {
+      "version": "1.0.0"
+    }
+  }
+}

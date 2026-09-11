@@ -1,6 +1,6 @@
 ---
 name: cc-refactor
-description: test verification, risk-based implementation, and scope enforcement.
+description: Run the refactor workflow — mandatory architectural justification, test verification, risk-based implementation, and scope enforcement.
 ---
 
 # refactor
@@ -50,7 +50,7 @@ Command: `refactor` (fixed for this workflow — do not infer from user text)
 
 ## Step 1 — Architectural justification (Architect role)
 
-Invoke the `architect` subagent via the Task tool. Always invoke this step
+Adopt the `architect` role as defined in `AGENTS.md`. Always invoke this step
 first, regardless of risk level. A refactor without a written justification is
 scope creep in disguise.
 
@@ -99,7 +99,7 @@ Proceed to Step 3b.
 
 ## Step 3a — Implementation, low-risk (Implementer role)
 
-Invoke the `implementer` subagent via the Task tool. Use the approved
+Adopt the `implementer` role as defined in `AGENTS.md`. Use the approved
 Refactor Plan.
 Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
@@ -139,7 +139,7 @@ regression. **STOP and report.**
 
 ## Step 5 — Code review (Reviewer role) — medium/high-risk only
 
-Invoke the `reviewer` subagent via the Task tool. Use the diff and Refactor
+Adopt the `reviewer` role as defined in `AGENTS.md`. Use the diff and Refactor
 Plan.
 
 Verify:
@@ -161,3 +161,7 @@ and after, Review Report (if applicable).
 The refactor is complete only when: all pre-existing tests still pass, the
 implementation matches the approved plan exactly, and no CRITICAL review
 findings remain.
+
+## Next
+
+Run `$cc-review` on the diff before merging.

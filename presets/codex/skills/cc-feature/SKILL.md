@@ -1,6 +1,6 @@
 ---
 name: cc-feature
-description: implementation, testing, review, and documentation.
+description: Run the full feature workflow — task validation, technical design, implementation, testing, review, and documentation.
 ---
 
 # feature
@@ -33,9 +33,13 @@ If `openspec status` reports an active change folder:
 1. Run: `npx cc-codeconductor openspec validate --output json`
 2. Run: `npx cc-codeconductor openspec analyze --output json`
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
-4. Next command spelling on this runner: `/cc:feature`
+4. Next command spelling on this runner: `$cc-feature`
 
 Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
+
+Skills: `using-cc-skills`, `openspec`, `testing-tdd`, `evaluation`.
+Do not skip `openspec analyze` when a change folder is active.
+"I'll add tests later" is not allowed — tester before implementer.
 
 ---
 
@@ -51,7 +55,7 @@ Record a Repo Map artifact before intake.
 
 ## Step 2 — Task Card validation (Task Coach role)
 
-Invoke the `task-coach` subagent via the Task tool.
+Adopt the `task-coach` role as defined in `AGENTS.md`.
 
 Produce a complete Task Card. The Task Card is ready when it contains: title,
 type, risk classification, scope, context, acceptance criteria, and constraints.
@@ -66,7 +70,7 @@ continuing.**
 
 ## Step 3 — Technical Plan (Architect role)
 
-Invoke the `architect` subagent via the Task tool.
+Adopt the `architect` role as defined in `AGENTS.md`.
 
 Produce a Technical Plan that covers:
 
@@ -84,7 +88,7 @@ not proceed to implementation until the plan is approved.**
 
 ## Step 4 — Test coverage (Tester role)
 
-Invoke the `tester` subagent via the Task tool.
+Adopt the `tester` role as defined in `AGENTS.md`.
 
 Use the Implementation Summary and the Task Card.
 
@@ -97,7 +101,7 @@ Use the Implementation Summary and the Task Card.
 
 ## Step 5 — Implementation (Implementer role)
 
-Invoke the `implementer` subagent via the Task tool.
+Adopt the `implementer` role as defined in `AGENTS.md`.
 
 Use the approved Technical Plan and the Task Card from the steps above.
 Implementer creates a Git Worktree before touching any file; all edits happen inside it.
@@ -112,7 +116,7 @@ Implementer creates a Git Worktree before touching any file; all edits happen in
 
 ## Step 6 — Code review (Reviewer role)
 
-Invoke the `reviewer` subagent via the Task tool.
+Adopt the `reviewer` role as defined in `AGENTS.md`.
 
 Use the complete diff and the Task Card.
 
@@ -126,7 +130,7 @@ they are resolved and the diff is re-reviewed.
 
 ## Step 7 — Documentation (Docs role)
 
-Invoke the `docs` subagent via the Task tool.
+Adopt the `docs` role as defined in `AGENTS.md`.
 
 Invoke this step only if any of the following changed:
 
@@ -152,3 +156,7 @@ Report the following:
 
 The feature is complete only when: all tests pass, no CRITICAL review findings
 remain, and documentation reflects the implemented behavior.
+
+## Next
+
+Run `$cc-review` on the diff before merging.

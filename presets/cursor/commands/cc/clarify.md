@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Re-explain the last deliverable in Task Card vocabulary when it did not land.
+  Re-explain the last deliverable in Task Card vocabulary when it did not land.
 ---
 
 # Clarify Workflow

@@ -1,6 +1,6 @@
 ---
 name: cc-api-contract
-description: compatibility constraints, contract tests, documentation, and review.
+description: Run the API contract workflow for public interface changes, compatibility constraints, contract tests, documentation, and review.
 ---
 
 # api-contract
@@ -30,7 +30,7 @@ If `openspec status` reports an active change folder:
 1. Run: `npx cc-codeconductor openspec validate --output json`
 2. Run: `npx cc-codeconductor openspec analyze --output json`
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
-4. Next command spelling on this runner: `/cc:api-contract`
+4. Next command spelling on this runner: `$cc-api-contract`
 
 Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
 
@@ -39,7 +39,7 @@ Local development: `bun run dev <same argv>`. Published package: `npx cc-codecon
 
 ## Step 1 — Task Card validation (Task Coach role)
 
-Invoke the `task-coach` subagent via the Task tool.
+Adopt the `task-coach` role as defined in `AGENTS.md`.
 
 The Task Card must classify the task as high risk by default and include the
 affected public interface, request/response examples, compatibility notes,
@@ -52,7 +52,7 @@ criteria.
 
 ## Step 2 — Technical Plan (Architect role)
 
-Invoke the `architect` subagent via the Task tool.
+Adopt the `architect` role as defined in `AGENTS.md`.
 
 Define the API contract, validation strategy, compatibility behavior, docs or
 OpenAPI changes, and reviewer blocking conditions.
@@ -63,7 +63,7 @@ OpenAPI changes, and reviewer blocking conditions.
 
 ## Step 3 — Implementation (Implementer role)
 
-Invoke the `implementer` subagent via the Task tool.
+Adopt the `implementer` role as defined in `AGENTS.md`.
 
 Apply the minimal diff, preserve compatible behavior unless explicitly approved
 as breaking, and update only the planned files.
@@ -72,7 +72,7 @@ as breaking, and update only the planned files.
 
 ## Step 4 — Contract Tests (Tester role)
 
-Invoke the `tester` subagent via the Task tool.
+Adopt the `tester` role as defined in `AGENTS.md`.
 
 Add or update tests for request shape, response shape, status/error behavior,
 and backward compatibility.
@@ -81,7 +81,11 @@ and backward compatibility.
 
 ## Step 5 — Review (Reviewer role)
 
-Invoke the `reviewer` subagent via the Task tool.
+Adopt the `reviewer` role as defined in `AGENTS.md`.
 
 Block on missing contract tests, undocumented breaking changes, or docs/OpenAPI
 drift.
+
+## Next
+
+Run `$cc-review` on the diff before merging.

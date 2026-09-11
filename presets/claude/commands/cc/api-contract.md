@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Run the API contract workflow for public interface changes,
+  Run the API contract workflow for public interface changes,
   compatibility constraints, contract tests, documentation, and review.
 ---
 
@@ -82,3 +82,7 @@ Adopt the **Reviewer** role as defined in `CLAUDE.md`.
 
 Block on missing contract tests, undocumented breaking changes, or docs/OpenAPI
 drift.
+
+## Next
+
+Run `/cc:review` on the diff before merging.

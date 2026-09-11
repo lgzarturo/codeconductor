@@ -72,7 +72,7 @@ describe('cursor preset install', () => {
     expect(content).toContain('Target-Specific Orchestration');
     expect(content).toContain('/multitask');
     expect(content).toContain('security-reviewer');
-    expect(content).toContain('Evaluation Gate (v0.5.0)');
+    expect(content).toContain('Evaluation Gate (v1.0.0)');
   });
 
   test('repo-explorer runs as background subagent', async () => {

@@ -1,6 +1,5 @@
 ---
 id: security
-version: 1.0.0
 name: Security
 description: >
   Provides expert knowledge for implementing and reviewing application security following OWASP Top 10 (2021), with stack-specific patterns for Spring Boot, Django, Next.js, and Astro.

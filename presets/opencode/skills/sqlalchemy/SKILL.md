@@ -1,6 +1,5 @@
 ---
 id: sqlalchemy
-version: 1.0.0
 name: SQLAlchemy
 description: >
   SQLAlchemy 2.x patterns for async FastAPI projects: models, sessions, queries,

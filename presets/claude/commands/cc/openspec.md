@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Run OpenSpec backlog delivery — validate BACKLOG.md, plan TaskCards,
+  Run OpenSpec backlog delivery — validate BACKLOG.md, plan TaskCards,
   orchestrate agents by phase, review gate, and update backlog state.
 ---
 

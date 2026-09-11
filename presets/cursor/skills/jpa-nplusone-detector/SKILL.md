@@ -1,6 +1,5 @@
 ---
 id: jpa-nplusone-detector
-version: 1.0.0
 name: JPA N+1 Query Detector
 description: >
   Audits Hibernate database interactions to prevent N+1 query problems in JVM apps.

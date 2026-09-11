@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Run a structured code review — produces a Review Report with
+  Run a structured code review — produces a Review Report with
   CRITICAL, WARNING, and SUGGESTION findings; CRITICAL findings block merge.
 ---
 
@@ -147,3 +147,7 @@ npx cc-codeconductor scorecard regression
 ```
 
 Map merge recommendation to scorecard verdict. Record outcome for trend tracking.
+
+## Next
+
+Approved: merge. Blocked: return the findings to `/cc:fix` or `/cc:feature`.

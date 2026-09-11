@@ -11,9 +11,9 @@ export function formatCcCommand(name: string, surface: CommandSurface): string {
 }
 
 export function surfaceForRunner(
-  runner: 'cursor' | 'claude' | 'gemini' | 'opencode' | 'agy' | 'codex',
+  runner: 'cursor' | 'claude' | 'gemini' | 'opencode' | 'agy' | 'codex' | 'pi',
 ): CommandSurface {
   if (runner === 'codex') return 'dollar';
-  if (runner === 'opencode' || runner === 'agy') return 'hyphen';
+  if (runner === 'opencode' || runner === 'agy' || runner === 'pi') return 'hyphen';
   return 'colon';
 }

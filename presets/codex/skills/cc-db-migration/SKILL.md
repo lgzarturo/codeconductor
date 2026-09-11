@@ -1,6 +1,6 @@
 ---
 name: cc-db-migration
-description: operational sequencing, tests, and review.
+description: Run the database migration workflow for schema/data changes, operational sequencing, tests, and review.
 ---
 
 # db-migration
@@ -31,7 +31,7 @@ If `openspec status` reports an active change folder:
 1. Run: `npx cc-codeconductor openspec validate --output json`
 2. Run: `npx cc-codeconductor openspec analyze --output json`
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
-4. Next command spelling on this runner: `/cc:db-migration`
+4. Next command spelling on this runner: `$cc-db-migration`
 
 Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
 
@@ -40,7 +40,7 @@ Local development: `bun run dev <same argv>`. Published package: `npx cc-codecon
 
 ## Step 1 — Task Card validation (Task Coach role)
 
-Invoke the `task-coach` subagent via the Task tool.
+Adopt the `task-coach` role as defined in `AGENTS.md`.
 
 The Task Card must classify the task as high risk and include affected schema,
 model, and migration files; data backfill needs; deployment ordering;
@@ -52,7 +52,7 @@ rollback/forward-fix strategy; lock risk; data risk; and verification commands.
 
 ## Step 2 — Migration Plan (Architect role)
 
-Invoke the `architect` subagent via the Task tool.
+Adopt the `architect` role as defined in `AGENTS.md`.
 
 Define the schema/data plan, operational sequencing, compatibility strategy,
 rollback/forward-fix notes, and test approach.
@@ -63,7 +63,7 @@ rollback/forward-fix notes, and test approach.
 
 ## Step 3 — Migration Tests (Tester role)
 
-Invoke the `tester` subagent via the Task tool.
+Adopt the `tester` role as defined in `AGENTS.md`.
 
 Cover migration-sensitive behavior where the stack supports it, including
 existing-data edge cases and rollback/forward-fix notes when automated rollback
@@ -73,7 +73,7 @@ tests are not practical.
 
 ## Step 4 — Implementation (Implementer role)
 
-Invoke the `implementer` subagent via the Task tool.
+Adopt the `implementer` role as defined in `AGENTS.md`.
 
 Keep model and migration changes together, avoid unrelated refactors, and
 preserve the deployment order specified by architect.
@@ -82,7 +82,11 @@ preserve the deployment order specified by architect.
 
 ## Step 5 — Review (Reviewer role)
 
-Invoke the `reviewer` subagent via the Task tool.
+Adopt the `reviewer` role as defined in `AGENTS.md`.
 
 Block on missing migration tests, missing data-risk notes, undocumented
 deployment sequencing, or model/migration drift.
+
+## Next
+
+Run `$cc-review` on the diff before merging.

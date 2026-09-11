@@ -1,7 +1,7 @@
 import { describe, expect, test, afterEach, beforeEach } from 'bun:test';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile, mkdtemp } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { homedir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import {
   getTargetInstallationPath,
   isTargetInstalled,
@@ -73,13 +73,35 @@ describe('Update Checker & Smart Updates', () => {
   test('loadSkillsLock', async () => {
     const codeconductorDir = join(TEST_DIR, '.codeconductor');
     await mkdir(codeconductorDir, { recursive: true });
-    
+
     const lockFile = join(codeconductorDir, 'skills-lock.json');
     const mockLock = { 'android': '1.0.0' };
     await writeFile(lockFile, JSON.stringify(mockLock), 'utf-8');
 
     const loaded = await loadSkillsLock(TEST_DIR);
     expect(loaded).toEqual(mockLock);
+  });
+
+  test('checkUpdates detects skill version updates when skills-lock.json exists', async () => {
+    const codeconductorDir = join(TEST_DIR, '.codeconductor');
+    await mkdir(codeconductorDir, { recursive: true });
+
+    const lockFile = join(codeconductorDir, 'skills-lock.json');
+    const mockLock = { 'android': '1.0.0', 'api-versioning': '1.5.0' };
+    await writeFile(lockFile, JSON.stringify(mockLock), 'utf-8');
+
+    const result = await checkUpdates(TEST_DIR, false);
+
+    const androidUpdate = result.skills.find(s => s.id === 'android');
+    expect(androidUpdate).toBeDefined();
+    expect(androidUpdate?.currentVersion).toBe('1.0.0');
+    expect(androidUpdate?.latestVersion).toBe('1.0.0');
+    expect(androidUpdate?.hasUpdate).toBe(false);
+  });
+
+  test('checkUpdates handles missing skills-lock.json gracefully', async () => {
+    const result = await checkUpdates(TEST_DIR, false);
+    expect(result.skills.length).toBe(0);
   });
 
   test('checkUpdates detects modifications in presets', async () => {

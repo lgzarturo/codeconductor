@@ -1,0 +1,193 @@
+# Shared model + tool-name tables for every CodeConductor target.
+# Single source of truth for the 14 agent roles x 8 providers (claude,
+# opencode, codex, gemini, cursor, grok, agy, pi) and the 7 canonical tool
+# names x 6 target-native tool-name mappings (claude, opencode, codex,
+# gemini, cursor, agy — pi has no tools: frontmatter to substitute into, see
+# src/adapters/pi/pi-council-generator.ts). Loaded by loadModelConfig() in
+# manifest-loader.ts and merged with the requesting target's own
+# src/presets/models/<target>.yml, which carries only `target:` plus
+# (opencode only) a `permissions:` override — opencode uses permission
+# blocks instead of tool-name substitution.
+#
+# `pi:` values are copied verbatim from `claude:` — Pi is provider-agnostic
+# and Anthropic model IDs are stable across clients (verified against
+# https://github.com/earendil-works/pi docs, not against a live install; see
+# docs/harness-spec.md and the Fase 3 risk note).
+
+agents:
+  architect:
+    claude: claude-opus-5
+    pi: claude-opus-5
+    opencode: opencode-go/deepseek-v4-pro
+    codex: gpt-5.6-sol
+    gemini: gemini-3.1-pro-preview
+    cursor: claude-opus-5-thinking-high
+    grok: cursor-grok-4.6-high-fast
+    agy: gemini-3.1-pro
+  implementer:
+    claude: claude-sonnet-5
+    pi: claude-sonnet-5
+    opencode: opencode-go/mimo-v2.5
+    codex: gpt-5.6-terra
+    gemini: gemini-3.7-flash
+    cursor: composer-2.5-fast
+    grok: cursor-grok-4.6-high-fast
+    agy: claude-sonnet-4.6-thinking
+  tester:
+    claude: claude-sonnet-5
+    pi: claude-sonnet-5
+    opencode: opencode-go/minimax-m3
+    codex: gpt-5.6-terra
+    gemini: gemini-3.7-flash
+    cursor: composer-2.5-fast
+    grok: cursor-grok-4.6-high-fast
+    agy: claude-sonnet-4.6-thinking
+  orchestrator:
+    claude: claude-sonnet-5
+    pi: claude-sonnet-5
+    opencode: opencode-go/qwen3.7-plus
+    codex: gpt-5.6-terra
+    gemini: gemini-3.7-flash
+    cursor: composer-2.5
+    grok: cursor-grok-4.6-high-fast
+    agy: claude-sonnet-4.6-thinking
+  reviewer:
+    claude: claude-opus-5
+    pi: claude-opus-5
+    opencode: opencode-go/qwen3.8-max
+    codex: gpt-5.6-sol
+    gemini: gemini-3.1-pro-preview
+    cursor: claude-sonnet-5-thinking-high
+    grok: cursor-grok-4.6-high-fast
+    agy: gemini-3.1-pro
+  docs:
+    claude: claude-haiku-4-5-20251001
+    pi: claude-haiku-4-5-20251001
+    opencode: opencode-go/hy3
+    codex: gpt-5.6-luna
+    gemini: gemini-3.7-flash
+    cursor: claude-4.5-haiku-thinking
+    grok: cursor-grok-4.6-high-fast
+    agy: gemini-3.8-flash
+  task-coach:
+    claude: claude-haiku-4-5-20251001
+    pi: claude-haiku-4-5-20251001
+    opencode: opencode-go/gpt-5.6-luna
+    codex: gpt-5.6-luna
+    gemini: gemini-3.7-flash
+    cursor: claude-4.5-haiku-thinking
+    grok: cursor-grok-4.6-high-fast
+    agy: gemini-3.8-flash
+  repo-explorer:
+    claude: claude-haiku-4-5-20251001
+    pi: claude-haiku-4-5-20251001
+    opencode: opencode-go/longcat-2.0
+    codex: gpt-5.6-luna
+    gemini: gemini-3.7-flash
+    cursor: composer-2.5-fast
+    grok: cursor-grok-4.6-high-fast
+    agy: gemini-3.8-flash
+  goal-planner:
+    claude: claude-haiku-4-5-20251001
+    pi: claude-haiku-4-5-20251001
+    opencode: opencode-go/deepseek-v4-flash
+    codex: gpt-5.6-luna
+    gemini: gemini-3.7-flash
+    cursor: claude-4.5-haiku-thinking
+    grok: cursor-grok-4.6-high-fast
+    agy: gemini-3.8-flash
+  complexity-auditor:
+    claude: claude-sonnet-5
+    pi: claude-sonnet-5
+    opencode: opencode-go/glm-5.3
+    codex: gpt-5.6-terra
+    gemini: gemini-3.7-flash
+    cursor: claude-sonnet-5-thinking-high
+    grok: cursor-grok-4.6-high-fast
+    agy: claude-sonnet-4.6-thinking
+  security-reviewer:
+    claude: claude-opus-5
+    pi: claude-opus-5
+    opencode: opencode-go/kimi-k3
+    codex: gpt-5.6-sol
+    gemini: gemini-3.1-pro-preview
+    cursor: claude-opus-5-thinking-high
+    grok: cursor-grok-4.6-high-fast
+    agy: gemini-3.1-pro
+  contract-builder:
+    claude: claude-opus-5
+    pi: claude-opus-5
+    opencode: opencode-go/qwen3.8-max
+    codex: gpt-5.6-sol
+    gemini: gemini-3.1-pro-preview
+    cursor: claude-sonnet-5-thinking-high
+    grok: cursor-grok-4.6-high-fast
+    agy: gemini-3.1-pro
+  planner:
+    claude: claude-haiku-4-5-20251001
+    pi: claude-haiku-4-5-20251001
+    opencode: opencode-go/gpt-5.6-luna
+    codex: gpt-5.6-luna
+    gemini: gemini-3.7-flash
+    cursor: claude-4.5-haiku-thinking
+    grok: cursor-grok-4.6-high-fast
+    agy: gemini-3.8-flash
+  devil:
+    claude: claude-opus-5
+    pi: claude-opus-5
+    opencode: opencode-go/glm-5.3
+    codex: gpt-5.6-sol
+    gemini: gemini-3.1-pro-preview
+    cursor: claude-opus-5-thinking-high
+    grok: cursor-grok-4.6-high-fast
+    agy: gemini-3.1-pro
+tools:
+  Read:
+    claude: ViewCodeItem / ReadFile
+    codex: read_file
+    gemini: view_file
+    cursor: read
+    opencode: file_read / view_file
+    agy: view_file
+  Write:
+    claude: WriteNewFile
+    codex: write_file
+    gemini: write_file
+    cursor: write
+    opencode: file_write
+    agy: write_to_file
+  Edit:
+    claude: StrReplaceEditor
+    codex: apply_diff
+    gemini: patch_file
+    cursor: edit
+    opencode: file_patch / edit
+    agy: replace_file_content / multi_replace_file_content
+  Bash:
+    claude: Bash
+    codex: bash
+    gemini: execute_command
+    cursor: shell
+    opencode: bash / run_command
+    agy: run_command
+  Glob:
+    claude: Glob
+    codex: glob
+    gemini: list_dir
+    cursor: find
+    opencode: dir_list / glob
+    agy: list_dir
+  Grep:
+    claude: Grep
+    codex: grep
+    gemini: search_grep
+    cursor: grep
+    opencode: grep_search / search
+    agy: grep_search
+  WebFetch:
+    claude: WebFetch
+    codex: fetch / browse
+    gemini: fetch_url
+    cursor: fetch
+    opencode: web_fetch / browser
+    agy: read_url_content / read_browser_page

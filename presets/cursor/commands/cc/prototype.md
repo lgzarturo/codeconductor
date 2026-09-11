@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Disposable spike in an isolated worktree. Not a merge candidate.
+  Disposable spike in an isolated worktree. Not a merge candidate.
 ---
 
 # Prototype Workflow

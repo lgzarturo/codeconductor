@@ -43,7 +43,7 @@ contracts, task cards, and risk-based routing.
 > - `npx cc-codeconductor goal` / `ingest` / `product` / `orchestrate` /
 >   `impact` / `verify` — Product OS (see
 >   [docs/v1.0.0-release-notes.md](docs/v1.0.0-release-notes.md))
-> - Slash commands after `install preset` — 20 CCEP workflows plus `/cc-ask`;
+> - Slash commands after `install preset` — 21 CCEP workflows plus `/cc-ask`;
 >   prefer `/cc-iterative`, `/cc-triage`, `/cc-handoff` for wayfinding;
 >   `/cc-backlog` authors `BACKLOG.md`; `/cc-openspec` and `/cc-tdd-cycle`
 >   for delivery and TDD
@@ -124,16 +124,19 @@ not only because features were added. Re-install presets after upgrading.
 
 ### Slash commands
 
-After `install preset`, 18 CCEP workflows plus `/cc-ask`:
+After `install preset`, 21 CCEP workflows plus `/cc-ask` (22 total), tiered by
+what they do rather than which subsystem they touch:
 
-| Group          | Commands                                                                                                                     |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Delivery       | `/cc-feature`, `/cc-fix`, `/cc-refactor`, `/cc-api-contract`, `/cc-db-migration`                                             |
-| Quality        | `/cc-tdd-cycle`, `/cc-test-plan`, `/cc-review`, `/cc-council`, `/cc-scorecard`                                               |
-| OpenSpec / ops | `/cc-openspec`, `/cc-iterative`, `/cc-triage`, `/cc-explore`, `/cc-prototype`, `/cc-handoff`, `/cc-clarify`, `/cc-pagespeed` |
-| Entry          | `/cc-ask` — CLI `ask` recommends a slash command; it does not start the workflow                                             |
+| Tier          | Commands                                                                                                    | Purpose                                        |
+| ------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| Entry         | `/cc-ask`, `/cc-triage`, `/cc-explore`                                                                          | Recommend a next command and stop — no writes.  |
+| Delivery      | `/cc-feature`, `/cc-fix`, `/cc-refactor`, `/cc-tdd-cycle`, `/cc-api-contract`, `/cc-db-migration`, `/cc-spec-mutation` | Implement, test-before-implement where both apply. |
+| Verification  | `/cc-review`, `/cc-council`, `/cc-scorecard`, `/cc-test-plan`, `/cc-security`                                    | Gate a diff or a decision before merge.         |
+| Management    | `/cc-backlog`, `/cc-openspec`, `/cc-handoff`, `/cc-clarify`, `/cc-prototype`, `/cc-pagespeed`, `/cc-iterative`   | Author BACKLOG.md, deliver it, or one-off ops.  |
 
 Prefer `/cc-iterative`, `/cc-triage`, and `/cc-handoff` for wayfinding.
+`/cc-ask` recommends a command from a natural-language problem; it does not
+start the workflow.
 
 ### OpenSpec and TDD
 
@@ -229,7 +232,7 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 
 ## Current Support
 
-- OpenCode, Claude, Codex, Gemini, Cursor, and Agy presets
+- OpenCode, Claude, Codex, Gemini, Cursor, Agy, and Pi presets
 - Claude Code-compatible preset (see
   [Claude Environment Options & Best Practices](docs/claude-env-options.md))
 - Spring Boot / Kotlin workflow
@@ -237,7 +240,7 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 - **15 Conductor Agents** — including `reviewer`, `security-reviewer`,
   `complexity-auditor`, `business-agent`, `continuous-architect`, and
   `impact-analyst`
-- 18 CCEP slash-command workflows plus `/cc-ask` after `install preset`
+- 21 CCEP slash-command workflows plus `/cc-ask` after `install preset`
 - OpenSpec delivery loop (`validate` … `archive`) with test-before-implement
 - Deterministic CCEP validation (Zod schemas per agent role)
 - Task Card template
@@ -398,6 +401,7 @@ npx cc-codeconductor install preset --target opencode     # project-level
 npx cc-codeconductor install preset --target claude
 npx cc-codeconductor install preset --target codex
 npx cc-codeconductor install preset --target agy          # antigravity cli
+npx cc-codeconductor install preset --target pi            # pi.dev coding agent
 npx cc-codeconductor install preset --target all          # all targets
 
 npx cc-codeconductor install preset --target claude --global   # write to ~/.claude/
@@ -473,6 +477,7 @@ npx cc-codeconductor install council --target opencode     # project-level
 npx cc-codeconductor install council --target claude
 npx cc-codeconductor install council --target codex
 npx cc-codeconductor install council --target agy          # antigravity cli
+npx cc-codeconductor install council --target pi            # pi.dev coding agent
 npx cc-codeconductor install council --target all          # all targets
 
 npx cc-codeconductor install council --target claude --global  # write to ~/.claude/
@@ -521,6 +526,21 @@ Smart updates all currently installed target presets, council configurations,
 and skills (from `skills-lock.json`), preserving user edits outside managed
 blocks. Also validates that `AGENTS.md` and `CLAUDE.md` do not exceed the 40KB
 size limit.
+
+#### `migrate` — repair a Claude Code settings.json
+
+```bash
+npx cc-codeconductor migrate               # ./.claude/settings.json
+npx cc-codeconductor migrate --global      # ~/.claude/settings.json
+npx cc-codeconductor migrate --dry-run     # preview without writing
+npx cc-codeconductor migrate --file .claude/settings.local.json
+```
+
+Rewrites every `Write(path)` permission rule to `Edit(path)` — Claude Code
+only applies file-scoped rules written the second way, so a `Write(path)`
+rule silently never matches — and dedupes the result. A reinstall can't
+remove a bad rule already on disk (permission arrays merge by union), so this
+is a standalone repair pass, not something `update` fixes on its own.
 
 #### `help` / `cc-help` — distinct help contracts
 

@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"const fs=require('fs'),p=['scripts/invoke-hook.cjs','.agents/scripts/invoke-hook.cjs'].find(f=>fs.existsSync(f));if(p)require(require('path').resolve(p));else{if(process.argv.includes('--format=agy')){process.stdout.write(process.argv.includes('post-tool')?'{}\\n':'{\\\"decision\\\":\\\"allow\\\"}\\n');}process.exit(0);}\" post-tool --format=agy"
+            "command": "node -e \"const fs=require('fs');const c=['scripts/invoke-hook.cjs','.agents/scripts/invoke-hook.cjs'];const p=c.find(f=>fs.existsSync(f));if(p){require(require('path').resolve(p));}else{const body=process.argv.includes('post-tool')?{}:{decision:'allow'};process.stdout.write(JSON.stringify(body)+'\\n');process.exit(0);}\" post-tool --format=agy"
           }
         ]
       }
@@ -17,11 +17,11 @@
     "enabled": true,
     "PreToolUse": [
       {
-        "matcher": "run_command|write_to_file|replace_file_content|multi_replace_file_content|view_file",
+        "matcher": "run_command|write_to_file|replace_file_content|multi_replace_file_content",
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"const fs=require('fs'),p=['scripts/invoke-hook.cjs','.agents/scripts/invoke-hook.cjs'].find(f=>fs.existsSync(f));if(p)require(require('path').resolve(p));else{if(process.argv.includes('--format=agy')){process.stdout.write(process.argv.includes('post-tool')?'{}\\n':'{\\\"decision\\\":\\\"allow\\\"}\\n');}process.exit(0);}\" pre-tool --format=agy"
+            "command": "node -e \"const fs=require('fs');const c=['scripts/invoke-hook.cjs','.agents/scripts/invoke-hook.cjs'];const p=c.find(f=>fs.existsSync(f));if(p){require(require('path').resolve(p));}else{const body=process.argv.includes('post-tool')?{}:{decision:'allow'};process.stdout.write(JSON.stringify(body)+'\\n');process.exit(0);}\" pre-tool --format=agy"
           }
         ]
       }

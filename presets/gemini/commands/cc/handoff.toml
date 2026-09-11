@@ -1,4 +1,4 @@
-description = "CodeConductor handoff workflow"
+description = "Compact the session into gitignored `.codeconductor/sessions/handoff.md` (redact secrets)."
 
 prompt = """
 # Handoff Workflow

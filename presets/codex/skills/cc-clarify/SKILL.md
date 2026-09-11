@@ -1,6 +1,6 @@
 ---
 name: cc-clarify
-description: CodeConductor clarify workflow
+description: Re-explain the last deliverable in Task Card vocabulary when it did not land.
 ---
 
 # clarify

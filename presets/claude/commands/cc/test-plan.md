@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Generate a structured test plan for a feature or module — covers
+  Generate a structured test plan for a feature or module — covers
   unit, integration, contract, and edge cases without writing implementation code.
 ---
 
@@ -148,3 +148,7 @@ Deliver the complete Test Plan document. Save it as
 
 This command produces a plan, not test files. No production code and no test
 code is written during this command.
+
+## Next
+
+Implement against this plan with `/cc:tdd-cycle` or `/cc:feature`.

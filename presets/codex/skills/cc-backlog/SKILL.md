@@ -1,6 +1,6 @@
 ---
 name: cc-backlog
-description: validate with openspec, and plan OpenSpec change folders for /cc-openspec.
+description: Author BACKLOG.md — wayfinding, grilling, create or append items, validate with openspec, and plan OpenSpec change folders for /cc-openspec.
 ---
 
 # backlog

@@ -1,0 +1,14 @@
+target: codex
+invocation: dollar
+commandFormat: skill
+contextFile: AGENTS.md
+# Commands are derived from presets/cursor/commands/cc/*.md by
+# scripts/render-agent-commands.ts, which rewrites cursor's "via the Task
+# tool" phrasing to this style — codex has no Task tool and no separate
+# subagent files, only the monolithic AGENTS.md (like Claude's CLAUDE.md).
+subagentInvocationStyle: adopt-role
+capabilities:
+  subagents: false
+  hooks: false
+  mcp: false
+  council: true

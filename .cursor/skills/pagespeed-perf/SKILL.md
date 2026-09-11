@@ -32,7 +32,7 @@ inputs:
   - name: url
     type: string
     required: true
-    description: Full URL to audit (must include scheme: https://...)
+    description: "Full URL to audit (must include scheme: https://...)"
   - name: strategy
     type: string
     required: false

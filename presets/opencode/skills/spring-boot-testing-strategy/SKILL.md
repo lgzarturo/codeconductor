@@ -1,6 +1,5 @@
 ---
 id: spring-boot-testing-strategy
-version: 1.0.0
 name: Spring Boot Testing Strategy
 description: >
   Provides expert knowledge of the testing pyramid, test design principles, MockK patterns, and integration testing conventions for Spring Boot + Kotlin projects.

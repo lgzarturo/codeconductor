@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Evaluate deliverable quality — scorecard, outcome tracking, regression
+  Evaluate deliverable quality — scorecard, outcome tracking, regression
   checklist, and aggregate stats.
 ---
 

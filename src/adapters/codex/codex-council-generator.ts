@@ -1,4 +1,5 @@
 import type { GeneratedFile } from '../../core/generation/generated-file';
+import { checklistFor } from '../../domain/council/council-agent';
 import type { CouncilSpec } from '../../domain/council/council-spec';
 
 /**
@@ -61,10 +62,11 @@ function generateCodexAgent(agent: {
   focus: readonly string[];
 }): string {
   const focusAreas = agent.focus.join(', ');
+  const checklist = checklistFor(agent.id).join('; ');
   return `name = "${agent.role}"
 description = "${agent.role} council agent. Focus: ${focusAreas}. Context: ${agent.context}. Model hint: ${agent.modelHint}."
 nickname_candidates = ["${agent.role}", "Council ${agent.role}"]
-developer_instructions = "You are the ${agent.role} council agent. Your focus areas are: ${focusAreas}. Context: ${agent.context}. Apply ${agent.modelHint} reasoning to your analysis."
+developer_instructions = "You are the ${agent.role} council agent. Your focus areas are: ${focusAreas}. Context: ${agent.context}. Apply ${agent.modelHint} reasoning to your analysis. Review checklist: ${checklist}. Categorize findings as CRITICAL (blocks the verdict), WARNING, or SUGGESTION."
 `;
 }
 

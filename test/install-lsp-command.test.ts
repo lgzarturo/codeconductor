@@ -4,9 +4,9 @@
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { delimiter, join, resolve } from 'node:path';
 import { invokeCli } from './helpers/invoke-cli';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
@@ -23,6 +23,22 @@ async function cleanup() {
       await rm(join(CLI_ROOT, dir), { recursive: true, force: true });
     } catch {}
   }
+}
+
+async function installFakeBinary(binaryName: string): Promise<() => Promise<void>> {
+  const binDir = await mkdtemp(join(tmpdir(), 'cc-fake-bin-'));
+  const binaryPath = join(binDir, binaryName);
+  const originalPath = process.env.PATH ?? '';
+  await writeFile(
+    binaryPath,
+    '#!/bin/sh\nif [ "$1" = "--version" ]; then\n  echo "1.0.0"\nfi\n'
+  );
+  await chmod(binaryPath, 0o755);
+  process.env.PATH = `${binDir}${delimiter}${originalPath}`;
+  return async () => {
+    process.env.PATH = originalPath;
+    await rm(binDir, { recursive: true, force: true });
+  };
 }
 
 describe('install lsp command', () => {
@@ -195,15 +211,23 @@ describe('install lsp command', () => {
   // Acceptance Criterion 7: --force overwrites existing LSP config
   describe('--force flag', () => {
     test('--force allows overwriting existing config', async () => {
+      const restoreBinary = await installFakeBinary('typescript-language-server');
+
       // First, create a config file
+      const configPath = join(CLI_ROOT, '.opencode', 'opencode.json');
       await mkdir(join(CLI_ROOT, '.opencode'), { recursive: true });
-      await writeFile(join(CLI_ROOT, '.opencode', 'opencode.json'), '{"old": "config"}');
+      await writeFile(configPath, '{"old": "config"}');
 
-      // Run with --force
-      const result = await runCli(['install', 'lsp', '--target=opencode', '--lang=typescript', '--force']);
+      try {
+        // Run with --force
+        const result = await runCli(['install', 'lsp', '--target=opencode', '--lang=typescript', '--force']);
 
-      // Should succeed even with existing file
-      expect(result.exitCode).toBe(0);
+        // Should succeed even with existing file
+        expect(result.exitCode).toBe(0);
+        expect(await readFile(configPath, 'utf8')).not.toBe('{"old": "config"}');
+      } finally {
+        await restoreBinary();
+      }
     });
   });
 

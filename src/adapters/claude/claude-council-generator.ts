@@ -35,7 +35,12 @@ export function generateClaudeFiles(spec: CouncilSpec): GeneratedFile[] {
 }
 
 function generateCouncilSkill(spec: CouncilSpec): string {
-  return `# Council Skill
+  return `---
+name: council
+description: ${yamlString(spec.description)}
+---
+
+# Council Skill
 
 ## Description
 ${spec.description}

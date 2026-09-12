@@ -1,5 +1,5 @@
 import type { GeneratedFile } from '../../core/generation/generated-file';
-import { checklistFor } from '../../domain/council/council-agent';
+import { checklistFor, yamlString } from '../../domain/council/council-agent';
 import type { CouncilSpec } from '../../domain/council/council-spec';
 
 /**
@@ -73,7 +73,7 @@ developer_instructions = "You are the ${agent.role} council agent. Your focus ar
 function generateCodexSkill(spec: CouncilSpec): string {
   return `---
 name: council
-description: ${spec.description}
+description: ${yamlString(spec.description)}
 version: ${spec.version}
 ---
 

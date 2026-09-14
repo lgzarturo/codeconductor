@@ -404,6 +404,26 @@ Three binding mechanisms, all explicit:
 | Orchestration | `multi-agent-orchestration`, `workflow-orchestration-patterns`, `conductor-setup` | Council/pipeline design |
 | Auxiliary | `code-review`, `pagespeed-perf`, `pagespeed-insights`, `api-versioning`, `astro`, `android`, `php-pro`, `python`, … | On demand |
 
+### Web interface work
+
+The shared [web-design-engineering](skills/web-design-engineering/SKILL.md) skill
+adds contextual UI criteria to feature, fix, review, and OpenSpec workflows. It
+activates for web layout, component behavior, feedback, motion, or requested UI
+audits; React/Tailwind alone, backend-only tasks, and native mobile do not trigger
+it. All seven runners receive it through their existing preset installers.
+
+Reuse product components and tokens. Static pages need no invented animations;
+durations and curves are contextual choices. Example acceptance: Escape during a
+dialog’s entrance closes it, returns focus to its trigger, and never reopens it
+from a stale callback; reduced motion preserves these actions without spatial
+movement. Test the state behavior and verify the interaction in a browser. If the
+browser is unavailable, record the visual/interaction check as pending.
+
+Requested audits produce prioritized findings; out-of-scope opportunities remain
+suggestions until backlog creation is requested. Existing review axes, severities,
+CCEP contracts, and scorecard weights remain authoritative. Tailwind, framework,
+PageSpeed, and evaluation skills retain their responsibilities.
+
 ### 6.3 Stack presets and their skill bindings
 
 Stack presets ship an agent-contract layer; the skills themselves come from

@@ -62,3 +62,5 @@ skills:
     targets: [cursor, opencode]
   - name: tdd-mutation-tester
     targets: [cursor, opencode]
+  - name: web-design-engineering
+    targets: [claude, codex, cursor, opencode, agy]

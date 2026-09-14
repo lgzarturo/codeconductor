@@ -1,0 +1,6 @@
+# Agy LSP Configuration (experimental)
+# NOTE: Agy config format may change as the tool evolves
+
+typescript:
+  command: typescript-language-server
+  args: [--stdio]

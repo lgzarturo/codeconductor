@@ -1,9 +1,9 @@
 # CodeConductor CLI Commands Reference
 
-Reference for the CodeConductor CLI. Published package is **0.5.0**. Commands
-under Product OS (`goal`, `ingest`, `product`, `orchestrate`, `impact`,
-`verify`) are documented as **v1.0.0** — present in this repo via
-`bun run dev`, not in the published npm package.
+Reference for the CodeConductor CLI. Published package is **1.3.0**, the
+current stable release in the **1.3.x** line. Product OS commands (`goal`,
+`ingest`, `product`, `orchestrate`, `impact`, `verify`) are included in the
+published package.
 
 **Loops:** CCEP slash commands are the canonical consumer workflow (prefer
 `/cc-iterative`, `/cc-triage`, `/cc-handoff`). OpenSpec is a delivery loop

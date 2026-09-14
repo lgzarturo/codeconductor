@@ -2,7 +2,7 @@
 
 **Stop prompting. Start orchestrating.**
 
-[![Socket Badge](https://badge.socket.dev/npm/package/cc-codeconductor/1.0.0)](https://badge.socket.dev/npm/package/cc-codeconductor/1.0.0)
+[![Socket Badge](https://badge.socket.dev/npm/package/cc-codeconductor/1.3.0)](https://badge.socket.dev/npm/package/cc-codeconductor/1.3.0)
 
 CodeConductor is an open-source framework for building structured, reproducible
 AI-assisted software engineering workflows.
@@ -15,11 +15,11 @@ contracts, task cards, and risk-based routing.
 >
 > ## Current Scope
 >
-> Published package is **1.0.0**. Limitations matrix:
+> Published package is **1.3.x (current stable: 1.3.0)**. Limitations matrix:
 > [docs/current-status.md](docs/current-status.md). This repository:
 > `bun run dev …` (not `npx`) while iterating.
 >
-> Shipped in 1.0.0:
+> Shipped in the 1.3.x stable line:
 >
 > - `npx cc-codeconductor init` — detects project stack, writes
 >   `.codeconductor/config.yml`, copies `council.yml` and `policy.yml` into
@@ -42,7 +42,7 @@ contracts, task cards, and risk-based routing.
 > - `npx cc-codeconductor scorecard …`
 > - `npx cc-codeconductor goal` / `ingest` / `product` / `orchestrate` /
 >   `impact` / `verify` — Product OS (see
->   [docs/v1.0.0-release-notes.md](docs/v1.0.0-release-notes.md))
+>   [docs/v1.3.0-release-notes.md](docs/v1.3.0-release-notes.md))
 > - Slash commands after `install preset` — 21 CCEP workflows plus `/cc-ask`;
 >   prefer `/cc-iterative`, `/cc-triage`, `/cc-handoff` for wayfinding;
 >   `/cc-backlog` authors `BACKLOG.md`; `/cc-openspec` and `/cc-tdd-cycle`
@@ -96,10 +96,12 @@ This is not a prompt collection. It is a workflow framework.
 
 ---
 
-## What's new in v1.0.0
+## What's new in v1.3.0
 
-v1.0.0 is a **major** bump from v0.5.0 because the workflow contracts changed,
-not only because features were added. Re-install presets after upgrading.
+v1.3.0 is the current **stable** release in the 1.3.x line. It retains the
+v1.0.0 workflow contract baseline and adds cross-target preset fixes, centralized
+skill versioning, runner parity improvements, and the contextual web design
+engineering skill. Re-install presets after upgrading.
 
 ### Breaking changes vs v0.5.0
 
@@ -161,7 +163,8 @@ review. Test-before-implement is required whenever both phases apply.
 - `complexity-auditor` — bloat and non-native abstractions; runs before
   `reviewer` on refactor, API change, and database migration routes
 
-New v1.0.0 agents: `business-agent`, `continuous-architect`, `impact-analyst`.
+The v1.0.0 contract baseline introduced `business-agent`,
+`continuous-architect`, and `impact-analyst`.
 
 ### Deterministic TypeScript validation (CCEP)
 
@@ -187,9 +190,9 @@ npx cc-codeconductor ccep taskcard --command feature --input @card.json
 
 ### Product OS
 
-Also in 1.0.0: `goal` / `ingest` / `product` / `orchestrate` / `impact` /
+The stable line includes `goal` / `ingest` / `product` / `orchestrate` / `impact` /
 `verify`, plus `.codeconductor/product-graph.json` and related artifacts.
-Details: [docs/v1.0.0-release-notes.md](docs/v1.0.0-release-notes.md) and
+Details: [docs/v1.3.0-release-notes.md](docs/v1.3.0-release-notes.md) and
 [docs/product-os.md](docs/product-os.md).
 
 ### Migrate from v0.5.0
@@ -274,14 +277,14 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 
 ## Supply chain
 
-Published **1.0.0** declares two production dependencies (`package.json`
+Published **1.3.0** declares two production dependencies (`package.json`
 `dependencies`; same on
 [npm](https://www.npmjs.com/package/cc-codeconductor)). Neither has further
 npm transitive dependencies.
 
 ```mermaid
 graph LR
-  cc["cc-codeconductor@1.0.0"]
+  cc["cc-codeconductor@1.3.0"]
   zod["zod@^3.23.8"]
   yaml["yaml@^2.4.5"]
   cc --> zod
@@ -793,10 +796,10 @@ codeconductor/
 
 ## Roadmap
 
-Published package: **1.0.0**. Remaining gaps (sandbox, policy compiler, full
+Published package: **1.3.x (current stable: 1.3.0)**. Remaining gaps (sandbox, policy compiler, full
 stack-specific asset pruning): [docs/current-status.md](docs/current-status.md).
-Product OS surface:
-[docs/v1.0.0-release-notes.md](docs/v1.0.0-release-notes.md).
+Release details:
+[docs/v1.3.0-release-notes.md](docs/v1.3.0-release-notes.md).
 
 See [ROADMAP.md](ROADMAP.md) for historical notes.
 

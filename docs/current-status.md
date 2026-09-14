@@ -2,23 +2,24 @@
 
 This file is the canonical shipped/planned matrix for the repository.
 
-**Published package version:** `1.2.0` (from `package.json`)
+**Published package version:** `1.3.0` — current stable line: `1.3.x` (from
+`package.json`)
 
 Code present in the repository but assigned to a later release is
 **implemented, unreleased**. A release-note filename or historical roadmap
 entry does not by itself mean that version was published.
 
-| Capability | Repository status | Published in 0.5.0 |
+| Capability | Repository status | Available in stable 1.3.x |
 | ---------- | ----------------- | ------------------- |
 | Core CLI (`init`, `detect`, `install`, `doctor`, `update`, `migrate`) | shipped | yes |
 | Preset and council installation (7 targets: agy, claude, codex, cursor, gemini, opencode, pi) | shipped | yes |
 | SEO audit / `llms.txt` commands | shipped | yes |
 | Scorecard and outcome evaluation | shipped | yes |
-| Harness ablation (leave-one-out catalog + experiment + report) | implemented, unreleased — **v1.0.0** | no |
+| Harness ablation (leave-one-out catalog + experiment + report) | shipped | yes |
 | CCEP parse/profile/resolve/compile/validate/evaluate/consensus/taskcard | shipped | yes |
 | OpenSpec loop (`validate/scan/plan/status/next/start/done/block/archive` + `/cc-backlog` + `/cc-openspec`) | shipped | yes |
-| Product graph, impact, orchestrate, verify | implemented, unreleased — **v1.0.0** | no |
-| Goal DAG planning/runtime | implemented, unreleased — **v1.0.0** | no |
+| Product graph, impact, orchestrate, verify | shipped | yes |
+| Goal DAG planning/runtime | shipped | yes |
 | 8-phase `runWorkflowPipeline` | experimental library API | no CLI runtime |
 | Stack-specific skill selection | shipped | yes |
 | Full stack-specific asset pruning/replacement | planned | no |
@@ -47,12 +48,14 @@ version's files, it never removes an older version's directory).
 
 ## Release documentation
 
-The next documented release is **v1.0.0** (Product OS). Historical notes for
-0.4.0 and 0.5.0 remain in `docs/v0.4.0-release-notes.md` and
-`docs/v0.5.0-release-notes.md`.
+The current documented release is **v1.3.0**, the stable release in the 1.3.x
+line. Historical notes for 0.4.0, 0.5.0, and the v1.0.0 Product OS draft remain
+available alongside these notes.
 
-- [docs/v1.0.0-release-notes.md](v1.0.0-release-notes.md) — draft for the
-  Product OS surface while the published package version is `1.0.0`
+- [docs/v1.3.0-release-notes.md](v1.3.0-release-notes.md) — current stable
+  release notes
+- [docs/v1.0.0-release-notes.md](v1.0.0-release-notes.md) — historical Product
+  OS release draft
 
 ## TaskCard shapes
 

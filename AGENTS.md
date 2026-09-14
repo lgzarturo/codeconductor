@@ -40,6 +40,16 @@ the coding-agent CLI, not Inflection's Pi). It lives at the project root
 4. **Goal-Driven Execution** — turn the task into a verifiable goal with a
    success check; loop until it passes.
 
+## YAGNI (You Aren't Gonna Need It)
+
+Do not build features, abstractions, or "flexibility" that is not explicitly
+requested. Every line you write must solve a problem that exists now.
+
+## Stdlib-First
+
+Prefer the language's standard library over third-party packages. Before adding
+a dependency, check whether a built-in module already solves the problem.
+
 ## Commands
 
 CodeConductor ships its slash commands as Pi prompt templates under
@@ -82,6 +92,26 @@ to test all current flow before publishing version v1.0.0 to npm.
 
 This section is manually maintained. Add project-specific conventions,
 exceptions, or context here.
+
+## Agent Routing Table
+
+| Task Type            | Risk        | Route                                               |
+| -------------------- | ----------- | --------------------------------------------------- |
+| New feature design   | any         | `architect` → `tester` → `implementer`              |
+| Bug fix              | low         | `tester` → `implementer`                            |
+| Bug fix              | medium–high | `task-coach` → `tester` → `implementer`             |
+| Refactor             | low         | `implementer`                                       |
+| Refactor             | medium–high | `architect` → `implementer` → `complexity-auditor` → `reviewer` |
+| API change           | any         | `architect` → `implementer` → `complexity-auditor` → `reviewer` |
+| Database migration   | any         | `architect` → `tester` → `implementer` → `complexity-auditor` → `reviewer` |
+| Test coverage        | any         | `tester`                                            |
+| Documentation update | any         | `docs`                                              |
+| Codebase exploration | any         | `repo-explorer`                                     |
+| Code review          | any         | `reviewer`                                          |
+| DDD→SDD→TDD pipeline | any         | `contract-builder` → `architect` → `tester` → `implementer` |
+
+Each arrow represents a handoff. The next agent starts only after the previous
+agent's deliverable is available.
 
 ### Internal skills (not shipped)
 
@@ -147,3 +177,71 @@ Rules:
   query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current
   (AST-only, no API cost).
+
+### complexity-auditor
+
+**Role:** Analyzes code for bloat, unnecessary abstractions, and non-native
+solutions. Produces a structured Complexity Audit Report with LOC deltas,
+dependency changes, and bloat pattern findings.
+
+**Use when:** Before reviewer in refactor (medium–high), API change, and
+database migration routes.
+
+**Permissions:**
+
+- read: `allow`
+- edit: `deny`
+- bash: `deny`
+- network: `deny`
+
+**Does not:** Propose new dependencies, suggest new abstractions, recommend
+external libraries, or edit any file.
+
+### goal-planner
+
+**Role:** Transforms an objective string into a YAML task graph with
+dependencies. Deterministic template matching; objective → GoalGraph. No side
+effects.
+
+**Use when:** User runs `codeconductor goal "<objective>"` or the orchestrator
+needs a multi-step plan before delegation.
+
+**Permissions:**
+
+- read: `allow`
+- edit: `deny`
+- bash: `deny`
+- network: `deny`
+
+**Does not:** Write files, execute commands, or make routing decisions.
+
+**Dependency order delegation (orchestrator):**
+
+When the orchestrator receives a GoalGraph, it delegates tasks in dependency
+order. A task is routed only after all its `depends_on` targets complete with
+status `done`. If a dependency is `blocked`, the dependent task remains
+`pending`. The orchestrator tracks the graph state in
+`.codeconductor/current-goal.yml`.
+
+### contract-builder
+
+**Role:** Defines API contracts, data shapes, and behavior specs before
+implementation. Produces OpenAPI specs, JSON Schema, or TypeScript interfaces
+that the implementer and tester use as the source of truth.
+
+**Use when:** A new feature needs spec-before-implementation, an API contract
+needs definition, or the DDD→SDD→TDD pipeline is triggered.
+
+**Permissions:**
+
+- read: `allow`
+- edit: `ask` (docs, ADRs, OpenAPI only)
+- bash: `deny`
+- network: `deny`
+
+**Does not:** Write implementation code. Modify source files.
+
+## Agent Contract Notes
+
+Agent permissions and routing in this file are the canonical Pi context
+contract for this repository.

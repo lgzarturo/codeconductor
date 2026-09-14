@@ -1,29 +1,38 @@
-## graphify
+<!-- CODECONDUCTOR:BEGIN managed -->
 
-This project has a knowledge graph at graphify-out/ with god nodes, community
-structure, and cross-file relationships.
+# CodeConductor — Gemini CLI Preset
 
-Rules:
+This file configures CodeConductor for **Gemini CLI**. It lives at the project
+root (`GEMINI.md`) so Gemini CLI's hierarchical context loader picks it up
+from the current directory and every ancestor up to the project root.
 
-- For codebase questions, first run `graphify query "<question>"` when
-  graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for
-  relationships and `graphify explain "<concept>"` for focused concepts. These
-  return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw
-  grep output.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of
-  raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when
-  query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current
-  (AST-only, no API cost).
+## Behavioral Discipline
 
-## Local Development Execution Rule
+1. **Think Before Coding** — state assumptions; ask if uncertain; present
+   alternatives instead of picking silently.
+2. **Simplicity First** — minimum code that solves the problem; no
+   speculative abstractions.
+3. **Surgical Changes** — touch only what the task requires; match existing
+   style; remove only what your own change made unused.
+4. **Goal-Driven Execution** — turn the task into a verifiable goal with a
+   success check; loop until it passes.
 
-Do NOT use `npx cc-codeconductor` for local testing. Use `bun run dev` instead
-to test all current flow before publishing version v1.0.0 to npm.
+## Commands
 
-| Production (`npx`)                       | Local development (`bun run dev`) |
-| ---------------------------------------- | --------------------------------- |
-| `npx cc-codeconductor seo audit --url …` | `bun run dev seo audit --url …`   |
-| `npx cc-codeconductor goal "…"`          | `bun run dev goal "…"`            |
-| `npx cc-codeconductor ccep parse …`      | `bun run dev ccep parse …`        |
+CodeConductor ships its slash commands as native Gemini CLI TOML commands
+under `.gemini/commands/cc/`, invoked as `/cc:<name>` (e.g. `/cc:feature`,
+`/cc:review`). Run `/cc:ask "<problem>"` when unsure which one applies — it
+recommends exactly one and stops; it does not start the workflow.
+
+Skills live under `.gemini/skills/` (Gemini CLI's native Agent Skills
+discovery path, shared with `.agents/skills/` per the Agent Skills open
+standard). Read `.gemini/skills/using-cc-skills/SKILL.md` first — it maps
+intent to the right slash command.
+
+## What never changes
+
+- Do not invoke the Implementer without an accepted Technical Plan.
+- Do not skip the Reviewer step for medium- or high-risk changes.
+- Do not store secrets in any file loaded by Gemini CLI.
+
+<!-- CODECONDUCTOR:END managed -->

@@ -6,7 +6,7 @@ readonly: true
 is_background: false
 ---
 
-# Agent Contract — contract-builder v0.5.0
+# Agent Contract — contract-builder v1.0.0
 
 ## Role
 

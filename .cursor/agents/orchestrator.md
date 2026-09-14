@@ -5,7 +5,7 @@ model: "composer-2.5"
 readonly: true
 is_background: false
 ---
-# Agent Contract — orchestrator v0.5.0
+# Agent Contract — orchestrator v1.0.0
 
 ## Role
 
@@ -255,7 +255,7 @@ routes the agents through an iterative feedback loop:
 
 ---
 
-## Evaluation Gate (v0.5.0)
+## Evaluation Gate (v1.0.0)
 
 After each agent completes a deliverable on **medium** or **high** risk tasks:
 
@@ -266,7 +266,7 @@ After each agent completes a deliverable on **medium** or **high** risk tasks:
 5. Record outcome: `npx cc-codeconductor scorecard record --task <id> --verdict PASS|REVISE|REJECT --score <n>`
 6. Route on verdict: **REVISE** → prior agent with findings; **REJECT** → `task-coach`
 
-Include `contract_version: v0.5.0` in scorecard metadata.
+Include `contract_version: v1.0.0` in scorecard metadata.
 
 ---
 

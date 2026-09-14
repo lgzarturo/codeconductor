@@ -6,9 +6,9 @@ description:
   modifies anything.
 effort: low
 mode: subagent
-model: "gemini-3.8-flash"
+model: "claude-haiku-4-5-20251001"
 temperature: 0.1
-tools: view_file, list_dir, grep_search, run_command
+tools: Read, Glob, Grep, Bash
 permission:
   read: allow
   edit: deny

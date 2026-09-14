@@ -6,9 +6,9 @@ description:
   code.
 effort: high
 mode: subagent
-model: "gemini-3.1-pro"
+model: "claude-opus-5"
 temperature: 0.1
-tools: view_file, list_dir, grep_search
+tools: Read, Glob, Grep
 permission:
   read: allow
   edit:

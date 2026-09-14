@@ -6,9 +6,9 @@ description:
   CRITICAL, WARNING, or SUGGESTION.
 effort: high
 mode: subagent
-model: "gemini-3.1-pro"
+model: "claude-opus-5"
 temperature: 0.1
-tools: view_file, list_dir, grep_search, run_command
+tools: Read, Glob, Grep, Bash
 permission:
   read: allow
   edit: deny
@@ -271,7 +271,7 @@ When the orchestrator requests evaluation, produce scores for all 8 criteria in
 2. Minimal diff (20%)
 3. Tests present and passing (15%)
 4. No regressions (15%)
-5. Code conventions (10%)
+5. Code conventions (5%)
 6. Documentation updated (5%)
 7. Context discipline (5%)
 8. Complexity diffusion / cc-gain (5%)

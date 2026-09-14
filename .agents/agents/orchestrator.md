@@ -6,9 +6,9 @@ description:
   without writing a single line of code.
 effort: medium
 mode: primary
-model: "claude-sonnet-4.6-thinking"
+model: "claude-sonnet-5"
 temperature: 0.1
-tools: view_file, list_dir, grep_search, run_command
+tools: Read, Glob, Grep, Bash
 permission:
   read: allow
   edit: deny

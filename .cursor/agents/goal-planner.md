@@ -6,7 +6,7 @@ readonly: true
 is_background: false
 ---
 
-# Agent Contract — goal-planner v0.5.0
+# Agent Contract — goal-planner v1.0.0
 
 ## Role
 

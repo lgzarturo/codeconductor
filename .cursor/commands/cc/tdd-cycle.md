@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Run a structured Red-Green-Refactor TDD cycle — write a failing
+  Run a structured Red-Green-Refactor TDD cycle — write a failing
   test first, implement the minimum code to pass it, then refactor with the
   suite green.
 ---

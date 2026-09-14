@@ -5,7 +5,7 @@ model: "claude-4.5-haiku-thinking"
 readonly: true
 is_background: false
 ---
-# Agent Contract — task-coach v0.5.0
+# Agent Contract — task-coach v1.0.0
 
 ## Role
 

@@ -1,4 +1,4 @@
-description = "[cc: alias] Recommend one CodeConductor slash command from a natural-language problem. Does not start that workflow."
+description = "Recommend one CodeConductor slash command from a natural-language problem. Does not start that workflow."
 
 prompt = """
 # Ask — recommend a slash command

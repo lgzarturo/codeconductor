@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Run the bug fix workflow — risk-based routing through task
+  Run the bug fix workflow — risk-based routing through task
   validation, implementation, testing, and optional review.
 ---
 
@@ -17,6 +17,18 @@ Provide the following information in $ARGUMENTS:
 - Any relevant error messages or stack traces
 
 ---
+
+## Web interface scope
+
+When the task concerns web layout, component states, feedback, motion, or a
+requested UI audit, apply skill `web-design-engineering` from the installed skill
+library. Use it during intake/discovery, design, test/implement, and review as
+applicable; keep this workflow’s gates and TDD order. Framework presence alone
+does not activate it; backend-only and native mobile work are excluded. Record
+required visual checks as pending when unavailable. Keep findings in the existing
+Review Report: contract failures in Spec Axis, technical issues in existing
+subchecks, and aesthetic preferences as suggestions; do not add an axis.
+
 
 ## Step 0 — CCEP Bootstrap
 
@@ -163,3 +175,7 @@ passes, and no CRITICAL review findings remain.
 
 Skills: `testing-tdd`, `evaluation`. Record `scorecard create --from-diff`.
 A small fix still needs a Task Card and a failing regression test first.
+
+## Next
+
+Run `/cc:review` on the diff before merging.

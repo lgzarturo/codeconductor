@@ -260,7 +260,7 @@ When the orchestrator requests evaluation, produce scores for all 8 criteria in
 2. Minimal diff (20%)
 3. Tests present and passing (15%)
 4. No regressions (15%)
-5. Code conventions (10%)
+5. Code conventions (5%)
 6. Documentation updated (5%)
 7. Context discipline (5%)
 8. Complexity diffusion / cc-gain (5%)

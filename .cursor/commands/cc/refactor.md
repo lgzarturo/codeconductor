@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Run the refactor workflow — mandatory architectural justification,
+  Run the refactor workflow — mandatory architectural justification,
   test verification, risk-based implementation, and scope enforcement.
 ---
 
@@ -158,3 +158,7 @@ and after, Review Report (if applicable).
 The refactor is complete only when: all pre-existing tests still pass, the
 implementation matches the approved plan exactly, and no CRITICAL review
 findings remain.
+
+## Next
+
+Run `/cc:review` on the diff before merging.

@@ -29,7 +29,7 @@ behavioral consequences.
 If coverage is insufficient:
 
 1. **STOP**. Report the coverage gap to the human.
-2. Suggest invoking `/cc:test-plan` first to establish coverage.
+2. Suggest invoking `/cc-test-plan` first to establish coverage.
 3. Do not proceed with the refactor until coverage is confirmed.
 
 ---
@@ -159,3 +159,7 @@ and after, Review Report (if applicable).
 The refactor is complete only when: all pre-existing tests still pass, the
 implementation matches the approved plan exactly, and no CRITICAL review
 findings remain.
+
+## Next
+
+Run `/cc-review` on the diff before merging.

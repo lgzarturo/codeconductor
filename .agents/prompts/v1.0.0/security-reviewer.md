@@ -5,9 +5,9 @@ description:
   authority on auth, payment, credentials, injection, and supply-chain paths.
 effort: high
 mode: subagent
-model: "gemini-3.1-pro"
+model: "claude-opus-5"
 temperature: 0.1
-tools: view_file, list_dir, grep_search, run_command
+tools: Read, Glob, Grep, Bash
 permission:
   read: allow
   edit: deny

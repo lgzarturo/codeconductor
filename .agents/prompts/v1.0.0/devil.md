@@ -5,9 +5,9 @@ description:
   surface the strongest objections before code ships. Never writes code.
 effort: high
 mode: subagent
-model: "gemini-3.1-pro"
+model: "claude-opus-5"
 temperature: 0.2
-tools: view_file, list_dir, grep_search, run_command
+tools: Read, Glob, Grep, Bash
 permission:
   read: allow
   edit: deny

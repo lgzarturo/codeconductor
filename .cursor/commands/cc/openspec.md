@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Run OpenSpec backlog delivery — validate BACKLOG.md, plan TaskCards,
+  Run OpenSpec backlog delivery — validate BACKLOG.md, plan TaskCards,
   orchestrate agents by phase, review gate, and update backlog state.
 ---
 
@@ -13,6 +13,18 @@ Orchestrate FIFO delivery from `BACKLOG.md`. CodeConductor owns planning; agents
 ---
 
 ---
+
+## Web interface scope
+
+When the task concerns web layout, component states, feedback, motion, or a
+requested UI audit, apply skill `web-design-engineering` from the installed skill
+library. Use it during intake/discovery, design, test/implement, and review as
+applicable; keep this workflow’s gates and TDD order. Framework presence alone
+does not activate it; backend-only and native mobile work are excluded. Record
+required visual checks as pending when unavailable. Keep findings in the existing
+Review Report: contract failures in Spec Axis, technical issues in existing
+subchecks, and aesthetic preferences as suggestions; do not add an axis.
+
 
 ## Step 0 — CCEP Bootstrap
 

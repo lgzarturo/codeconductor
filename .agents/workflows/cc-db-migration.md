@@ -95,3 +95,7 @@ undocumented deployment sequencing, or model/migration drift.
 
 Report migration files changed, model files changed, tests run, lock risk, data
 risk, operational sequencing, rollback/forward-fix notes, and residual risk.
+
+## Next
+
+Run `/cc-review` on the diff before merging.

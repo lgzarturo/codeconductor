@@ -1,4 +1,4 @@
-description = "CRITICAL, WARNING, and SUGGESTION findings; CRITICAL findings block merge."
+description = "Run a structured code review — produces a Review Report with CRITICAL, WARNING, and SUGGESTION findings; CRITICAL findings block merge."
 
 prompt = """
 # Code Review Workflow
@@ -13,6 +13,18 @@ Specify what to review. Accepted formats:
 - Empty — defaults to the current working diff (`git diff`)
 
 ---
+
+## Web interface scope
+
+When the task concerns web layout, component states, feedback, motion, or a
+requested UI audit, apply skill `web-design-engineering` from the installed skill
+library. Use it during intake/discovery, design, test/implement, and review as
+applicable; keep this workflow’s gates and TDD order. Framework presence alone
+does not activate it; backend-only and native mobile work are excluded. Record
+required visual checks as pending when unavailable. Keep findings in the existing
+Review Report: contract failures in Spec Axis, technical issues in existing
+subchecks, and aesthetic preferences as suggestions; do not add an axis.
+
 
 ## Step 0 — CCEP Bootstrap
 
@@ -52,7 +64,7 @@ Show the diff summary (files changed, lines added/removed) before proceeding.
 
 ## Step 2 — Code review (Reviewer role)
 
-Invoke the `reviewer` subagent via the Task tool.
+Adopt the `reviewer` role as defined in `.gemini/agents/reviewer.md`.
 
 Evaluate the diff against the following checklist:
 
@@ -145,6 +157,7 @@ npx cc-codeconductor scorecard regression
 
 Map merge recommendation to scorecard verdict. Record outcome for trend tracking.
 
-Skills: `evaluation`. Handmade TDD JSON is rejected. Run `scorecard suite-run`
-or `scorecard record` before declaring the review closed.
+## Next
+
+Approved: merge. Blocked: return the findings to `/cc:fix` or `/cc:feature`.
 """

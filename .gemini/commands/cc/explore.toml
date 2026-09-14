@@ -1,4 +1,4 @@
-description = "CodeConductor explore workflow"
+description = "Map the repository and recommend the next CodeConductor slash command. Read-only."
 
 prompt = """
 # Explore Workflow

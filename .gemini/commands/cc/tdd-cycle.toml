@@ -1,4 +1,4 @@
-description = "test first, implement the minimum code to pass it, then refactor with the suite green."
+description = "Run a structured Red-Green-Refactor TDD cycle — write a failing test first, implement the minimum code to pass it, then refactor with the suite green."
 
 prompt = """
 # TDD Cycle — Red → Green → Refactor
@@ -68,7 +68,7 @@ Do not advance phases until that evidence exists.
 
 ## Phase 1 — RED (Tester role)
 
-Invoke the `tester` subagent via the Task tool.
+Adopt the `tester` role as defined in `.gemini/agents/tester.md`.
 
 ### 1a — Scope clarification
 
@@ -124,7 +124,7 @@ confirmation.**
 
 ## Phase 2 — GREEN (Implementer role)
 
-Invoke the `implementer` subagent via the Task tool.
+Adopt the `implementer` role as defined in `.gemini/agents/implementer.md`.
 
 ### 2a — Read the failing test before writing any code
 
@@ -171,7 +171,7 @@ confirmation.**
 
 ## Phase 3 — REFACTOR (Implementer role, then Reviewer role)
 
-Invoke the `implementer` subagent via the Task tool.
+Adopt the `implementer` role as defined in `.gemini/agents/implementer.md`.
 
 ### 3a — Assess what needs cleaning
 
@@ -202,7 +202,7 @@ change and investigate.
 
 ### 3d — Review (Reviewer role)
 
-Invoke the `reviewer` subagent via the Task tool.
+Adopt the `reviewer` role as defined in `.gemini/agents/reviewer.md`.
 
 Review only the refactored code against these axes:
 
@@ -258,7 +258,4 @@ The TDD cycle is complete when:
 
 If the behavior requires additional test cases, start a new `/tdd-cycle` with
 the next scenario. One cycle = one behavior.
-
-Skill: `testing-tdd`. Evidence from the verification runner only — handmade TDD
-JSON is rejected. Optional gate: `bun run dev scorecard suite-run --suite workflow-gates`.
 """

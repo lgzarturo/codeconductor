@@ -1,6 +1,6 @@
 ---
 description: >-
-  [cc: alias] Compact the session into gitignored `.codeconductor/sessions/handoff.md` (redact secrets).
+  Compact the session into gitignored `.codeconductor/sessions/handoff.md` (redact secrets).
 ---
 
 # Handoff Workflow

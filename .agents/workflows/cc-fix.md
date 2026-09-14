@@ -19,6 +19,18 @@ Provide the following information in $ARGUMENTS:
 
 ---
 
+## Web interface scope
+
+When the task concerns web layout, component states, feedback, motion, or a
+requested UI audit, apply skill `web-design-engineering` from the installed skill
+library. Use it during intake/discovery, design, test/implement, and review as
+applicable; keep this workflow’s gates and TDD order. Framework presence alone
+does not activate it; backend-only and native mobile work are excluded. Record
+required visual checks as pending when unavailable. Keep findings in the existing
+Review Report: contract failures in Spec Axis, technical issues in existing
+subchecks, and aesthetic preferences as suggestions; do not add an axis.
+
+
 ## Step 0 — CCEP Bootstrap
 
 Command: `fix` (fixed for this workflow — do not infer from user text)
@@ -163,3 +175,7 @@ resolved.
 Report: Task Card, Implementation Summary, regression test added, Review Report
 (if applicable). The fix is complete only when: the regression test passes, the
 full suite passes, and no CRITICAL review findings remain.
+
+## Next
+
+Run `/cc-review` on the diff before merging.

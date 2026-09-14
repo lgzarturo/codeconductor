@@ -5,7 +5,7 @@ model: "claude-4.5-haiku-thinking"
 readonly: false
 is_background: false
 ---
-# Agent Contract — docs v0.5.0
+# Agent Contract — docs v1.0.0
 
 ## Role
 

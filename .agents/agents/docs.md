@@ -5,9 +5,9 @@ description:
   actually implemented — reads the diff first, writes only what changed.
 effort: low
 mode: subagent
-model: "gemini-3.8-flash"
+model: "claude-haiku-4-5-20251001"
 temperature: 0.1
-tools: view_file, write_to_file, replace_file_content / multi_replace_file_content, list_dir, grep_search
+tools: Read, Write, Edit, Glob, Grep
 permission:
   read: allow
   edit:
@@ -77,7 +77,7 @@ CHANGELOG is mandatory for every implementation change. No exceptions.
 - `docs/**/*.md` — any markdown documentation file
 - `docs/adr/*.md` — Architecture Decision Records
 - `CHANGELOG.md` — always update for any implementation change
-- `.codeconductor/sessions/handoff.md` — `/cc:handoff` only; gitignored; redact secrets
+- `.codeconductor/sessions/handoff.md` — `/cc-handoff` only; gitignored; redact secrets
 - `openapi.yaml`, `openapi.json`, or any OpenAPI spec file
 - Any `*-api.yaml` or `*-api.json` file
 

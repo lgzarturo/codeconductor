@@ -5,9 +5,9 @@ description:
   intake role. No code.
 effort: low
 mode: subagent
-model: "gemini-3.8-flash"
+model: "claude-haiku-4-5-20251001"
 temperature: 0.1
-tools: view_file, list_dir, grep_search
+tools: Read, Glob, Grep
 permission:
   read: allow
   edit: deny

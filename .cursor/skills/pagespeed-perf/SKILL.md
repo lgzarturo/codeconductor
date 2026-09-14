@@ -1,6 +1,5 @@
 ---
 id: pagespeed-perf
-version: 1.0.0
 name: PageSpeed Performance Audit
 description: >
   Web Performance Engineering — analyzes Core Web Vitals using the PageSpeed

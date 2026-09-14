@@ -18,6 +18,18 @@ Specify what to review. Accepted formats:
 
 ---
 
+## Web interface scope
+
+When the task concerns web layout, component states, feedback, motion, or a
+requested UI audit, apply skill `web-design-engineering` from the installed skill
+library. Use it during intake/discovery, design, test/implement, and review as
+applicable; keep this workflow’s gates and TDD order. Framework presence alone
+does not activate it; backend-only and native mobile work are excluded. Record
+required visual checks as pending when unavailable. Keep findings in the existing
+Review Report: contract failures in Spec Axis, technical issues in existing
+subchecks, and aesthetic preferences as suggestions; do not add an axis.
+
+
 ## Step 0 — CCEP Bootstrap
 
 Command: `review` (fixed for this workflow — do not infer from user text)
@@ -138,7 +150,7 @@ If any CRITICAL findings exist:
 - The Review Report status is **BLOCKED**
 - Report all CRITICAL findings to the human
 - Do not proceed until each CRITICAL finding is resolved
-- After resolution, invoke `/cc:review` again on the same target
+- After resolution, invoke `/cc-review` again on the same target
 
 If no CRITICAL findings exist:
 
@@ -152,3 +164,7 @@ If no CRITICAL findings exist:
 
 Deliver the complete Review Report. Never summarize or omit findings. Every
 finding must include a location and an actionable description.
+
+## Next
+
+Approved: merge. Blocked: return the findings to `/cc-fix` or `/cc-feature`.

@@ -56,6 +56,8 @@ skills:
     targets: [claude, codex, cursor, opencode, agy]
   - name: workflow-orchestration-patterns
     targets: [claude, codex, cursor, opencode]
+  - name: android-ui-design
+    targets: [claude, codex, cursor, opencode, agy]
   - name: code-review
     targets: [cursor, opencode]
   - name: seo-analytics-injector

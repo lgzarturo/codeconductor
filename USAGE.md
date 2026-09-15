@@ -402,7 +402,7 @@ Three binding mechanisms, all explicit:
 | App security | `security` (OWASP) | `cc-security`, `cc-review` |
 | Security domains (`security-*`) | 19 skills: `recon`, `vuln-assessment`, `web`, `cloud`, `network`, `mobile`, `crypto`, `ai-llm`, `blue-team`, `red-team`, `exploit-dev`, `malware-analysis`, `reverse-engineering`, `incident-response`, `threat-hunting`, `log-analysis`, `soc-automation`, `grc`, `ot-ics` | `cc-security` (domain in `$ARGUMENTS`) |
 | Orchestration | `multi-agent-orchestration`, `workflow-orchestration-patterns`, `conductor-setup` | Council/pipeline design |
-| Auxiliary | `code-review`, `pagespeed-perf`, `pagespeed-insights`, `api-versioning`, `astro`, `android`, `php-pro`, `python`, … | On demand |
+| Auxiliary | `code-review`, `pagespeed-perf`, `pagespeed-insights`, `api-versioning`, `astro`, `android`, `android-ui-design`, `php-pro`, `python`, … | On demand |
 
 ### Web interface work
 
@@ -423,6 +423,15 @@ Requested audits produce prioritized findings; out-of-scope opportunities remain
 suggestions until backlog creation is requested. Existing review axes, severities,
 CCEP contracts, and scorecard weights remain authoritative. Tailwind, framework,
 PageSpeed, and evaluation skills retain their responsibilities.
+
+### Android phone interface work
+
+The shared [android-ui-design](skills/android-ui-design/SKILL.md) skill adds
+specialized UX/UI guidance to feature, fix, review, and OpenSpec workflows for
+concrete Jetpack Compose phone interfaces. It covers design, implementation,
+review, and read-only audits while preserving the product visual system; Material
+3 recommendations remain advisory. Kotlin or Compose presence alone does not
+trigger it. All seven runners receive it through their existing preset installers.
 
 ### 6.3 Stack presets and their skill bindings
 
@@ -503,4 +512,3 @@ References:
 - Agent contracts — [`AGENTS.md`](AGENTS.md), `.agents/AGENTS.md`
 - Workflow sources — `.agents/workflows/cc-*.md`,
   `src/core/ccep/profiles.ts`, `src/core/presets/workflow-commands.ts`
-

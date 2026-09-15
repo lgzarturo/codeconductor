@@ -53,6 +53,15 @@ required visual checks as pending when unavailable. Keep findings in the existin
 Review Report: contract failures in Spec Axis, technical issues in existing
 subchecks, and aesthetic preferences as suggestions; do not add an axis.
 
+## Android phone interface scope
+
+When an item concerns concrete Jetpack Compose phone layout, component states,
+interaction, accessibility, visual behavior, or a requested UI audit, apply skill
+`android-ui-design` throughout discover, design, test/implement, and review. Keep
+OpenSpec gates and TDD order. Kotlin, Compose, framework, or dependency presence
+alone does not activate it; non-UI Android work stays with `android`. Keep audit-only
+delivery read-only and record unavailable visual or emulator evidence as pending.
+
 ## Common Rationalizations
 
 | Rationalization | Reality |

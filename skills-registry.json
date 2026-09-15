@@ -4,6 +4,9 @@
     "android": {
       "version": "1.0.0"
     },
+    "android-ui-design": {
+      "version": "1.0.0"
+    },
     "api-versioning": {
       "version": "1.0.0"
     },

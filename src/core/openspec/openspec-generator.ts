@@ -82,7 +82,7 @@ The system MUST ${criterion}.
 
 #### Scenario: SC-${n} ${criterion}
 
-- GIVEN the current behavior in ${item.scope}
+- GIVEN the relevant scoped behavior
 - WHEN this change is applied
 - THEN ${criterion}
 `;

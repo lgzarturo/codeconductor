@@ -630,7 +630,9 @@ npx cc-codeconductor openspec next
 npx cc-codeconductor openspec start BC-001-discover
 npx cc-codeconductor openspec done BC-001-discover
 npx cc-codeconductor openspec block BC-001-implement --reason "waiting on design"
+npx cc-codeconductor openspec unblock BC-001-implement
 npx cc-codeconductor openspec archive BC-001
+npx cc-codeconductor odd read delivery-001
 ```
 
 Subcommands: `validate` / `scan` / `plan` / `analyze` / `status` / `next` /

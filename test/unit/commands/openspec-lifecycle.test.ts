@@ -133,6 +133,33 @@ describe('openspec start/done/block/archive', () => {
     expect((blocked.data as { reason: string }).reason).toBe('waiting on design');
   });
 
+  test('unblock restores a blocked card to pending and the item to READY', async () => {
+    const root = await tempProject();
+    roots.push(root);
+    await run(root, 'plan', 'BC-001');
+    await run(root, 'start', 'BC-001-discover');
+    await run(root, 'block', 'BC-001-discover', 'waiting on design');
+
+    const unblocked = await run(root, 'unblock', 'BC-001-discover');
+    expect(unblocked.code).toBe(0);
+    expect((unblocked.data as { cardStatus: string }).cardStatus).toBe('pending');
+    expect((unblocked.data as { itemStatus: string }).itemStatus).toBe('READY');
+    expect((unblocked.data as { nextStep: string }).nextStep).toBe('Run openspec plan BC-001.');
+
+    const replanned = await run(root, 'plan', 'BC-001');
+    expect(replanned.code).toBe(0);
+
+    const next = await run(root, 'next');
+    expect((next.data as { taskCard: { id: string } }).taskCard.id).toBe('BC-001-discover');
+
+    const restarted = await run(root, 'start', 'BC-001-discover');
+    expect(restarted.code).toBe(0);
+
+    const invalid = await run(root, 'unblock', 'BC-001-discover');
+    expect(invalid.code).toBe(1);
+    expect(JSON.stringify(invalid.data)).toMatch(/must be blocked/);
+  });
+
   test('archive requires every card done and moves the change folder', async () => {
     const root = await tempProject();
     roots.push(root);

@@ -255,6 +255,26 @@ The feedback loop only works if the input is accurate. Score what you see.
 
 ---
 
+## Delivery telemetry baseline
+
+Outcomes may also record the cost of the workflow, independently from the
+quality score. This supports comparison of small changes, tracked delivery, and
+OpenSpec without treating unavailable provider usage as free.
+
+```bash
+bun run dev scorecard record --task BC-020 --verdict PASS --score 2.5 \
+  --route tracked --context-bytes 4096 --handoffs 2 \
+  --checks "bun test,bun run typecheck"
+```
+
+`--route` accepts `read-only`, `small`, `tracked`, or `openspec`.
+`--context-bytes`, `--handoffs`, and `--checks` are optional measurements.
+When `--route` is present but no token flag is supplied, token usage is
+recorded as `unknown`, not zero. Supply `--tokens` only when the runner reports
+the aggregate value.
+
+---
+
 ## Harness ablation
 
 Scorecards measure the Deliverable. Ablation measures the **harness**: whether

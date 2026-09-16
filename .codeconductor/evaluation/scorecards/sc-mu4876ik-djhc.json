@@ -1,0 +1,69 @@
+{
+  "id": "sc-mu4876ik-djhc",
+  "taskId": "BC-020",
+  "agent": "reviewer",
+  "model": "opencode-go/qwen3.8-max",
+  "contractVersion": "1.4.1",
+  "criteria": [
+    {
+      "id": "acceptance",
+      "label": "Acceptance criteria met",
+      "weight": 0.3,
+      "score": 3,
+      "notes": "All FR/SC mapped to tasks",
+      "autoSuggested": true
+    },
+    {
+      "id": "minimal_diff",
+      "label": "Minimal diff (no scope creep)",
+      "weight": 0.2,
+      "score": 2,
+      "notes": "Diff within declared scope",
+      "autoSuggested": true
+    },
+    {
+      "id": "tests",
+      "label": "Tests present and passing",
+      "weight": 0.15,
+      "score": 2
+    },
+    {
+      "id": "regressions",
+      "label": "No regressions introduced",
+      "weight": 0.15,
+      "score": 2
+    },
+    {
+      "id": "conventions",
+      "label": "Code follows project conventions",
+      "weight": 0.05,
+      "score": 2
+    },
+    {
+      "id": "documentation",
+      "label": "Documentation updated if required",
+      "weight": 0.05,
+      "score": 2
+    },
+    {
+      "id": "context_discipline",
+      "label": "Context discipline",
+      "weight": 0.05,
+      "score": 2
+    },
+    {
+      "id": "cc_gain",
+      "label": "Complexity diffusion (cc-gain)",
+      "weight": 0.05,
+      "score": 3,
+      "notes": "cc-gain raw=12.8, verdict=positive",
+      "autoSuggested": true
+    }
+  ],
+  "weightedScore": 2.35,
+  "verdict": "PASS",
+  "findings": [],
+  "createdAt": "2026-09-16T14:58:36.879Z",
+  "backlogId": "BC-020",
+  "source": "openspec"
+}

@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "activeItemId": "BC-019",
+  "activeItemId": "BC-021",
   "taskCards": [
     {
-      "id": "BC-019-discover",
-      "backlogId": "BC-019",
+      "id": "BC-021-discover",
+      "backlogId": "BC-021",
       "phase": "discover",
-      "title": "BC-019: Discover scope and impact",
-      "prompt": "Backlog item BC-019 — Gestor de harness seguro y CLI de mantenimiento\n\nDescription: Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.\nScope: estado de instalación bajo `.codeconductor/`, init/install/update, comandos setup/version/status, registro declarativo de ayuda, documentación generada compacta, completions y tests de CLI.\n\nMap repository structure, conventions, and impact radius for this change.",
+      "title": "BC-021: Discover scope and impact",
+      "prompt": "Backlog item BC-021 — Perfil ODD y Delivery Ledger recuperable\n\nDescription: Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.\nScope: `BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.\n\nMap repository structure, conventions, and impact radius for this change.",
       "agent": "repo-explorer",
       "modelHint": "repo-explorer",
       "dependsOn": [],
@@ -15,83 +15,75 @@
         "Repo map identifies relevant files and impact radius"
       ],
       "status": "done",
-      "itemHash": "81f3fa499ddb4c32"
+      "itemHash": "072c51e7cc6822a2"
     },
     {
-      "id": "BC-019-design",
-      "backlogId": "BC-019",
+      "id": "BC-021-design",
+      "backlogId": "BC-021",
       "phase": "design",
-      "title": "BC-019: Technical design",
-      "prompt": "Backlog item BC-019 — Gestor de harness seguro y CLI de mantenimiento\n\nDescription: Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.\nScope: estado de instalación bajo `.codeconductor/`, init/install/update, comandos setup/version/status, registro declarativo de ayuda, documentación generada compacta, completions y tests de CLI.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
+      "title": "BC-021: Technical design",
+      "prompt": "Backlog item BC-021 — Perfil ODD y Delivery Ledger recuperable\n\nDescription: Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.\nScope: `BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
       "agent": "architect",
       "modelHint": "architect",
       "dependsOn": [
-        "BC-019-discover"
+        "BC-021-discover"
       ],
       "acceptanceCriteria": [
         "Technical plan lists files affected and approach"
       ],
       "status": "done",
-      "itemHash": "81f3fa499ddb4c32"
+      "itemHash": "072c51e7cc6822a2"
     },
     {
-      "id": "BC-019-test",
-      "backlogId": "BC-019",
+      "id": "BC-021-test",
+      "backlogId": "BC-021",
       "phase": "test",
-      "title": "BC-019: Test coverage",
-      "prompt": "Backlog item BC-019 — Gestor de harness seguro y CLI de mantenimiento\n\nDescription: Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.\nScope: estado de instalación bajo `.codeconductor/`, init/install/update, comandos setup/version/status, registro declarativo de ayuda, documentación generada compacta, completions y tests de CLI.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
+      "title": "BC-021: Test coverage",
+      "prompt": "Backlog item BC-021 — Perfil ODD y Delivery Ledger recuperable\n\nDescription: Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.\nScope: `BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
       "agent": "tester",
       "modelHint": "tester",
       "dependsOn": [
-        "BC-019-design"
+        "BC-021-design"
       ],
       "acceptanceCriteria": [
-        "Test covers: init e install registran hashes SHA-256 y versiones para cada archivo gestionado.",
-        "Test covers: update no sobrescribe council.yml ni policy.yml modificados localmente sin --force y devuelve un conflicto explícito.",
-        "Test covers: update planifica, hace backup y revierte las escrituras aplicadas si una actualización falla.",
-        "Test covers: version informa CLI, estado del harness, targets y skills tanto en humano como JSON; --version conserva la salida corta.",
-        "Test covers: status informa instalación, targets, configuración, actualizaciones y archivos gestionados modificados sin ejecutar doctor.",
-        "Test covers: setup admite --target, --locale, --yes y --dry-run; el dry-run no escribe y la ruta normal inicializa, instala y ejecuta diagnóstico.",
-        "Test covers: help y --help son jerárquicos; install preset --help y help install preset muestran ayuda específica.",
-        "Test covers: El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell."
+        "Test covers: Una solicitud de sólo lectura y un cambio pequeño no crean ledger.",
+        "Test covers: Un cambio sustancial crea un único ledger antes de la primera escritura con objetivo, scope, tareas, aceptación, evidencia y next step.",
+        "Test covers: CCEP valida ledger y Task Card; el riesgo y ConfirmationGate existentes continúan aplicándose.",
+        "Test covers: La reanudación reconcilia ledger, árbol y punteros de memoria sin sobrescribir conflictos."
       ],
       "status": "done",
-      "itemHash": "81f3fa499ddb4c32"
+      "itemHash": "072c51e7cc6822a2"
     },
     {
-      "id": "BC-019-implement",
-      "backlogId": "BC-019",
+      "id": "BC-021-implement",
+      "backlogId": "BC-021",
       "phase": "implement",
-      "title": "BC-019: Implementation",
-      "prompt": "Backlog item BC-019 — Gestor de harness seguro y CLI de mantenimiento\n\nDescription: Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.\nScope: estado de instalación bajo `.codeconductor/`, init/install/update, comandos setup/version/status, registro declarativo de ayuda, documentación generada compacta, completions y tests de CLI.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
+      "title": "BC-021: Implementation",
+      "prompt": "Backlog item BC-021 — Perfil ODD y Delivery Ledger recuperable\n\nDescription: Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.\nScope: `BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
       "agent": "implementer",
       "modelHint": "implementer",
       "dependsOn": [
-        "BC-019-test"
+        "BC-021-test"
       ],
       "acceptanceCriteria": [
-        "init e install registran hashes SHA-256 y versiones para cada archivo gestionado.",
-        "update no sobrescribe council.yml ni policy.yml modificados localmente sin --force y devuelve un conflicto explícito.",
-        "update planifica, hace backup y revierte las escrituras aplicadas si una actualización falla.",
-        "version informa CLI, estado del harness, targets y skills tanto en humano como JSON; --version conserva la salida corta.",
-        "status informa instalación, targets, configuración, actualizaciones y archivos gestionados modificados sin ejecutar doctor.",
-        "setup admite --target, --locale, --yes y --dry-run; el dry-run no escribe y la ruta normal inicializa, instala y ejecuta diagnóstico.",
-        "help y --help son jerárquicos; install preset --help y help install preset muestran ayuda específica.",
-        "El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell."
+        "Una solicitud de sólo lectura y un cambio pequeño no crean ledger.",
+        "Un cambio sustancial crea un único ledger antes de la primera escritura con objetivo, scope, tareas, aceptación, evidencia y next step.",
+        "CCEP valida ledger y Task Card; el riesgo y ConfirmationGate existentes continúan aplicándose.",
+        "La reanudación reconcilia ledger, árbol y punteros de memoria sin sobrescribir conflictos."
       ],
       "status": "done",
-      "itemHash": "81f3fa499ddb4c32"
+      "itemHash": "072c51e7cc6822a2"
     },
     {
-      "id": "BC-019-review",
-      "backlogId": "BC-019",
+      "id": "BC-021-review",
+      "backlogId": "BC-021",
       "phase": "review",
-      "title": "BC-019: Review and validation",
-      "prompt": "Backlog item BC-019 — Gestor de harness seguro y CLI de mantenimiento\n\nDescription: Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.\nScope: estado de instalación bajo `.codeconductor/`, init/install/update, comandos setup/version/status, registro declarativo de ayuda, documentación generada compacta, completions y tests de CLI.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
+      "title": "BC-021: Review and validation",
+      "prompt": "Backlog item BC-021 — Perfil ODD y Delivery Ledger recuperable\n\nDescription: Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.\nScope: `BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
       "agent": "reviewer",
       "modelHint": "reviewer",
       "dependsOn": [
-        "BC-019-implement"
+        "BC-021-implement"
       ],
       "acceptanceCriteria": [
         "All acceptance criteria verified",
@@ -99,7 +91,7 @@
         "No scope creep beyond backlog item"
       ],
       "status": "done",
-      "itemHash": "81f3fa499ddb4c32"
+      "itemHash": "072c51e7cc6822a2"
     }
   ],
   "lastScanHash": "620aba2bbc3ae662",
@@ -117,7 +109,9 @@
     "BC-010": "openspec/changes/bc-010-gate-pre-commit-typecheck-y-test-adaptado-a-bun",
     "BC-011": "openspec/changes/bc-011-comando-cc-handoff-para-traspaso-entre-sesiones",
     "BC-012": "openspec/changes/bc-012-router-cc-ask-que-recomienda-el-slash-command-co",
-    "BC-019": "openspec/changes/bc-019-gestor-de-harness-seguro-y-cli-de-mantenimiento"
+    "BC-019": "openspec/changes/bc-019-gestor-de-harness-seguro-y-cli-de-mantenimiento",
+    "BC-020": "openspec/changes/archive/bc-020-l-nea-base-de-coste-y-selecci-n-de-ruta-para-odd",
+    "BC-021": "openspec/changes/bc-021-perfil-odd-y-delivery-ledger-recuperable"
   },
   "itemSnapshots": {
     "BC-012": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Router /cc:ask que recomienda el slash command correcto\"}",
@@ -132,6 +126,8 @@
     "BC-003": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Revisión de dos ejes en /cc:review\"}",
     "BC-002": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"CONTEXT.md como glosario de dominio y criterios ADR\"}",
     "BC-001": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Rúbrica writing-for-agents para auditar prompts de agentes\"}",
-    "BC-019": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Gestor de harness seguro y CLI de mantenimiento\",\"description\":\"Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.\",\"scope\":\"estado de instalación bajo `.codeconductor/`, init/install/update, comandos setup/version/status, registro declarativo de ayuda, documentación generada compacta, completions y tests de CLI.\",\"type\":\"feature\",\"priority\":\"P0\",\"acceptanceCriteria\":[\"init e install registran hashes SHA-256 y versiones para cada archivo gestionado.\",\"update no sobrescribe council.yml ni policy.yml modificados localmente sin --force y devuelve un conflicto explícito.\",\"update planifica, hace backup y revierte las escrituras aplicadas si una actualización falla.\",\"version informa CLI, estado del harness, targets y skills tanto en humano como JSON; --version conserva la salida corta.\",\"status informa instalación, targets, configuración, actualizaciones y archivos gestionados modificados sin ejecutar doctor.\",\"setup admite --target, --locale, --yes y --dry-run; el dry-run no escribe y la ruta normal inicializa, instala y ejecuta diagnóstico.\",\"help y --help son jerárquicos; install preset --help y help install preset muestran ayuda específica.\",\"El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell.\"]}"
+    "BC-019": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Gestor de harness seguro y CLI de mantenimiento\",\"description\":\"Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.\",\"scope\":\"estado de instalación bajo `.codeconductor/`, init/install/update, comandos setup/version/status, registro declarativo de ayuda, documentación generada compacta, completions y tests de CLI.\",\"type\":\"feature\",\"priority\":\"P0\",\"acceptanceCriteria\":[\"init e install registran hashes SHA-256 y versiones para cada archivo gestionado.\",\"update no sobrescribe council.yml ni policy.yml modificados localmente sin --force y devuelve un conflicto explícito.\",\"update planifica, hace backup y revierte las escrituras aplicadas si una actualización falla.\",\"version informa CLI, estado del harness, targets y skills tanto en humano como JSON; --version conserva la salida corta.\",\"status informa instalación, targets, configuración, actualizaciones y archivos gestionados modificados sin ejecutar doctor.\",\"setup admite --target, --locale, --yes y --dry-run; el dry-run no escribe y la ruta normal inicializa, instala y ejecuta diagnóstico.\",\"help y --help son jerárquicos; install preset --help y help install preset muestran ayuda específica.\",\"El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell.\"]}",
+    "BC-020": "{\"status\":\"READY\",\"progress\":80,\"title\":\"Línea base de coste y selección de ruta para ODD\",\"description\":\"Definir la clasificación de coordinación (pequeño, ODD rastreado u OpenSpec explícito) sin alterar los gates de riesgo, y capturar una línea base comparable de contexto, tokens, handoffs, checks y calidad.\",\"scope\":\"`AGENTS.md`, `BACKLOG.md`, `.codeconductor/`, `docs/odd-integration-plan.md`, `docs/agent-scorecard.md`, `src/core/ccep/`, `src/core/evaluation/`, `src/commands/scorecard.command.ts`, `src/cli/router.ts`, `src/validation/schemas.ts`, `test/odd-baseline.test.ts`, `test/evaluation/scorecard-signals.test.ts`.\",\"type\":\"feature\",\"priority\":\"P0\",\"acceptanceCriteria\":[\"La selección de ruta distingue autorización, coordinación y riesgo, y conserva los gates high-risk existentes.\",\"Un scorecard puede registrar ruta, bytes de contexto, tokens conocidos/desconocidos, handoffs, checks y resultado sin falsos ceros.\",\"Una suite de muestra compara al menos cambios pequeños, delivery rastreado y OpenSpec con el mismo formato de evidencia.\"]}",
+    "BC-021": "{\"status\":\"READY\",\"progress\":60,\"title\":\"Perfil ODD y Delivery Ledger recuperable\",\"description\":\"Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.\",\"scope\":\"`BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.\",\"type\":\"feature\",\"priority\":\"P0\",\"acceptanceCriteria\":[\"Una solicitud de sólo lectura y un cambio pequeño no crean ledger.\",\"Un cambio sustancial crea un único ledger antes de la primera escritura con objetivo, scope, tareas, aceptación, evidencia y next step.\",\"CCEP valida ledger y Task Card; el riesgo y ConfirmationGate existentes continúan aplicándose.\",\"La reanudación reconcilia ledger, árbol y punteros de memoria sin sobrescribir conflictos.\"]}"
   }
 }

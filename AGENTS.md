@@ -21,6 +21,16 @@ LLM coding mistakes and bias toward caution over speed.
    success criteria. For multi-step tasks, state a plan with verification
    checks. Loop until verified.
 
+### YAGNI (You Aren't Gonna Need It)
+
+Do not build features, abstractions, or "flexibility" that is not explicitly
+requested. Every line you write must solve a problem that exists **now**.
+
+### Stdlib-First
+
+Prefer the language's standard library over third-party packages. Add a
+dependency only when the repository's existing tools cannot solve the problem.
+
 <!-- CODECONDUCTOR:BEGIN managed -->
 
 # CodeConductor — Pi Preset

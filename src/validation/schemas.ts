@@ -876,6 +876,7 @@ export const WorkflowCommandSchema = z.enum([
   'handoff',
   'clarify',
   'security',
+  'odd',
 ]);
 
 export const CcepOutputFormatSchema = z.enum(['taskcard', 'plan', 'verdict']);
@@ -1127,6 +1128,52 @@ export const TaskOutcomeStatusSchema = z.enum([
   'reject',
 ]);
 
+export const DeliveryRouteSchema = z.enum(['read-only', 'small', 'tracked', 'openspec']);
+
+export const TokenUsageSchema = z.union([
+  z.object({
+    status: z.literal('known'),
+    total: z.number().nonnegative(),
+  }),
+  z.object({ status: z.literal('unknown') }),
+]);
+
+export const DeliveryTelemetrySchema = z.object({
+  route: DeliveryRouteSchema,
+  contextBytes: z.number().int().nonnegative().optional(),
+  handoffs: z.number().int().nonnegative().optional(),
+  checks: z.array(z.string().min(1)).optional(),
+  tokenUsage: TokenUsageSchema,
+});
+
+export const DeliveryLedgerTaskSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  status: z.enum(['pending', 'done', 'blocked']),
+});
+
+export const DeliveryLedgerSchema = z.object({
+  version: z.literal(1),
+  id: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/),
+  taskCard: CanonicalTaskCardSchema,
+  tasks: z.array(DeliveryLedgerTaskSchema).min(1),
+  evidence: z.array(z.string().min(1)),
+  nextStep: z.string().min(1),
+  memoryTopicKey: z.string().min(1),
+  workspace: z.record(z.string(), z.string()),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+export const DeliveryLedgerRequestSchema = z.object({
+  id: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/),
+  authorized: z.boolean(),
+  route: DeliveryRouteSchema,
+  taskCard: CanonicalTaskCardSchema,
+  tasks: z.array(DeliveryLedgerTaskSchema).min(1),
+  nextStep: z.string().min(1),
+});
+
 export const TaskOutcomeSchema = z.object({
   id: z.string(),
   taskId: z.string(),
@@ -1151,6 +1198,7 @@ export const TaskOutcomeSchema = z.object({
   suiteTaskId: z.string().optional(),
   harnessFingerprint: z.string().optional(),
   disabledComponents: z.array(z.string()).optional(),
+  delivery: DeliveryTelemetrySchema.optional(),
 });
 
 export const HarnessComponentIdSchema = z.enum([
@@ -1307,6 +1355,8 @@ export type HarnessExperimentInput = z.infer<typeof HarnessExperimentSchema>;
 export type HarnessSuiteTaskInput = z.infer<typeof HarnessSuiteTaskSchema>;
 export type HarnessSuiteInput = z.infer<typeof HarnessSuiteSchema>;
 export type WorkflowCommandInput = z.infer<typeof WorkflowCommandSchema>;
+export type DeliveryLedgerInput = z.infer<typeof DeliveryLedgerSchema>;
+export type DeliveryLedgerRequestInput = z.infer<typeof DeliveryLedgerRequestSchema>;
 export type CommandEnvelopeInput = z.infer<typeof CommandEnvelopeSchema>;
 export type WorkflowProfileInput = z.infer<typeof WorkflowProfileSchema>;
 export type ExecutionContextInput = z.infer<typeof ExecutionContextSchema>;
@@ -1491,4 +1541,3 @@ export type SkillsRegistry = z.infer<typeof SkillsRegistrySchema>;
 export function validateSkillsRegistry(data: unknown): SkillsRegistry {
   return SkillsRegistrySchema.parse(data);
 }
-

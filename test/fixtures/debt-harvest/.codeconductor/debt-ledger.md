@@ -8,26 +8,26 @@
 
 | File | Line | Reason |
 | ---- | ---- | ------ |
-| src\sample.ts | 4 | implement idempotency check |
+| src/sample.ts | 4 | implement idempotency check |
 
 ## reliability
 
 | File | Line | Reason |
 | ---- | ---- | ------ |
-| src\sample.ts | 11 | queue messages for batch processing |
+| src/sample.ts | 11 | queue messages for batch processing |
 
 ## security
 
 | File | Line | Reason |
 | ---- | ---- | ------ |
-| src\sample.ts | 25 | validate input against schema |
+| src/sample.ts | 25 | validate input against schema |
 
 ## unclassified
 
 | File | Line | Reason |
 | ---- | ---- | ------ |
-| src\sample.ts | 10 | add retry logic for transient failures |
-| src\sample.ts | 20 | add caching layer |
-| src\utils.ts | 4 | handle nested config objects |
+| src/sample.ts | 10 | add retry logic for transient failures |
+| src/sample.ts | 20 | add caching layer |
+| src/utils.ts | 4 | handle nested config objects |
 
 <!-- CODECONDUCTOR:END managed -->

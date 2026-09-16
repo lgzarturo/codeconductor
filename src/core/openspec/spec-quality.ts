@@ -6,7 +6,7 @@ const FR_ID = /\bFR-\d{3}\b/g;
 const SC_ID = /\bSC-\d{3}\b/g;
 const US_AC = /\b(?:US|AC)#?\d+\b/g;
 const GWT =
-  /\bGIVEN\b[\s\S]{0,400}\bWHEN\b[\s\S]{0,400}\bTHEN\b/i;
+  /\bGIVEN\b[\s\S]*?\bWHEN\b[\s\S]*?\bTHEN\b/i;
 const NEEDS_CLARIFICATION = /\[NEEDS CLARIFICATION:[^\]]*\]/gi;
 const PLACEHOLDER = /\(To be completed/i;
 const HOW_LEAK =

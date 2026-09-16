@@ -204,7 +204,8 @@ Published commands (package ${packageJson.version}):
   cc-help                 Show preset inventory (skills, subagents, commands)
   debt-harvest / harvest  Scan source files for deferred debt items
   ccep                    CCEP contracts: parse/profile/validate/evaluate/consensus/taskcard
-  openspec                OpenSpec loop: validate/scan/plan/analyze/status/next/start/done/block/archive
+  openspec                OpenSpec loop: validate/scan/plan/analyze/status/next/start/done/block/unblock/archive
+  odd                     Opt-in delivery ledger: create/read/reconcile
   scorecard               Record and aggregate evaluation outcomes
                           (catalog / fingerprint / experiment / ablation / suite-run)
   hook                    OS-agnostic agent hooks: pre-tool / post-tool / session-start
@@ -299,7 +300,9 @@ Examples:
   npx cc-codeconductor openspec start BC-001-discover
   npx cc-codeconductor openspec done BC-001-discover
   npx cc-codeconductor openspec block BC-001-implement --reason "waiting on design"
+  npx cc-codeconductor openspec unblock BC-001-implement
   npx cc-codeconductor openspec archive BC-001
+  npx cc-codeconductor odd read delivery-001
   npx cc-codeconductor scorecard create --task BC-001 --from-diff
   npx cc-codeconductor scorecard models
   npx cc-codeconductor scorecard aggregate
@@ -713,6 +716,7 @@ export async function routeCommand(
         'start',
         'done',
         'block',
+        'unblock',
         'archive',
       ];
       let openspecSub = 'validate';
@@ -736,6 +740,20 @@ export async function routeCommand(
         projectRoot,
         output: flags.output,
       } as OpenspecOptions);
+    }
+
+    case 'odd': {
+      const validSubs = ['create', 'read', 'reconcile'];
+      if (!subcommand || !validSubs.includes(subcommand)) {
+        return unknownSubcommand(command, subcommand ?? '', validSubs);
+      }
+      const { oddCommand } = await import('../commands/odd.command');
+      return oddCommand({
+        subcommand,
+        projectRoot,
+        input: options.input,
+        id: (options.id as string | undefined) ?? args.rest?.[0],
+      });
     }
 
     case 'hook': {
@@ -819,6 +837,13 @@ export async function routeCommand(
         costUsd: options.cost ? parseFloat(String(options.cost)) : undefined,
         tokens: options.tokens ? parseInt(String(options.tokens), 10) : undefined,
         durationMs: options.duration ? parseInt(String(options.duration), 10) : undefined,
+        deliveryRoute: options.route as ScorecardOptions['deliveryRoute'],
+        contextBytes: options['context-bytes'] ? parseInt(String(options['context-bytes']), 10) : undefined,
+        handoffs: options.handoffs ? parseInt(String(options.handoffs), 10) : undefined,
+        checks:
+          typeof options.checks === 'string'
+            ? options.checks.split(',').map((check) => check.trim()).filter(Boolean)
+            : undefined,
         verdict: options.verdict as string,
         weightedScore: options.score ? parseFloat(String(options.score)) : undefined,
         source: options.source as string,

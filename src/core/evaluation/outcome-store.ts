@@ -182,7 +182,13 @@ export function aggregateOutcomes(outcomes: TaskOutcomeInput[]): {
   passRate: number;
   avgWeightedScore: number;
   byAgent: Record<string, { count: number; avgScore: number }>;
-  byModel: Record<string, { count: number; avgScore: number; avgCost?: number; avgTokens?: number }>;
+  byModel: Record<string, {
+    count: number;
+    avgScore: number;
+    avgCost?: number;
+    avgTokens?: number;
+    knownTokenMeasurements: number;
+  }>;
   byVariant: Record<string, { count: number; avgScore: number }>;
 } {
   const withScore = outcomes.filter((o) => o.weightedScore !== undefined);
@@ -193,7 +199,13 @@ export function aggregateOutcomes(outcomes: TaskOutcomeInput[]): {
       : 0;
 
   const byAgent: Record<string, { count: number; avgScore: number }> = {};
-  const byModel: Record<string, { count: number; avgScore: number; avgCost?: number; avgTokens?: number }> = {};
+  const byModel: Record<string, {
+    count: number;
+    avgScore: number;
+    avgCost?: number;
+    avgTokens?: number;
+    knownTokenMeasurements: number;
+  }> = {};
   const byVariant: Record<string, { count: number; avgScore: number }> = {};
   const agentScoreCounts: Record<string, number> = {};
   const modelScoreCounts: Record<string, number> = {};
@@ -209,7 +221,7 @@ export function aggregateOutcomes(outcomes: TaskOutcomeInput[]): {
       agentScoreCounts[o.agent] = (agentScoreCounts[o.agent] ?? 0) + 1;
     }
 
-    if (!byModel[o.model]) byModel[o.model] = { count: 0, avgScore: 0 };
+    if (!byModel[o.model]) byModel[o.model] = { count: 0, avgScore: 0, knownTokenMeasurements: 0 };
     byModel[o.model].count++;
     if (o.weightedScore !== undefined) {
       byModel[o.model].avgScore += o.weightedScore;
@@ -219,10 +231,15 @@ export function aggregateOutcomes(outcomes: TaskOutcomeInput[]): {
       byModel[o.model].avgCost = (byModel[o.model].avgCost ?? 0) + o.costUsd;
       modelCostCounts[o.model] = (modelCostCounts[o.model] ?? 0) + 1;
     }
-    if (o.tokensIn !== undefined || o.tokensOut !== undefined) {
-      const tokens = (o.tokensIn ?? 0) + (o.tokensOut ?? 0);
-      byModel[o.model].avgTokens = (byModel[o.model].avgTokens ?? 0) + tokens;
+    const reportedTokens = o.delivery?.tokenUsage.status === 'known'
+      ? o.delivery.tokenUsage.total
+      : o.tokensIn !== undefined || o.tokensOut !== undefined
+        ? (o.tokensIn ?? 0) + (o.tokensOut ?? 0)
+        : undefined;
+    if (reportedTokens !== undefined) {
+      byModel[o.model].avgTokens = (byModel[o.model].avgTokens ?? 0) + reportedTokens;
       modelTokenCounts[o.model] = (modelTokenCounts[o.model] ?? 0) + 1;
+      byModel[o.model].knownTokenMeasurements++;
     }
 
     if (o.variantId) {

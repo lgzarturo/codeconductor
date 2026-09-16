@@ -1,0 +1,44 @@
+id: odd
+version: 1
+command: odd
+taskCard:
+  type: feature
+  requiredFields:
+    - title
+    - type
+    - risk
+    - scope
+    - context
+    - acceptanceCriteria
+phases:
+  - id: wayfinding
+    agent: repo-explorer
+    outputSchema: agent-output
+  - id: intake
+    agent: task-coach
+    outputSchema: planner-output
+    stopGate: confirmation
+  - id: ledger
+    agent: orchestrator
+    type: cli-gate
+  - id: test
+    agent: tester
+    dependsOn:
+      - intake
+  - id: implement
+    agent: implementer
+    dependsOn:
+      - test
+  - id: review
+    agent: reviewer
+routing:
+  default:
+    - wayfinding
+    - intake
+    - ledger
+    - test
+    - implement
+    - review
+confirmationGate:
+  stopOnHighRisk: true
+  stopOnQuestions: true

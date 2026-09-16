@@ -1,0 +1,71 @@
+{
+  "id": "sc-mu4fi30z-g3de",
+  "taskId": "BC-021",
+  "agent": "reviewer",
+  "model": "opencode-go/qwen3.8-max",
+  "contractVersion": "1.4.1",
+  "criteria": [
+    {
+      "id": "acceptance",
+      "label": "Acceptance criteria met",
+      "weight": 0.3,
+      "score": 3,
+      "notes": "All FR/SC mapped to tasks",
+      "autoSuggested": true
+    },
+    {
+      "id": "minimal_diff",
+      "label": "Minimal diff (no scope creep)",
+      "weight": 0.2,
+      "score": 0,
+      "notes": "Files outside scope: AGENTS.md, docs/agent-scorecard.md, src/commands/openspec.command.ts, src/commands/scorecard.command.ts, src/core/evaluation/outcome-store.ts",
+      "autoSuggested": true
+    },
+    {
+      "id": "tests",
+      "label": "Tests present and passing",
+      "weight": 0.15,
+      "score": 2
+    },
+    {
+      "id": "regressions",
+      "label": "No regressions introduced",
+      "weight": 0.15,
+      "score": 2
+    },
+    {
+      "id": "conventions",
+      "label": "Code follows project conventions",
+      "weight": 0.05,
+      "score": 2
+    },
+    {
+      "id": "documentation",
+      "label": "Documentation updated if required",
+      "weight": 0.05,
+      "score": 2
+    },
+    {
+      "id": "context_discipline",
+      "label": "Context discipline",
+      "weight": 0.05,
+      "score": 2
+    },
+    {
+      "id": "cc_gain",
+      "label": "Complexity diffusion (cc-gain)",
+      "weight": 0.05,
+      "score": 0,
+      "notes": "cc-gain raw=-9.600000000000001, verdict=negative",
+      "autoSuggested": true
+    }
+  ],
+  "weightedScore": 1.8,
+  "verdict": "REJECT",
+  "findings": [
+    "Scope creep detected in 8 file(s)."
+  ],
+  "createdAt": "2026-09-16T18:23:02.884Z",
+  "backlogId": "BC-021",
+  "source": "openspec"
+}

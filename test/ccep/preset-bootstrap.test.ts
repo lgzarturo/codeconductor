@@ -27,6 +27,7 @@ const CURSOR_COMMAND_FILES: Record<string, string> = {
   handoff: 'handoff.md',
   clarify: 'clarify.md',
   security: 'security.md',
+  odd: 'odd.md',
 };
 
 describe('ccep preset bootstrap — cursor commands', () => {

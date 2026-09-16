@@ -19,6 +19,7 @@ import {
   applyAnalyzeSignals,
   collectScorecardSignals,
   criteriaFromSignals,
+  parseScopeFiles,
 } from '../core/evaluation/scorecard-signals';
 import { loadOpenspecState } from '../core/openspec/openspec-state';
 import { analyzeChangeFolder } from '../core/openspec/spec-analyzer';
@@ -69,6 +70,10 @@ export interface ScorecardOptions {
   readonly costUsd?: number;
   readonly tokens?: number;
   readonly durationMs?: number;
+  readonly deliveryRoute?: 'read-only' | 'small' | 'tracked' | 'openspec';
+  readonly contextBytes?: number;
+  readonly handoffs?: number;
+  readonly checks?: string[];
   readonly verdict?: string;
   readonly weightedScore?: number;
   readonly source?: string;
@@ -155,7 +160,7 @@ async function handleCreate(
     if (backlog.success && options.taskId) {
       const item = backlog.data.items.find((i) => i.id === options.taskId);
       if (item) {
-        scopeFiles = item.scope.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+        scopeFiles = parseScopeFiles(item.scope);
       }
     }
     let hints = collectScorecardSignals(projectRoot, scopeFiles);
@@ -281,6 +286,18 @@ async function handleRecord(
     costUsd: options.costUsd,
     tokensIn: options.tokens,
     durationMs: options.durationMs,
+    delivery: options.deliveryRoute
+      ? {
+          route: options.deliveryRoute,
+          contextBytes: options.contextBytes,
+          handoffs: options.handoffs,
+          checks: options.checks,
+          tokenUsage:
+            options.tokens !== undefined
+              ? { status: 'known' as const, total: options.tokens }
+              : { status: 'unknown' as const },
+        }
+      : undefined,
     experimentId,
     variantId,
     suiteTaskId,

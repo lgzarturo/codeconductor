@@ -2,9 +2,18 @@ import { describe, expect, test } from 'bun:test';
 import {
   collectScorecardSignals,
   criteriaFromSignals,
+  parseScopeFiles,
 } from '../../src/core/evaluation/scorecard-signals';
 
 describe('collectScorecardSignals extra signals', () => {
+  test('parses Markdown-formatted scope paths for diff matching', () => {
+    expect(parseScopeFiles('`docs/odd-integration-plan.md`, `src/core/ccep/`, `test/example.test.ts`.')).toEqual([
+      'docs/odd-integration-plan.md',
+      'src/core/ccep/',
+      'test/example.test.ts',
+    ]);
+  });
+
   test('extra scopeViolationCount sets minimal_diff to 0 and records finding', () => {
     const hints = collectScorecardSignals(process.cwd(), undefined, {
       scopeViolationCount: 3,

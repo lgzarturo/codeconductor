@@ -14,6 +14,89 @@ Formato validable por `cc openspec validate`. Análisis completo en
 
 ## Items
 
+### BC-021 | Perfil ODD y Delivery Ledger recuperable
+
+- Priority: P0
+- Status: REVIEW
+- Type: feature
+- Depends on: BC-020
+- Description: Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.
+- Scope: `BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.
+- Out of scope: Copiar `odd/tasks`, instalar Engram/MCP, sustituir BACKLOG.md u OpenSpec, o cambiar el runtime experimental de ocho fases.
+- Progress: 100%
+- Reviewer: reviewer
+- Acceptance:
+  - [ ] Una solicitud de sólo lectura y un cambio pequeño no crean ledger.
+  - [ ] Un cambio sustancial crea un único ledger antes de la primera escritura con objetivo, scope, tareas, aceptación, evidencia y next step.
+  - [ ] CCEP valida ledger y Task Card; el riesgo y ConfirmationGate existentes continúan aplicándose.
+  - [ ] La reanudación reconcilia ledger, árbol y punteros de memoria sin sobrescribir conflictos.
+
+### BC-022 | Ensamblado de contexto y reanudación con presupuesto observable
+
+- Priority: P1
+- Status: READY
+- Type: feature
+- Depends on: BC-021
+- Description: Reducir repetición entre agentes montando contexto mínimo desde ledger, scope, memoria y evidencia, y reusar compacción posterior a TDD.
+- Scope: contexto/compacción/memoria, compilación CCEP, contratos de handoff y tests de límites/reanudación.
+- Out of scope: Inyectar el workspace completo, borrar historial del usuario, o bloquear por tokens no medidos.
+- Progress: 0
+- Reviewer: reviewer
+- Acceptance:
+  - [ ] El orden, procedencia y límite de bytes de cada fragmento de contexto son deterministas y verificables.
+  - [ ] RED/GREEN aprobado se propaga como resumen y evidencia, no como transcript completo.
+  - [ ] Una reanudación con cambios externos detecta divergencia y pide la mínima decisión necesaria.
+  - [ ] Los proveedores sin telemetría dejan el coste como unknown y nunca como cero.
+
+### BC-023 | Semántica ODD canónica y paridad de presets
+
+- Priority: P1
+- Status: READY
+- Type: feature
+- Depends on: BC-021
+- Description: Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.
+- Scope: fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.
+- Out of scope: Homogeneizar manualmente todo el prose histórico, asumir subagentes/hook/MCP en todos los runners, o cambiar sus configuraciones privadas.
+- Progress: 0
+- Reviewer: reviewer
+- Acceptance:
+  - [ ] Cada target instalado ofrece la misma selección de ruta ODD o declara una limitación explícita y comprobada.
+  - [ ] La generación respeta la sintaxis de invocación y las capacidades declaradas por target.
+  - [ ] Las instrucciones de handoff no repiten request/transcript y enlazan el ledger y la evidencia.
+
+### BC-024 | Council proporcional con recibo de candidato
+
+- Priority: P1
+- Status: READY
+- Type: feature
+- Depends on: BC-020
+- Description: Reducir coste de review rutinario seleccionando un panel aplicable y vinculando cada veredicto al mismo candidato congelado, sin debilitar veto ni quorum.
+- Scope: council policy/spec/consensus, schemas, CCEP/preset council y tests.
+- Out of scope: Eliminar reviewer, security-reviewer, complexity-auditor o los gates de riesgo actuales.
+- Progress: 0
+- Reviewer: reviewer
+- Acceptance:
+  - [ ] El panel se deriva determinísticamente de tipo, riesgo y scope, y se registra como expectedAgentIds.
+  - [ ] Todos los votos agregados referencian el mismo hash de diff/commit; una discrepancia falla cerrada.
+  - [ ] Señales de seguridad incluyen security-reviewer y preservan security/compliance veto.
+  - [ ] Quorum, críticos y ausencia de roles tienen pruebas de regresión.
+
+### BC-025 | Evaluación de adopción y guía de flujos diarios
+
+- Priority: P2
+- Status: READY
+- Type: tech-debt
+- Depends on: BC-022, BC-023, BC-024
+- Description: Evaluar ODD contra la línea base y documentar la selección, reanudación, límites y promoción segura del flujo.
+- Scope: eval suites, scorecards, README/guías de workflow, documentación de Council y release notes.
+- Out of scope: Declarar ahorro sin medición o descontinuar OpenSpec/SDD.
+- Progress: 0
+- Reviewer: reviewer
+- Acceptance:
+  - [ ] Una suite repetible compara coste/contexto y calidad con criterios publicados.
+  - [ ] ODD sólo pasa a recomendado por defecto si no empeora aceptación, tests o findings frente a la línea base.
+  - [ ] La guía explica cuándo usar ODD, OpenSpec, TDD y council, y cómo volver al flujo formal.
+
 ### BC-013 | Cerrar el loop OpenSpec (start/done/block/archive)
 
 - Priority: P0
@@ -142,6 +225,22 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [x] El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell.
 
 ## Archive
+### BC-020 | Línea base de coste y selección de ruta para ODD
+
+- Priority: P0
+- Status: DONE
+- Type: feature
+- Depends on: none
+- Description: Definir la clasificación de coordinación (pequeño, ODD rastreado u OpenSpec explícito) sin alterar los gates de riesgo, y capturar una línea base comparable de contexto, tokens, handoffs, checks y calidad.
+- Scope: `AGENTS.md`, `BACKLOG.md`, `.codeconductor/`, `docs/odd-integration-plan.md`, `docs/agent-scorecard.md`, `src/core/ccep/`, `src/core/evaluation/`, `src/commands/scorecard.command.ts`, `src/cli/router.ts`, `src/validation/schemas.ts`, `test/odd-baseline.test.ts`, `test/evaluation/scorecard-signals.test.ts`.
+- Out of scope: Crear el workflow ODD, cambiar rutas existentes o imponer límites de tokens donde el runner no los reporte.
+- Progress: 100%
+- Reviewer: reviewer
+- Acceptance:
+  - [x] La selección de ruta distingue autorización, coordinación y riesgo, y conserva los gates high-risk existentes.
+  - [x] Un scorecard puede registrar ruta, bytes de contexto, tokens conocidos/desconocidos, handoffs, checks y resultado sin falsos ceros.
+  - [x] Una suite de muestra compara al menos cambios pequeños, delivery rastreado y OpenSpec con el mismo formato de evidencia.
+
 
 ### BC-012 | Router /cc:ask que recomienda el slash command correcto
 

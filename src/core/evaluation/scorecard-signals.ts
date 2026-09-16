@@ -14,6 +14,18 @@ export interface ScorecardSignalHints {
   hashMismatch?: boolean;
 }
 
+/** Parse the Markdown scope field into paths suitable for diff matching. */
+export function parseScopeFiles(scope: string): string[] {
+  return scope
+    .split(/[,;]/)
+    .map((entry) => entry.trim().replace(/[.;:]$/, '').replace(/^`|`$/g, ''))
+    .filter(Boolean);
+}
+
+function isGeneratedBuildCache(path: string): boolean {
+  return /(^|\/)\.gradle\//.test(path);
+}
+
 /**
  * Collect auto-suggested scores from git diff and complexity audit.
  */
@@ -71,7 +83,7 @@ export function collectScorecardSignals(
   }
 
   if (scopeFiles && scopeFiles.length > 0) {
-    const outOfScope = [...changedFiles].filter(
+    const outOfScope = [...changedFiles].filter((file) => !isGeneratedBuildCache(file)).filter(
       (f) => !scopeFiles.some((s) => f.includes(s.replace(/\*\*/g, '')))
     );
     if (outOfScope.length > 0) {

@@ -49,10 +49,10 @@ export interface OpenspecOptions {
 }
 
 const KNOWN_SUBCOMMANDS =
-  'validate, scan, plan, analyze, status, next, start, done, block, archive';
+  'validate, scan, plan, analyze, status, next, start, done, block, unblock, archive';
 
 /**
- * Openspec CLI — validate, scan, plan, status, next, start, done, block, archive
+ * Openspec CLI — validate, scan, plan, status, next, start, done, block, unblock, archive
  */
 export async function openspecCommand(
   options: OpenspecOptions
@@ -79,6 +79,8 @@ export async function openspecCommand(
       return handleDone(projectRoot, itemId);
     case 'block':
       return handleBlock(projectRoot, itemId, reason);
+    case 'unblock':
+      return handleUnblock(projectRoot, itemId);
     case 'archive':
       return handleArchive(projectRoot, itemId);
     default:
@@ -693,6 +695,63 @@ async function handleBlock(
       itemId: itemLoaded.item.id,
       itemStatus: 'BLOCKED',
       reason: reason.trim(),
+    },
+  };
+}
+
+async function handleUnblock(
+  projectRoot: string,
+  cardId?: string,
+): Promise<{ code: number; data?: unknown }> {
+  const command = 'openspec unblock';
+  if (!cardId) {
+    return fail(command, ['Missing card id. Usage: openspec unblock <cardId>']);
+  }
+
+  const loaded = await loadStateOrFail(projectRoot, command);
+  if (!loaded.ok) return loaded.response;
+  const card = findCard(loaded.state, cardId);
+  if (!card) {
+    return fail(command, [`Task card ${cardId} not found`]);
+  }
+  if (card.status !== 'blocked') {
+    return fail(command, [`Card ${cardId} must be blocked before unblock (got ${card.status})`]);
+  }
+
+  const itemLoaded = await loadItemOrFail(projectRoot, card.backlogId, command);
+  if (!itemLoaded.ok) return itemLoaded.response;
+  if (itemLoaded.item.status !== 'BLOCKED') {
+    return fail(command, [
+      `Backlog item ${itemLoaded.item.id} must be BLOCKED before unblock (got ${itemLoaded.item.status})`,
+    ]);
+  }
+
+  const state = setTaskCardStatus(loaded.state, cardId, 'pending');
+  const written = await persistState(projectRoot, state);
+  if (!written.ok) return fail(command, [written.error]);
+
+  const changePath = state.changePaths[card.backlogId];
+  if (changePath) {
+    const backlog = await loadBacklog(projectRoot);
+    await writeTasksMarkdown(projectRoot, changePath, itemCards(state, card.backlogId), {
+      tddRequired: backlog.success ? backlog.data.global.tddRequired : false,
+      acceptanceCriteria: itemLoaded.item.acceptanceCriteria,
+    });
+  }
+
+  const transition = await transitionItem(projectRoot, itemLoaded.item, 'READY');
+  if (!transition.ok) return fail(command, [transition.error]);
+
+  return {
+    code: 0,
+    data: {
+      success: true,
+      command,
+      cardId,
+      cardStatus: 'pending',
+      itemId: itemLoaded.item.id,
+      itemStatus: 'READY',
+      nextStep: `Run openspec plan ${itemLoaded.item.id}.`,
     },
   };
 }

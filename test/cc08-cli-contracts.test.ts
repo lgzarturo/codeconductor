@@ -37,6 +37,19 @@ describe('CC-08 CLI contracts', () => {
     );
   });
 
+  test('routes openspec unblock to the lifecycle command', async () => {
+    const result = await route(['openspec', 'unblock', '--output=json']);
+    expect(result.code).toBe(1);
+    const data = result.data as { command: string; errors: string[] };
+    expect(data.command).toBe('openspec unblock');
+    expect(data.errors.join(' ')).toMatch(/missing card id/i);
+  });
+
+  test('routes odd commands instead of treating them as an unknown command', async () => {
+    const result = await route(['odd', 'read', 'delivery-001', '--output=json']);
+    expect((result.data as { errors: string[] }).errors.join(' ')).not.toMatch(/unknown command/i);
+  });
+
   test('rejects invalid SEO enum and numeric options before network work', async () => {
     for (const argv of [
       ['seo', 'audit', '--url', 'https://example.com', '--format=xml'],

@@ -185,6 +185,25 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     routing: { default: ['validate-backlog', 'discover', 'design', 'analyze', 'test', 'implement', 'review'] },
     confirmationGate: baseGate,
   },
+  odd: {
+    id: 'odd',
+    version: 1,
+    command: 'odd',
+    taskCard: {
+      type: 'feature',
+      requiredFields: ['title', 'type', 'risk', 'scope', 'context', 'acceptanceCriteria'],
+    },
+    phases: [
+      { id: 'wayfinding', agent: 'repo-explorer', outputSchema: 'agent-output' },
+      { id: 'intake', agent: 'task-coach', outputSchema: 'planner-output', stopGate: 'confirmation' },
+      { id: 'ledger', agent: 'orchestrator', type: 'cli-gate' },
+      { id: 'test', agent: 'tester', dependsOn: ['intake'] },
+      { id: 'implement', agent: 'implementer', dependsOn: ['test'] },
+      { id: 'review', agent: 'reviewer' },
+    ],
+    routing: { default: ['wayfinding', 'intake', 'ledger', 'test', 'implement', 'review'] },
+    confirmationGate: baseGate,
+  },
   backlog: {
     id: 'backlog',
     version: 1,

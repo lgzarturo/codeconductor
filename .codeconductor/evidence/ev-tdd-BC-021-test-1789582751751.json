@@ -1,0 +1,17 @@
+{
+  "id": "ev-tdd-BC-021-test-1789582751751",
+  "source": "cc verify",
+  "type": "tdd",
+  "timestamp": "2026-09-16T18:19:11.751Z",
+  "relatedTask": "BC-021-test",
+  "confidence": 0.9,
+  "summary": "TDD suite passed",
+  "data": {
+    "capturedBy": "verification-runner",
+    "suiteFailed": false,
+    "suitePassed": true,
+    "exitCode": 0,
+    "timedOut": false,
+    "command": "bun test test/odd-ledger.test.ts"
+  }
+}

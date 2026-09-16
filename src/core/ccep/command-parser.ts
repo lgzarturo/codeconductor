@@ -37,6 +37,7 @@ const COMMAND_DEFAULTS: Record<
   handoff: { outputFormat: 'plan', needConfirmation: false, riskThreshold: 'low' },
   clarify: { outputFormat: 'plan', needConfirmation: false, riskThreshold: 'low' },
   security: { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'high' },
+  odd: { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'medium' },
 };
 
 function readProjectId(projectRoot: string): string {

@@ -1,97 +1,97 @@
 {
   "version": 1,
-  "activeItemId": "BC-021",
+  "activeItemId": "BC-024",
   "taskCards": [
     {
-      "id": "BC-021-discover",
-      "backlogId": "BC-021",
+      "id": "BC-024-discover",
+      "backlogId": "BC-024",
       "phase": "discover",
-      "title": "BC-021: Discover scope and impact",
-      "prompt": "Backlog item BC-021 — Perfil ODD y Delivery Ledger recuperable\n\nDescription: Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.\nScope: `BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.\n\nMap repository structure, conventions, and impact radius for this change.",
+      "title": "BC-024: Discover scope and impact",
+      "prompt": "Backlog item BC-024 — Council proporcional con recibo de candidato\n\nDescription: Reducir coste de review rutinario seleccionando un panel aplicable y vinculando cada veredicto al mismo candidato congelado, sin debilitar veto ni quorum.\nScope: council policy/spec/consensus, schemas, CCEP/preset council y tests.\n\nMap repository structure, conventions, and impact radius for this change.",
       "agent": "repo-explorer",
       "modelHint": "repo-explorer",
       "dependsOn": [],
       "acceptanceCriteria": [
         "Repo map identifies relevant files and impact radius"
       ],
-      "status": "done",
-      "itemHash": "072c51e7cc6822a2"
+      "status": "pending",
+      "itemHash": "7f86e2538cbef685"
     },
     {
-      "id": "BC-021-design",
-      "backlogId": "BC-021",
+      "id": "BC-024-design",
+      "backlogId": "BC-024",
       "phase": "design",
-      "title": "BC-021: Technical design",
-      "prompt": "Backlog item BC-021 — Perfil ODD y Delivery Ledger recuperable\n\nDescription: Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.\nScope: `BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
+      "title": "BC-024: Technical design",
+      "prompt": "Backlog item BC-024 — Council proporcional con recibo de candidato\n\nDescription: Reducir coste de review rutinario seleccionando un panel aplicable y vinculando cada veredicto al mismo candidato congelado, sin debilitar veto ni quorum.\nScope: council policy/spec/consensus, schemas, CCEP/preset council y tests.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
       "agent": "architect",
       "modelHint": "architect",
       "dependsOn": [
-        "BC-021-discover"
+        "BC-024-discover"
       ],
       "acceptanceCriteria": [
         "Technical plan lists files affected and approach"
       ],
-      "status": "done",
-      "itemHash": "072c51e7cc6822a2"
+      "status": "pending",
+      "itemHash": "7f86e2538cbef685"
     },
     {
-      "id": "BC-021-test",
-      "backlogId": "BC-021",
+      "id": "BC-024-test",
+      "backlogId": "BC-024",
       "phase": "test",
-      "title": "BC-021: Test coverage",
-      "prompt": "Backlog item BC-021 — Perfil ODD y Delivery Ledger recuperable\n\nDescription: Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.\nScope: `BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
+      "title": "BC-024: Test coverage",
+      "prompt": "Backlog item BC-024 — Council proporcional con recibo de candidato\n\nDescription: Reducir coste de review rutinario seleccionando un panel aplicable y vinculando cada veredicto al mismo candidato congelado, sin debilitar veto ni quorum.\nScope: council policy/spec/consensus, schemas, CCEP/preset council y tests.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
       "agent": "tester",
       "modelHint": "tester",
       "dependsOn": [
-        "BC-021-design"
+        "BC-024-design"
       ],
       "acceptanceCriteria": [
-        "Test covers: Una solicitud de sólo lectura y un cambio pequeño no crean ledger.",
-        "Test covers: Un cambio sustancial crea un único ledger antes de la primera escritura con objetivo, scope, tareas, aceptación, evidencia y next step.",
-        "Test covers: CCEP valida ledger y Task Card; el riesgo y ConfirmationGate existentes continúan aplicándose.",
-        "Test covers: La reanudación reconcilia ledger, árbol y punteros de memoria sin sobrescribir conflictos."
+        "Test covers: El panel se deriva determinísticamente de tipo, riesgo y scope, y se registra como expectedAgentIds.",
+        "Test covers: Todos los votos agregados referencian el mismo hash de diff/commit; una discrepancia falla cerrada.",
+        "Test covers: Señales de seguridad incluyen security-reviewer y preservan security/compliance veto.",
+        "Test covers: Quorum, críticos y ausencia de roles tienen pruebas de regresión."
       ],
-      "status": "done",
-      "itemHash": "072c51e7cc6822a2"
+      "status": "pending",
+      "itemHash": "7f86e2538cbef685"
     },
     {
-      "id": "BC-021-implement",
-      "backlogId": "BC-021",
+      "id": "BC-024-implement",
+      "backlogId": "BC-024",
       "phase": "implement",
-      "title": "BC-021: Implementation",
-      "prompt": "Backlog item BC-021 — Perfil ODD y Delivery Ledger recuperable\n\nDescription: Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.\nScope: `BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
+      "title": "BC-024: Implementation",
+      "prompt": "Backlog item BC-024 — Council proporcional con recibo de candidato\n\nDescription: Reducir coste de review rutinario seleccionando un panel aplicable y vinculando cada veredicto al mismo candidato congelado, sin debilitar veto ni quorum.\nScope: council policy/spec/consensus, schemas, CCEP/preset council y tests.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
       "agent": "implementer",
       "modelHint": "implementer",
       "dependsOn": [
-        "BC-021-test"
+        "BC-024-test"
       ],
       "acceptanceCriteria": [
-        "Una solicitud de sólo lectura y un cambio pequeño no crean ledger.",
-        "Un cambio sustancial crea un único ledger antes de la primera escritura con objetivo, scope, tareas, aceptación, evidencia y next step.",
-        "CCEP valida ledger y Task Card; el riesgo y ConfirmationGate existentes continúan aplicándose.",
-        "La reanudación reconcilia ledger, árbol y punteros de memoria sin sobrescribir conflictos."
+        "El panel se deriva determinísticamente de tipo, riesgo y scope, y se registra como expectedAgentIds.",
+        "Todos los votos agregados referencian el mismo hash de diff/commit; una discrepancia falla cerrada.",
+        "Señales de seguridad incluyen security-reviewer y preservan security/compliance veto.",
+        "Quorum, críticos y ausencia de roles tienen pruebas de regresión."
       ],
-      "status": "done",
-      "itemHash": "072c51e7cc6822a2"
+      "status": "pending",
+      "itemHash": "7f86e2538cbef685"
     },
     {
-      "id": "BC-021-review",
-      "backlogId": "BC-021",
+      "id": "BC-024-review",
+      "backlogId": "BC-024",
       "phase": "review",
-      "title": "BC-021: Review and validation",
-      "prompt": "Backlog item BC-021 — Perfil ODD y Delivery Ledger recuperable\n\nDescription: Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.\nScope: `BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
+      "title": "BC-024: Review and validation",
+      "prompt": "Backlog item BC-024 — Council proporcional con recibo de candidato\n\nDescription: Reducir coste de review rutinario seleccionando un panel aplicable y vinculando cada veredicto al mismo candidato congelado, sin debilitar veto ni quorum.\nScope: council policy/spec/consensus, schemas, CCEP/preset council y tests.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
       "agent": "reviewer",
       "modelHint": "reviewer",
       "dependsOn": [
-        "BC-021-implement"
+        "BC-024-implement"
       ],
       "acceptanceCriteria": [
         "All acceptance criteria verified",
         "Tests pass",
         "No scope creep beyond backlog item"
       ],
-      "status": "done",
-      "itemHash": "072c51e7cc6822a2"
+      "status": "pending",
+      "itemHash": "7f86e2538cbef685"
     }
   ],
   "lastScanHash": "620aba2bbc3ae662",
@@ -111,7 +111,8 @@
     "BC-012": "openspec/changes/bc-012-router-cc-ask-que-recomienda-el-slash-command-co",
     "BC-019": "openspec/changes/bc-019-gestor-de-harness-seguro-y-cli-de-mantenimiento",
     "BC-020": "openspec/changes/archive/bc-020-l-nea-base-de-coste-y-selecci-n-de-ruta-para-odd",
-    "BC-021": "openspec/changes/bc-021-perfil-odd-y-delivery-ledger-recuperable"
+    "BC-021": "openspec/changes/archive/bc-021-perfil-odd-y-delivery-ledger-recuperable",
+    "BC-024": "openspec/changes/bc-024-council-proporcional-con-recibo-de-candidato"
   },
   "itemSnapshots": {
     "BC-012": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Router /cc:ask que recomienda el slash command correcto\"}",
@@ -128,6 +129,7 @@
     "BC-001": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Rúbrica writing-for-agents para auditar prompts de agentes\"}",
     "BC-019": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Gestor de harness seguro y CLI de mantenimiento\",\"description\":\"Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.\",\"scope\":\"estado de instalación bajo `.codeconductor/`, init/install/update, comandos setup/version/status, registro declarativo de ayuda, documentación generada compacta, completions y tests de CLI.\",\"type\":\"feature\",\"priority\":\"P0\",\"acceptanceCriteria\":[\"init e install registran hashes SHA-256 y versiones para cada archivo gestionado.\",\"update no sobrescribe council.yml ni policy.yml modificados localmente sin --force y devuelve un conflicto explícito.\",\"update planifica, hace backup y revierte las escrituras aplicadas si una actualización falla.\",\"version informa CLI, estado del harness, targets y skills tanto en humano como JSON; --version conserva la salida corta.\",\"status informa instalación, targets, configuración, actualizaciones y archivos gestionados modificados sin ejecutar doctor.\",\"setup admite --target, --locale, --yes y --dry-run; el dry-run no escribe y la ruta normal inicializa, instala y ejecuta diagnóstico.\",\"help y --help son jerárquicos; install preset --help y help install preset muestran ayuda específica.\",\"El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell.\"]}",
     "BC-020": "{\"status\":\"READY\",\"progress\":80,\"title\":\"Línea base de coste y selección de ruta para ODD\",\"description\":\"Definir la clasificación de coordinación (pequeño, ODD rastreado u OpenSpec explícito) sin alterar los gates de riesgo, y capturar una línea base comparable de contexto, tokens, handoffs, checks y calidad.\",\"scope\":\"`AGENTS.md`, `BACKLOG.md`, `.codeconductor/`, `docs/odd-integration-plan.md`, `docs/agent-scorecard.md`, `src/core/ccep/`, `src/core/evaluation/`, `src/commands/scorecard.command.ts`, `src/cli/router.ts`, `src/validation/schemas.ts`, `test/odd-baseline.test.ts`, `test/evaluation/scorecard-signals.test.ts`.\",\"type\":\"feature\",\"priority\":\"P0\",\"acceptanceCriteria\":[\"La selección de ruta distingue autorización, coordinación y riesgo, y conserva los gates high-risk existentes.\",\"Un scorecard puede registrar ruta, bytes de contexto, tokens conocidos/desconocidos, handoffs, checks y resultado sin falsos ceros.\",\"Una suite de muestra compara al menos cambios pequeños, delivery rastreado y OpenSpec con el mismo formato de evidencia.\"]}",
-    "BC-021": "{\"status\":\"READY\",\"progress\":60,\"title\":\"Perfil ODD y Delivery Ledger recuperable\",\"description\":\"Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.\",\"scope\":\"`BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.\",\"type\":\"feature\",\"priority\":\"P0\",\"acceptanceCriteria\":[\"Una solicitud de sólo lectura y un cambio pequeño no crean ledger.\",\"Un cambio sustancial crea un único ledger antes de la primera escritura con objetivo, scope, tareas, aceptación, evidencia y next step.\",\"CCEP valida ledger y Task Card; el riesgo y ConfirmationGate existentes continúan aplicándose.\",\"La reanudación reconcilia ledger, árbol y punteros de memoria sin sobrescribir conflictos.\"]}"
+    "BC-021": "{\"status\":\"READY\",\"progress\":60,\"title\":\"Perfil ODD y Delivery Ledger recuperable\",\"description\":\"Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.\",\"scope\":\"`BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.\",\"type\":\"feature\",\"priority\":\"P0\",\"acceptanceCriteria\":[\"Una solicitud de sólo lectura y un cambio pequeño no crean ledger.\",\"Un cambio sustancial crea un único ledger antes de la primera escritura con objetivo, scope, tareas, aceptación, evidencia y next step.\",\"CCEP valida ledger y Task Card; el riesgo y ConfirmationGate existentes continúan aplicándose.\",\"La reanudación reconcilia ledger, árbol y punteros de memoria sin sobrescribir conflictos.\"]}",
+    "BC-024": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Council proporcional con recibo de candidato\",\"description\":\"Reducir coste de review rutinario seleccionando un panel aplicable y vinculando cada veredicto al mismo candidato congelado, sin debilitar veto ni quorum.\",\"scope\":\"council policy/spec/consensus, schemas, CCEP/preset council y tests.\",\"type\":\"feature\",\"priority\":\"P1\",\"acceptanceCriteria\":[\"El panel se deriva determinísticamente de tipo, riesgo y scope, y se registra como expectedAgentIds.\",\"Todos los votos agregados referencian el mismo hash de diff/commit; una discrepancia falla cerrada.\",\"Señales de seguridad incluyen security-reviewer y preservan security/compliance veto.\",\"Quorum, críticos y ausencia de roles tienen pruebas de regresión.\"]}"
   }
 }

@@ -14,23 +14,6 @@ Formato validable por `cc openspec validate`. Análisis completo en
 
 ## Items
 
-### BC-021 | Perfil ODD y Delivery Ledger recuperable
-
-- Priority: P0
-- Status: REVIEW
-- Type: feature
-- Depends on: BC-020
-- Description: Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.
-- Scope: `BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.
-- Out of scope: Copiar `odd/tasks`, instalar Engram/MCP, sustituir BACKLOG.md u OpenSpec, o cambiar el runtime experimental de ocho fases.
-- Progress: 100%
-- Reviewer: reviewer
-- Acceptance:
-  - [ ] Una solicitud de sólo lectura y un cambio pequeño no crean ledger.
-  - [ ] Un cambio sustancial crea un único ledger antes de la primera escritura con objetivo, scope, tareas, aceptación, evidencia y next step.
-  - [ ] CCEP valida ledger y Task Card; el riesgo y ConfirmationGate existentes continúan aplicándose.
-  - [ ] La reanudación reconcilia ledger, árbol y punteros de memoria sin sobrescribir conflictos.
-
 ### BC-022 | Ensamblado de contexto y reanudación con presupuesto observable
 
 - Priority: P1
@@ -67,13 +50,13 @@ Formato validable por `cc openspec validate`. Análisis completo en
 ### BC-024 | Council proporcional con recibo de candidato
 
 - Priority: P1
-- Status: READY
+- Status: PLANNED
 - Type: feature
 - Depends on: BC-020
 - Description: Reducir coste de review rutinario seleccionando un panel aplicable y vinculando cada veredicto al mismo candidato congelado, sin debilitar veto ni quorum.
 - Scope: council policy/spec/consensus, schemas, CCEP/preset council y tests.
 - Out of scope: Eliminar reviewer, security-reviewer, complexity-auditor o los gates de riesgo actuales.
-- Progress: 0
+- Progress: 0%
 - Reviewer: reviewer
 - Acceptance:
   - [ ] El panel se deriva determinísticamente de tipo, riesgo y scope, y se registra como expectedAgentIds.
@@ -225,6 +208,23 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [x] El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell.
 
 ## Archive
+### BC-021 | Perfil ODD y Delivery Ledger recuperable
+
+- Priority: P0
+- Status: DONE
+- Type: feature
+- Depends on: BC-020
+- Description: Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.
+- Scope: `BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.
+- Out of scope: Copiar `odd/tasks`, instalar Engram/MCP, sustituir BACKLOG.md u OpenSpec, o cambiar el runtime experimental de ocho fases.
+- Progress: 100%
+- Reviewer: reviewer
+- Acceptance:
+  - [x] Una solicitud de sólo lectura y un cambio pequeño no crean ledger.
+  - [x] Un cambio sustancial crea un único ledger antes de la primera escritura con objetivo, scope, tareas, aceptación, evidencia y next step.
+  - [x] CCEP valida ledger y Task Card; el riesgo y ConfirmationGate existentes continúan aplicándose.
+  - [x] La reanudación reconcilia ledger, árbol y punteros de memoria sin sobrescribir conflictos.
+
 ### BC-020 | Línea base de coste y selección de ruta para ODD
 
 - Priority: P0

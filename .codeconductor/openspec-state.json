@@ -1,89 +1,105 @@
 {
   "version": 1,
+  "activeItemId": "BC-019",
   "taskCards": [
     {
-      "id": "BC-012-discover",
-      "backlogId": "BC-012",
+      "id": "BC-019-discover",
+      "backlogId": "BC-019",
       "phase": "discover",
-      "title": "BC-012: Discover scope and impact",
-      "prompt": "Backlog item BC-012 — Router /cc:ask que recomienda el slash command correcto\n\nDescription: Portar ask-matt como router de baja prioridad que, dado un problema en lenguaje natural, recomienda el slash command adecuado entre feature, fix, refactor, review, tdd-cycle y openspec.\nScope: Definir /cc:ask apoyado en /cc:help con el catálogo de flujos.\n\nMap repository structure, conventions, and impact radius for this change.",
+      "title": "BC-019: Discover scope and impact",
+      "prompt": "Backlog item BC-019 — Gestor de harness seguro y CLI de mantenimiento\n\nDescription: Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.\nScope: estado de instalación bajo `.codeconductor/`, init/install/update, comandos setup/version/status, registro declarativo de ayuda, documentación generada compacta, completions y tests de CLI.\n\nMap repository structure, conventions, and impact radius for this change.",
       "agent": "repo-explorer",
       "modelHint": "repo-explorer",
       "dependsOn": [],
       "acceptanceCriteria": [
         "Repo map identifies relevant files and impact radius"
       ],
-      "status": "done"
+      "status": "done",
+      "itemHash": "81f3fa499ddb4c32"
     },
     {
-      "id": "BC-012-design",
-      "backlogId": "BC-012",
+      "id": "BC-019-design",
+      "backlogId": "BC-019",
       "phase": "design",
-      "title": "BC-012: Technical design",
-      "prompt": "Backlog item BC-012 — Router /cc:ask que recomienda el slash command correcto\n\nDescription: Portar ask-matt como router de baja prioridad que, dado un problema en lenguaje natural, recomienda el slash command adecuado entre feature, fix, refactor, review, tdd-cycle y openspec.\nScope: Definir /cc:ask apoyado en /cc:help con el catálogo de flujos.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
+      "title": "BC-019: Technical design",
+      "prompt": "Backlog item BC-019 — Gestor de harness seguro y CLI de mantenimiento\n\nDescription: Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.\nScope: estado de instalación bajo `.codeconductor/`, init/install/update, comandos setup/version/status, registro declarativo de ayuda, documentación generada compacta, completions y tests de CLI.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
       "agent": "architect",
       "modelHint": "architect",
       "dependsOn": [
-        "BC-012-discover"
+        "BC-019-discover"
       ],
       "acceptanceCriteria": [
         "Technical plan lists files affected and approach"
       ],
-      "status": "done"
+      "status": "done",
+      "itemHash": "81f3fa499ddb4c32"
     },
     {
-      "id": "BC-012-test",
-      "backlogId": "BC-012",
+      "id": "BC-019-test",
+      "backlogId": "BC-019",
       "phase": "test",
-      "title": "BC-012: Test coverage",
-      "prompt": "Backlog item BC-012 — Router /cc:ask que recomienda el slash command correcto\n\nDescription: Portar ask-matt como router de baja prioridad que, dado un problema en lenguaje natural, recomienda el slash command adecuado entre feature, fix, refactor, review, tdd-cycle y openspec.\nScope: Definir /cc:ask apoyado en /cc:help con el catálogo de flujos.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
+      "title": "BC-019: Test coverage",
+      "prompt": "Backlog item BC-019 — Gestor de harness seguro y CLI de mantenimiento\n\nDescription: Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.\nScope: estado de instalación bajo `.codeconductor/`, init/install/update, comandos setup/version/status, registro declarativo de ayuda, documentación generada compacta, completions y tests de CLI.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
       "agent": "tester",
       "modelHint": "tester",
       "dependsOn": [
-        "BC-012-design"
+        "BC-019-design"
       ],
       "acceptanceCriteria": [
-        "Test covers: /cc:ask mapea un problema en lenguaje natural a un slash command concreto",
-        "Test covers: La recomendación justifica por qué ese flujo encaja con el problema",
-        "Test covers: El catálogo de flujos permanece alineado con los comandos disponibles"
+        "Test covers: init e install registran hashes SHA-256 y versiones para cada archivo gestionado.",
+        "Test covers: update no sobrescribe council.yml ni policy.yml modificados localmente sin --force y devuelve un conflicto explícito.",
+        "Test covers: update planifica, hace backup y revierte las escrituras aplicadas si una actualización falla.",
+        "Test covers: version informa CLI, estado del harness, targets y skills tanto en humano como JSON; --version conserva la salida corta.",
+        "Test covers: status informa instalación, targets, configuración, actualizaciones y archivos gestionados modificados sin ejecutar doctor.",
+        "Test covers: setup admite --target, --locale, --yes y --dry-run; el dry-run no escribe y la ruta normal inicializa, instala y ejecuta diagnóstico.",
+        "Test covers: help y --help son jerárquicos; install preset --help y help install preset muestran ayuda específica.",
+        "Test covers: El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell."
       ],
-      "status": "done"
+      "status": "done",
+      "itemHash": "81f3fa499ddb4c32"
     },
     {
-      "id": "BC-012-implement",
-      "backlogId": "BC-012",
+      "id": "BC-019-implement",
+      "backlogId": "BC-019",
       "phase": "implement",
-      "title": "BC-012: Implementation",
-      "prompt": "Backlog item BC-012 — Router /cc:ask que recomienda el slash command correcto\n\nDescription: Portar ask-matt como router de baja prioridad que, dado un problema en lenguaje natural, recomienda el slash command adecuado entre feature, fix, refactor, review, tdd-cycle y openspec.\nScope: Definir /cc:ask apoyado en /cc:help con el catálogo de flujos.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
+      "title": "BC-019: Implementation",
+      "prompt": "Backlog item BC-019 — Gestor de harness seguro y CLI de mantenimiento\n\nDescription: Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.\nScope: estado de instalación bajo `.codeconductor/`, init/install/update, comandos setup/version/status, registro declarativo de ayuda, documentación generada compacta, completions y tests de CLI.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
       "agent": "implementer",
       "modelHint": "implementer",
       "dependsOn": [
-        "BC-012-test"
+        "BC-019-test"
       ],
       "acceptanceCriteria": [
-        "/cc:ask mapea un problema en lenguaje natural a un slash command concreto",
-        "La recomendación justifica por qué ese flujo encaja con el problema",
-        "El catálogo de flujos permanece alineado con los comandos disponibles"
+        "init e install registran hashes SHA-256 y versiones para cada archivo gestionado.",
+        "update no sobrescribe council.yml ni policy.yml modificados localmente sin --force y devuelve un conflicto explícito.",
+        "update planifica, hace backup y revierte las escrituras aplicadas si una actualización falla.",
+        "version informa CLI, estado del harness, targets y skills tanto en humano como JSON; --version conserva la salida corta.",
+        "status informa instalación, targets, configuración, actualizaciones y archivos gestionados modificados sin ejecutar doctor.",
+        "setup admite --target, --locale, --yes y --dry-run; el dry-run no escribe y la ruta normal inicializa, instala y ejecuta diagnóstico.",
+        "help y --help son jerárquicos; install preset --help y help install preset muestran ayuda específica.",
+        "El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell."
       ],
-      "status": "done"
+      "status": "done",
+      "itemHash": "81f3fa499ddb4c32"
     },
     {
-      "id": "BC-012-review",
-      "backlogId": "BC-012",
+      "id": "BC-019-review",
+      "backlogId": "BC-019",
       "phase": "review",
-      "title": "BC-012: Review and validation",
-      "prompt": "Backlog item BC-012 — Router /cc:ask que recomienda el slash command correcto\n\nDescription: Portar ask-matt como router de baja prioridad que, dado un problema en lenguaje natural, recomienda el slash command adecuado entre feature, fix, refactor, review, tdd-cycle y openspec.\nScope: Definir /cc:ask apoyado en /cc:help con el catálogo de flujos.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
+      "title": "BC-019: Review and validation",
+      "prompt": "Backlog item BC-019 — Gestor de harness seguro y CLI de mantenimiento\n\nDescription: Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.\nScope: estado de instalación bajo `.codeconductor/`, init/install/update, comandos setup/version/status, registro declarativo de ayuda, documentación generada compacta, completions y tests de CLI.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
       "agent": "reviewer",
       "modelHint": "reviewer",
       "dependsOn": [
-        "BC-012-implement"
+        "BC-019-implement"
       ],
       "acceptanceCriteria": [
         "All acceptance criteria verified",
         "Tests pass",
         "No scope creep beyond backlog item"
       ],
-      "status": "done"
+      "status": "done",
+      "itemHash": "81f3fa499ddb4c32"
     }
   ],
   "lastScanHash": "620aba2bbc3ae662",
@@ -100,7 +116,8 @@
     "BC-009": "openspec/changes/bc-009-hook-pretooluse-que-bloquea-git-destructivo",
     "BC-010": "openspec/changes/bc-010-gate-pre-commit-typecheck-y-test-adaptado-a-bun",
     "BC-011": "openspec/changes/bc-011-comando-cc-handoff-para-traspaso-entre-sesiones",
-    "BC-012": "openspec/changes/bc-012-router-cc-ask-que-recomienda-el-slash-command-co"
+    "BC-012": "openspec/changes/bc-012-router-cc-ask-que-recomienda-el-slash-command-co",
+    "BC-019": "openspec/changes/bc-019-gestor-de-harness-seguro-y-cli-de-mantenimiento"
   },
   "itemSnapshots": {
     "BC-012": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Router /cc:ask que recomienda el slash command correcto\"}",
@@ -114,6 +131,7 @@
     "BC-004": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Gate de loop rojo reproducible en /cc:fix\"}",
     "BC-003": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Revisión de dos ejes en /cc:review\"}",
     "BC-002": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"CONTEXT.md como glosario de dominio y criterios ADR\"}",
-    "BC-001": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Rúbrica writing-for-agents para auditar prompts de agentes\"}"
+    "BC-001": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Rúbrica writing-for-agents para auditar prompts de agentes\"}",
+    "BC-019": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Gestor de harness seguro y CLI de mantenimiento\",\"description\":\"Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.\",\"scope\":\"estado de instalación bajo `.codeconductor/`, init/install/update, comandos setup/version/status, registro declarativo de ayuda, documentación generada compacta, completions y tests de CLI.\",\"type\":\"feature\",\"priority\":\"P0\",\"acceptanceCriteria\":[\"init e install registran hashes SHA-256 y versiones para cada archivo gestionado.\",\"update no sobrescribe council.yml ni policy.yml modificados localmente sin --force y devuelve un conflicto explícito.\",\"update planifica, hace backup y revierte las escrituras aplicadas si una actualización falla.\",\"version informa CLI, estado del harness, targets y skills tanto en humano como JSON; --version conserva la salida corta.\",\"status informa instalación, targets, configuración, actualizaciones y archivos gestionados modificados sin ejecutar doctor.\",\"setup admite --target, --locale, --yes y --dry-run; el dry-run no escribe y la ruta normal inicializa, instala y ejecuta diagnóstico.\",\"help y --help son jerárquicos; install preset --help y help install preset muestran ayuda específica.\",\"El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell.\"]}"
   }
 }

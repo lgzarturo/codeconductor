@@ -18,6 +18,8 @@ run('cli bundle', [
   '--outfile=dist/index.js',
 ]);
 
+run('CLI documentation', ['run', 'scripts/generate-cli-docs.ts']);
+
 run('library bundle', [
   'build',
   'src/index.ts',

@@ -120,6 +120,27 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [x] bun run lint corre scripts/lint.ts y el hook pre-commit incluye lint
   - [x] compileCheck omitido reporta skipped con motivo, no un compile limpio silencioso
 
+### BC-019 | Gestor de harness seguro y CLI de mantenimiento
+
+- Priority: P0
+- Status: REVIEW
+- Type: feature
+- Depends on: none
+- Description: Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.
+- Scope: BACKLOG.md, package.json, scripts/build.ts, scripts/generate-cli-docs.ts, docs/{generated,getting-started,cli,concepts,development}/, src/cli/{execute,router,command-registry}.ts, src/commands/{init,install,update,setup,status,version,onboarding}.command.ts, src/core/{install,presets/update-checker}.ts y tests de CLI/estado.
+- Out of scope: autoactualizar npm, aplicar una fusión YAML semántica automática ante conflictos, o publicar man pages en el sistema.
+- Progress: 100%
+- Reviewer: reviewer
+- Acceptance:
+  - [x] init e install registran hashes SHA-256 y versiones para cada archivo gestionado.
+  - [x] update no sobrescribe council.yml ni policy.yml modificados localmente sin --force y devuelve un conflicto explícito.
+  - [x] update planifica, hace backup y revierte las escrituras aplicadas si una actualización falla.
+  - [x] version informa CLI, estado del harness, targets y skills tanto en humano como JSON; --version conserva la salida corta.
+  - [x] status informa instalación, targets, configuración, actualizaciones y archivos gestionados modificados sin ejecutar doctor.
+  - [x] setup admite --target, --locale, --yes y --dry-run; el dry-run no escribe y la ruta normal inicializa, instala y ejecuta diagnóstico.
+  - [x] help y --help son jerárquicos; install preset --help y help install preset muestran ayuda específica.
+  - [x] El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell.
+
 ## Archive
 
 ### BC-012 | Router /cc:ask que recomienda el slash command correcto

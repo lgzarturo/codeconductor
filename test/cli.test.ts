@@ -94,14 +94,15 @@ describe('CLI', () => {
     expect(result.stdout).toContain('CodeConductor CLI');
     expect(result.stdout).toContain(`CodeConductor CLI v${packageJson.version}`);
     expect(result.stdout).toContain('Usage:');
-    expect(result.stdout).toContain('Published commands (package');
+    expect(result.stdout).toContain('GETTING STARTED');
+    expect(result.stdout).toContain('MAINTENANCE');
     expect(result.stdout).toContain('init');
     expect(result.stdout).toContain('detect');
     expect(result.stdout).toContain('install');
     expect(result.stdout).toContain('doctor');
     expect(result.stdout).toContain('update');
-    expect(result.stdout).toContain('install preset');
-    expect(result.stdout).toContain('install council');
+    expect(result.stdout).toContain('setup');
+    expect(result.stdout).toContain('status');
   });
 
   test('help command shows help text', async () => {
@@ -430,7 +431,7 @@ describe('CLI', () => {
   });
 
   test('--help shows codex as install target', async () => {
-    const result = await runCli(['--help']);
+    const result = await runCli(['install', '--help']);
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('codex');
   });

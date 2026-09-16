@@ -13,6 +13,10 @@ import { copyFromManifest } from '../core/presets/file-copier';
 import { loadManifest, loadModelConfig, PRESETS_DIR } from '../core/presets/manifest-loader';
 import { SRC_PRESETS_DIR, POLICY_PATH } from '../core/presets/package-paths';
 import type { IndividualRunnerTarget } from '../core/runner/runner-target';
+import { readInstallationState, recordManagedFiles } from '../core/install/installation-state';
+import { UpdateTransaction } from '../core/install/update-transaction';
+import { getLatestCliVersion } from '../core/install/registry-client';
+import packageJson from '../../package.json';
 
 export interface UpdateOptions {
   readonly dryRun: boolean;
@@ -20,6 +24,7 @@ export interface UpdateOptions {
   readonly global: boolean;
   readonly output: OutputMode;
   readonly projectRoot: string;
+  readonly check?: boolean;
 }
 
 /**
@@ -28,8 +33,9 @@ export interface UpdateOptions {
 export async function updateCommand(
   options: UpdateOptions
 ): Promise<{ code: number; data?: unknown }> {
-  const { dryRun, force, global: isGlobal, output, projectRoot } = options;
+  const { dryRun, force, global: isGlobal, output, projectRoot, check = false } = options;
   const basePath = isGlobal ? homedir() : projectRoot;
+  let transaction: UpdateTransaction | undefined;
 
   try {
     // 1. Load current config
@@ -47,7 +53,42 @@ export async function updateCommand(
     const config = configResult.data;
 
     // 2. Perform updates check
-    const updateResults = await checkUpdates(basePath, isGlobal);
+    const updateResults = await checkUpdates(basePath, isGlobal, force);
+
+    if (check) {
+      const [latest, state] = await Promise.all([
+        getLatestCliVersion(packageJson.name),
+        readInstallationState(basePath),
+      ]);
+      return {
+        code: 0,
+        data: {
+          success: true,
+          command: 'update',
+          check: true,
+          cli: { current: packageJson.version, latest },
+          harness: { installed: state?.harnessVersion ?? null, latest },
+          sync: { available: updateResults.hasUpdates, conflicts: updateResults.conflicts },
+          message: latest && latest !== packageJson.version
+            ? `CLI update available: ${packageJson.version} → ${latest}`
+            : 'Checked for updates',
+        },
+      };
+    }
+
+    if (updateResults.conflicts.length > 0 && !force) {
+      return {
+        code: 2,
+        data: {
+          success: false,
+          command: 'update',
+          message: 'Local modifications require --force to overwrite',
+          conflicts: updateResults.conflicts,
+          wouldUpdate: [],
+          updated: [],
+        },
+      };
+    }
 
     // 3. Print 40KB file size warnings
     const largeFiles = await validateAgentFileSizes(basePath, isGlobal);
@@ -102,6 +143,15 @@ export async function updateCommand(
 
     // 5. Apply updates
     const updated: string[] = [];
+    const plannedDestinations = [
+      resolve(basePath, '.codeconductor', 'presets', 'council.yml'),
+      resolve(basePath, '.codeconductor', 'presets', 'policy.yml'),
+      resolve(basePath, '.codeconductor', 'install-state.json'),
+      resolve(basePath, '.codeconductor', 'skills-lock.json'),
+      resolve(basePath, '.agents', 'skills-lock.json'),
+      ...updateResults.targets.flatMap((target) => target.hasUpdate ? target.files : []),
+    ];
+    transaction = await UpdateTransaction.begin(basePath, plannedDestinations);
 
     // Update council preset
     if (updateResults.council) {
@@ -254,6 +304,17 @@ export async function updateCommand(
       }
     }
 
+    // A write plan is only committed when the resulting harness remains diagnosable.
+    const { doctorCommand } = await import('./doctor.command');
+    const doctor = await doctorCommand({ projectRoot: basePath, output });
+    if (doctor.code !== 0) {
+      throw new Error('Post-update doctor check failed');
+    }
+
+    await recordManagedFiles(basePath, updated, { cliVersion: packageJson.version });
+    await transaction.commit();
+    transaction = undefined;
+
     return {
       code: 0,
       data: {
@@ -265,6 +326,18 @@ export async function updateCommand(
       },
     };
   } catch (error) {
+    try {
+      await transaction?.rollback();
+    } catch (rollbackError) {
+      return {
+        code: 1,
+        data: {
+          success: false,
+          command: 'update',
+          errors: [`${String(error)}; rollback failed: ${String(rollbackError)}`],
+        },
+      };
+    }
     return {
       code: 1,
       data: {

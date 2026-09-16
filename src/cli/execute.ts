@@ -1,5 +1,6 @@
 import { getExitCode } from './errors';
-import { getHelp, getVersion, parseArgs, routeCommand, type CliArgs } from './router';
+import { getVersion, parseArgs, routeCommand, type CliArgs } from './router';
+import { renderHelp } from './command-registry';
 
 /**
  * Command-line args after the runtime and script path (`init --force`, not
@@ -8,13 +9,25 @@ import { getHelp, getVersion, parseArgs, routeCommand, type CliArgs } from './ro
 export async function executeCli(args: string[], projectRoot: string): Promise<number> {
   const parsed = parseArgs(args);
 
+  if (args.length === 0) {
+    const { onboardingCommand } = await import('../commands/onboarding.command');
+    const result = await onboardingCommand(projectRoot);
+    emitCliResult(parsed, result);
+    return result.code;
+  }
+
   if (parsed.flags.version) {
     console.log(getVersion());
     return 0;
   }
 
-  if (parsed.flags.help || !parsed.command || parsed.command === 'help') {
-    console.log(getHelp());
+  if (!parsed.command || parsed.command === 'help') {
+    console.log(renderHelp(parsed.subcommand, parsed.rest?.[0], parsed.options.all === true));
+    return 0;
+  }
+
+  if (parsed.flags.help) {
+    console.log(renderHelp(parsed.command, parsed.subcommand));
     return 0;
   }
 
@@ -113,6 +126,8 @@ function emitCliResult(parsed: CliArgs, result: { code: number; data?: unknown }
     items.forEach((f) => console.log(`  + ${f}`));
   } else if ('created' in data) {
     console.log(`Created ${(data.created as string[]).length} files`);
+  } else if ('output' in data && typeof data.output === 'string') {
+    console.log(data.output);
   } else if ('detected' in data) {
     console.log('Detected:');
     const detected = data.detected as Record<string, string[] | string>;
@@ -123,8 +138,6 @@ function emitCliResult(parsed: CliArgs, result: { code: number; data?: unknown }
         console.log(`  - ${key}: ${value}`);
       }
     });
-  } else if ('output' in data && typeof data.output === 'string') {
-    console.log(data.output);
   }
 }
 

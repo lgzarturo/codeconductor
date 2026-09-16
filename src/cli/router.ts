@@ -20,8 +20,12 @@ import type { OrchestrateOptions } from '../commands/orchestrate.command';
 import type { ImpactOptions } from '../commands/impact.command';
 import type { VerifyOptions } from '../commands/verify.command';
 import type { AskOptions } from '../commands/ask.command';
+import type { SetupOptions } from '../commands/setup.command';
+import type { StatusOptions } from '../commands/status.command';
+import type { VersionOptions } from '../commands/version.command';
 import type { OutputMode } from '../utils/logger';
 import { RUNNER_TARGETS } from '../core/runner/runner-target';
+import { renderCompletion, renderDocs, renderHelp } from './command-registry';
 
 /**
  * Parsed CLI arguments
@@ -69,6 +73,8 @@ export function parseArgs(args: string[]): CliArgs {
       flags.help = true;
     } else if (arg === '--version' || arg === '-v') {
       flags.version = true;
+    } else if (arg === '--json') {
+      flags.output = 'json';
     } else if (arg === '--dry-run') {
       flags.dryRun = true;
     } else if (arg === '--force') {
@@ -170,6 +176,11 @@ export function getVersion(): string {
  * Get help text
  */
 export function getHelp(): string {
+  return renderHelp();
+}
+
+/** @deprecated Kept temporarily for historical references; command metadata owns help. */
+export function getLegacyHelp(): string {
   return `CodeConductor CLI v${packageJson.version}
 
 Usage: npx cc-codeconductor <command> [options]
@@ -378,12 +389,36 @@ export async function routeCommand(
   }
 
   switch (command) {
+    case 'setup': {
+      const { setupCommand } = await import('../commands/setup.command');
+      return setupCommand({
+        projectRoot,
+        target: typeof options.target === 'string' ? options.target : 'opencode',
+        locale: options.locale === 'es' ? 'es' : 'en',
+        dryRun: flags.dryRun,
+        force: flags.force,
+        yes: options.yes === true || options.yes === 'true',
+        output: flags.output,
+      } as SetupOptions);
+    }
+
+    case 'version': {
+      const { versionCommand } = await import('../commands/version.command');
+      return versionCommand({ projectRoot, output: flags.output } as VersionOptions);
+    }
+
+    case 'status': {
+      const { statusCommand } = await import('../commands/status.command');
+      return statusCommand({ projectRoot, output: flags.output } as StatusOptions);
+    }
+
     case 'init': {
       const { initCommand } = await import('../commands/init.command');
       return initCommand({
         projectRoot,
         dryRun: flags.dryRun,
         force: flags.force,
+        check: options.check === true || options.check === 'true',
         global: options.global === true || options.global === 'true',
         output: flags.output,
         locale: (options.locale === 'es' ? 'es' : 'en') as 'en' | 'es',
@@ -471,6 +506,7 @@ export async function routeCommand(
         projectRoot,
         dryRun: flags.dryRun,
         force: flags.force,
+        check: options.check === true || options.check === 'true',
         global: options.global === true || options.global === 'true',
         output: flags.output,
       } as UpdateOptions);
@@ -493,9 +529,20 @@ export async function routeCommand(
         data: {
           success: true,
           command: 'help',
-          help: getHelp(),
+          help: renderHelp(subcommand, args.rest?.[0]),
         },
       };
+
+    case 'docs':
+    case 'man':
+      return { code: 0, data: { success: true, command, output: renderDocs(subcommand) } };
+
+    case 'completion': {
+      const output = renderCompletion(subcommand ?? '');
+      return output
+        ? { code: 0, data: { success: true, command: 'completion', output } }
+        : cliContractError('completion', ['Expected shell: bash, zsh, fish, or powershell.']);
+    }
 
     case 'ask': {
       const { askCommand } = await import('../commands/ask.command');

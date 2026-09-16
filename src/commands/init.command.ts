@@ -7,7 +7,9 @@ import { detectProject } from '../core/detection/project-detector';
 import { POLICY_PATH, ROOT_PRESETS_DIR, SRC_PRESETS_DIR } from '../core/presets/package-paths';
 import { resolvePreset } from '../core/presets/preset-resolver';
 import { ensureOpenspecGitignore } from '../core/openspec/openspec-gitignore';
+import { recordManagedFiles } from '../core/install/installation-state';
 import type { OutputMode } from '../utils/logger';
+import packageJson from '../../package.json';
 
 export interface InitOptions {
   readonly dryRun: boolean;
@@ -116,6 +118,11 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
     const gitignoreCreated = await ensureOpenspecGitignore(baseDir);
     const evalCreated = await initEvaluationArtifacts(baseDir, force);
     const workflowsCreated = await initWorkflowArtifacts(baseDir, force);
+    await recordManagedFiles(
+      baseDir,
+      copiedPresets.map((preset) => resolve(baseDir, preset)),
+      { cliVersion: packageJson.version },
+    );
 
     return {
       code: 0,
@@ -129,6 +136,7 @@ export async function initCommand(options: InitOptions): Promise<{ code: number;
           ...(gitignoreCreated ? [gitignoreCreated] : []),
           ...evalCreated,
           ...workflowsCreated,
+          '.codeconductor/install-state.json',
         ],
         ...(profile
           ? {

@@ -21,8 +21,10 @@ import {
   type IndividualRunnerTarget,
 } from '../core/runner/runner-target';
 import { parseSkillFrontmatter, skillIdentifier } from '../core/presets/skill-frontmatter';
+import { recordManagedFiles } from '../core/install/installation-state';
 import type { InstallManifest } from '../validation/schemas';
 import type { OutputMode } from '../utils/logger';
+import packageJson from '../../package.json';
 
 export interface InstallOptions {
   readonly target: string;
@@ -141,6 +143,16 @@ export async function installCommand(
 
     const errors = allFiles.filter((f) => !f.success).map((f) => `${f.path}: ${f.error}`);
     const successes = allFiles.filter((f) => f.success);
+
+    if (!dryRun) {
+      for (const targetName of targets) {
+        await recordManagedFiles(
+          baseDir,
+          successes.filter((file) => file.target === targetName).map((file) => file.path),
+          { cliVersion: packageJson.version, target: targetName },
+        );
+      }
+    }
 
     if (errors.length > 0 && successes.length === 0) {
       return {
@@ -300,6 +312,18 @@ export async function installPresetCommand(
     }
 
     const errors = allFileResults.filter((r) => r.action === 'error');
+
+    if (!dryRun && errors.length === 0) {
+      for (const targetName of targets) {
+        await recordManagedFiles(
+          baseDir,
+          allFileResults
+            .filter((file) => file.target === targetName && ['written', 'appended', 'merged'].includes(file.action))
+            .map((file) => file.dest),
+          { cliVersion: packageJson.version, target: targetName },
+        );
+      }
+    }
 
     return {
       code: errors.length > 0 ? 2 : 0,

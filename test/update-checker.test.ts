@@ -1,5 +1,5 @@
 import { describe, expect, test, afterEach, beforeEach } from 'bun:test';
-import { mkdir, rm, writeFile, mkdtemp } from 'node:fs/promises';
+import { mkdir, rm, writeFile, readFile, mkdtemp } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { homedir, tmpdir } from 'node:os';
 import {
@@ -11,7 +11,7 @@ import {
   validateAgentMarkers
 } from '../src/core/presets/update-checker';
 
-const TEST_DIR = resolve(import.meta.dir, '..', 'test-update-checker-tmp');
+const TEST_DIR = resolve(tmpdir(), 'cc-update-checker-test');
 
 describe('Update Checker & Smart Updates', () => {
   beforeEach(async () => {
@@ -104,7 +104,7 @@ describe('Update Checker & Smart Updates', () => {
     expect(result.skills.length).toBe(0);
   });
 
-  test('checkUpdates detects modifications in presets', async () => {
+  test('checkUpdates reports untracked preset differences as conflicts', async () => {
     const codeconductorDir = join(TEST_DIR, '.codeconductor');
     await mkdir(join(codeconductorDir, 'presets'), { recursive: true });
 
@@ -113,9 +113,38 @@ describe('Update Checker & Smart Updates', () => {
     await writeFile(join(codeconductorDir, 'presets', 'policy.yml'), 'safety: none');
 
     const result = await checkUpdates(TEST_DIR, false);
-    expect(result.council).toBe(true);
-    expect(result.policy).toBe(true);
-    expect(result.hasUpdates).toBe(true);
+    expect(result.council).toBe(false);
+    expect(result.policy).toBe(false);
+    expect(result.conflicts).toContain(join(codeconductorDir, 'presets', 'council.yml'));
+    expect(result.conflicts).toContain(join(codeconductorDir, 'presets', 'policy.yml'));
+  });
+
+  test('update preserves locally modified managed presets unless forced', async () => {
+    const { initCommand } = await import('../src/commands/init.command');
+    const { updateCommand } = await import('../src/commands/update.command');
+    await writeFile(join(TEST_DIR, 'package.json'), '{"name":"fixture"}');
+    await initCommand({
+      projectRoot: TEST_DIR,
+      dryRun: false,
+      force: true,
+      global: false,
+      output: 'json',
+      locale: 'en',
+    });
+    const council = join(TEST_DIR, '.codeconductor', 'presets', 'council.yml');
+    await writeFile(council, 'name: locally-customized\n');
+
+    const result = await updateCommand({
+      dryRun: false,
+      force: false,
+      global: false,
+      output: 'json',
+      projectRoot: TEST_DIR,
+    });
+
+    expect(result.code).toBe(2);
+    expect((result.data as { conflicts: string[] }).conflicts).toContain(council);
+    expect(await readFile(council, 'utf-8')).toBe('name: locally-customized\n');
   });
 
   test('validateAgentMarkers warns on missing or invalid markers', async () => {
@@ -257,5 +286,3 @@ outputContract: Markdown verdict
     expect(readFileSync(agentPath, 'utf-8')).toContain('Architect');
   });
 });
-
-

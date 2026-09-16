@@ -1,7 +1,11 @@
-# CodeConductor CLI Usage Guide
+# Legacy CLI Usage Guide
 
-This document explains how to run CodeConductor locally and how to package it
-for distribution as an npm package executable via `npx`.
+This legacy reference remains for historical commands. New users should begin
+with [installation](getting-started/installation.md),
+[first project](getting-started/first-project.md), and the focused
+[CLI guides](cli/). Maintainers should use
+[CLI development](development/cli-development.md). This split keeps package
+development instructions separate from operating a project harness.
 
 For **local smoke-test recipes** (all major commands via `bun run dev`), see
 [`usage-cc.md`](usage-cc.md).

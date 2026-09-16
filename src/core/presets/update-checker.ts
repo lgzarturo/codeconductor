@@ -10,9 +10,11 @@ import { ROOT_PRESETS_DIR, SRC_PRESETS_DIR, POLICY_PATH, SKILLS_REGISTRY_PATH } 
 import type { InstallStrategy, SkillsRegistry } from '../../validation/schemas';
 import { SkillsRegistrySchema } from '../../validation/schemas';
 import { INDIVIDUAL_TARGETS, type IndividualRunnerTarget } from '../runner/runner-target';
+import { getManagedFileStatus, readInstallationState } from '../install/installation-state';
 
 export interface UpdateCheckResults {
   readonly hasUpdates: boolean;
+  readonly conflicts: string[];
   readonly council: boolean;
   readonly policy: boolean;
   readonly targets: Array<{ target: string; hasUpdate: boolean; files: string[] }>;
@@ -251,6 +253,15 @@ async function fileContentDiffers(pathA: string, pathB: string): Promise<boolean
   }
 }
 
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    await stat(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Helper to load skills-lock.json if present
  */
@@ -317,15 +328,34 @@ async function getLatestSkillVersion(skillId: string): Promise<string | null> {
  */
 export async function checkUpdates(
   basePath: string,
-  isGlobal: boolean
+  isGlobal: boolean,
+  includeConflicts = false,
 ): Promise<UpdateCheckResults> {
   // 1. Check council preset and policy
   const localCouncil = resolve(basePath, '.codeconductor', 'presets', 'council.yml');
   const bundledCouncil = resolve(SRC_PRESETS_DIR, 'council', 'council.yml');
-  const councilHasUpdate = await fileContentDiffers(localCouncil, bundledCouncil);
+  const localCouncilDiffers = await fileContentDiffers(localCouncil, bundledCouncil);
 
   const localPolicy = resolve(basePath, '.codeconductor', 'presets', 'policy.yml');
-  const policyHasUpdate = await fileContentDiffers(localPolicy, POLICY_PATH);
+  const localPolicyDiffers = await fileContentDiffers(localPolicy, POLICY_PATH);
+  const installationState = await readInstallationState(basePath);
+  const conflicts: string[] = [];
+  const [councilExists, policyExists] = await Promise.all([
+    fileExists(localCouncil),
+    fileExists(localPolicy),
+  ]);
+  const councilModified = installationState
+    ? await getManagedFileStatus(basePath, localCouncil, installationState) === 'modified'
+    : false;
+  const policyModified = installationState
+    ? await getManagedFileStatus(basePath, localPolicy, installationState) === 'modified'
+    : false;
+  const councilUntracked = localCouncilDiffers && councilExists && !installationState;
+  const policyUntracked = localPolicyDiffers && policyExists && !installationState;
+  if (localCouncilDiffers && (councilModified || councilUntracked)) conflicts.push(localCouncil);
+  if (localPolicyDiffers && (policyModified || policyUntracked)) conflicts.push(localPolicy);
+  const councilHasUpdate = localCouncilDiffers && (!(councilModified || councilUntracked) || includeConflicts);
+  const policyHasUpdate = localPolicyDiffers && (!(policyModified || policyUntracked) || includeConflicts);
 
   // 2. Check installed targets
   const targetsToCheck: readonly IndividualRunnerTarget[] = INDIVIDUAL_TARGETS;
@@ -534,6 +564,7 @@ export async function checkUpdates(
 
   return {
     hasUpdates: hasPresetUpdates || hasTargetUpdates || hasSkillUpdates,
+    conflicts,
     council: councilHasUpdate,
     policy: policyHasUpdate,
     targets: targetResults,
@@ -542,5 +573,3 @@ export async function checkUpdates(
 }
 
 export { detectComplementaryTools, type ComplementaryToolsStatus } from './complementary-detector';
-
-

@@ -18,6 +18,7 @@
     "dist/index.js",
     "dist/library.js",
     "dist/**/*.d.ts",
+    "docs/generated/",
     "policy.yml",
     "presets/",
     "src/presets/"
@@ -48,6 +49,7 @@
     "build:cli": "bun build src/cli/main.ts --target=node --outfile=dist/index.js",
     "build:lib": "bun build src/index.ts --target=node --outfile=dist/library.js --packages=external",
     "build:types": "tsc -p tsconfig.lib.json --emitDeclarationOnly",
+    "generate:cli-docs": "bun run scripts/generate-cli-docs.ts",
     "test": "bun test",
     "test:fast": "bun run scripts/test-fast.ts",
     "typecheck": "tsc --noEmit",

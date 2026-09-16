@@ -77,7 +77,7 @@ describe('CC-08 CLI contracts', () => {
   test('canonical status document tracks the published package version', async () => {
     const status = await readFile(join(ROOT, 'docs/current-status.md'), 'utf-8');
     expect(status).toContain(`Published package version:** \`${packageJson.version}\``);
-    expect(status).toMatch(/implemented, unreleased/i);
+    expect(status).toMatch(/implemented,\s+unreleased/i);
     expect(status).toMatch(/experimental library API/i);
     expect(status).toMatch(/planned/i);
   });

@@ -45,6 +45,7 @@ fi
 
 PACKAGE_JSON="package.json"
 VERSION_FILE="VERSION"
+STATUS_DOC="docs/current-status.md"
 CURRENT_VERSION=$(node -p "require('./$PACKAGE_JSON').version")
 REPO_URL=$(node -p "require('./$PACKAGE_JSON').repository.url" 2>/dev/null || echo "")
 
@@ -58,8 +59,10 @@ function command_exists() {
 if [[ "$DRY_RUN" == "true" ]]; then
   dry_log "Package version: $CURRENT_VERSION"
   dry_log "Version file: $VERSION_FILE"
+  dry_log "Status document: $STATUS_DOC"
   dry_log "Version bump: $VERSION_TYPE"
   dry_log "Would run: npm test && npm run typecheck"
+  dry_log "Would update: docs/current-status.md"
   dry_log "Would generate CHANGELOG via git-cliff"
   dry_log "Would commit: 'chore(release): bump to v<new-version>'"
   dry_log "Would create git tag: v<new-version>"
@@ -91,9 +94,26 @@ log "New version: $NEW_VERSION"
 
 node -p "
 const fs = require('fs');
+const newVersion = '$NEW_VERSION';
+const [major, minor] = newVersion.split('.');
+const stableLine = major + '.' + minor;
+
 const pkg = JSON.parse(fs.readFileSync('$PACKAGE_JSON', 'utf8'));
-pkg.version = '$NEW_VERSION';
+pkg.version = newVersion;
 fs.writeFileSync('$PACKAGE_JSON', JSON.stringify(pkg, null, 2) + '\n');
+
+if (fs.existsSync('$STATUS_DOC')) {
+  let status = fs.readFileSync('$STATUS_DOC', 'utf8');
+  status = status.replace(
+    /\*\*Published package version:\*\* \`[^\`]+\` — current stable line: \`[^\`]+\`/,
+    '**Published package version:** \`' + newVersion + '\` — current stable line: \`' + stableLine + '.x\`'
+  );
+  status = status.replace(
+    /Available in stable \d+\.\d+\.x/g,
+    'Available in stable ' + stableLine + '.x'
+  );
+  fs.writeFileSync('$STATUS_DOC', status, 'utf8');
+}
 "
 printf '%s\n' "$NEW_VERSION" > "$VERSION_FILE"
 
@@ -114,7 +134,7 @@ else
   git add CHANGELOG.md
 fi
 
-git add "$PACKAGE_JSON" "$VERSION_FILE"
+git add "$PACKAGE_JSON" "$VERSION_FILE" "$STATUS_DOC"
 git commit -m "chore(release): bump to v$NEW_VERSION"
 git tag "v$NEW_VERSION"
 

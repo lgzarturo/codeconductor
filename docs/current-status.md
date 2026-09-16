@@ -5,11 +5,11 @@ This file is the canonical shipped/planned matrix for the repository.
 **Published package version:** `1.4.0` — current stable line: `1.4.x` (from
 `package.json`)
 
-Code present in the repository but assigned to a later release is **implemented,
-unreleased**. A release-note filename or historical roadmap entry does not by
-itself mean that version was published.
+Code present in the repository but assigned to a later release is
+**implemented, unreleased**. A release-note filename or historical roadmap
+entry does not by itself mean that version was published.
 
-| Capability                                                                                                 | Repository status                     | Available in stable 1.3.x |
+| Capability                                                                                                 | Repository status                     | Available in stable 1.4.x |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------- |
 | Core CLI (`init`, `detect`, `install`, `doctor`, `update`, `migrate`)                                      | shipped                               | yes                       |
 | Preset and council installation (7 targets: agy, claude, codex, cursor, gemini, opencode, pi)              | shipped                               | yes                       |

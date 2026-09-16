@@ -155,7 +155,10 @@ export async function hasPassingScorecard(
   backlogId: string,
 ): Promise<boolean> {
   const listed = await listScorecards(projectRoot, { backlogId, verdict: 'PASS' });
-  return listed.success && listed.data.length > 0;
+  if (listed.success && listed.data.length > 0) return true;
+
+  const outcomes = await listOutcomes(projectRoot, { backlogId, source: 'review' });
+  return outcomes.success && outcomes.data.some((outcome) => outcome.verdict === 'PASS');
 }
 
 /**

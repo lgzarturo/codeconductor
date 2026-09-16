@@ -13,6 +13,7 @@ import {
   loadScorecard,
   aggregateOutcomes,
   generateEvalId,
+  hasPassingScorecard,
 } from '../src/core/evaluation/outcome-store';
 import { createDefaultCriteria, buildScorecardRecord } from '../src/core/evaluation/scorecard-calculator';
 
@@ -67,6 +68,21 @@ describe('outcome-store', () => {
     expect(load.success).toBe(true);
     if (!load.success) return;
     expect(load.data.verdict).toBe('PASS');
+  });
+
+  test('recognizes a human PASS outcome as a passing review gate', async () => {
+    await appendOutcome(TEST_DIR, {
+      id: 'human-review-1',
+      taskId: 'BC-024',
+      source: 'review',
+      agent: 'reviewer',
+      model: 'human',
+      contractVersion: '1.0.0',
+      timestamp: new Date().toISOString(),
+      verdict: 'PASS',
+      backlogId: 'BC-024',
+    });
+    expect(await hasPassingScorecard(TEST_DIR, 'BC-024')).toBe(true);
   });
 
   test('aggregateOutcomes groups by model', async () => {
@@ -243,4 +259,3 @@ describe('outcome-store', () => {
     expect(agg.byVariant['minus:review'].avgScore).toBe(2.0);
   });
 });
-

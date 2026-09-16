@@ -17,13 +17,13 @@ Formato validable por `cc openspec validate`. Análisis completo en
 ### BC-022 | Ensamblado de contexto y reanudación con presupuesto observable
 
 - Priority: P1
-- Status: READY
+- Status: PLANNED
 - Type: feature
 - Depends on: BC-021
 - Description: Reducir repetición entre agentes montando contexto mínimo desde ledger, scope, memoria y evidencia, y reusar compacción posterior a TDD.
 - Scope: contexto/compacción/memoria, compilación CCEP, contratos de handoff y tests de límites/reanudación.
 - Out of scope: Inyectar el workspace completo, borrar historial del usuario, o bloquear por tokens no medidos.
-- Progress: 0
+- Progress: 0%
 - Reviewer: reviewer
 - Acceptance:
   - [ ] El orden, procedencia y límite de bytes de cada fragmento de contexto son deterministas y verificables.
@@ -46,23 +46,6 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [ ] Cada target instalado ofrece la misma selección de ruta ODD o declara una limitación explícita y comprobada.
   - [ ] La generación respeta la sintaxis de invocación y las capacidades declaradas por target.
   - [ ] Las instrucciones de handoff no repiten request/transcript y enlazan el ledger y la evidencia.
-
-### BC-024 | Council proporcional con recibo de candidato
-
-- Priority: P1
-- Status: REVIEW
-- Type: feature
-- Depends on: BC-020
-- Description: Reducir coste de review rutinario seleccionando un panel aplicable y vinculando cada veredicto al mismo candidato congelado, sin debilitar veto ni quorum.
-- Scope: `src/domain/council/council-spec.ts`, `src/domain/council/council-consensus.ts`, `src/validation/schemas.ts`, `test/unit/domain/council/council-spec.test.ts`, `test/unit/domain/council/council-consensus.test.ts`, `test/unit/commands/ccep-consensus.test.ts`, `test/agent-contract-validation.test.ts`, `BACKLOG.md`, `.codeconductor/openspec-state.json`, `.codeconductor/events.jsonl`.
-- Out of scope: Eliminar reviewer, security-reviewer, complexity-auditor o los gates de riesgo actuales.
-- Progress: 100%
-- Reviewer: reviewer
-- Acceptance:
-  - [x] El panel se deriva determinísticamente de tipo, riesgo y scope, y se registra como expectedAgentIds.
-  - [x] Todos los votos agregados referencian el mismo hash de diff/commit; una discrepancia falla cerrada.
-  - [x] Señales de seguridad incluyen security-reviewer y preservan security/compliance veto.
-  - [x] Quorum, críticos y ausencia de roles tienen pruebas de regresión.
 
 ### BC-025 | Evaluación de adopción y guía de flujos diarios
 
@@ -208,6 +191,23 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [x] El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell.
 
 ## Archive
+### BC-024 | Council proporcional con recibo de candidato
+
+- Priority: P1
+- Status: DONE
+- Type: feature
+- Depends on: BC-020
+- Description: Reducir coste de review rutinario seleccionando un panel aplicable y vinculando cada veredicto al mismo candidato congelado, sin debilitar veto ni quorum.
+- Scope: `src/domain/council/council-spec.ts`, `src/domain/council/council-consensus.ts`, `src/validation/schemas.ts`, `src/core/evaluation/outcome-store.ts`, `test/unit/domain/council/council-spec.test.ts`, `test/unit/domain/council/council-consensus.test.ts`, `test/unit/commands/ccep-consensus.test.ts`, `test/agent-contract-validation.test.ts`, `test/outcome-store.test.ts`, `BACKLOG.md`, `.codeconductor/openspec-state.json`, `.codeconductor/events.jsonl`.
+- Out of scope: Eliminar reviewer, security-reviewer, complexity-auditor o los gates de riesgo actuales.
+- Progress: 100%
+- Reviewer: reviewer
+- Acceptance:
+  - [x] El panel se deriva determinísticamente de tipo, riesgo y scope, y se registra como expectedAgentIds.
+  - [x] Todos los votos agregados referencian el mismo hash de diff/commit; una discrepancia falla cerrada.
+  - [x] Señales de seguridad incluyen security-reviewer y preservan security/compliance veto.
+  - [x] Quorum, críticos y ausencia de roles tienen pruebas de regresión.
+
 ### BC-021 | Perfil ODD y Delivery Ledger recuperable
 
 - Priority: P0

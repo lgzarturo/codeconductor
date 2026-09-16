@@ -83,12 +83,12 @@ describe('maintenance commands', () => {
       await writeFile(join(fresh, 'package.json'), '{"name":"fixture"}');
       const uninitialized = await invokeCli([], fresh);
       expect(uninitialized.stdout).toContain('CodeConductor is not initialized');
-      expect(uninitialized.stdout).toContain('cc setup --dry-run');
+      expect(uninitialized.stdout).toContain('setup --dry-run');
 
       await invokeCli(['init', '--force'], fresh);
       const initialized = await invokeCli([], fresh);
       expect(initialized.stdout).toContain('Project harness');
-      expect(initialized.stdout).toContain('cc update --check');
+      expect(initialized.stdout).toContain('update --check');
     } finally {
       await rm(fresh, { recursive: true, force: true });
     }

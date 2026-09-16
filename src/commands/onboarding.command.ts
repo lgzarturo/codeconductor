@@ -3,8 +3,10 @@ import { loadConfig } from '../core/config/config-loader';
 import { detectProject } from '../core/detection/project-detector';
 import { readInstallationState } from '../core/install/installation-state';
 import { resolvePreset } from '../core/presets/preset-resolver';
+import { resolveCliBin } from '../utils/cli-bin';
 
 export async function onboardingCommand(projectRoot: string): Promise<{ code: number; data: unknown }> {
+  const bin = resolveCliBin();
   const [config, profile, state] = await Promise.all([
     loadConfig(projectRoot),
     detectProject(projectRoot),
@@ -29,18 +31,18 @@ export async function onboardingCommand(projectRoot: string): Promise<{ code: nu
           '',
           'Get started:',
           '  1. Inspect what will be installed',
-          '     cc setup --dry-run',
+          `     ${bin} setup --dry-run`,
           '  2. Configure the harness',
-          '     cc setup',
+          `     ${bin} setup`,
           '  3. Verify the installation',
-          '     cc doctor',
+          `     ${bin} doctor`,
           '',
           `Detected project: ${[...profile.runtimes, ...profile.frameworks].join(', ') || 'unknown'}`,
           `Recommended preset: ${recommendation.stack}`,
           '',
           'Documentation:',
-          '  cc help setup',
-          '  cc docs getting-started',
+          `  ${bin} help setup`,
+          `  ${bin} docs getting-started`,
         ].join('\n'),
       },
     };
@@ -63,12 +65,12 @@ export async function onboardingCommand(projectRoot: string): Promise<{ code: nu
         `  locale          ${config.data.defaults.locale}`,
         '',
         'Run:',
-        '  cc status',
-        '  cc doctor',
-        '  cc update --check',
+        `  ${bin} status`,
+        `  ${bin} doctor`,
+        `  ${bin} update --check`,
         '',
         'Other commands:',
-        '  cc help',
+        `  ${bin} help`,
       ].join('\n'),
     },
   };

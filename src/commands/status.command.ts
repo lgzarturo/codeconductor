@@ -3,6 +3,7 @@ import { getManagedFileStatus, readInstallationState } from '../core/install/ins
 import { checkUpdates, isTargetInstalled } from '../core/presets/update-checker';
 import { INDIVIDUAL_TARGETS } from '../core/runner/runner-target';
 import { resolve } from 'node:path';
+import { resolveCliBin } from '../utils/cli-bin';
 import type { OutputMode } from '../utils/logger';
 
 export interface StatusOptions {
@@ -11,6 +12,7 @@ export interface StatusOptions {
 }
 
 export async function statusCommand(options: StatusOptions): Promise<{ code: number; data: unknown }> {
+  const bin = resolveCliBin();
   const [configResult, state] = await Promise.all([
     loadConfig(options.projectRoot),
     readInstallationState(options.projectRoot),
@@ -57,7 +59,7 @@ export async function statusCommand(options: StatusOptions): Promise<{ code: num
     ...(modifiedFiles.length ? [`  locally modified managed files: ${modifiedFiles.length}`] : []),
     ...(data.updates?.conflicts.length ? [`  conflicts: ${data.updates.conflicts.join(', ')}`] : []),
     '',
-    'Run `cc doctor` for diagnostics.',
+    `Run \`${bin} doctor\` for diagnostics.`,
   ].join('\n');
   return { code: 0, data: { ...data, output } };
 }

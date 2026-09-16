@@ -8,6 +8,7 @@ import {
   type ProductGraphEdgeInput,
 } from '../../validation/schemas';
 import { err, ok, type Result } from '../../utils/result';
+import { resolveCliBin } from '../../utils/cli-bin';
 import { productGraphPath } from './paths';
 
 export async function loadGraph(projectRoot: string): Promise<Result<ProductGraphInput, Error>> {
@@ -16,7 +17,7 @@ export async function loadGraph(projectRoot: string): Promise<Result<ProductGrap
     return ok(ProductGraphSchema.parse(JSON.parse(raw)));
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
-      return err(new Error('Product graph not found. Run `cc ingest` first.'));
+      return err(new Error(`Product graph not found. Run \`${resolveCliBin()} ingest\` first.`));
     }
     return err(e instanceof Error ? e : new Error(String(e)));
   }

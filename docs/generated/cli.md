@@ -5,7 +5,7 @@
 Configure and install CodeConductor.
 
 ```text
-cc setup [--target <target>] [--locale en|es] [--yes] [--dry-run]
+cc-codeconductor setup [--target <target>] [--locale en|es] [--yes] [--dry-run]
 ```
 
 ## detect
@@ -13,7 +13,7 @@ cc setup [--target <target>] [--locale en|es] [--yes] [--dry-run]
 Inspect the project stack and recommended presets.
 
 ```text
-cc detect
+cc-codeconductor detect
 ```
 
 ## init
@@ -21,7 +21,7 @@ cc detect
 Initialize low-level CodeConductor configuration.
 
 ```text
-cc init [--locale en|es]
+cc-codeconductor init [--locale en|es]
 ```
 
 ## install
@@ -29,7 +29,7 @@ cc init [--locale en|es]
 Install harness components.
 
 ```text
-cc install preset --target <target>
+cc-codeconductor install preset --target <target>
 ```
 
 ## version
@@ -37,7 +37,7 @@ cc install preset --target <target>
 Show CLI and project harness versions.
 
 ```text
-cc version [--json]
+cc-codeconductor version [--json]
 ```
 
 ## status
@@ -45,7 +45,7 @@ cc version [--json]
 Show installed harness state.
 
 ```text
-cc status [--json]
+cc-codeconductor status [--json]
 ```
 
 ## doctor
@@ -53,7 +53,7 @@ cc status [--json]
 Diagnose the installation.
 
 ```text
-cc doctor
+cc-codeconductor doctor
 ```
 
 ## update
@@ -61,7 +61,7 @@ cc doctor
 Safely reconcile managed harness files.
 
 ```text
-cc update [--dry-run] [--force]
+cc-codeconductor update [--dry-run] [--force]
 ```
 
 ## migrate
@@ -69,7 +69,7 @@ cc update [--dry-run] [--force]
 Apply compatibility migrations.
 
 ```text
-cc migrate [--dry-run]
+cc-codeconductor migrate [--dry-run]
 ```
 
 ## docs
@@ -77,7 +77,7 @@ cc migrate [--dry-run]
 Read bundled command documentation.
 
 ```text
-cc docs [command]
+cc-codeconductor docs [command]
 ```
 
 ## completion
@@ -85,7 +85,7 @@ cc docs [command]
 Generate shell completion.
 
 ```text
-cc completion <bash|zsh|fish|powershell>
+cc-codeconductor completion <bash|zsh|fish|powershell>
 ```
 
 ## hook
@@ -93,7 +93,7 @@ cc completion <bash|zsh|fish|powershell>
 Run installed agent hooks.
 
 ```text
-cc hook <pre-tool|post-tool|session-start>
+cc-codeconductor hook <pre-tool|post-tool|session-start>
 ```
 
 ## cc-help
@@ -101,7 +101,7 @@ cc hook <pre-tool|post-tool|session-start>
 Show a target preset inventory.
 
 ```text
-cc cc-help --target <target>
+cc-codeconductor cc-help --target <target>
 ```
 
 ## ask
@@ -109,7 +109,7 @@ cc cc-help --target <target>
 Recommend a slash-command workflow.
 
 ```text
-cc ask "problem"
+cc-codeconductor ask "problem"
 ```
 
 ## goal
@@ -117,7 +117,7 @@ cc ask "problem"
 Plan a goal into dependent tasks.
 
 ```text
-cc goal "objective"
+cc-codeconductor goal "objective"
 ```
 
 ## ingest
@@ -125,7 +125,7 @@ cc goal "objective"
 Ingest repository knowledge into the product graph.
 
 ```text
-cc ingest
+cc-codeconductor ingest
 ```
 
 ## product
@@ -133,7 +133,7 @@ cc ingest
 Explore the product graph and memory.
 
 ```text
-cc product <subcommand>
+cc-codeconductor product <subcommand>
 ```
 
 ## ccep
@@ -141,7 +141,7 @@ cc product <subcommand>
 Run CCEP contract workflows.
 
 ```text
-cc ccep <subcommand>
+cc-codeconductor ccep <subcommand>
 ```
 
 ## openspec
@@ -149,7 +149,7 @@ cc ccep <subcommand>
 Run the OpenSpec delivery loop.
 
 ```text
-cc openspec <subcommand>
+cc-codeconductor openspec <subcommand>
 ```
 
 ## scorecard
@@ -157,7 +157,7 @@ cc openspec <subcommand>
 Record and aggregate outcomes.
 
 ```text
-cc scorecard <subcommand>
+cc-codeconductor scorecard <subcommand>
 ```
 
 ## orchestrate
@@ -165,7 +165,7 @@ cc scorecard <subcommand>
 Run goal execution orchestration.
 
 ```text
-cc orchestrate <subcommand>
+cc-codeconductor orchestrate <subcommand>
 ```
 
 ## impact
@@ -173,7 +173,7 @@ cc orchestrate <subcommand>
 Analyze change impact.
 
 ```text
-cc impact [--files <paths>]
+cc-codeconductor impact [--files <paths>]
 ```
 
 ## verify
@@ -181,7 +181,7 @@ cc impact [--files <paths>]
 Verify task completion with evidence.
 
 ```text
-cc verify --task <id>
+cc-codeconductor verify --task <id>
 ```
 
 ## seo
@@ -189,7 +189,7 @@ cc verify --task <id>
 Audit SEO and generate llms.txt.
 
 ```text
-cc seo audit --url <url>
+cc-codeconductor seo audit --url <url>
 ```
 
 ## debt-harvest
@@ -197,6 +197,6 @@ cc seo audit --url <url>
 Scan source files for deferred debt.
 
 ```text
-cc debt-harvest
+cc-codeconductor debt-harvest
 ```
 

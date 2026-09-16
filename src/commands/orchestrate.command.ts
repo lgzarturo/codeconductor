@@ -13,6 +13,7 @@ import { goalTaskToCanonicalCard } from '../core/orchestrator/runtime-orchestrat
 import { enrichGoalWithProduct } from '../core/planner/product-planner';
 import { loadGraph } from '../core/product-graph/graph-store';
 import { runLoopForProject, shouldRunAgentLoop } from '../core/loop/loop-engine';
+import { resolveCliBin } from '../utils/cli-bin';
 import type { OutputMode } from '../utils/logger';
 
 export interface OrchestrateOptions {
@@ -196,7 +197,7 @@ async function handleRun(
       data: {
         success: false,
         command: 'orchestrate',
-        errors: ['Verification failed. Run `cc verify --task ' + taskId + '`'],
+        errors: ['Verification failed. Run `' + resolveCliBin() + ' verify --task ' + taskId + '`'],
       },
     };
   }

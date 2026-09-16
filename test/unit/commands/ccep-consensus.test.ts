@@ -73,6 +73,28 @@ describe('ccep consensus', () => {
     expect((result.data as { verdict: { status: string } }).verdict.status).toBe('ESCALATED');
   });
 
+  test('candidate receipt mismatch exits 2 (ESCALATED)', async () => {
+    const result = await ccepCommand({
+      subcommand: 'consensus',
+      projectRoot: ROOT,
+      output: 'json',
+      input: JSON.stringify({
+        verdicts: [
+          ballot('a', 'APPROVED', { candidateHash: 'sha256:expected' }),
+          ballot('b', 'APPROVED', { candidateHash: 'sha256:other' }),
+          ballot('c', 'APPROVED', { candidateHash: 'sha256:expected' }),
+        ],
+        config: {
+          algorithm: 'majority',
+          allowSecurityVeto: true,
+          candidateHash: 'sha256:expected',
+        },
+      }),
+    });
+    expect(result.code).toBe(2);
+    expect((result.data as { verdict: { status: string } }).verdict.status).toBe('ESCALATED');
+  });
+
   test('rejects a payload that is not a ballot box', async () => {
     const result = await ccepCommand({
       subcommand: 'consensus',

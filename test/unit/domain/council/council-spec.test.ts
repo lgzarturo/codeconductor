@@ -6,10 +6,11 @@ import {
   DEFAULT_COUNCIL_AGENTS,
   deriveConsensusConfig,
   hasSecurityFocusedAgent,
+  selectCouncilPanel,
   SEO_HOTEL_COUNCIL_AGENTS,
   type CouncilSpec,
 } from '../../../../src/domain/council/council-spec';
-import { validateCouncilSpec } from '../../../../src/validation/schemas';
+import { ConsensusConfigSchema, validateCouncilSpec } from '../../../../src/validation/schemas';
 
 const YAML_PATH = join(import.meta.dir, '../../../../src/presets/council/council.yml');
 
@@ -44,6 +45,51 @@ describe('deriveConsensusConfig', () => {
     expect(hasSecurityFocusedAgent(spec)).toBe(false);
     expect(() => deriveConsensusConfig(spec)).toThrow(/security-focused agent/);
     expect(deriveConsensusConfig(spec, { allowSecurityVeto: false }).allowSecurityVeto).toBe(false);
+  });
+
+  test('derives a deterministic, proportional panel from type, risk and scope', () => {
+    const first = selectCouncilPanel(defaultSpec(), {
+      type: 'feature',
+      risk: 'high',
+      scope: ['src/auth/session.ts', 'src/data/migrations/001.sql'],
+    });
+    const second = selectCouncilPanel(defaultSpec(), {
+      type: 'feature',
+      risk: 'high',
+      scope: ['src/auth/session.ts', 'src/data/migrations/001.sql'],
+    });
+
+    expect(first.expectedAgentIds).toEqual(second.expectedAgentIds);
+    expect(first.expectedAgentIds).toEqual([
+      'architect',
+      'product',
+      'delivery',
+      'data-ops',
+      'security-reviewer',
+      'devil',
+    ]);
+    expect(first.quorum).toBe(3);
+  });
+
+  test('includes the security reviewer when a security signal is present', () => {
+    const panel = selectCouncilPanel(defaultSpec(), {
+      type: 'fix',
+      risk: 'low',
+      scope: ['src/auth/token.ts'],
+    });
+    expect(panel.expectedAgentIds).toEqual(['delivery', 'security-reviewer', 'devil']);
+    expect(panel.quorum).toBe(2);
+    expect(panel.allowSecurityVeto).toBe(true);
+  });
+
+  test('keeps the security veto valid for a routine low-risk panel', () => {
+    const panel = selectCouncilPanel(defaultSpec(), {
+      type: 'fix',
+      risk: 'low',
+      scope: ['src/formatting.ts'],
+    });
+    expect(panel.expectedAgentIds).toEqual(['delivery', 'security-reviewer', 'devil']);
+    expect(ConsensusConfigSchema.safeParse(panel).success).toBe(true);
   });
 });
 

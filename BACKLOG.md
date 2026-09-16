@@ -50,19 +50,19 @@ Formato validable por `cc openspec validate`. Análisis completo en
 ### BC-024 | Council proporcional con recibo de candidato
 
 - Priority: P1
-- Status: PLANNED
+- Status: REVIEW
 - Type: feature
 - Depends on: BC-020
 - Description: Reducir coste de review rutinario seleccionando un panel aplicable y vinculando cada veredicto al mismo candidato congelado, sin debilitar veto ni quorum.
-- Scope: council policy/spec/consensus, schemas, CCEP/preset council y tests.
+- Scope: `src/domain/council/council-spec.ts`, `src/domain/council/council-consensus.ts`, `src/validation/schemas.ts`, `test/unit/domain/council/council-spec.test.ts`, `test/unit/domain/council/council-consensus.test.ts`, `test/unit/commands/ccep-consensus.test.ts`, `test/agent-contract-validation.test.ts`, `BACKLOG.md`, `.codeconductor/openspec-state.json`, `.codeconductor/events.jsonl`.
 - Out of scope: Eliminar reviewer, security-reviewer, complexity-auditor o los gates de riesgo actuales.
-- Progress: 0%
+- Progress: 100%
 - Reviewer: reviewer
 - Acceptance:
-  - [ ] El panel se deriva determinísticamente de tipo, riesgo y scope, y se registra como expectedAgentIds.
-  - [ ] Todos los votos agregados referencian el mismo hash de diff/commit; una discrepancia falla cerrada.
-  - [ ] Señales de seguridad incluyen security-reviewer y preservan security/compliance veto.
-  - [ ] Quorum, críticos y ausencia de roles tienen pruebas de regresión.
+  - [x] El panel se deriva determinísticamente de tipo, riesgo y scope, y se registra como expectedAgentIds.
+  - [x] Todos los votos agregados referencian el mismo hash de diff/commit; una discrepancia falla cerrada.
+  - [x] Señales de seguridad incluyen security-reviewer y preservan security/compliance veto.
+  - [x] Quorum, críticos y ausencia de roles tienen pruebas de regresión.
 
 ### BC-025 | Evaluación de adopción y guía de flujos diarios
 

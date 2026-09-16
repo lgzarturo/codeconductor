@@ -126,6 +126,20 @@ describe('CouncilVerdictInputSchema', () => {
     expect(result.success).toBe(true);
   });
 
+  test('accepts a non-empty candidate receipt', () => {
+    const result = CouncilVerdictInputSchema.safeParse({
+      agentId: 'architect',
+      agentRole: 'Architect',
+      status: 'APPROVED',
+      securityVeto: false,
+      confidence: 1,
+      findings: [],
+      summary: 'Looks good.',
+      candidateHash: 'sha256:abc',
+    });
+    expect(result.success).toBe(true);
+  });
+
   test('rejects verdict with invalid status', () => {
     const input = {
       agentId: 'architect',
@@ -200,6 +214,16 @@ describe('ConsensusConfigSchema', () => {
   test('accepts majority config without an expected roster', () => {
     const input = { algorithm: 'majority', allowSecurityVeto: true };
     expect(ConsensusConfigSchema.safeParse(input).success).toBe(true);
+  });
+
+  test('rejects an empty candidate receipt', () => {
+    expect(
+      ConsensusConfigSchema.safeParse({
+        algorithm: 'majority',
+        allowSecurityVeto: true,
+        candidateHash: '',
+      }).success,
+    ).toBe(false);
   });
 });
 

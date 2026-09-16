@@ -371,6 +371,7 @@ export const CouncilVerdictInputSchema = z.object({
   confidence: z.number().min(0).max(1),
   findings: z.array(CouncilFindingSchema),
   summary: z.string(),
+  candidateHash: z.string().min(1).optional(),
 });
 
 /**
@@ -391,6 +392,7 @@ export const ConsensusConfigSchema = z
       .optional(),
     quorum: z.number().int().positive().optional(),
     criticalFindingsPolicy: z.enum(['escalate', 'reject', 'ignore']).optional(),
+    candidateHash: z.string().min(1).optional(),
   })
   // The unanimous algorithm cannot approve without a roster, so a config that
   // omits one is rejected at the edge rather than escalating every review.

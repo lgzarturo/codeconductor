@@ -20,6 +20,8 @@ export interface CouncilVerdictInput {
   readonly confidence?: number;
   readonly findings: readonly CouncilFinding[];
   readonly summary: string;
+  /** Immutable candidate (commit or diff) reviewed by this ballot. */
+  readonly candidateHash?: string;
 }
 
 export type CriticalFindingsPolicy = 'escalate' | 'reject' | 'ignore';
@@ -40,6 +42,8 @@ export interface ConsensusConfig {
   readonly quorum?: number;
   /** What to do with severity:critical findings after explicit vetos. */
   readonly criticalFindingsPolicy?: CriticalFindingsPolicy;
+  /** Immutable candidate required on every ballot when supplied. */
+  readonly candidateHash?: string;
 }
 
 /**
@@ -332,6 +336,17 @@ export function councilConsensus(
       summary: `${vetoType} veto applied by ${vetoAgent?.agentRole ?? vetoByAgentId} — rejected regardless of majority.`,
       individualVerdicts: verdicts,
     };
+  }
+
+  if (config.candidateHash !== undefined) {
+    const mismatched = verdicts.filter((verdict) => verdict.candidateHash !== config.candidateHash);
+    if (mismatched.length > 0) {
+      return escalated(
+        verdicts,
+        `Candidate receipt mismatch for ${mismatched.length} ballot(s) — escalated for human review.`,
+        counts,
+      );
+    }
   }
 
   const critical = allFindings.filter((f) => f.severity === 'critical');

@@ -30,6 +30,12 @@ export interface CouncilAgentSpec {
   readonly focus: readonly string[];
 }
 
+export interface CouncilPanelRequest {
+  readonly type: string;
+  readonly risk: 'low' | 'medium' | 'high';
+  readonly scope: readonly string[];
+}
+
 /**
  * Default council agents
  */
@@ -101,7 +107,7 @@ export function deriveConsensusConfig(
   spec: CouncilSpec,
   overrides: Partial<ConsensusConfig> = {},
 ): ConsensusConfig {
-  const expectedAgentIds = spec.agents.map((agent) => agent.id);
+  const expectedAgentIds = overrides.expectedAgentIds ?? spec.agents.map((agent) => agent.id);
   const allowSecurityVeto = overrides.allowSecurityVeto ?? true;
   if (allowSecurityVeto && !hasSecurityFocusedAgent(spec)) {
     throw new Error(
@@ -112,10 +118,47 @@ export function deriveConsensusConfig(
     algorithm: overrides.algorithm ?? 'majority',
     allowSecurityVeto,
     allowComplianceVeto: overrides.allowComplianceVeto ?? true,
-    expectedAgentIds: overrides.expectedAgentIds ?? expectedAgentIds,
+    expectedAgentIds,
     quorum: overrides.quorum ?? Math.ceil(expectedAgentIds.length / 2),
     criticalFindingsPolicy: overrides.criticalFindingsPolicy ?? 'escalate',
+    candidateHash: overrides.candidateHash,
   };
+}
+
+const DATA_HINTS = ['data', 'database', 'migration', 'analytics', 'pipeline', 'sql'];
+
+/**
+ * Select the smallest deterministic panel that covers the declared work.
+ * The input is deliberately descriptive rather than inferred from the tree so
+ * planning is repeatable and review scope remains auditable.
+ */
+export function selectCouncilPanel(
+  spec: CouncilSpec,
+  request: CouncilPanelRequest,
+): ConsensusConfig {
+  const type = request.type.trim().toLowerCase();
+  const scope = request.scope.join(' ').toLowerCase();
+  const selected = new Set(['delivery', 'security-reviewer', 'devil']);
+  const isFeature = type === 'feature' || type === 'api';
+  const isStructural = ['feature', 'api', 'refactor', 'migration', 'database'].includes(type);
+
+  if (isFeature || request.risk !== 'low') selected.add('architect');
+  if (isFeature || request.risk === 'high') selected.add('product');
+  if (DATA_HINTS.some((hint) => scope.includes(hint)) || ['migration', 'database'].includes(type)) {
+    selected.add('data-ops');
+  }
+  if (request.risk === 'high' || SECURITY_HINTS.some((hint) => scope.includes(hint))) {
+    selected.add('security-reviewer');
+  }
+  if (isStructural) selected.add('architect');
+
+  const expectedAgentIds = spec.agents
+    .map((agent) => agent.id)
+    .filter((id) => selected.has(id));
+  return deriveConsensusConfig(spec, {
+    expectedAgentIds,
+    quorum: Math.ceil(expectedAgentIds.length / 2),
+  });
 }
 
 /**

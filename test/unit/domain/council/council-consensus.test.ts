@@ -63,6 +63,46 @@ describe('domain/council/council-consensus', () => {
     expect(v.summary).toContain('Security veto');
   });
 
+  test('candidate receipt mismatch fails closed before an approving majority', () => {
+    const v = councilConsensus(
+      [
+        verdict({ agentId: 'a1', candidateHash: 'sha256:expected' }),
+        verdict({ agentId: 'a2', candidateHash: 'sha256:other' }),
+        verdict({ agentId: 'a3', candidateHash: 'sha256:expected' }),
+      ],
+      {
+        algorithm: 'majority',
+        allowSecurityVeto: true,
+        candidateHash: 'sha256:expected',
+      },
+    );
+    expect(v.status).toBe('ESCALATED');
+    expect(v.summary).toContain('Candidate receipt');
+  });
+
+  test('security veto remains a rejection when the candidate receipt mismatches', () => {
+    const v = councilConsensus(
+      [
+        verdict({ agentId: 'a1', candidateHash: 'sha256:other' }),
+        verdict({ agentId: 'a2', candidateHash: 'sha256:other' }),
+        verdict({
+          agentId: 'security-reviewer',
+          agentRole: 'security',
+          status: 'REJECTED',
+          securityVeto: true,
+          candidateHash: 'sha256:other',
+        }),
+      ],
+      {
+        algorithm: 'majority',
+        allowSecurityVeto: true,
+        candidateHash: 'sha256:expected',
+      },
+    );
+    expect(v.status).toBe('REJECTED');
+    expect(v.vetoApplied).toBe(true);
+  });
+
   test('compliance veto overrides an approving majority', () => {
     const v = councilConsensus([
       verdict({ agentId: 'a1', status: 'APPROVED' }),

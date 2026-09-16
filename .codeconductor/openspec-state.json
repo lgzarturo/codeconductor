@@ -14,7 +14,7 @@
       "acceptanceCriteria": [
         "Repo map identifies relevant files and impact radius"
       ],
-      "status": "pending",
+      "status": "done",
       "itemHash": "7f86e2538cbef685"
     },
     {
@@ -31,7 +31,7 @@
       "acceptanceCriteria": [
         "Technical plan lists files affected and approach"
       ],
-      "status": "pending",
+      "status": "done",
       "itemHash": "7f86e2538cbef685"
     },
     {
@@ -51,7 +51,7 @@
         "Test covers: Señales de seguridad incluyen security-reviewer y preservan security/compliance veto.",
         "Test covers: Quorum, críticos y ausencia de roles tienen pruebas de regresión."
       ],
-      "status": "pending",
+      "status": "done",
       "itemHash": "7f86e2538cbef685"
     },
     {
@@ -71,7 +71,7 @@
         "Señales de seguridad incluyen security-reviewer y preservan security/compliance veto.",
         "Quorum, críticos y ausencia de roles tienen pruebas de regresión."
       ],
-      "status": "pending",
+      "status": "done",
       "itemHash": "7f86e2538cbef685"
     },
     {
@@ -90,7 +90,7 @@
         "Tests pass",
         "No scope creep beyond backlog item"
       ],
-      "status": "pending",
+      "status": "done",
       "itemHash": "7f86e2538cbef685"
     }
   ],

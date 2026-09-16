@@ -1,3 +1,14 @@
+# Single source of truth for the council roster (loaded by
+# src/core/presets/preset-loader.ts -> loadCouncilPreset, consumed by
+# `cc install council --target <t>` in src/commands/install.command.ts).
+# Per-role checklist and finding-format content lives in
+# src/domain/council/council-agent.ts (generateAgentContent /
+# checklistFor), shared by every generator except Codex, which renders
+# its own TOML shape in src/adapters/codex/codex-council-generator.ts.
+# Adding or renaming an agent here requires a matching entry in
+# ROLE_PROFILES (council-agent.ts) and, if it changes the roster's ids,
+# updating DEFAULT_COUNCIL_AGENTS in src/domain/council/council-spec.ts —
+# test/unit/domain/council/council-spec.test.ts asserts the two stay in sync.
 name: council
 version: 0.1.0
 description: Multi-agent council for code review and architecture decisions
@@ -12,15 +23,6 @@ agents:
       - architecture
       - design-patterns
       - code-structure
-
-  - id: security
-    role: Security
-    context: repo-readonly
-    modelHint: security-reasoning
-    focus:
-      - security
-      - vulnerabilities
-      - compliance
 
   - id: product
     role: Product
@@ -56,6 +58,7 @@ agents:
     focus:
       - security
       - vulnerabilities
+      - compliance
       - credentials
       - injection
       - auth

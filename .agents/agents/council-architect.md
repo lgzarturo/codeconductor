@@ -1,3 +1,16 @@
+---
+description: "Architect council agent. Focus: architecture, design-patterns, code-structure. Context: repo-readonly. Model hint: strong-reasoning."
+mode: subagent
+permission:
+  read: allow
+  edit: deny
+  bash: deny
+  glob: allow
+  grep: allow
+  webfetch: deny
+  websearch: deny
+---
+
 # Architect Agent
 
 ## Role

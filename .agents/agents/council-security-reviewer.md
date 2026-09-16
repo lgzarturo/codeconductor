@@ -1,3 +1,16 @@
+---
+description: "Security Reviewer council agent. Focus: security, vulnerabilities, compliance, credentials, injection, auth, supply-chain. Context: repo-readonly. Model hint: security-reasoning."
+mode: subagent
+permission:
+  read: allow
+  edit: deny
+  bash: deny
+  glob: allow
+  grep: allow
+  webfetch: deny
+  websearch: deny
+---
+
 # Security Reviewer Agent
 
 ## Role
@@ -12,6 +25,7 @@ security-reasoning
 ## Focus Areas
 - security
 - vulnerabilities
+- compliance
 - credentials
 - injection
 - auth

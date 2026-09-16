@@ -40,16 +40,6 @@ the coding-agent CLI, not Inflection's Pi). It lives at the project root
 4. **Goal-Driven Execution** — turn the task into a verifiable goal with a
    success check; loop until it passes.
 
-## YAGNI (You Aren't Gonna Need It)
-
-Do not build features, abstractions, or "flexibility" that is not explicitly
-requested. Every line you write must solve a problem that exists now.
-
-## Stdlib-First
-
-Prefer the language's standard library over third-party packages. Before adding
-a dependency, check whether a built-in module already solves the problem.
-
 ## Commands
 
 CodeConductor ships its slash commands as Pi prompt templates under

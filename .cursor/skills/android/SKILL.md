@@ -38,6 +38,10 @@ paths:
 
 This playbook defines the architecture, UI design system, performance guidelines, and testing strategy for native Android applications.
 
+`android-ui-design` owns specialized Jetpack Compose phone UI/UX design,
+implementation, review, and audit guidance. This skill remains the general guide
+for architecture, Hilt dependency injection, Media3, performance, and testing.
+
 ---
 
 ## 1. Lead Architect & Modularization

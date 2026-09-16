@@ -1,3 +1,16 @@
+---
+description: "Devil council agent. Focus: review, edge-cases, failure-modes. Context: repo-readonly. Model hint: adversarial."
+mode: subagent
+permission:
+  read: allow
+  edit: deny
+  bash: deny
+  glob: allow
+  grep: allow
+  webfetch: deny
+  websearch: deny
+---
+
 # Devil Agent
 
 ## Role

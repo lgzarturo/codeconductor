@@ -13,6 +13,7 @@ import { parseCommand } from './command-parser';
 import { productGraphPath } from '../product-graph/paths';
 import { queryNodes } from '../product-graph/graph-store';
 import { isProductGraphDisabled } from '../evaluation/harness-catalog';
+import { loadOpenspecState } from '../openspec/openspec-state';
 
 const DEFAULT_POLICIES: ExecutionContextInput['policies'] = {
   architecture: 'modular',
@@ -90,6 +91,15 @@ export async function resolveContext(
 ): Promise<ExecutionContextInput> {
   const ast = await resolveAstSource(projectRoot);
   const knowledge = await loadProductKnowledge(projectRoot);
+  if (envelope.command === 'openspec') {
+    const state = await loadOpenspecState(projectRoot);
+    const changePath = state.success && state.data.activeItemId
+      ? state.data.changePaths[state.data.activeItemId]
+      : undefined;
+    if (changePath) {
+      knowledge.openspec = { changePath };
+    }
+  }
   const firstPhase = profile.phases[0];
 
   let stack = envelope.repoContext.stack;

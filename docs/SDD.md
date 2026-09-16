@@ -105,3 +105,19 @@ This 8-phase pipeline is **library-only**. Shipped delivery is CCEP slash
 commands plus `openspec validate` / `analyze` / `plan` / `done` / `archive`.
 Specs use `FR-###` / `SC-###` and Given/When/Then. Policy lives in
 `BACKLOG.md` `## Global` and `AGENTS.md` — not a second constitution file.
+
+### Native OpenSpec change contract
+
+CodeConductor owns this contract; it does not install or require the external
+`@fission-ai/openspec` package. `openspec plan` creates a change-local
+`change.yaml` manifest and delta specs under
+`openspec/changes/<change>/specs/<capability>/spec.md`. A delta may contain
+`ADDED`, `MODIFIED`, and `REMOVED` requirements. On `openspec archive`, the CLI
+validates and synchronizes every delta to `openspec/specs/` before moving the
+change to the archive; invalid or conflicting requirements leave durable specs
+unchanged.
+
+CCEP compiles OpenSpec prompts with a phase-specific context package. It passes
+the relevant artifact paths and only the knowledge needed by `discover`,
+`design`, `test`, `implement`, or `review`, rather than repeating the complete
+project knowledge in every phase.

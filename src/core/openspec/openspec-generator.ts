@@ -12,6 +12,14 @@ function pad3(n: number): string {
   return String(n).padStart(3, '0');
 }
 
+function capabilitySlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48) || 'change';
+}
+
 function proposalContent(item: BacklogItemInput): string {
   return `# Proposal: ${item.title}
 
@@ -175,7 +183,14 @@ export async function generateOpenspecChange(
   await writeFile(resolve(changeDir, 'proposal.md'), proposalContent(item), 'utf-8');
   await writeFile(resolve(changeDir, 'design.md'), designContent(item), 'utf-8');
   await writeFile(resolve(changeDir, 'tasks.md'), tasksContent(taskCards, taskOpts), 'utf-8');
-  await writeFile(resolve(changeDir, 'specs', 'delta.md'), specDelta(item), 'utf-8');
+  const capability = capabilitySlug(item.title);
+  await mkdir(resolve(changeDir, 'specs', capability), { recursive: true });
+  await writeFile(resolve(changeDir, 'specs', capability, 'spec.md'), specDelta(item), 'utf-8');
+  await writeFile(
+    resolve(changeDir, 'change.yaml'),
+    `version: 1\nbacklogId: ${item.id}\nprofile: standard\ncapabilities:\n  - ${capability}\n`,
+    'utf-8',
+  );
 
   return `openspec/changes/${slug}`;
 }

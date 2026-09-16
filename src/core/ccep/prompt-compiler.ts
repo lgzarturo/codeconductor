@@ -1,4 +1,5 @@
 import type { ExecutionContextInput } from '../../validation/schemas';
+import { buildOpenspecPhaseContext } from '../openspec/openspec-context';
 
 export interface PromptLayer {
   readonly name:
@@ -101,6 +102,9 @@ function buildAgentLayer(role: string, phase: string): string {
 }
 
 function buildTaskLayer(context: ExecutionContextInput, phase: string): string {
+  if (context.envelope.command === 'openspec') {
+    return JSON.stringify(buildOpenspecPhaseContext(context, phase).task, null, 2);
+  }
   return JSON.stringify(
     {
       command: context.envelope.command,
@@ -125,6 +129,9 @@ export function compilePrompt(options: {
   const schemaName =
     phaseDef?.outputSchema ?? context.outputSchema ?? 'agent-output';
   const schemaBody = OUTPUT_SCHEMAS[schemaName] ?? OUTPUT_SCHEMAS['agent-output'];
+  const knowledge = context.envelope.command === 'openspec'
+    ? buildOpenspecPhaseContext(context, phase).knowledge
+    : context.knowledge;
 
   const layers: PromptLayer[] = [
     { name: 'system', content: buildSystemLayer() },
@@ -133,7 +140,7 @@ export function compilePrompt(options: {
       name: 'policies',
       content: JSON.stringify({ ...context.policies, promptVersion }, null, 2),
     },
-    { name: 'knowledge', content: JSON.stringify(context.knowledge, null, 2) },
+    { name: 'knowledge', content: JSON.stringify(knowledge, null, 2) },
     { name: 'ast', content: JSON.stringify(context.ast, null, 2) },
     { name: 'task', content: buildTaskLayer(context, phase) },
     {

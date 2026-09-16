@@ -85,6 +85,35 @@ describe('ccep prompt-compiler', () => {
     expect(schemaLayer?.content).toContain('questionsForUser');
   });
 
+  test('uses a phase-specific context package for OpenSpec', async () => {
+    const envelope = parseCommand('openspec', 'Deliver BC-001', PROJECT_ROOT);
+    const profile = loadWorkflowProfile('openspec');
+    const context = await resolveContext(envelope, profile, PROJECT_ROOT);
+    context.knowledge = {
+      domains: ['workflow'],
+      decisions: [{ id: 'D-1', name: 'TDD', data: {} }],
+      requirements: [{ id: 'R-1', name: 'traceability', status: 'active' }],
+      risks: [{ id: 'risk-1', name: 'scope drift' }],
+      openspec: { changePath: 'openspec/changes/bc-001-deliver' },
+      unrelated: 'must not enter the implementation prompt',
+    };
+
+    const compiled = compilePrompt({
+      role: 'implementer',
+      phase: 'implement',
+      context,
+      promptVersion: 'v1.0.0',
+    });
+
+    const knowledge = compiled.layers.find((layer) => layer.name === 'knowledge')?.content;
+    const task = compiled.layers.find((layer) => layer.name === 'task')?.content;
+    expect(knowledge).toContain('D-1');
+    expect(knowledge).not.toContain('unrelated');
+    expect(task).toContain('design.md');
+    expect(task).toContain('openspec/changes/bc-001-deliver');
+    expect(task).not.toContain('userRequest');
+  });
+
   test('council-review prompt stub matches CouncilVerdictSchema', async () => {
     const envelope = parseCommand('council', 'Add OAuth2 login', PROJECT_ROOT);
     const profile = loadWorkflowProfile('council');

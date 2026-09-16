@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { assessSpecMarkdown, type SpecQualityReport } from './spec-quality';
 
@@ -61,6 +61,25 @@ function testSection(tasksMarkdown: string): string {
     }
   }
   return kept.join('\n');
+}
+
+async function readDeltaSpecs(specDir: string): Promise<string> {
+  let entries;
+  try {
+    entries = await readdir(specDir, { withFileTypes: true });
+  } catch {
+    return '';
+  }
+  const contents: string[] = [];
+  for (const entry of entries) {
+    const path = join(specDir, entry.name);
+    if (entry.isDirectory()) {
+      contents.push(await readDeltaSpecs(path));
+    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      contents.push(await readFile(path, 'utf-8'));
+    }
+  }
+  return contents.filter(Boolean).join('\n\n');
 }
 
 /**
@@ -155,13 +174,7 @@ export async function analyzeChangeFolder(
   },
 ): Promise<SpecAnalyzeReport> {
   const changeRoot = resolve(projectRoot, changePath);
-  const specPath = join(changeRoot, 'specs', 'delta.md');
-  let specMarkdown = '';
-  try {
-    specMarkdown = await readFile(specPath, 'utf-8');
-  } catch {
-    specMarkdown = '';
-  }
+  const specMarkdown = await readDeltaSpecs(join(changeRoot, 'specs'));
   let tasksMarkdown = '';
   try {
     tasksMarkdown = await readFile(join(changeRoot, 'tasks.md'), 'utf-8');

@@ -175,5 +175,10 @@ describe('openspec start/done/block/archive', () => {
     );
     const backlog = await readFile(join(root, 'BACKLOG.md'), 'utf-8');
     expect(backlog).toMatch(/## Archive[\s\S]*BC-001/);
+    const durableSpecs = await readFile(
+      join(root, 'openspec/specs', 'add-backlog-parser', 'spec.md'),
+      'utf-8',
+    );
+    expect(durableSpecs).toContain('FR-001');
   });
 });

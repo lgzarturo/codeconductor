@@ -635,7 +635,9 @@ npx cc-codeconductor openspec archive BC-001
 
 Subcommands: `validate` / `scan` / `plan` / `analyze` / `status` / `next` /
 `start` / `done` / `block` / `archive`. `analyze` is read-only coverage
-(FR/SC → tasks → tests). Illegal status transitions fail closed. See
+(FR/SC → tasks → tests). Planned changes use capability-scoped delta specs;
+archive synchronizes validated deltas into durable specs before filing the
+change. Illegal status transitions fail closed. See
 [docs/SDD.md](docs/SDD.md) and the OpenSpec skill.
 
 #### Product OS — `ingest` / `product` / `orchestrate` / `impact` / `verify`

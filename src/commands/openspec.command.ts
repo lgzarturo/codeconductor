@@ -15,6 +15,7 @@ import {
 } from '../core/openspec/openspec-generator';
 import { assessChangeFolder } from '../core/openspec/spec-quality';
 import { analyzeChangeFolder } from '../core/openspec/spec-analyzer';
+import { syncChangeSpecs } from '../core/openspec/spec-sync';
 import { SpecAnalyzeReportSchema } from '../validation/schemas';
 import { hasTddRunnerEvidence } from '../core/verification/verification-runner';
 import { hasPassingScorecard } from '../core/evaluation/outcome-store';
@@ -735,18 +736,13 @@ async function handleArchive(
     }
   }
 
-  if (itemLoaded.item.status !== 'DONE') {
-    const toDone = await transitionItem(projectRoot, itemLoaded.item, 'DONE', 100);
-    if (!toDone.ok) return fail(command, [toDone.error]);
-  }
-
-  const content = await readBacklogMarkdown(projectRoot);
-  const archived = archiveItemInMarkdown(content, itemId);
-  await persistBacklog(projectRoot, archived);
-
   let archivedPath: string | undefined;
   const changePath = loaded.state.changePaths[itemId];
   if (changePath && !changePath.includes('/archive/')) {
+    const synced = await syncChangeSpecs(projectRoot, changePath);
+    if (!synced.success) {
+      return fail(command, [`Cannot archive ${itemId}: spec sync failed: ${synced.errors.join('; ')}`]);
+    }
     try {
       archivedPath = await archiveChangeFolder(projectRoot, changePath);
     } catch (e) {
@@ -755,6 +751,15 @@ async function handleArchive(
       ]);
     }
   }
+
+  if (itemLoaded.item.status !== 'DONE') {
+    const toDone = await transitionItem(projectRoot, itemLoaded.item, 'DONE', 100);
+    if (!toDone.ok) return fail(command, [toDone.error]);
+  }
+
+  const content = await readBacklogMarkdown(projectRoot);
+  const archived = archiveItemInMarkdown(content, itemId);
+  await persistBacklog(projectRoot, archived);
 
   const nextState: OpenspecStateInput = {
     ...loaded.state,

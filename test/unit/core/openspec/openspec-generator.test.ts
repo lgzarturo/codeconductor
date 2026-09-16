@@ -51,7 +51,7 @@ afterAll(async () => {
 
 describe('core/openspec/openspec-generator', () => {
   describe('generateOpenspecChange', () => {
-    test('writes the change folder with proposal, design, tasks and delta spec', async () => {
+    test('writes the change folder with a capability delta and manifest', async () => {
       const root = await mkdtemp(join(ROOT, 'proj-'));
       const rel = await generateOpenspecChange(root, ITEM, CARDS);
 
@@ -60,13 +60,14 @@ describe('core/openspec/openspec-generator', () => {
       expect(existsSync(join(base, 'proposal.md'))).toBe(true);
       expect(existsSync(join(base, 'design.md'))).toBe(true);
       expect(existsSync(join(base, 'tasks.md'))).toBe(true);
-      expect(existsSync(join(base, 'specs', 'delta.md'))).toBe(true);
+      expect(existsSync(join(base, 'specs', 'add-search', 'spec.md'))).toBe(true);
+      expect(existsSync(join(base, 'change.yaml'))).toBe(true);
 
       const proposal = await readFile(join(base, 'proposal.md'), 'utf-8');
       expect(proposal).toContain('# Proposal: Add Search');
       expect(proposal).toContain('more conversions');
 
-      const spec = await readFile(join(base, 'specs', 'delta.md'), 'utf-8');
+      const spec = await readFile(join(base, 'specs', 'add-search', 'spec.md'), 'utf-8');
       expect(spec).toContain('FR-001');
       expect(spec).toContain('SC-001');
       expect(spec).toContain('MUST');

@@ -19,6 +19,7 @@ import type { ProductOptions } from '../commands/product.command';
 import type { OrchestrateOptions } from '../commands/orchestrate.command';
 import type { ImpactOptions } from '../commands/impact.command';
 import type { VerifyOptions } from '../commands/verify.command';
+import type { RddOptions } from '../commands/rdd.command';
 import type { AskOptions } from '../commands/ask.command';
 import type { SetupOptions } from '../commands/setup.command';
 import type { StatusOptions } from '../commands/status.command';
@@ -665,6 +666,27 @@ export async function routeCommand(
         allowCompileCheck:
           options['allow-compile-check'] === true || options['allow-compile-check'] === 'true',
       } as VerifyOptions);
+    }
+
+    case 'rdd': {
+      const validSubs = ['capture', 'verify', 'status', 'git-check', 'install-hooks'] as const;
+      if (!subcommand || !validSubs.includes(subcommand as (typeof validSubs)[number])) {
+        return unknownSubcommand('rdd', subcommand ?? '', [...validSubs]);
+      }
+      const { rddCommand } = await import('../commands/rdd.command');
+      const paths = typeof options.paths === 'string'
+        ? options.paths.split(',').map((path) => path.trim()).filter(Boolean)
+        : undefined;
+      return rddCommand({
+        subcommand: subcommand as RddOptions['subcommand'],
+        projectRoot,
+        taskId: (options.task as string | undefined) ?? args.rest?.[0],
+        receiptId: options.receipt as string | undefined,
+        phase: options.phase as RddOptions['phase'],
+        paths,
+        outcome: options.outcome as RddOptions['outcome'],
+        command: options.command as string | undefined,
+      });
     }
 
     case 'ccep': {

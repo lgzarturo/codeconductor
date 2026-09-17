@@ -459,6 +459,12 @@ docs | test **Risk:** low | medium | high **Scope:** [files or modules affected]
 **Agent:** [agent name] **Requires review:** yes | no
 ```
 
+## Receipt integrity
+
+- For any implementation, test, review, handoff, or delivery decision, capture or verify the current RDD receipt with `bun run dev rdd`.
+- A receipt is valid only for its exact candidate. If code, tests, contracts, or runner configuration changed, repeat the affected verification.
+- TDD and Mutation Testing retain their existing gates; RDD verifies that their observed evidence still belongs to the current candidate.
+
 <!-- CODECONDUCTOR:END managed -->
 
 ---

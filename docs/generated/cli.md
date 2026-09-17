@@ -184,6 +184,18 @@ Verify task completion with evidence.
 cc-codeconductor verify --task <id>
 ```
 
+## rdd
+
+Capture and validate Receipt-Driven Development evidence.
+
+```text
+cc-codeconductor rdd capture --task <id> [--phase red|green|review]
+cc-codeconductor rdd verify --receipt <id>
+cc-codeconductor rdd status [--task <id>]
+cc-codeconductor rdd git-check
+cc-codeconductor rdd install-hooks
+```
+
 ## seo
 
 Audit SEO and generate llms.txt.

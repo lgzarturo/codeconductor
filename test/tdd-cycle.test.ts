@@ -163,4 +163,25 @@ test('${name}', () => { expect(1).toBe(${passing ? 1 : 2}); });
     if (!afterGreen.success) return;
     expect(afterGreen.data.state.phase).toBe('REFACTOR');
   });
+
+  test('refuses a TDD transition when the verified candidate changed', async () => {
+    await writeSuite('fail.test.ts', false);
+    const captured = await captureTddSuiteEvidence(projectRoot, 'task-tdd', {
+      command: 'bun test fail.test.ts',
+      phase: 'red',
+    });
+    expect(captured.success).toBe(true);
+    if (!captured.success) return;
+
+    await writeFile(join(projectRoot, 'implementation.ts'), 'export const changed = true;\n');
+    const advanced = await advanceTddPhase(
+      projectRoot,
+      'task-tdd',
+      createInitialTddState(),
+      captured.data.evidenceId,
+    );
+
+    expect(advanced.success).toBe(false);
+    if (!advanced.success) expect(advanced.error.message).toContain('stale');
+  });
 });

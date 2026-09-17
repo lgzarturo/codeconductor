@@ -1084,4 +1084,10 @@ Contract version:** v0.1.0 **Date:** [YYYY-MM-DD] **Evaluator:** [human name or
   starting.
 - Delegate verbose operations to sub-agents.
 
+## Receipt integrity
+
+- For any implementation, test, review, handoff, or delivery decision, capture or verify the current RDD receipt with `bun run dev rdd`.
+- A receipt is valid only for its exact candidate. If code, tests, contracts, or runner configuration changed, repeat the affected verification.
+- TDD and Mutation Testing retain their existing gates; RDD verifies that their observed evidence still belongs to the current candidate.
+
 <!-- CODECONDUCTOR:END managed -->

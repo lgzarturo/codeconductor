@@ -52,17 +52,30 @@ export async function oddCommand(options: OddOptions): Promise<{ code: number; d
     if (options.subcommand === 'reconcile') {
       const result = await reconcileDeliveryLedger(options.projectRoot, options.id);
       const memory = await loadMemoryIndex(options.projectRoot);
+      const { rddCommand } = await import('./rdd.command');
+      const rdd = await rddCommand({
+        subcommand: 'status',
+        projectRoot: options.projectRoot,
+        taskId: result.ledger.taskCard.id,
+      });
+      const receipts = (rdd.data as { receipts?: Array<{ valid?: boolean }> }).receipts ?? [];
+      const staleReceipt = receipts.some((receipt) => receipt.valid === false);
+      const changedPaths = staleReceipt
+        ? [...result.changedPaths, 'RDD receipt'].sort()
+        : result.changedPaths;
       return {
         code: 0,
         data: {
           success: true,
-          status: result.changedPaths.length === 0 ? 'ready' : 'conflict',
-          resume: resumeDecision(result.changedPaths),
+          status: changedPaths.length === 0 ? 'ready' : 'conflict',
+          resume: resumeDecision(changedPaths),
+          rdd,
           memory: memory.success ? 'available' : 'unavailable',
           memoryPointers: memory.success
             ? memory.data.pointers.filter((pointer) => pointer.topic_key === result.ledger.memoryTopicKey)
             : [],
           ...result,
+          changedPaths,
         },
       };
     }

@@ -35,4 +35,10 @@ intent to the right slash command.
 - Do not skip the Reviewer step for medium- or high-risk changes.
 - Do not store secrets in any file loaded by Gemini CLI.
 
+## Receipt integrity
+
+- For any implementation, test, review, handoff, or delivery decision, capture or verify the current RDD receipt with `bun run dev rdd`.
+- A receipt is valid only for its exact candidate. If code, tests, contracts, or runner configuration changed, repeat the affected verification.
+- TDD and Mutation Testing retain their existing gates; RDD verifies that their observed evidence still belongs to the current candidate.
+
 <!-- CODECONDUCTOR:END managed -->

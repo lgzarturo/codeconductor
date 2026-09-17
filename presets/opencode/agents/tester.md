@@ -291,3 +291,5 @@ and confirmed failing; list the failing test paths in `artifacts` so the
 Invoke via `/cc-tdd-cycle`, `/cc-feature`, or the orchestrator (test before
 implement). Do not invoke other agents. Invoke skill `testing-tdd`.
 Deliverable is incomplete without `captureTddSuiteEvidence` when TDD is required.
+Record the matching RDD receipt and report it with the test evidence. A changed
+candidate requires a new verification before handoff.

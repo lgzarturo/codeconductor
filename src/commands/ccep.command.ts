@@ -457,12 +457,27 @@ export async function ccepCommand(
         mergedConfig = { ...mergedConfig, ...parsedConfig.data };
       }
 
+      let currentCandidateHash: string | undefined;
+      if (mergedConfig?.candidateHash !== undefined) {
+        const { captureReceipt, collectReceiptPaths } = await import('../core/verification/rdd-receipt');
+        const receipt = await captureReceipt(projectRoot, {
+          taskId: 'council',
+          phase: 'review',
+          paths: await collectReceiptPaths(projectRoot),
+          outcome: 'passed',
+          coverage: 'project',
+        });
+        currentCandidateHash = receipt.manifestHash;
+        mergedConfig = { ...mergedConfig, candidateHash: currentCandidateHash };
+      }
+
       const verdict = councilConsensus(parsedBallots.verdicts, mergedConfig);
       return {
         code: consensusExitCode(verdict.status),
         data: {
           success: verdict.status === 'APPROVED',
           command: 'ccep consensus',
+          candidateHash: currentCandidateHash,
           verdict,
         },
       };

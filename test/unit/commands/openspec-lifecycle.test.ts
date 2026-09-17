@@ -10,12 +10,20 @@ import {
   TDD_CAPTURED_BY,
   TDD_EVIDENCE_SOURCE,
 } from '../../../src/core/verification/verification-runner';
+import { captureReceipt } from '../../../src/core/verification/rdd-receipt';
 import type { OpenspecTaskCardInput } from '../../../src/validation/schemas';
 
-async function writeTddEvidence(root: string, taskId: string): Promise<void> {
+async function writeTddEvidence(root: string, taskId: string, phase: 'test' | 'implement'): Promise<void> {
   const dir = join(root, '.codeconductor', 'evidence');
   await mkdir(dir, { recursive: true });
   const id = `ev-tdd-${taskId}-life`;
+  const suitePassed = phase === 'implement';
+  const rddReceipt = await captureReceipt(root, {
+    taskId,
+    phase: suitePassed ? 'green' : 'red',
+    paths: ['BACKLOG.md'],
+    outcome: suitePassed ? 'passed' : 'failed',
+  });
   await writeFile(
     join(dir, `${id.replace(/[^A-Za-z0-9_-]/g, '_')}.json`),
     JSON.stringify({
@@ -25,7 +33,7 @@ async function writeTddEvidence(root: string, taskId: string): Promise<void> {
       timestamp: new Date().toISOString(),
       relatedTask: taskId,
       confidence: 0.9,
-      data: { capturedBy: TDD_CAPTURED_BY, suiteFailed: true, suitePassed: false },
+      data: { capturedBy: TDD_CAPTURED_BY, suiteFailed: !suitePassed, suitePassed, rddReceipt },
     }),
   );
 }
@@ -173,7 +181,7 @@ describe('openspec start/done/block/archive', () => {
 
     for (const card of cards) {
       if (card.phase === 'test' || card.phase === 'implement') {
-        await writeTddEvidence(root, card.id);
+        await writeTddEvidence(root, card.id, card.phase);
       }
       const start = await run(root, 'start', card.id);
       expect(start.code).toBe(0);

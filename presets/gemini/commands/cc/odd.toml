@@ -12,4 +12,9 @@ bun run dev ccep profile --command odd
 ```
 
 Create a ledger only after authorization and tracked coordination. Read-only and small work do not create state.
+
+When ODD has verification evidence, include its RDD receipt in the ledger
+handoff. On resume, verify it against the workspace before relying on a prior
+test or review result. If it is stale, keep the ledger and repeat only the
+invalidated verification.
 """

@@ -138,6 +138,10 @@ npx cc-codeconductor openspec archive <itemId>
 
 `start` moves the card `pending → doing` and the item `PLANNED → IN_PROGRESS`. `done` marks the card complete, updates Progress, and moves the item to `REVIEW` when every card is done and review is required. `archive` requires all cards done (and review evidence when Global review is required) and moves `openspec/changes/<slug>` to `archive/`.
 
+For test and implementation cards, `done` also requires a current RDD-backed
+RED or GREEN receipt respectively. Do not reuse evidence after candidate files
+change; capture and verify the matching receipt again.
+
 ---
 
 ## Step 5 — Model matrix and execute loop

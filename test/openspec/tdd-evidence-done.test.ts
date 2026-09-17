@@ -7,6 +7,7 @@ import {
   TDD_CAPTURED_BY,
   TDD_EVIDENCE_SOURCE,
 } from '../../src/core/verification/verification-runner';
+import { captureReceipt } from '../../src/core/verification/rdd-receipt';
 import type { OpenspecTaskCardInput } from '../../src/validation/schemas';
 
 const FIXTURE = join(import.meta.dir, '../fixtures/backlog/BACKLOG.md');
@@ -32,6 +33,12 @@ async function writeRunnerEvidence(root: string, taskId: string): Promise<void> 
   const dir = join(root, '.codeconductor', 'evidence');
   await mkdir(dir, { recursive: true });
   const id = `ev-tdd-${taskId}-ok`;
+  const rddReceipt = await captureReceipt(root, {
+    taskId,
+    phase: 'verification',
+    paths: ['BACKLOG.md'],
+    outcome: 'failed',
+  });
   await writeFile(
     join(dir, `${id.replace(/[^A-Za-z0-9_-]/g, '_')}.json`),
     JSON.stringify({
@@ -41,7 +48,7 @@ async function writeRunnerEvidence(root: string, taskId: string): Promise<void> 
       timestamp: new Date().toISOString(),
       relatedTask: taskId,
       confidence: 0.9,
-      data: { capturedBy: TDD_CAPTURED_BY, suiteFailed: true, suitePassed: false },
+      data: { capturedBy: TDD_CAPTURED_BY, suiteFailed: true, suitePassed: false, rddReceipt },
     }),
   );
 }

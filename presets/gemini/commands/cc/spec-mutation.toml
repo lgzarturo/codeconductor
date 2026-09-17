@@ -125,6 +125,11 @@ Verdict is binary: PASS continues to the mutation gate; REJECT returns to the
 
 ## Stage 5 — Mutation gate (`mutation_testing`)
 
+RDD complements this gate: capture the candidate receipt before Mutation Testing
+and verify it after the runner restores production source. A survivor opens a
+new tester/reviewer-approved test revision; it never makes an earlier receipt
+valid again.
+
 Run the deterministic AST mutator shipped with this preset:
 
 ```bash

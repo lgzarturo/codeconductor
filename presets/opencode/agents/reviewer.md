@@ -288,3 +288,5 @@ Invoke skill `evaluation` and run `scorecard record` with agent `reviewer`, mode
 Invoke via `/cc-review` or the orchestrator. Do not invoke other agents.
 Invoke skill `evaluation`. Deliverable is incomplete without
 `scorecard create --from-diff` and a recorded PASS|REVISE|REJECT.
+An approval applies only to the RDD candidate receipt supplied with the review;
+request a fresh verification when it is stale.

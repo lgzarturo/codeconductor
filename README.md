@@ -161,6 +161,18 @@ Agent phases: validate-backlog → discover → design → **test** → implemen
 review. Test-before-implement is required whenever both phases apply.
 `/cc-tdd-cycle` enforces Red → Green → Refactor (`tester` then `implementer`).
 
+### Receipt-Driven Development
+
+RDD binds local verification evidence to the exact code, tests, contracts,
+lockfiles, and configuration it observed. Use `bun run dev rdd capture --task
+<id>`, `bun run dev rdd verify --receipt <id>`, and `bun run dev rdd status` to
+inspect that evidence. A changed candidate invalidates its receipt and requires
+the affected verification to run again. RDD complements TDD and Mutation
+Testing: it checks evidence freshness rather than behavioral coverage.
+Run `bun run dev rdd install-hooks` in a Git repository to install preserving
+pre-commit and pre-push checks; the hook runs `rdd git-check` against the latest
+receipt.
+
 ### Review agents
 
 15 Conductor Agents ship in `presets/<target>/agents/`. Review path:

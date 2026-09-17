@@ -10,6 +10,7 @@ import {
 import { loadGoal, writeGoal } from '../src/core/goal/goal-state';
 import { loadOperationalState, setActiveTask } from '../src/core/memory/operational-state';
 import { evidenceDir } from '../src/core/product-graph/paths';
+import { captureReceipt } from '../src/core/verification/rdd-receipt';
 import type { GoalGraphInput } from '../src/validation/schemas';
 
 describe('Orchestrator runtime', () => {
@@ -140,6 +141,13 @@ describe('completeTask: preconditions are validated before writing', () => {
   ) {
     const dir = evidenceDir(projectRoot);
     await mkdir(dir, { recursive: true });
+    const rddReceipt = await captureReceipt(projectRoot, {
+      taskId: relatedTask,
+      phase: 'verification',
+      paths: [],
+      outcome: body?.data?.passed === false ? 'failed' : 'passed',
+      coverage: 'project',
+    });
     await writeFile(
       join(dir, `${id}.json`),
       JSON.stringify({
@@ -149,7 +157,7 @@ describe('completeTask: preconditions are validated before writing', () => {
         timestamp: new Date().toISOString(),
         relatedTask,
         confidence: 0.9,
-        data: body?.data ?? { passed: true, checks: [] },
+        data: { ...(body?.data ?? { passed: true, checks: [] }), rddReceipt },
       }),
       'utf-8',
     );

@@ -42,6 +42,14 @@ export {
   loadTddSuiteEvidence,
   hasTddRunnerEvidence,
 } from './core/verification/verification-runner';
+
+export {
+  captureReceipt,
+  collectReceiptPaths,
+  isRddReceipt,
+  verifyReceipt,
+} from './core/verification/rdd-receipt';
+export type { RddPhase, RddReceipt, RddReceiptPath, ReceiptVerification } from './core/verification/rdd-receipt';
 export type {
   RunVerificationOptions,
   VerificationCheck,

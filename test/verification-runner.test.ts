@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gateTaskCompletion, runVerification } from '../src/core/verification/verification-runner';
 import { evidenceDir } from '../src/core/product-graph/paths';
+import { captureReceipt } from '../src/core/verification/rdd-receipt';
 import type { EvidenceInput, GoalGraphInput } from '../src/validation/schemas';
 import type { Result } from '../src/utils/result';
 
@@ -68,7 +69,18 @@ function makeGoal(overrides: Partial<GoalGraphInput['tasks'][0]> = {}): GoalGrap
 async function writeEvidence(evidence: EvidenceInput) {
   const dir = evidenceDir(projectRoot);
   await mkdir(dir, { recursive: true });
-  await writeFile(join(dir, `${evidence.id}.json`), JSON.stringify(evidence, null, 2), 'utf-8');
+  const rddReceipt = await captureReceipt(projectRoot, {
+    taskId: evidence.relatedTask ?? 'task-1',
+    phase: 'verification',
+    paths: [],
+    outcome: evidence.data?.passed === false ? 'failed' : 'passed',
+    coverage: 'project',
+  });
+  await writeFile(
+    join(dir, `${evidence.id}.json`),
+    JSON.stringify({ ...evidence, data: { ...evidence.data, rddReceipt } }, null, 2),
+    'utf-8',
+  );
 }
 
 function evidence(overrides: Partial<EvidenceInput> & { id: string; type: string }): EvidenceInput {

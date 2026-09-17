@@ -386,10 +386,11 @@ async function handleAnalyze(
   const tddCards = cards.filter((c) => c.phase === 'test' || c.phase === 'implement');
   let hasTddEvidence: boolean | undefined;
   if (tddCards.length > 0) {
-    hasTddEvidence = false;
+    hasTddEvidence = true;
     for (const card of tddCards) {
-      if (await hasTddRunnerEvidence(projectRoot, card.id)) {
-        hasTddEvidence = true;
+      const expectedPhase = card.phase === 'test' ? 'red' : 'green';
+      if (!(await hasTddRunnerEvidence(projectRoot, card.id, expectedPhase))) {
+        hasTddEvidence = false;
         break;
       }
     }
@@ -612,10 +613,11 @@ async function handleDone(
   const backlog = await loadBacklog(projectRoot);
   const tddRequired = backlog.success ? backlog.data.global.tddRequired : false;
   if (tddRequired && (card.phase === 'test' || card.phase === 'implement')) {
-    const evidenced = await hasTddRunnerEvidence(projectRoot, cardId);
+    const expectedPhase = card.phase === 'test' ? 'red' : 'green';
+    const evidenced = await hasTddRunnerEvidence(projectRoot, cardId, expectedPhase);
     if (!evidenced) {
       return fail(command, [
-        `Card ${cardId} (${card.phase}) requires verification-runner TDD evidence. Run captureTddSuiteEvidence before openspec done.`,
+        `Card ${cardId} (${card.phase}) requires current ${expectedPhase.toUpperCase()} verification-runner TDD evidence. Run captureTddSuiteEvidence before openspec done.`,
       ]);
     }
   }

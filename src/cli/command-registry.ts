@@ -41,6 +41,7 @@ export const COMMANDS: readonly CommandDefinition[] = [
   { name: 'orchestrate', group: 'workflow', summary: 'Run goal execution orchestration.', usage: ['cc-codeconductor orchestrate <subcommand>'] },
   { name: 'impact', group: 'workflow', summary: 'Analyze change impact.', usage: ['cc-codeconductor impact [--files <paths>]'] },
   { name: 'verify', group: 'workflow', summary: 'Verify task completion with evidence.', usage: ['cc-codeconductor verify --task <id>'] },
+  { name: 'rdd', group: 'workflow', summary: 'Capture and validate Receipt-Driven Development evidence.', usage: ['cc-codeconductor rdd capture --task <id> [--phase red|green|review]', 'cc-codeconductor rdd verify --receipt <id>', 'cc-codeconductor rdd status [--task <id>]', 'cc-codeconductor rdd git-check', 'cc-codeconductor rdd install-hooks'] },
   { name: 'seo', group: 'tool', summary: 'Audit SEO and generate llms.txt.', usage: ['cc-codeconductor seo audit --url <url>'] },
   { name: 'debt-harvest', aliases: ['harvest'], group: 'tool', summary: 'Scan source files for deferred debt.', usage: ['cc-codeconductor debt-harvest'] },
 ];

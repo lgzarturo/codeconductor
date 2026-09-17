@@ -19,6 +19,13 @@ import { err, ok, type Result } from '../../utils/result';
 import { evidenceDir } from '../product-graph/paths';
 import { appendEvent } from '../memory/episodic-store';
 import { mkdir, readdir, writeFile } from 'node:fs/promises';
+import {
+  captureReceipt,
+  collectReceiptPaths,
+  isRddReceipt,
+  verifyReceipt,
+  type RddReceipt,
+} from './rdd-receipt';
 
 export interface VerificationCheck {
   name: string;
@@ -58,6 +65,13 @@ function isPassingEvidence(ev: EvidenceInput): boolean {
     default:
       return false;
   }
+}
+
+async function isCurrentPassingEvidence(projectRoot: string, ev: EvidenceInput): Promise<boolean> {
+  if (!isPassingEvidence(ev)) return false;
+  const receipt = ev.data?.rddReceipt;
+  if (!isRddReceipt(receipt)) return false;
+  return (await verifyReceipt(projectRoot, receipt)).valid;
 }
 
 /**
@@ -144,7 +158,7 @@ export async function validateEvidenceIds(
     if (!record) {
       return err(new Error(`Evidence "${id}" is not a record of task ${taskId}`));
     }
-    if (!isPassingEvidence(record)) {
+    if (!(await isCurrentPassingEvidence(projectRoot, record))) {
       return err(new Error(`Evidence "${id}" does not record a passing result`));
     }
     if (record.type === 'verification') hasPassingVerification = true;
@@ -267,9 +281,12 @@ export async function runVerification(
 
   // Verification records are written by this runner, so counting them would let
   // a previous run vouch for the next one. Only external, passing evidence counts.
-  const supporting = collected.data.records.filter(
-    (ev) => ev.type !== 'verification' && isPassingEvidence(ev),
-  );
+  const supporting: EvidenceInput[] = [];
+  for (const candidate of collected.data.records) {
+    if (candidate.type !== 'verification' && await isCurrentPassingEvidence(projectRoot, candidate)) {
+      supporting.push(candidate);
+    }
+  }
   evidenceIds.push(...supporting.map((ev) => ev.id));
 
   checks.push({
@@ -284,6 +301,13 @@ export async function runVerification(
   });
 
   const passed = checks.every((c) => c.passed);
+  const receipt = await captureReceipt(projectRoot, {
+    taskId,
+    phase: 'verification',
+    paths: await collectReceiptPaths(projectRoot),
+    outcome: passed ? 'passed' : 'failed',
+    coverage: 'project',
+  });
 
   const evidence: EvidenceInput = {
     id: `ev-verify-${taskId}-${Date.now()}`,
@@ -293,7 +317,7 @@ export async function runVerification(
     relatedTask: taskId,
     confidence: passed ? 0.9 : 0.3,
     summary: passed ? 'Verification passed' : 'Verification failed',
-    data: { passed, checks },
+    data: { passed, checks, rddReceipt: receipt },
   };
 
   const persisted = await persistEvidence(projectRoot, evidence);
@@ -328,21 +352,24 @@ export async function gateTaskCompletion(
   if (collected.data.invalid > 0) return ok(false);
 
   const cited = evidenceIds ? new Set(evidenceIds) : undefined;
-  const hasPassing = (type: string): boolean =>
-    collected.data.records.some(
-      (ev) => (!cited || cited.has(ev.id)) && ev.type === type && isPassingEvidence(ev),
-    );
+  const hasPassing = async (type: string): Promise<boolean> => {
+    for (const evidence of collected.data.records) {
+      if ((!cited || cited.has(evidence.id)) && evidence.type === type &&
+          await isCurrentPassingEvidence(projectRoot, evidence)) return true;
+    }
+    return false;
+  };
 
   for (const req of evidenceRequired) {
     switch (req) {
       case 'acceptance_criteria_met':
-        if (!hasPassing('verification')) return ok(false);
+        if (!(await hasPassing('verification'))) return ok(false);
         break;
       case 'tests_passed':
-        if (!hasPassing('test')) return ok(false);
+        if (!(await hasPassing('test'))) return ok(false);
         break;
       case 'review_approved':
-        if (!hasPassing('review')) return ok(false);
+        if (!(await hasPassing('review'))) return ok(false);
         break;
       default:
         return ok(false);
@@ -358,6 +385,8 @@ export const TDD_CAPTURED_BY = 'verification-runner';
 export interface CaptureTddSuiteOptions extends RunVerificationOptions {
   /** Allowlisted test command (`bun test`, `npm test`, …). */
   readonly command: string;
+  /** The TDD transition this runner invocation is expected to prove. */
+  readonly phase?: 'red' | 'green' | 'refactor';
 }
 
 /**
@@ -374,6 +403,7 @@ export async function captureTddSuiteEvidence(
       evidenceId: string;
       suiteFailed: boolean;
       suitePassed: boolean;
+      receipt: RddReceipt;
     },
     Error
   >
@@ -386,6 +416,16 @@ export async function captureTddSuiteEvidence(
     );
   }
 
+  const paths = await collectReceiptPaths(projectRoot);
+  const before = await captureReceipt(projectRoot, {
+    taskId,
+    phase: options.phase ?? 'verification',
+    paths,
+    command: options.command,
+    outcome: 'failed',
+    coverage: 'project',
+  });
+
   const result = await runCompileCheck({
     command: options.command,
     cwd: projectRoot,
@@ -393,6 +433,13 @@ export async function captureTddSuiteEvidence(
 
   const suitePassed = result.success && !result.timedOut && result.exitCode === 0;
   const suiteFailed = !result.timedOut && result.exitCode !== 0;
+  const receipt = { ...before, outcome: suitePassed ? 'passed' as const : 'failed' as const };
+  const receiptResult = await verifyReceipt(projectRoot, receipt);
+  if (!receiptResult.valid) {
+    return err(new Error(
+      `RDD candidate changed while the TDD suite ran: ${receiptResult.changedPaths.join(', ')}`,
+    ));
+  }
 
   const evidence: EvidenceInput = {
     id: `ev-tdd-${taskId}-${Date.now()}`,
@@ -413,6 +460,7 @@ export async function captureTddSuiteEvidence(
       exitCode: result.exitCode,
       timedOut: result.timedOut,
       command: options.command,
+      rddReceipt: receipt,
     },
   };
 
@@ -436,6 +484,7 @@ export async function captureTddSuiteEvidence(
     evidenceId: evidence.id,
     suiteFailed,
     suitePassed,
+    receipt,
   });
 }
 
@@ -447,7 +496,7 @@ export async function loadTddSuiteEvidence(
   projectRoot: string,
   taskId: string,
   evidenceId: string,
-): Promise<Result<TddSuiteEvidence, Error>> {
+): Promise<Result<TddSuiteEvidence & { receipt: RddReceipt }, Error>> {
   const evDir = evidenceDir(projectRoot);
   const path = evidenceFilePath(evDir, evidenceId);
   if (!path.success) return path;
@@ -484,7 +533,19 @@ export async function loadTddSuiteEvidence(
     return err(new Error(`Evidence "${evidenceId}" was not captured by the verification runner`));
   }
 
-  return ok({ capturedBy, suiteFailed, suitePassed });
+  const receipt = ev.data?.rddReceipt;
+  if (!isRddReceipt(receipt)) {
+    return err(new Error(`Evidence "${evidenceId}" has no valid RDD receipt`));
+  }
+  if (receipt.taskId !== taskId) {
+    return err(new Error(`Evidence "${evidenceId}" receipt belongs to another task`));
+  }
+  const verified = await verifyReceipt(projectRoot, receipt);
+  if (!verified.valid) {
+    return err(new Error(`Evidence "${evidenceId}" RDD receipt is stale: ${verified.changedPaths.join(', ')}`));
+  }
+
+  return ok({ capturedBy, suiteFailed, suitePassed, receipt });
 }
 
 /**
@@ -494,13 +555,19 @@ export async function loadTddSuiteEvidence(
 export async function hasTddRunnerEvidence(
   projectRoot: string,
   taskId: string,
+  expectedPhase?: 'red' | 'green',
 ): Promise<boolean> {
   const collected = await collectTaskEvidence(projectRoot, taskId);
   if (!collected.success) return false;
-  return collected.data.records.some(
-    (ev) =>
-      ev.type === 'tdd' &&
-      ev.source === TDD_EVIDENCE_SOURCE &&
-      ev.data?.capturedBy === TDD_CAPTURED_BY,
-  );
+  for (const ev of collected.data.records) {
+    if (ev.type !== 'tdd' || ev.source !== TDD_EVIDENCE_SOURCE || ev.data?.capturedBy !== TDD_CAPTURED_BY) {
+      continue;
+    }
+    const loaded = await loadTddSuiteEvidence(projectRoot, taskId, ev.id);
+    if (!loaded.success) continue;
+    if (expectedPhase === 'red' && (!loaded.data.suiteFailed || loaded.data.suitePassed)) continue;
+    if (expectedPhase === 'green' && (!loaded.data.suitePassed || loaded.data.suiteFailed)) continue;
+    return true;
+  }
+  return false;
 }

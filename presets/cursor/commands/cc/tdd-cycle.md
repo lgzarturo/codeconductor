@@ -68,6 +68,14 @@ runner) — do not hand-edit JSON under `.codeconductor/evidence/`.
 
 Do not advance phases until that evidence exists.
 
+### Receipt-Driven Development
+
+Run the verification runner with the matching `phase` (`red`, `green`, or
+`refactor`). It records an RDD receipt for the complete candidate. Before a
+handoff, phase transition, or final review, verify that receipt. A changed
+source, test, contract, lockfile, or runner configuration invalidates it and
+requires the affected phase to run again.
+
 ---
 
 ## Phase 1 — RED (Tester role)

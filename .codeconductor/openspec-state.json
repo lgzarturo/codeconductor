@@ -2,11 +2,11 @@
   "version": 1,
   "taskCards": [
     {
-      "id": "BC-023-discover",
-      "backlogId": "BC-023",
+      "id": "BC-025-discover",
+      "backlogId": "BC-025",
       "phase": "discover",
-      "title": "BC-023: Discover scope and impact",
-      "prompt": "Backlog item BC-023 — Semántica ODD canónica y paridad de presets\n\nDescription: Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.\nScope: fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.\n\nMap repository structure, conventions, and impact radius for this change.",
+      "title": "BC-025: Discover scope and impact",
+      "prompt": "Backlog item BC-025 — Evaluación de adopción y guía de flujos diarios\n\nDescription: Evaluar ODD contra la línea base y documentar la selección, reanudación, límites y promoción segura del flujo.\nScope: eval suites, scorecards, README/guías de workflow, documentación de Council y release notes.\n\nMap repository structure, conventions, and impact radius for this change.",
       "agent": "repo-explorer",
       "modelHint": "repo-explorer",
       "dependsOn": [],
@@ -14,73 +14,73 @@
         "Repo map identifies relevant files and impact radius"
       ],
       "status": "done",
-      "itemHash": "c6f33fb017e8aa71"
+      "itemHash": "35ca17ac2b6cb5a9"
     },
     {
-      "id": "BC-023-design",
-      "backlogId": "BC-023",
+      "id": "BC-025-design",
+      "backlogId": "BC-025",
       "phase": "design",
-      "title": "BC-023: Technical design",
-      "prompt": "Backlog item BC-023 — Semántica ODD canónica y paridad de presets\n\nDescription: Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.\nScope: fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
+      "title": "BC-025: Technical design",
+      "prompt": "Backlog item BC-025 — Evaluación de adopción y guía de flujos diarios\n\nDescription: Evaluar ODD contra la línea base y documentar la selección, reanudación, límites y promoción segura del flujo.\nScope: eval suites, scorecards, README/guías de workflow, documentación de Council y release notes.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
       "agent": "architect",
       "modelHint": "architect",
       "dependsOn": [
-        "BC-023-discover"
+        "BC-025-discover"
       ],
       "acceptanceCriteria": [
         "Technical plan lists files affected and approach"
       ],
       "status": "done",
-      "itemHash": "c6f33fb017e8aa71"
+      "itemHash": "35ca17ac2b6cb5a9"
     },
     {
-      "id": "BC-023-test",
-      "backlogId": "BC-023",
+      "id": "BC-025-test",
+      "backlogId": "BC-025",
       "phase": "test",
-      "title": "BC-023: Test coverage",
-      "prompt": "Backlog item BC-023 — Semántica ODD canónica y paridad de presets\n\nDescription: Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.\nScope: fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
+      "title": "BC-025: Test coverage",
+      "prompt": "Backlog item BC-025 — Evaluación de adopción y guía de flujos diarios\n\nDescription: Evaluar ODD contra la línea base y documentar la selección, reanudación, límites y promoción segura del flujo.\nScope: eval suites, scorecards, README/guías de workflow, documentación de Council y release notes.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
       "agent": "tester",
       "modelHint": "tester",
       "dependsOn": [
-        "BC-023-design"
+        "BC-025-design"
       ],
       "acceptanceCriteria": [
-        "Test covers: Cada target instalado ofrece la misma selección de ruta ODD o declara una limitación explícita y comprobada.",
-        "Test covers: La generación respeta la sintaxis de invocación y las capacidades declaradas por target.",
-        "Test covers: Las instrucciones de handoff no repiten request/transcript y enlazan el ledger y la evidencia."
+        "Test covers: Una suite repetible compara coste/contexto y calidad con criterios publicados.",
+        "Test covers: ODD sólo pasa a recomendado por defecto si no empeora aceptación, tests o findings frente a la línea base.",
+        "Test covers: La guía explica cuándo usar ODD, OpenSpec, TDD y council, y cómo volver al flujo formal."
       ],
       "status": "done",
-      "itemHash": "c6f33fb017e8aa71"
+      "itemHash": "35ca17ac2b6cb5a9"
     },
     {
-      "id": "BC-023-implement",
-      "backlogId": "BC-023",
+      "id": "BC-025-implement",
+      "backlogId": "BC-025",
       "phase": "implement",
-      "title": "BC-023: Implementation",
-      "prompt": "Backlog item BC-023 — Semántica ODD canónica y paridad de presets\n\nDescription: Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.\nScope: fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
+      "title": "BC-025: Implementation",
+      "prompt": "Backlog item BC-025 — Evaluación de adopción y guía de flujos diarios\n\nDescription: Evaluar ODD contra la línea base y documentar la selección, reanudación, límites y promoción segura del flujo.\nScope: eval suites, scorecards, README/guías de workflow, documentación de Council y release notes.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
       "agent": "implementer",
       "modelHint": "implementer",
       "dependsOn": [
-        "BC-023-test"
+        "BC-025-test"
       ],
       "acceptanceCriteria": [
-        "Cada target instalado ofrece la misma selección de ruta ODD o declara una limitación explícita y comprobada.",
-        "La generación respeta la sintaxis de invocación y las capacidades declaradas por target.",
-        "Las instrucciones de handoff no repiten request/transcript y enlazan el ledger y la evidencia."
+        "Una suite repetible compara coste/contexto y calidad con criterios publicados.",
+        "ODD sólo pasa a recomendado por defecto si no empeora aceptación, tests o findings frente a la línea base.",
+        "La guía explica cuándo usar ODD, OpenSpec, TDD y council, y cómo volver al flujo formal."
       ],
       "status": "done",
-      "itemHash": "c6f33fb017e8aa71"
+      "itemHash": "35ca17ac2b6cb5a9"
     },
     {
-      "id": "BC-023-review",
-      "backlogId": "BC-023",
+      "id": "BC-025-review",
+      "backlogId": "BC-025",
       "phase": "review",
-      "title": "BC-023: Review and validation",
-      "prompt": "Backlog item BC-023 — Semántica ODD canónica y paridad de presets\n\nDescription: Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.\nScope: fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
+      "title": "BC-025: Review and validation",
+      "prompt": "Backlog item BC-025 — Evaluación de adopción y guía de flujos diarios\n\nDescription: Evaluar ODD contra la línea base y documentar la selección, reanudación, límites y promoción segura del flujo.\nScope: eval suites, scorecards, README/guías de workflow, documentación de Council y release notes.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
       "agent": "reviewer",
       "modelHint": "reviewer",
       "dependsOn": [
-        "BC-023-implement"
+        "BC-025-implement"
       ],
       "acceptanceCriteria": [
         "All acceptance criteria verified",
@@ -88,7 +88,7 @@
         "No scope creep beyond backlog item"
       ],
       "status": "done",
-      "itemHash": "c6f33fb017e8aa71"
+      "itemHash": "35ca17ac2b6cb5a9"
     }
   ],
   "lastScanHash": "620aba2bbc3ae662",
@@ -111,7 +111,8 @@
     "BC-021": "openspec/changes/archive/bc-021-perfil-odd-y-delivery-ledger-recuperable",
     "BC-024": "openspec/changes/archive/bc-024-council-proporcional-con-recibo-de-candidato",
     "BC-022": "openspec/changes/archive/bc-022-ensamblado-de-contexto-y-reanudaci-n-con-presupu",
-    "BC-023": "openspec/changes/archive/bc-023-sem-ntica-odd-can-nica-y-paridad-de-presets"
+    "BC-023": "openspec/changes/archive/bc-023-sem-ntica-odd-can-nica-y-paridad-de-presets",
+    "BC-025": "openspec/changes/archive/bc-025-evaluaci-n-de-adopci-n-y-gu-a-de-flujos-diarios"
   },
   "itemSnapshots": {
     "BC-012": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Router /cc:ask que recomienda el slash command correcto\"}",
@@ -131,6 +132,7 @@
     "BC-021": "{\"status\":\"READY\",\"progress\":60,\"title\":\"Perfil ODD y Delivery Ledger recuperable\",\"description\":\"Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.\",\"scope\":\"`BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.\",\"type\":\"feature\",\"priority\":\"P0\",\"acceptanceCriteria\":[\"Una solicitud de sólo lectura y un cambio pequeño no crean ledger.\",\"Un cambio sustancial crea un único ledger antes de la primera escritura con objetivo, scope, tareas, aceptación, evidencia y next step.\",\"CCEP valida ledger y Task Card; el riesgo y ConfirmationGate existentes continúan aplicándose.\",\"La reanudación reconcilia ledger, árbol y punteros de memoria sin sobrescribir conflictos.\"]}",
     "BC-024": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Council proporcional con recibo de candidato\",\"description\":\"Reducir coste de review rutinario seleccionando un panel aplicable y vinculando cada veredicto al mismo candidato congelado, sin debilitar veto ni quorum.\",\"scope\":\"council policy/spec/consensus, schemas, CCEP/preset council y tests.\",\"type\":\"feature\",\"priority\":\"P1\",\"acceptanceCriteria\":[\"El panel se deriva determinísticamente de tipo, riesgo y scope, y se registra como expectedAgentIds.\",\"Todos los votos agregados referencian el mismo hash de diff/commit; una discrepancia falla cerrada.\",\"Señales de seguridad incluyen security-reviewer y preservan security/compliance veto.\",\"Quorum, críticos y ausencia de roles tienen pruebas de regresión.\"]}",
     "BC-022": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Ensamblado de contexto y reanudación con presupuesto observable\",\"description\":\"Reducir repetición entre agentes montando contexto mínimo desde ledger, scope, memoria y evidencia, y reusar compacción posterior a TDD.\",\"scope\":\"contexto/compacción/memoria, compilación CCEP, contratos de handoff y tests de límites/reanudación.\",\"type\":\"feature\",\"priority\":\"P1\",\"acceptanceCriteria\":[\"El orden, procedencia y límite de bytes de cada fragmento de contexto son deterministas y verificables.\",\"RED/GREEN aprobado se propaga como resumen y evidencia, no como transcript completo.\",\"Una reanudación con cambios externos detecta divergencia y pide la mínima decisión necesaria.\",\"Los proveedores sin telemetría dejan el coste como unknown y nunca como cero.\"]}",
-    "BC-023": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Semántica ODD canónica y paridad de presets\",\"description\":\"Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.\",\"scope\":\"fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.\",\"type\":\"feature\",\"priority\":\"P1\",\"acceptanceCriteria\":[\"Cada target instalado ofrece la misma selección de ruta ODD o declara una limitación explícita y comprobada.\",\"La generación respeta la sintaxis de invocación y las capacidades declaradas por target.\",\"Las instrucciones de handoff no repiten request/transcript y enlazan el ledger y la evidencia.\"]}"
+    "BC-023": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Semántica ODD canónica y paridad de presets\",\"description\":\"Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.\",\"scope\":\"fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.\",\"type\":\"feature\",\"priority\":\"P1\",\"acceptanceCriteria\":[\"Cada target instalado ofrece la misma selección de ruta ODD o declara una limitación explícita y comprobada.\",\"La generación respeta la sintaxis de invocación y las capacidades declaradas por target.\",\"Las instrucciones de handoff no repiten request/transcript y enlazan el ledger y la evidencia.\"]}",
+    "BC-025": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Evaluación de adopción y guía de flujos diarios\",\"description\":\"Evaluar ODD contra la línea base y documentar la selección, reanudación, límites y promoción segura del flujo.\",\"scope\":\"eval suites, scorecards, README/guías de workflow, documentación de Council y release notes.\",\"type\":\"tech-debt\",\"priority\":\"P2\",\"acceptanceCriteria\":[\"Una suite repetible compara coste/contexto y calidad con criterios publicados.\",\"ODD sólo pasa a recomendado por defecto si no empeora aceptación, tests o findings frente a la línea base.\",\"La guía explica cuándo usar ODD, OpenSpec, TDD y council, y cómo volver al flujo formal.\"]}"
   }
 }

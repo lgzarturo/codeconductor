@@ -140,6 +140,15 @@ Prefer `/cc-iterative`, `/cc-triage`, and `/cc-handoff` for wayfinding.
 `/cc-ask` recommends a command from a natural-language problem; it does not
 start the workflow.
 
+### ODD adoption and escalation
+
+ODD is opt-in until paired delivery evidence shows non-inferior acceptance,
+tests, and findings with lower context than OpenSpec. Run
+`bun run dev scorecard suite-run --suite odd-adoption` to keep that decision
+reproducible. The [ODD adoption guide](docs/odd-adoption.md) explains route
+selection, ledger-based resumption, and when to return to OpenSpec, TDD, or
+Council.
+
 ### OpenSpec and TDD
 
 OpenSpec is the delivery loop for `BACKLOG.md`:

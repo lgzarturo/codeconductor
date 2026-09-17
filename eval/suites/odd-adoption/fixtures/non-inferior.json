@@ -1,0 +1,6 @@
+[
+  { "id": "fixture-one", "route": "openspec", "acceptancePassed": true, "testsPassed": true, "findings": 2, "contextBytes": 1200, "costUsd": 0.24 },
+  { "id": "fixture-two", "route": "openspec", "acceptancePassed": true, "testsPassed": true, "findings": 1, "contextBytes": 1000, "costUsd": 0.20 },
+  { "id": "fixture-one", "route": "tracked", "acceptancePassed": true, "testsPassed": true, "findings": 1, "contextBytes": 800, "costUsd": 0.18 },
+  { "id": "fixture-two", "route": "tracked", "acceptancePassed": true, "testsPassed": true, "findings": 1, "contextBytes": 700, "costUsd": 0.16 }
+]

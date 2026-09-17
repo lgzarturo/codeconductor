@@ -14,22 +14,6 @@ Formato validable por `cc openspec validate`. Análisis completo en
 
 ## Items
 
-### BC-025 | Evaluación de adopción y guía de flujos diarios
-
-- Priority: P2
-- Status: READY
-- Type: tech-debt
-- Depends on: BC-022, BC-023, BC-024
-- Description: Evaluar ODD contra la línea base y documentar la selección, reanudación, límites y promoción segura del flujo.
-- Scope: eval suites, scorecards, README/guías de workflow, documentación de Council y release notes.
-- Out of scope: Declarar ahorro sin medición o descontinuar OpenSpec/SDD.
-- Progress: 0
-- Reviewer: reviewer
-- Acceptance:
-  - [ ] Una suite repetible compara coste/contexto y calidad con criterios publicados.
-  - [ ] ODD sólo pasa a recomendado por defecto si no empeora aceptación, tests o findings frente a la línea base.
-  - [ ] La guía explica cuándo usar ODD, OpenSpec, TDD y council, y cómo volver al flujo formal.
-
 ### BC-013 | Cerrar el loop OpenSpec (start/done/block/archive)
 
 - Priority: P0
@@ -158,6 +142,22 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [x] El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell.
 
 ## Archive
+### BC-025 | Evaluación de adopción y guía de flujos diarios
+
+- Priority: P2
+- Status: DONE
+- Type: tech-debt
+- Depends on: BC-022, BC-023, BC-024
+- Description: Evaluar ODD contra la línea base y documentar la selección, reanudación, límites y promoción segura del flujo.
+- Scope: `src/core/evaluation/`, `eval/suites/`, `test/`, `README.md`, `docs/`, `BACKLOG.md`, `.codeconductor/`.
+- Out of scope: Declarar ahorro sin medición o descontinuar OpenSpec/SDD.
+- Progress: 100%
+- Reviewer: reviewer
+- Acceptance:
+  - [x] Una suite repetible compara coste/contexto y calidad con criterios publicados.
+  - [x] ODD sólo pasa a recomendado por defecto si no empeora aceptación, tests o findings frente a la línea base.
+  - [x] La guía explica cuándo usar ODD, OpenSpec, TDD y council, y cómo volver al flujo formal.
+
 ### BC-023 | Semántica ODD canónica y paridad de presets
 
 - Priority: P1

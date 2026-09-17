@@ -1,0 +1,17 @@
+{
+  "id": "ev-tdd-BC-025-test-1789624826670",
+  "source": "cc verify",
+  "type": "tdd",
+  "timestamp": "2026-09-17T06:00:26.670Z",
+  "relatedTask": "BC-025-test",
+  "confidence": 0.9,
+  "summary": "TDD suite passed",
+  "data": {
+    "capturedBy": "verification-runner",
+    "suiteFailed": false,
+    "suitePassed": true,
+    "exitCode": 0,
+    "timedOut": false,
+    "command": "bun test test/odd-adoption.test.ts eval/suites/odd-adoption/checks.test.ts"
+  }
+}

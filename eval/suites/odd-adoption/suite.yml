@@ -1,0 +1,14 @@
+id: odd-adoption
+version: 1
+fixtureDir: fixtures
+tasks:
+  - id: odd-adoption-comparison
+    title: ODD adoption stays evidence-gated
+    type: feature
+    risk: medium
+    prompt: Compare paired tracked ODD and OpenSpec delivery samples.
+    scope: src/core/evaluation/odd-adoption.ts
+    acceptanceCriteria:
+      - ODD is eligible only with non-inferior quality and reduced context
+      - Missing or regressive evidence keeps ODD opt-in
+    testCommand: bun test eval/suites/odd-adoption/checks.test.ts

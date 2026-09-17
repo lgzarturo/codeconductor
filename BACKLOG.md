@@ -14,39 +14,6 @@ Formato validable por `cc openspec validate`. Análisis completo en
 
 ## Items
 
-### BC-022 | Ensamblado de contexto y reanudación con presupuesto observable
-
-- Priority: P1
-- Status: PLANNED
-- Type: feature
-- Depends on: BC-021
-- Description: Reducir repetición entre agentes montando contexto mínimo desde ledger, scope, memoria y evidencia, y reusar compacción posterior a TDD.
-- Scope: contexto/compacción/memoria, compilación CCEP, contratos de handoff y tests de límites/reanudación.
-- Out of scope: Inyectar el workspace completo, borrar historial del usuario, o bloquear por tokens no medidos.
-- Progress: 0%
-- Reviewer: reviewer
-- Acceptance:
-  - [ ] El orden, procedencia y límite de bytes de cada fragmento de contexto son deterministas y verificables.
-  - [ ] RED/GREEN aprobado se propaga como resumen y evidencia, no como transcript completo.
-  - [ ] Una reanudación con cambios externos detecta divergencia y pide la mínima decisión necesaria.
-  - [ ] Los proveedores sin telemetría dejan el coste como unknown y nunca como cero.
-
-### BC-023 | Semántica ODD canónica y paridad de presets
-
-- Priority: P1
-- Status: READY
-- Type: feature
-- Depends on: BC-021
-- Description: Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.
-- Scope: fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.
-- Out of scope: Homogeneizar manualmente todo el prose histórico, asumir subagentes/hook/MCP en todos los runners, o cambiar sus configuraciones privadas.
-- Progress: 0
-- Reviewer: reviewer
-- Acceptance:
-  - [ ] Cada target instalado ofrece la misma selección de ruta ODD o declara una limitación explícita y comprobada.
-  - [ ] La generación respeta la sintaxis de invocación y las capacidades declaradas por target.
-  - [ ] Las instrucciones de handoff no repiten request/transcript y enlazan el ledger y la evidencia.
-
 ### BC-025 | Evaluación de adopción y guía de flujos diarios
 
 - Priority: P2
@@ -191,6 +158,39 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [x] El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell.
 
 ## Archive
+### BC-023 | Semántica ODD canónica y paridad de presets
+
+- Priority: P1
+- Status: DONE
+- Type: feature
+- Depends on: BC-021
+- Description: Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.
+- Scope: fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.
+- Out of scope: Homogeneizar manualmente todo el prose histórico, asumir subagentes/hook/MCP en todos los runners, o cambiar sus configuraciones privadas.
+- Progress: 100%
+- Reviewer: reviewer
+- Acceptance:
+  - [x] Cada target instalado ofrece la misma selección de ruta ODD o declara una limitación explícita y comprobada.
+  - [x] La generación respeta la sintaxis de invocación y las capacidades declaradas por target.
+  - [x] Las instrucciones de handoff no repiten request/transcript y enlazan el ledger y la evidencia.
+
+### BC-022 | Ensamblado de contexto y reanudación con presupuesto observable
+
+- Priority: P1
+- Status: DONE
+- Type: feature
+- Depends on: BC-021
+- Description: Reducir repetición entre agentes montando contexto mínimo desde ledger, scope, memoria y evidencia, y reusar compacción posterior a TDD.
+- Scope: contexto/compacción/memoria, compilación CCEP, contratos de handoff y tests de límites/reanudación.
+- Out of scope: Inyectar el workspace completo, borrar historial del usuario, o bloquear por tokens no medidos.
+- Progress: 100%
+- Reviewer: reviewer
+- Acceptance:
+  - [x] El orden, procedencia y límite de bytes de cada fragmento de contexto son deterministas y verificables.
+  - [x] RED/GREEN aprobado se propaga como resumen y evidencia, no como transcript completo.
+  - [x] Una reanudación con cambios externos detecta divergencia y pide la mínima decisión necesaria.
+  - [x] Los proveedores sin telemetría dejan el coste como unknown y nunca como cero.
+
 ### BC-024 | Council proporcional con recibo de candidato
 
 - Priority: P1

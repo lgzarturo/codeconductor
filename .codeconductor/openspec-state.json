@@ -1,97 +1,94 @@
 {
   "version": 1,
-  "activeItemId": "BC-022",
   "taskCards": [
     {
-      "id": "BC-022-discover",
-      "backlogId": "BC-022",
+      "id": "BC-023-discover",
+      "backlogId": "BC-023",
       "phase": "discover",
-      "title": "BC-022: Discover scope and impact",
-      "prompt": "Backlog item BC-022 — Ensamblado de contexto y reanudación con presupuesto observable\n\nDescription: Reducir repetición entre agentes montando contexto mínimo desde ledger, scope, memoria y evidencia, y reusar compacción posterior a TDD.\nScope: contexto/compacción/memoria, compilación CCEP, contratos de handoff y tests de límites/reanudación.\n\nMap repository structure, conventions, and impact radius for this change.",
+      "title": "BC-023: Discover scope and impact",
+      "prompt": "Backlog item BC-023 — Semántica ODD canónica y paridad de presets\n\nDescription: Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.\nScope: fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.\n\nMap repository structure, conventions, and impact radius for this change.",
       "agent": "repo-explorer",
       "modelHint": "repo-explorer",
       "dependsOn": [],
       "acceptanceCriteria": [
         "Repo map identifies relevant files and impact radius"
       ],
-      "status": "pending",
-      "itemHash": "6a8a85c219c43fc4"
+      "status": "done",
+      "itemHash": "c6f33fb017e8aa71"
     },
     {
-      "id": "BC-022-design",
-      "backlogId": "BC-022",
+      "id": "BC-023-design",
+      "backlogId": "BC-023",
       "phase": "design",
-      "title": "BC-022: Technical design",
-      "prompt": "Backlog item BC-022 — Ensamblado de contexto y reanudación con presupuesto observable\n\nDescription: Reducir repetición entre agentes montando contexto mínimo desde ledger, scope, memoria y evidencia, y reusar compacción posterior a TDD.\nScope: contexto/compacción/memoria, compilación CCEP, contratos de handoff y tests de límites/reanudación.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
+      "title": "BC-023: Technical design",
+      "prompt": "Backlog item BC-023 — Semántica ODD canónica y paridad de presets\n\nDescription: Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.\nScope: fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
       "agent": "architect",
       "modelHint": "architect",
       "dependsOn": [
-        "BC-022-discover"
+        "BC-023-discover"
       ],
       "acceptanceCriteria": [
         "Technical plan lists files affected and approach"
       ],
-      "status": "pending",
-      "itemHash": "6a8a85c219c43fc4"
+      "status": "done",
+      "itemHash": "c6f33fb017e8aa71"
     },
     {
-      "id": "BC-022-test",
-      "backlogId": "BC-022",
+      "id": "BC-023-test",
+      "backlogId": "BC-023",
       "phase": "test",
-      "title": "BC-022: Test coverage",
-      "prompt": "Backlog item BC-022 — Ensamblado de contexto y reanudación con presupuesto observable\n\nDescription: Reducir repetición entre agentes montando contexto mínimo desde ledger, scope, memoria y evidencia, y reusar compacción posterior a TDD.\nScope: contexto/compacción/memoria, compilación CCEP, contratos de handoff y tests de límites/reanudación.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
+      "title": "BC-023: Test coverage",
+      "prompt": "Backlog item BC-023 — Semántica ODD canónica y paridad de presets\n\nDescription: Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.\nScope: fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
       "agent": "tester",
       "modelHint": "tester",
       "dependsOn": [
-        "BC-022-design"
+        "BC-023-design"
       ],
       "acceptanceCriteria": [
-        "Test covers: El orden, procedencia y límite de bytes de cada fragmento de contexto son deterministas y verificables.",
-        "Test covers: RED/GREEN aprobado se propaga como resumen y evidencia, no como transcript completo.",
-        "Test covers: Una reanudación con cambios externos detecta divergencia y pide la mínima decisión necesaria.",
-        "Test covers: Los proveedores sin telemetría dejan el coste como unknown y nunca como cero."
+        "Test covers: Cada target instalado ofrece la misma selección de ruta ODD o declara una limitación explícita y comprobada.",
+        "Test covers: La generación respeta la sintaxis de invocación y las capacidades declaradas por target.",
+        "Test covers: Las instrucciones de handoff no repiten request/transcript y enlazan el ledger y la evidencia."
       ],
-      "status": "pending",
-      "itemHash": "6a8a85c219c43fc4"
+      "status": "done",
+      "itemHash": "c6f33fb017e8aa71"
     },
     {
-      "id": "BC-022-implement",
-      "backlogId": "BC-022",
+      "id": "BC-023-implement",
+      "backlogId": "BC-023",
       "phase": "implement",
-      "title": "BC-022: Implementation",
-      "prompt": "Backlog item BC-022 — Ensamblado de contexto y reanudación con presupuesto observable\n\nDescription: Reducir repetición entre agentes montando contexto mínimo desde ledger, scope, memoria y evidencia, y reusar compacción posterior a TDD.\nScope: contexto/compacción/memoria, compilación CCEP, contratos de handoff y tests de límites/reanudación.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
+      "title": "BC-023: Implementation",
+      "prompt": "Backlog item BC-023 — Semántica ODD canónica y paridad de presets\n\nDescription: Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.\nScope: fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
       "agent": "implementer",
       "modelHint": "implementer",
       "dependsOn": [
-        "BC-022-test"
+        "BC-023-test"
       ],
       "acceptanceCriteria": [
-        "El orden, procedencia y límite de bytes de cada fragmento de contexto son deterministas y verificables.",
-        "RED/GREEN aprobado se propaga como resumen y evidencia, no como transcript completo.",
-        "Una reanudación con cambios externos detecta divergencia y pide la mínima decisión necesaria.",
-        "Los proveedores sin telemetría dejan el coste como unknown y nunca como cero."
+        "Cada target instalado ofrece la misma selección de ruta ODD o declara una limitación explícita y comprobada.",
+        "La generación respeta la sintaxis de invocación y las capacidades declaradas por target.",
+        "Las instrucciones de handoff no repiten request/transcript y enlazan el ledger y la evidencia."
       ],
-      "status": "pending",
-      "itemHash": "6a8a85c219c43fc4"
+      "status": "done",
+      "itemHash": "c6f33fb017e8aa71"
     },
     {
-      "id": "BC-022-review",
-      "backlogId": "BC-022",
+      "id": "BC-023-review",
+      "backlogId": "BC-023",
       "phase": "review",
-      "title": "BC-022: Review and validation",
-      "prompt": "Backlog item BC-022 — Ensamblado de contexto y reanudación con presupuesto observable\n\nDescription: Reducir repetición entre agentes montando contexto mínimo desde ledger, scope, memoria y evidencia, y reusar compacción posterior a TDD.\nScope: contexto/compacción/memoria, compilación CCEP, contratos de handoff y tests de límites/reanudación.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
+      "title": "BC-023: Review and validation",
+      "prompt": "Backlog item BC-023 — Semántica ODD canónica y paridad de presets\n\nDescription: Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.\nScope: fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
       "agent": "reviewer",
       "modelHint": "reviewer",
       "dependsOn": [
-        "BC-022-implement"
+        "BC-023-implement"
       ],
       "acceptanceCriteria": [
         "All acceptance criteria verified",
         "Tests pass",
         "No scope creep beyond backlog item"
       ],
-      "status": "pending",
-      "itemHash": "6a8a85c219c43fc4"
+      "status": "done",
+      "itemHash": "c6f33fb017e8aa71"
     }
   ],
   "lastScanHash": "620aba2bbc3ae662",
@@ -113,7 +110,8 @@
     "BC-020": "openspec/changes/archive/bc-020-l-nea-base-de-coste-y-selecci-n-de-ruta-para-odd",
     "BC-021": "openspec/changes/archive/bc-021-perfil-odd-y-delivery-ledger-recuperable",
     "BC-024": "openspec/changes/archive/bc-024-council-proporcional-con-recibo-de-candidato",
-    "BC-022": "openspec/changes/bc-022-ensamblado-de-contexto-y-reanudaci-n-con-presupu"
+    "BC-022": "openspec/changes/archive/bc-022-ensamblado-de-contexto-y-reanudaci-n-con-presupu",
+    "BC-023": "openspec/changes/archive/bc-023-sem-ntica-odd-can-nica-y-paridad-de-presets"
   },
   "itemSnapshots": {
     "BC-012": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Router /cc:ask que recomienda el slash command correcto\"}",
@@ -132,6 +130,7 @@
     "BC-020": "{\"status\":\"READY\",\"progress\":80,\"title\":\"Línea base de coste y selección de ruta para ODD\",\"description\":\"Definir la clasificación de coordinación (pequeño, ODD rastreado u OpenSpec explícito) sin alterar los gates de riesgo, y capturar una línea base comparable de contexto, tokens, handoffs, checks y calidad.\",\"scope\":\"`AGENTS.md`, `BACKLOG.md`, `.codeconductor/`, `docs/odd-integration-plan.md`, `docs/agent-scorecard.md`, `src/core/ccep/`, `src/core/evaluation/`, `src/commands/scorecard.command.ts`, `src/cli/router.ts`, `src/validation/schemas.ts`, `test/odd-baseline.test.ts`, `test/evaluation/scorecard-signals.test.ts`.\",\"type\":\"feature\",\"priority\":\"P0\",\"acceptanceCriteria\":[\"La selección de ruta distingue autorización, coordinación y riesgo, y conserva los gates high-risk existentes.\",\"Un scorecard puede registrar ruta, bytes de contexto, tokens conocidos/desconocidos, handoffs, checks y resultado sin falsos ceros.\",\"Una suite de muestra compara al menos cambios pequeños, delivery rastreado y OpenSpec con el mismo formato de evidencia.\"]}",
     "BC-021": "{\"status\":\"READY\",\"progress\":60,\"title\":\"Perfil ODD y Delivery Ledger recuperable\",\"description\":\"Añadir una ruta ODD opt-in que use CCEP y un único Delivery Ledger de CodeConductor sólo para trabajo sustancial autorizado.\",\"scope\":\"`BACKLOG.md`, `.codeconductor/`, `README.md`, `src/cli/router.ts`, `src/commands/odd.command.ts`, `src/core/ccep/command-parser.ts`, `src/core/ccep/profiles.ts`, `src/core/ccep/workflows/odd.yml`, `src/core/delivery/delivery-ledger.ts`, `src/core/openspec/openspec-generator.ts`, `src/core/openspec/spec-quality.ts`, `src/validation/schemas.ts`, `presets/cursor/commands/cc/odd.md`, `presets/claude/commands/cc/odd.md`, `presets/opencode/commands/cc-odd.md`, `presets/agy/workflows/cc-odd.md`, `test/odd-ledger.test.ts`, `test/cc08-cli-contracts.test.ts`, `test/ccep/command-parser.test.ts`, `test/ccep/schemas.test.ts`, `test/ccep/workflow-profile.test.ts`, `test/ccep/preset-bootstrap.test.ts`, `test/unit/core/ccep/command-parser.test.ts`, `test/unit/core/ccep/task-card-parity.test.ts`.\",\"type\":\"feature\",\"priority\":\"P0\",\"acceptanceCriteria\":[\"Una solicitud de sólo lectura y un cambio pequeño no crean ledger.\",\"Un cambio sustancial crea un único ledger antes de la primera escritura con objetivo, scope, tareas, aceptación, evidencia y next step.\",\"CCEP valida ledger y Task Card; el riesgo y ConfirmationGate existentes continúan aplicándose.\",\"La reanudación reconcilia ledger, árbol y punteros de memoria sin sobrescribir conflictos.\"]}",
     "BC-024": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Council proporcional con recibo de candidato\",\"description\":\"Reducir coste de review rutinario seleccionando un panel aplicable y vinculando cada veredicto al mismo candidato congelado, sin debilitar veto ni quorum.\",\"scope\":\"council policy/spec/consensus, schemas, CCEP/preset council y tests.\",\"type\":\"feature\",\"priority\":\"P1\",\"acceptanceCriteria\":[\"El panel se deriva determinísticamente de tipo, riesgo y scope, y se registra como expectedAgentIds.\",\"Todos los votos agregados referencian el mismo hash de diff/commit; una discrepancia falla cerrada.\",\"Señales de seguridad incluyen security-reviewer y preservan security/compliance veto.\",\"Quorum, críticos y ausencia de roles tienen pruebas de regresión.\"]}",
-    "BC-022": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Ensamblado de contexto y reanudación con presupuesto observable\",\"description\":\"Reducir repetición entre agentes montando contexto mínimo desde ledger, scope, memoria y evidencia, y reusar compacción posterior a TDD.\",\"scope\":\"contexto/compacción/memoria, compilación CCEP, contratos de handoff y tests de límites/reanudación.\",\"type\":\"feature\",\"priority\":\"P1\",\"acceptanceCriteria\":[\"El orden, procedencia y límite de bytes de cada fragmento de contexto son deterministas y verificables.\",\"RED/GREEN aprobado se propaga como resumen y evidencia, no como transcript completo.\",\"Una reanudación con cambios externos detecta divergencia y pide la mínima decisión necesaria.\",\"Los proveedores sin telemetría dejan el coste como unknown y nunca como cero.\"]}"
+    "BC-022": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Ensamblado de contexto y reanudación con presupuesto observable\",\"description\":\"Reducir repetición entre agentes montando contexto mínimo desde ledger, scope, memoria y evidencia, y reusar compacción posterior a TDD.\",\"scope\":\"contexto/compacción/memoria, compilación CCEP, contratos de handoff y tests de límites/reanudación.\",\"type\":\"feature\",\"priority\":\"P1\",\"acceptanceCriteria\":[\"El orden, procedencia y límite de bytes de cada fragmento de contexto son deterministas y verificables.\",\"RED/GREEN aprobado se propaga como resumen y evidencia, no como transcript completo.\",\"Una reanudación con cambios externos detecta divergencia y pide la mínima decisión necesaria.\",\"Los proveedores sin telemetría dejan el coste como unknown y nunca como cero.\"]}",
+    "BC-023": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Semántica ODD canónica y paridad de presets\",\"description\":\"Entregar ODD desde una fuente canónica y adaptarlo por capacidades de Codex, Claude, Cursor, Gemini, OpenCode, Agy y Pi.\",\"scope\":\"fuentes de preset, renderer, capability matrix, router/ask y pruebas de paridad.\",\"type\":\"feature\",\"priority\":\"P1\",\"acceptanceCriteria\":[\"Cada target instalado ofrece la misma selección de ruta ODD o declara una limitación explícita y comprobada.\",\"La generación respeta la sintaxis de invocación y las capacidades declaradas por target.\",\"Las instrucciones de handoff no repiten request/transcript y enlazan el ledger y la evidencia.\"]}"
   }
 }

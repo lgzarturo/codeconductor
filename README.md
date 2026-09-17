@@ -134,7 +134,7 @@ what they do rather than which subsystem they touch:
 | Entry         | `/cc-ask`, `/cc-triage`, `/cc-explore`                                                                          | Recommend a next command and stop — no writes.  |
 | Delivery      | `/cc-feature`, `/cc-fix`, `/cc-refactor`, `/cc-tdd-cycle`, `/cc-api-contract`, `/cc-db-migration`, `/cc-spec-mutation` | Implement, test-before-implement where both apply. |
 | Verification  | `/cc-review`, `/cc-council`, `/cc-scorecard`, `/cc-test-plan`, `/cc-security`                                    | Gate a diff or a decision before merge.         |
-| Management    | `/cc-backlog`, `/cc-openspec`, `/cc-handoff`, `/cc-clarify`, `/cc-prototype`, `/cc-pagespeed`, `/cc-iterative`   | Author BACKLOG.md, deliver it, or one-off ops.  |
+| Management    | `/cc-backlog`, `/cc-openspec`, `/cc-handoff`, `/cc-clarify`, `/cc-prototype`, `/cc-pagespeed`, `/cc-iterative`, `/cc-odd`   | Author BACKLOG.md, deliver it, or one-off ops.  |
 
 Prefer `/cc-iterative`, `/cc-triage`, and `/cc-handoff` for wayfinding.
 `/cc-ask` recommends a command from a natural-language problem; it does not

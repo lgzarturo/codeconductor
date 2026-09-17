@@ -35,7 +35,8 @@ recommended `context_scope` (`isolated` | `continuation` | `full`) for the next
 session — derived from the Task Card status above, not invented, with a
 one-sentence justification.
 
-Do not edit source or tests.
+Link the Delivery Ledger and verification evidence when they exist; do not
+repeat the original request or transcript. Do not edit source or tests.
 
 ---
 

@@ -1,4 +1,5 @@
 import { loadMemoryIndex } from '../core/memory/memory-index';
+import { resumeDecision } from '../core/ccep/context-assembly';
 import { validateTaskCardForProfile } from '../core/ccep/task-card-validator';
 import { loadWorkflowProfile } from '../core/ccep/workflow-profile-loader';
 import {
@@ -56,6 +57,7 @@ export async function oddCommand(options: OddOptions): Promise<{ code: number; d
         data: {
           success: true,
           status: result.changedPaths.length === 0 ? 'ready' : 'conflict',
+          resume: resumeDecision(result.changedPaths),
           memory: memory.success ? 'available' : 'unavailable',
           memoryPointers: memory.success
             ? memory.data.pointers.filter((pointer) => pointer.topic_key === result.ledger.memoryTopicKey)

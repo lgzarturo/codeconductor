@@ -34,7 +34,9 @@ errors instead of pasting dumps. If unresolved credential material remains, stop
 and wait for a human (CCEP `stopOnHighRisk`).
 
 Include: goal, Task Card status (no secret fields), files touched, test
-pass/fail (not log dumps), open questions, and the next `$cc-` command.
+pass/fail (not log dumps), open questions, the next `$cc-` command, plus links
+to the Delivery Ledger and verification evidence when they exist. Do not repeat
+the original request or transcript.
 
 Do not edit source or tests.
 

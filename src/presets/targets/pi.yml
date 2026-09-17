@@ -2,6 +2,7 @@ target: pi
 invocation: hyphen
 commandFormat: markdown
 contextFile: AGENTS.md
+# ODD is available through `bun run dev odd`; Pi installs no slash-prompt files.
 # No Task tool or subagents (deliberate design choice, per pi's own docs) —
 # same style as opencode and agy, which share the reason.
 subagentInvocationStyle: invoke-with-context

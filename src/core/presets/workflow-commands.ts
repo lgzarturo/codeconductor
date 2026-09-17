@@ -21,6 +21,7 @@ export const WORKFLOW_COMMANDS = [
   'handoff',
   'clarify',
   'security',
+  'odd',
 ] as const;
 
 export type WorkflowCommandName = (typeof WORKFLOW_COMMANDS)[number];

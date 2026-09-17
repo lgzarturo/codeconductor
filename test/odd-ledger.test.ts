@@ -84,7 +84,11 @@ describe('ODD Delivery Ledger', () => {
     await writeFile(join(root, 'README.md'), 'after');
 
     const result = await oddCommand({ subcommand: 'reconcile', projectRoot: root, id: 'delivery-001' });
-    expect(result.data).toMatchObject({ status: 'conflict', changedPaths: ['README.md'] });
+    expect(result.data).toMatchObject({
+      status: 'conflict',
+      changedPaths: ['README.md'],
+      resume: { status: 'needs_decision', changedPaths: ['README.md'] },
+    });
 
     const loaded = await oddCommand({ subcommand: 'read', projectRoot: root, id: 'delivery-001' });
     expect(loaded.data).toMatchObject({ ledger: { workspace: { 'README.md': expect.any(String) } } });

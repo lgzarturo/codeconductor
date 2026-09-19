@@ -2,7 +2,7 @@
 
 **Stop prompting. Start orchestrating.**
 
-[![Socket Badge](https://badge.socket.dev/npm/package/cc-codeconductor/1.3.0)](https://badge.socket.dev/npm/package/cc-codeconductor/1.3.0)
+[![Socket Badge](https://badge.socket.dev/npm/package/cc-codeconductor/1.4.2)](https://badge.socket.dev/npm/package/cc-codeconductor/1.4.2)
 
 CodeConductor is an open-source framework for building structured, reproducible
 AI-assisted software engineering workflows.
@@ -15,19 +15,22 @@ contracts, task cards, and risk-based routing.
 >
 > ## Current Scope
 >
-> Published package is **1.3.x (current stable: 1.3.0)**. Limitations matrix:
+> Published package is **1.4.2** (current stable line: **1.4.x**). Limitations
+> matrix:
 > [docs/current-status.md](docs/current-status.md). This repository:
 > `bun run dev …` (not `npx`) while iterating.
 >
-> Shipped in the 1.3.x stable line:
+> Shipped in the 1.4.x stable line:
 >
+> - `npx cc-codeconductor setup --target <target> --yes` — onboarding flow
 > - `npx cc-codeconductor init` — detects project stack, writes
 >   `.codeconductor/config.yml`, copies `council.yml` and `policy.yml` into
 >   `.codeconductor/presets/`
 > - `npx cc-codeconductor install council --target <opencode|claude|codex|agy|all>`
 > - `npx cc-codeconductor install preset --target <opencode|claude|codex|gemini|cursor|agy|all>`
 > - `npx cc-codeconductor install lsp --target <…>`
-> - `npx cc-codeconductor detect` / `doctor` / `update`
+> - `npx cc-codeconductor detect` / `status` / `version` / `doctor` / `update` /
+>   `migrate`
 > - `npx cc-codeconductor seo audit` / `seo llms` (SSRF-guarded fetch)
 > - `npx cc-codeconductor help` / `cc-help` (distinct contracts — see breaking
 >   changes below)
@@ -42,7 +45,7 @@ contracts, task cards, and risk-based routing.
 > - `npx cc-codeconductor scorecard …`
 > - `npx cc-codeconductor goal` / `ingest` / `product` / `orchestrate` /
 >   `impact` / `verify` — Product OS (see
->   [docs/v1.3.0-release-notes.md](docs/v1.3.0-release-notes.md))
+>   [docs/product-os.md](docs/product-os.md))
 > - Slash commands after `install preset` — 21 CCEP workflows plus `/cc-ask`;
 >   prefer `/cc-iterative`, `/cc-triage`, `/cc-handoff` for wayfinding;
 >   `/cc-backlog` authors `BACKLOG.md`; `/cc-openspec` and `/cc-tdd-cycle`
@@ -75,6 +78,29 @@ contracts, task cards, and risk-based routing.
 > maintainer-only stubs (`cc-self-review`, `cc-update-preset-models`) are
 > skipped so this repo can dogfood `install preset`.
 
+## Recommended CLI flow
+
+Start with the high-level onboarding command, then use the maintenance commands
+to inspect and reconcile the installed harness:
+
+```bash
+npx cc-codeconductor setup --target claude --yes
+npx cc-codeconductor status
+npx cc-codeconductor version
+npx cc-codeconductor doctor
+npx cc-codeconductor update --check
+npx cc-codeconductor migrate --dry-run
+```
+
+- `setup` detects the project, initializes the harness, installs the selected
+  target, and runs `doctor`.
+- `status` is the lightweight installation dashboard; `version` reports the CLI
+  and project harness versions.
+- `doctor` diagnoses configuration and managed files. `update` safely reconciles
+  installed harness files, while `migrate` applies compatibility repairs.
+- `init` and `install` remain available as lower-level primitives for automation
+  and targeted installations.
+
 ---
 
 ## Why CodeConductor?
@@ -96,9 +122,9 @@ This is not a prompt collection. It is a workflow framework.
 
 ---
 
-## What's new in v1.3.0
+## Historical: v1.3.0
 
-v1.3.0 is the current **stable** release in the 1.3.x line. It retains the
+v1.3.0 was a **stable** release in the 1.3.x line. It retained the
 v1.0.0 workflow contract baseline and adds cross-target preset fixes, centralized
 skill versioning, runner parity improvements, and the contextual web design
 engineering skill. Re-install presets after upgrading.
@@ -298,14 +324,14 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 
 ## Supply chain
 
-Published **1.3.0** declares two production dependencies (`package.json`
+Published **1.4.2** declares two production dependencies (`package.json`
 `dependencies`; same on
 [npm](https://www.npmjs.com/package/cc-codeconductor)). Neither has further
 npm transitive dependencies.
 
 ```mermaid
 graph LR
-  cc["cc-codeconductor@1.3.0"]
+  cc["cc-codeconductor@1.4.2"]
   zod["zod@^3.23.8"]
   yaml["yaml@^2.4.5"]
   cc --> zod
@@ -821,10 +847,9 @@ codeconductor/
 
 ## Roadmap
 
-Published package: **1.3.x (current stable: 1.3.0)**. Remaining gaps (sandbox, policy compiler, full
+Published package: **1.4.x (current stable: 1.4.2)**. Remaining gaps (sandbox, policy compiler, full
 stack-specific asset pruning): [docs/current-status.md](docs/current-status.md).
-Release details:
-[docs/v1.3.0-release-notes.md](docs/v1.3.0-release-notes.md).
+Release history: [CHANGELOG.md](CHANGELOG.md).
 
 See [ROADMAP.md](ROADMAP.md) for historical notes.
 

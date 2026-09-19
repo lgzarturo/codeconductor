@@ -45,9 +45,19 @@ fi
 
 PACKAGE_JSON="package.json"
 VERSION_FILE="VERSION"
-STATUS_DOC="docs/current-status.md"
 CURRENT_VERSION=$(node -p "require('./$PACKAGE_JSON').version")
-REPO_URL=$(node -p "require('./$PACKAGE_JSON').repository.url" 2>/dev/null || echo "")
+VERSION_FILE_VALUE=$(tr -d '[:space:]' < "$VERSION_FILE")
+if [[ "$CURRENT_VERSION" != "$VERSION_FILE_VALUE" ]]; then
+  echo "Error: package.json ($CURRENT_VERSION) and $VERSION_FILE ($VERSION_FILE_VALUE) are out of sync"
+  exit 1
+fi
+RELEASE_DOCS=(
+  "README.md"
+  "docs/cc-commands.md"
+  "docs/current-status.md"
+  "docs/current-limitations.md"
+  "docs/architecture.md"
+)
 
 function log() { echo "[release] $*"; }
 function dry_log() { echo "[DRY-RUN] $*"; }
@@ -56,13 +66,23 @@ function command_exists() {
   command -v "$1" &>/dev/null
 }
 
+NEW_VERSION=$(node -p "
+const v = require('./$PACKAGE_JSON').version.split('.').map(Number);
+const t = '$VERSION_TYPE';
+if (t === 'major') { v[0]++; v[1] = 0; v[2] = 0; }
+else if (t === 'minor') { v[1]++; v[2] = 0; }
+else { v[2]++; }
+v.join('.');
+")
+
 if [[ "$DRY_RUN" == "true" ]]; then
   dry_log "Package version: $CURRENT_VERSION"
+  dry_log "New version: $NEW_VERSION"
   dry_log "Version file: $VERSION_FILE"
-  dry_log "Status document: $STATUS_DOC"
+  dry_log "Release documentation: ${RELEASE_DOCS[*]}"
   dry_log "Version bump: $VERSION_TYPE"
   dry_log "Would run: npm test && npm run typecheck"
-  dry_log "Would update: docs/current-status.md"
+  dry_log "Would synchronize release documentation"
   dry_log "Would generate CHANGELOG via git-cliff"
   dry_log "Would commit: 'chore(release): bump to v<new-version>'"
   dry_log "Would create git tag: v<new-version>"
@@ -81,40 +101,18 @@ if [[ "$SKIP_TESTS" == "false" ]]; then
   npm run typecheck
 fi
 
-NEW_VERSION=$(node -p "
-const v = require('./$PACKAGE_JSON').version.split('.').map(Number);
-const t = '$VERSION_TYPE';
-if (t === 'major') { v[0]++; v[1] = 0; v[2] = 0; }
-else if (t === 'minor') { v[1]++; v[2] = 0; }
-else { v[2]++; }
-v.join('.');
-")
-
 log "New version: $NEW_VERSION"
 
-node -p "
+NEW_VERSION="$NEW_VERSION" node <<'NODE'
 const fs = require('fs');
-const newVersion = '$NEW_VERSION';
-const [major, minor] = newVersion.split('.');
-const stableLine = major + '.' + minor;
+const newVersion = process.env.NEW_VERSION;
+const packageJsonPath = 'package.json';
 
-const pkg = JSON.parse(fs.readFileSync('$PACKAGE_JSON', 'utf8'));
+const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 pkg.version = newVersion;
-fs.writeFileSync('$PACKAGE_JSON', JSON.stringify(pkg, null, 2) + '\n');
-
-if (fs.existsSync('$STATUS_DOC')) {
-  let status = fs.readFileSync('$STATUS_DOC', 'utf8');
-  status = status.replace(
-    /\*\*Published package version:\*\* \`[^\`]+\` — current stable line: \`[^\`]+\`/,
-    '**Published package version:** \`' + newVersion + '\` — current stable line: \`' + stableLine + '.x\`'
-  );
-  status = status.replace(
-    /Available in stable \d+\.\d+\.x/g,
-    'Available in stable ' + stableLine + '.x'
-  );
-  fs.writeFileSync('$STATUS_DOC', status, 'utf8');
-}
-"
+fs.writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2) + '\n');
+NODE
+bun run scripts/sync-release-docs.ts "$NEW_VERSION"
 printf '%s\n' "$NEW_VERSION" > "$VERSION_FILE"
 
 log "Building..."
@@ -134,7 +132,7 @@ else
   git add CHANGELOG.md
 fi
 
-git add "$PACKAGE_JSON" "$VERSION_FILE" "$STATUS_DOC"
+git add "$PACKAGE_JSON" "$VERSION_FILE" "${RELEASE_DOCS[@]}"
 git commit -m "chore(release): bump to v$NEW_VERSION"
 git tag "v$NEW_VERSION"
 

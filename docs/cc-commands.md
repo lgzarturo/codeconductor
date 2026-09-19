@@ -1,9 +1,15 @@
 # CodeConductor CLI Commands Reference
 
-Reference for the CodeConductor CLI. Published package is **1.3.0**, the
-current stable release in the **1.3.x** line. Product OS commands (`goal`,
+Reference for the CodeConductor CLI. Published package is **1.4.2**, the
+current stable release in the **1.4.x** line. Product OS commands (`goal`,
 `ingest`, `product`, `orchestrate`, `impact`, `verify`) are included in the
 published package.
+
+For the recommended lifecycle, start with [`setup`](cli/setup.md), then use
+[`status`](cli/status.md), [`version`](concepts/versioning.md), and
+`doctor` to inspect the installation. Use [`update`](cli/update.md) to
+reconcile managed files and `migrate` for compatibility repairs. `init` and
+`install` are lower-level primitives.
 
 **Loops:** CCEP slash commands are the canonical consumer workflow (prefer
 `/cc-iterative`, `/cc-triage`, `/cc-handoff`). OpenSpec is a delivery loop

@@ -2,12 +2,12 @@
 
 The canonical shipped/planned matrix is
 [current-status.md](current-status.md). The published package version is
-`1.3.0`, the current stable release in the `1.3.x` line.
+`1.4.2`, the current stable release in the `1.4.x` line.
 
 ## Workflow Runtime
 
 The CLI and Product OS orchestrator commands are shipped in the published
-`1.3.x` line. The separate 8-phase `runWorkflowPipeline` remains an
+`1.4.x` line. The separate 8-phase `runWorkflowPipeline` remains an
 experimental library API, not a CLI runtime.
 
 ## Stack presets

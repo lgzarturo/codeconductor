@@ -11,7 +11,7 @@ entry does not by itself mean that version was published.
 
 | Capability                                                                                                 | Repository status                     | Available in stable 1.4.x |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------- |
-| Core CLI (`init`, `detect`, `install`, `doctor`, `update`, `migrate`)                                      | shipped                               | yes                       |
+| Core CLI (`setup`, `init`, `detect`, `install`, `version`, `status`, `doctor`, `update`, `migrate`)          | shipped                               | yes                       |
 | Preset and council installation (7 targets: agy, claude, codex, cursor, gemini, opencode, pi)              | shipped                               | yes                       |
 | SEO audit / `llms.txt` commands                                                                            | shipped                               | yes                       |
 | Scorecard and outcome evaluation                                                                           | shipped                               | yes                       |
@@ -48,14 +48,9 @@ removes an older version's directory).
 
 ## Release documentation
 
-The current documented release is **v1.3.0**, the stable release in the 1.3.x
-line. Historical notes for 0.4.0, 0.5.0, and the v1.0.0 Product OS draft remain
-available alongside these notes.
-
-- [docs/v1.3.0-release-notes.md](v1.3.0-release-notes.md) — current stable
-  release notes
-- [docs/v1.0.0-release-notes.md](v1.0.0-release-notes.md) — historical Product
-  OS release draft
+The package and operational documentation are synchronized at **v1.4.2**.
+Historical release notes remain available alongside the
+[CHANGELOG.md](../CHANGELOG.md) release history.
 
 ## TaskCard shapes
 

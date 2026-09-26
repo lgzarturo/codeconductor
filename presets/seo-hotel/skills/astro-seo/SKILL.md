@@ -1,6 +1,6 @@
 ---
 id: astro-seo
-name: Astro SEO Validator
+name: astro-seo
 description: >
   SEO validation specific to Astro framework projects. Checks static generation,
   meta tag rendering, Content Collections usage, Island Architecture implications

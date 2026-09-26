@@ -1,6 +1,6 @@
 ---
 id: drizzle-schema-architect
-name: Drizzle Schema Architect
+name: drizzle-schema-architect
 description: >
   Generates strictly typed Drizzle ORM schemas for PostgreSQL with indexes, 
   foreign keys, and Zod schema deduction.

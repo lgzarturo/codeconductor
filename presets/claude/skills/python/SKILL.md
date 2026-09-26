@@ -1,6 +1,6 @@
 ---
 id: python
-name: Python
+name: python
 description: >
   Python development best practices: clean code, patterns,
   type hints, decorators, context managers, and architecture.

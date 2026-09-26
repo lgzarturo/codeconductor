@@ -1,6 +1,6 @@
 ---
 id: astro
-name: Astro
+name: astro
 description: >
   Provides expert knowledge for building Astro 5+ sites with Islands Architecture, Content Collections, TypeScript, and performance-first rendering strategies.
 

@@ -1,6 +1,6 @@
 ---
 id: android
-name: Android + Kotlin (Jetpack Compose & Media3)
+name: android
 description: >
   Provides expert knowledge for building modern native Android apps using Kotlin, Jetpack Compose, Material Design 3, MVI architecture, Hilt dependency injection, and Media3/ExoPlayer.
 

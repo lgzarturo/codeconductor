@@ -1,6 +1,6 @@
 ---
 id: django-orm
-name: Django ORM
+name: django-orm
 description: >
   Django ORM patterns for multi-tenant POS projects: efficient queries,
   bulk operations, transactions, and multi-schema upload paths.

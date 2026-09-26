@@ -1,6 +1,6 @@
 ---
 id: python-fastapi-stack
-name: Python FastAPI Stack
+name: python-fastapi-stack
 description: >
   FastAPI conventions for REST APIs: routers, Pydantic v2 schemas, dependency
   injection, error handling, pagination, and project structure.

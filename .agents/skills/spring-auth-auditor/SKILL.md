@@ -1,6 +1,6 @@
 ---
 id: spring-auth-auditor
-name: Spring Auth Auditor
+name: spring-auth-auditor
 description: >
   Secures Spring Security filters, JWT validations, OAuth2 setups, and CORS/CSRF headers.
 user-invokable: true

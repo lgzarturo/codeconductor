@@ -1,6 +1,6 @@
 ---
 id: seo-analytics-injector
-name: SEO Analytics Injector
+name: seo-analytics-injector
 description: >
   Verifies and injects Google Tag Manager (GTM), GA4 event triggers, and optimized meta tags.
 user-invokable: true

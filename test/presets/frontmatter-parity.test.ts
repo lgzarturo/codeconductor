@@ -55,6 +55,9 @@ describe('SKILL.md frontmatter parity (every shipped skill)', () => {
       // it fails loudly instead of shipping a skill nothing can discover.
       const dir = basename(dirname(rel));
       const ident = skillIdentifier(result.frontmatter);
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(result.frontmatter.name) || result.frontmatter.name.length > 64) {
+        failures.push(`${rel}: name "${result.frontmatter.name}" is not a portable skill name`);
+      }
       if (ident !== dir) {
         failures.push(`${rel}: identifier "${ident}" does not match its directory "${dir}"`);
       }

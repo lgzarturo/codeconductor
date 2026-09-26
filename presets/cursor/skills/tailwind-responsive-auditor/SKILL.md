@@ -1,6 +1,6 @@
 ---
 id: tailwind-responsive-auditor
-name: Tailwind Responsive Auditor
+name: tailwind-responsive-auditor
 description: >
   Audits Tailwind CSS usage ensuring mobile-first responsive utilities and clean classes.
 user-invokable: true

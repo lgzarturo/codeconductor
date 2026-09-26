@@ -1,6 +1,6 @@
 ---
 id: fastapi-pydantic-strict
-name: FastAPI Pydantic Strict
+name: fastapi-pydantic-strict
 description: >
   Enforces Pydantic v2 strict models, asynchronous dependency generators, and uv environment setup.
 user-invokable: true

@@ -1,6 +1,6 @@
 ---
 id: schema-validator
-name: Schema.org Validator
+name: schema-validator
 description: >
   Validates Schema.org structured data (JSON-LD, Microdata, RDFa) on hotel and hospitality websites.
   Supports single URL validation via --url and sitemap-scoped batch validation via --sitemap.

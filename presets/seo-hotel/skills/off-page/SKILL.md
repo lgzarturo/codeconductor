@@ -1,6 +1,6 @@
 ---
 id: off-page
-name: SEO Off-Page & Marketing
+name: off-page
 description: >
   Guidance for off-page SEO strategy specific to hotel and hospitality websites.
   Covers backlink strategy, local citations, review management, social signals,

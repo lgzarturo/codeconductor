@@ -1,6 +1,6 @@
 ---
 id: pagespeed-perf
-name: PageSpeed Performance Audit
+name: pagespeed-perf
 description: >
   Web Performance Engineering — analyzes Core Web Vitals using the PageSpeed
   Insights API (PSI v5) and applies the 80/20 principle: identify the 20% of

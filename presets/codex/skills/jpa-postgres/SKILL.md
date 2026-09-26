@@ -1,6 +1,6 @@
 ---
 id: jpa-postgres
-name: JPA + PostgreSQL
+name: jpa-postgres
 description: >
   Provides expert knowledge of JPA entity design, relationship mapping, Flyway
   migrations, and PostgreSQL-specific optimizations.

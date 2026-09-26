@@ -1,6 +1,6 @@
 ---
 id: spring-boot-kotlin
-name: Spring Boot + Kotlin
+name: spring-boot-kotlin
 description: >
   Provides expert knowledge of Spring Boot conventions, Kotlin idioms, and MVC
   patterns for backend API development.

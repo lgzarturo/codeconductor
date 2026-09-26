@@ -1,6 +1,6 @@
 ---
 id: code-review
-name: Code Review
+name: code-review
 description: >
   Provides a structured framework for conducting thorough code reviews covering correctness, security, architecture alignment, performance, and technical debt.
 

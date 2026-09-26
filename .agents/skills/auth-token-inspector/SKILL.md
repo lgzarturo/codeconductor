@@ -1,6 +1,6 @@
 ---
 id: auth-token-inspector
-name: Auth Token Inspector
+name: auth-token-inspector
 description: >
   Audits token storage mechanisms to prevent XSS-based JWT theft.
 user-invokable: true

@@ -1,6 +1,6 @@
 ---
 id: nextjs-typescript
-name: Next.js + TypeScript
+name: nextjs-typescript
 description: >
   Provides expert knowledge for building Next.js 15+ applications with the App Router, TypeScript, Server Components, Server Actions, and TanStack Query.
 

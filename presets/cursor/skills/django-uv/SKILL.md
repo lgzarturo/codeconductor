@@ -1,6 +1,6 @@
 ---
 id: django-uv
-name: Django + UV
+name: django-uv
 description: >
   Provides expert knowledge for building Django 5+ projects with UV as the package manager, domain-driven app structure, ruff for linting, and pytest-django for testing.
 

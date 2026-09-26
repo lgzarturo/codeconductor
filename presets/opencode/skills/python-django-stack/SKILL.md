@@ -1,6 +1,6 @@
 ---
 id: python-django-stack
-name: Python Django Stack
+name: python-django-stack
 description: >
   Python and Django conventions for multi-tenant SaaS POS projects:
   views, services, naming, JSON APIs, PDFs, and cart patterns.

@@ -1,6 +1,6 @@
 ---
 id: django-testing
-name: Django Testing
+name: django-testing
 description: >
   Testing patterns for multi-tenant Django POS projects using pytest-django,
   RequestFactory, and mocks. No factories, no complex conftest.

@@ -1,6 +1,6 @@
 ---
 id: livewire-alpine-bridge
-name: Livewire Alpine Bridge
+name: livewire-alpine-bridge
 description: >
   Schedules reactive frontend states cleanly using entangle directives in PHP and JS.
 user-invokable: true

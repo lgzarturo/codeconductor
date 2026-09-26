@@ -1,6 +1,6 @@
 ---
 id: tdd-mutation-tester
-name: TDD Mutation Tester
+name: tdd-mutation-tester
 description: >
   Performs simple mutation testing to verify test coverage and assertions.
 user-invokable: true

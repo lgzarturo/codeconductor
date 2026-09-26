@@ -1,6 +1,6 @@
 ---
 id: seo-audit
-name: SEO Technical Audit
+name: seo-audit
 description: >
   Comprehensive technical SEO audit for hotel websites. Checks meta tags, headings,
   internal linking, page speed signals, mobile readiness, crawl directives, and Core Web Vitals

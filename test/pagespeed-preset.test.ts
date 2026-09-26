@@ -61,7 +61,7 @@ describe('pagespeed-perf skill — frontmatter validity', () => {
 
     test(`${skillPath} declares name`, () => {
       const content = readPreset(skillPath);
-      expect(content).toContain('name: PageSpeed Performance Audit');
+      expect(content).toContain('name: pagespeed-perf');
     });
 
     test(`${skillPath} lists compatibility tools including claude, opencode, codex`, () => {

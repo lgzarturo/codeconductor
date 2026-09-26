@@ -2,14 +2,14 @@
 
 This file is the canonical shipped/planned matrix for the repository.
 
-**Published package version:** `1.4.2` — current stable line: `1.4.x` (from
+**Published package version:** `1.5.0` — current stable line: `1.5.x` (from
 `package.json`)
 
 Code present in the repository but assigned to a later release is
 **implemented, unreleased**. A release-note filename or historical roadmap
 entry does not by itself mean that version was published.
 
-| Capability                                                                                                 | Repository status                     | Available in stable 1.4.x |
+| Capability                                                                                                 | Repository status                     | Available in stable 1.5.x |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------- |
 | Core CLI (`setup`, `init`, `detect`, `install`, `version`, `status`, `doctor`, `update`, `migrate`)          | shipped                               | yes                       |
 | Preset and council installation (7 targets: agy, claude, codex, cursor, gemini, opencode, pi)              | shipped                               | yes                       |
@@ -48,7 +48,7 @@ removes an older version's directory).
 
 ## Release documentation
 
-The package and operational documentation are synchronized at **v1.4.2**.
+The package and operational documentation are synchronized at **v1.5.0**.
 Historical release notes remain available alongside the
 [CHANGELOG.md](../CHANGELOG.md) release history.
 

@@ -19,18 +19,35 @@ not.
 | `post-tool` | `bun run dev hook post-tool` | Best-effort prettier/eslint/ruff if present |
 | `session-start` | `bun run dev hook session-start` | Prints skill / OpenSpec / scorecard hints |
 
-Claude: deny → stderr + exit 2. Agy: JSON `{ "action": "deny", "error": "…" }`.
+Claude reads `tool_name` and `tool_input` from stdin. Deny → stderr + exit 2;
+ask → `hookSpecificOutput.permissionDecision: "ask"` with exit 0.
+Antigravity reads `toolCall.name` and `toolCall.args`, returning JSON
+`{ "decision": "deny", "reason": "…" }` or `decision: "allow" / "ask"`.
+See [Claude hooks](https://code.claude.com/docs/en/hooks) and
+[Antigravity hooks](https://antigravity.google/docs/hooks/).
+
+The wrapper buffers stdin once and replays it to every fallback runner. It
+tries source via Bun, local package/build via Node, and installed global npm
+entrypoints from PATH without `npx` or Windows `.cmd` shims. Node must be on PATH.
+Prettier and ESLint run through project-local JS entrypoints; missing optional
+formatters are skipped, with a five-second timeout per formatter.
+
+Windows drive paths, quoted `git.exe` paths, PowerShell Git invocation, Git
+global options, and command chains are covered by policy tests. Absolute or
+wildcard recursive Windows deletions (`Remove-Item`, `rd`, `del`) are denied.
+These checks are guardrails, not a full shell parser or security sandbox.
 
 ## Fail-Open Semantics & Per-Project Scope
 
 - **Fail-Open Policy**: If `cc-codeconductor` is not installed or cannot execute (e.g. runner error, timeout, missing binary), `invoke-hook.cjs` fails open:
-  - `agy`: Outputs `{"action":"allow"}` (for `pre-tool`) or `{}` (for `post-tool` / `session-start`) with exit status 0. The agent is never blocked.
+  - `agy`: Outputs `{"decision":"allow"}` (for `pre-tool`) or `{}` (for `post-tool` / `session-start`) with exit status 0. The agent is never blocked.
   - `claude`: Exits with status 0.
 - **Child Process Timeout**: All hook strategy child processes time out after 10,000 ms (10 seconds), triggering fail-open behavior instead of hanging.
 - **Per-Project Scope**: `agy/hooks.json` and `agy/scripts` specify `globalStrategy: skip` in the manifest. Hooks and scripts are only installed into project repositories (`.agents/hooks.json` and `.agents/scripts/`), never globally (`~/.gemini/config/`).
 
 ## Privacy (OpenCode Go)
 
-Do not assign `opencode-go/muse-spark-1.2-contributor` to a production role
-(trains on prompts). `opencode-go/ox-alpha-free` is not in the official Go
-catalog — optional fallback only.
+The requested preset assigns `opencode-go/muse-spark-1.3-contributor` to docs.
+It uses prompts/completions for training, is not ZDR, and has regional limits;
+do not send confidential material. Use another verified model when necessary.
+See [OpenCode Go privacy](https://opencode.ai/docs/go/#privacy).

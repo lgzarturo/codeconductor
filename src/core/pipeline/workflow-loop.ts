@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { councilConsensus } from '../../domain/council/council-consensus';
 import type {
   ConsensusConfig,
@@ -269,7 +270,7 @@ export async function runWorkflowPipeline(
 
     let hashValid = true;
     if (cwd && config.testDirs && config.testDirs.length > 0) {
-      const lockPath = `${cwd}/test-freeze.lock`;
+      const lockPath = join(cwd, 'test-freeze.lock');
       const freezeResult = await verifyTestFreeze(lockPath, config.testDirs, cwd).catch(() => null);
       if (freezeResult && !freezeResult.valid) {
         hashValid = false;

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { detectProject } from '../detection/project-detector';
 import {
   validateCommandEnvelope,
@@ -52,7 +52,7 @@ function readProjectId(projectRoot: string): string {
       // fall through
     }
   }
-  return projectRoot.split('/').pop() ?? 'unknown';
+  return basename(projectRoot) || 'unknown';
 }
 
 async function detectStack(projectRoot: string): Promise<string[]> {

@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { basename, join, relative, sep } from 'node:path';
 import type { KnowledgeEntityInput } from '../../validation/schemas';
 import { entityId, slugify } from './entity-normalizer';
 
@@ -15,9 +15,9 @@ export interface AdrParsed {
 export async function parseAdrFile(filePath: string): Promise<AdrParsed | null> {
   try {
     const content = await readFile(filePath, 'utf-8');
-    const basename = filePath.split('/').pop() ?? '';
-    const idMatch = basename.match(/adr-(\d+)/i);
-    const id = idMatch ? `adr-${idMatch[1]}` : slugify(basename);
+    const base = basename(filePath);
+    const idMatch = base.match(/adr-(\d+)/i);
+    const id = idMatch ? `adr-${idMatch[1]}` : slugify(base);
 
     const titleMatch = content.match(/^#\s+ADR-\d+:\s*(.+)$/m);
     const statusMatch = content.match(/\*\*Status:\*\*\s*(\w+)/i);
@@ -33,7 +33,7 @@ export async function parseAdrFile(filePath: string): Promise<AdrParsed | null> 
 
     return {
       id,
-      title: titleMatch?.[1]?.trim() ?? basename,
+      title: titleMatch?.[1]?.trim() ?? base,
       status: statusMatch?.[1]?.toLowerCase() ?? 'unknown',
       context: contextSection.trim(),
       decision: decisionSection.trim(),
@@ -144,7 +144,7 @@ export async function scanSrcComponents(projectRoot: string): Promise<KnowledgeE
             source: 'src/',
             confidence: 'medium',
             relations: [],
-            data: { path: full.replace(projectRoot + '/', '') },
+            data: { path: relative(projectRoot, full).split(sep).join('/') },
           });
           await walk(full, prefix ? `${prefix}-${domainSlug}` : domainSlug);
         }

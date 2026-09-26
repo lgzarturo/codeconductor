@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { loadBacklog } from '../openspec/backlog-parser';
 import type {
   KnowledgeEntityInput,
@@ -86,7 +86,7 @@ async function collectDeferRisks(projectRoot: string): Promise<KnowledgeEntityIn
   const perFile = await mapLimit(files, WALK_READ_CONCURRENCY, async (full) => {
     const entities: KnowledgeEntityInput[] = [];
     const content = await readFile(full, 'utf-8');
-    const rel = full.replace(projectRoot + '/', '');
+    const rel = relative(projectRoot, full).split(sep).join('/');
     const deferRe = new RegExp(DEFER_REGEX_SOURCE, 'gm');
     let match: RegExpExecArray | null;
     while ((match = deferRe.exec(content)) !== null) {

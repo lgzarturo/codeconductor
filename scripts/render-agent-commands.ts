@@ -79,9 +79,20 @@ export function rewriteTaskToolInvocation(body: string, target: 'gemini' | 'code
     );
 }
 
+/**
+ * Cursor's source points at its own skill install path — `.cursor/skills/`.
+ * Gemini and Codex install skills under their own target-specific paths (see
+ * src/presets/targets/*.yml); left as-is, both derived targets tell the
+ * model to read skills from a directory that doesn't exist for them.
+ */
+export function rewriteSkillsPath(body: string, target: 'gemini' | 'codex'): string {
+  const dest = target === 'gemini' ? '.gemini/skills/' : '.codex/skills/';
+  return body.replaceAll('.cursor/skills/', dest);
+}
+
 export function renderGeminiToml(cmd: string, md: string): string {
   const description = descriptionFrom(md, cmd);
-  const body = rewriteTaskToolInvocation(bodyFrom(md), 'gemini');
+  const body = rewriteSkillsPath(rewriteTaskToolInvocation(bodyFrom(md), 'gemini'), 'gemini');
   const prompt = tomlEscapePrompt(body.replaceAll('$ARGUMENTS', '{{args}}'));
   return `description = ${JSON.stringify(description)}
 
@@ -94,7 +105,10 @@ ${prompt}
 export function renderCodexSkill(cmd: string, md: string): string {
   const description = descriptionFrom(md, cmd);
   const invoke = formatCcCommand(cmd, 'dollar');
-  const body = rewriteTaskToolInvocation(rewriteCodexCrossReferences(bodyFrom(md)), 'codex');
+  const body = rewriteSkillsPath(
+    rewriteTaskToolInvocation(rewriteCodexCrossReferences(bodyFrom(md)), 'codex'),
+    'codex',
+  );
   return `---
 name: cc-${cmd}
 description: ${description}

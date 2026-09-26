@@ -62,7 +62,7 @@ If `graphify-out/graph.json` exists, run `graphify query "$ARGUMENTS"` (and
 `graphify path` / `graphify explain` when needed). Then invoke `repo-explorer`
 to map modules, conventions, and impact radius. Do not write code in this step.
 Record a Repo Map artifact before intake. Load the matching `security-*` skill
-for the named domain (see `.claude/skills/security-*/SKILL.md`). Keep the OWASP
+for the named domain (see `.opencode/skills/security-*/SKILL.md`). Keep the OWASP
 `security` skill for application-security reviews.
 
 ---

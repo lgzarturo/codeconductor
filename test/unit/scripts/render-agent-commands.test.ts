@@ -7,6 +7,7 @@ import {
   renderCodexSkill,
   renderGeminiToml,
   rewriteCodexCrossReferences,
+  rewriteSkillsPath,
   rewriteTaskToolInvocation,
 } from '../../../scripts/render-agent-commands';
 import { WORKFLOW_COMMANDS } from '../../../src/core/presets/workflow-commands';
@@ -115,6 +116,32 @@ describe('scripts/render-agent-commands.ts', () => {
 
     test('leaves text with no Task tool mention untouched', () => {
       expect(rewriteTaskToolInvocation('Run the tests and report the result.', 'gemini')).toBe(
+        'Run the tests and report the result.'
+      );
+    });
+  });
+
+  describe('rewriteSkillsPath', () => {
+    test('rewrites .cursor/skills/ to .gemini/skills/ for gemini', () => {
+      expect(rewriteSkillsPath('see `.cursor/skills/security-*/SKILL.md`', 'gemini')).toBe(
+        'see `.gemini/skills/security-*/SKILL.md`'
+      );
+    });
+
+    test('rewrites .cursor/skills/ to .codex/skills/ for codex', () => {
+      expect(rewriteSkillsPath('Apply `.cursor/skills/openspec/SKILL.md`', 'codex')).toBe(
+        'Apply `.codex/skills/openspec/SKILL.md`'
+      );
+    });
+
+    test('rewrites every occurrence in the body', () => {
+      expect(
+        rewriteSkillsPath('`.cursor/skills/a/SKILL.md` and `.cursor/skills/b/SKILL.md`', 'gemini')
+      ).toBe('`.gemini/skills/a/SKILL.md` and `.gemini/skills/b/SKILL.md`');
+    });
+
+    test('leaves text with no cursor skills path untouched', () => {
+      expect(rewriteSkillsPath('Run the tests and report the result.', 'codex')).toBe(
         'Run the tests and report the result.'
       );
     });

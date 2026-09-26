@@ -149,10 +149,13 @@ describe('cc-security command — Claude', () => {
 });
 
 describe('cc-security command — Cursor mirrors Claude', () => {
-  test('presets/cursor/commands/cc/security.md is identical to the Claude command', () => {
+  test('presets/cursor/commands/cc/security.md is identical to the Claude command except its skills path', () => {
     const claude = readPreset('presets/claude/commands/cc/security.md');
     const cursor = readPreset('presets/cursor/commands/cc/security.md');
-    expect(cursor).toBe(claude);
+    // Cursor and Claude install skills under different directories
+    // (.cursor/skills/ vs .claude/skills/) — that's the one intentional
+    // difference; everything else must still match.
+    expect(cursor.replaceAll('.cursor/skills/', '.claude/skills/')).toBe(claude);
   });
 });
 

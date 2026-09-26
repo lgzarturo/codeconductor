@@ -63,9 +63,8 @@ the following steps in order:
    the output filename: `{YYYY-MM-DD}_pagespeed-{hostname}-claude.md`.
 
 2. **Collect** — Call the PageSpeed Insights API for the requested strategy
-   (`mobile`, `desktop`, or `both`). Prefer the Bun scripts in
-   `~/.claude/skills/pagespeed-perf/scripts/run.ts` if Bun is available.
-   Otherwise, use `WebFetch` to call the PSI endpoint directly.
+   (`mobile`, `desktop`, or `both`) using `WebFetch` to call the PSI endpoint
+   directly.
 
 3. **Analyze** — Extract Core Web Vitals (LCP, INP, CLS, FCP, TTFB, TBT),
    identify the LCP element, enumerate third-party scripts by blocking time,

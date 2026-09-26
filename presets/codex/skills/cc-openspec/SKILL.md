@@ -214,4 +214,4 @@ Report completion: Task Cards executed, scorecard verdict, change folder path, f
 
 ## Skill
 
-Apply `.claude/skills/openspec/SKILL.md` for backlog format rules and state transitions.
+Apply `.codex/skills/openspec/SKILL.md` for backlog format rules and state transitions.

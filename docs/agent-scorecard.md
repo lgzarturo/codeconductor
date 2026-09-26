@@ -100,6 +100,13 @@ scores the aggregate.
 This is the heaviest criterion. A score of 0 here triggers an explicit policy
 veto (REJECT verdict), regardless of the weighted score.
 
+When scoring from a Reviewer's findings, classify each finding with the same
+Severity Rubric `/cc:review` uses (CRITICAL / WARNING / SUGGESTION anchors —
+see the "Severity Rubric" section in `presets/cursor/commands/cc/review.md`)
+rather than re-judging severity here. A CRITICAL finding contradicting an
+explicit acceptance criterion means that criterion is not met (score 0 for
+this criterion, independent of any other criterion's score).
+
 ### 2. Minimal Diff (20%)
 
 Evaluate whether the agent changed only what the Task Card required.

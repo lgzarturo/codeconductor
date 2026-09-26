@@ -116,6 +116,37 @@ Evaluate the diff against the following checklist:
 
 ---
 
+## Severity Rubric
+
+Classify every finding using these concrete anchors — not general judgment —
+so the same finding gets the same category on any run.
+
+**CRITICAL** (always):
+
+- Unauthenticated access to a protected resource
+- Injection (SQL, command, XSS) reachable from untrusted input
+- A secret or credential present in the diff
+- A destructive operation with no confirmation
+- The build or test suite is broken
+- A direct contradiction of an explicit acceptance criterion
+
+**WARNING**:
+
+- Missing test for a new branch or edge case
+- An error is silently swallowed — no log, no propagation
+- A change outside the declared scope
+- Inconsistent with an established pattern already in the module
+- Missing input validation in an internal function (not exposed at a trust boundary)
+
+**SUGGESTION**:
+
+- Style or naming
+- Minor readability
+- Speculative refactor that wasn't requested
+- Non-blocking micro-optimization
+
+---
+
 ## Step 3 — Review Report
 
 Produce a structured Review Report with findings in three categories:

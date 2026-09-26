@@ -10,6 +10,15 @@ const HIGH_RE =
   /(migrat|schema|auth(?:n|z|entication|orization)?|oauth|payment|billing|credential|password|secret|openapi|public[-_ ]?api|api[-_ ]?contract)/i;
 
 /**
+ * Infrastructure and supply-chain signals not already covered by HIGH_RE:
+ * migration tooling with no "migrat"/"schema" in its path (alembic), CI/CD
+ * pipelines, infrastructure-as-code, and dependency lockfiles (a
+ * supply-chain vector).
+ */
+const INFRA_RE =
+  /(alembic|\.github[/\\]workflows|dockerfile|terraform|\.tf\b|package-lock\.json|go\.sum|cargo\.lock)/i;
+
+/**
  * Classify delivery risk from AGENTS.md signals.
  * Migration, public API/contracts, and auth/payment paths are high
  * independent of backlog priority (P0 does not imply high).
@@ -18,7 +27,7 @@ export function classifyRisk(input: ClassifyRiskInput): RiskLevel {
   const type = (input.type ?? '').toLowerCase();
   const blob = [type, ...(input.targetFiles ?? []), ...(input.signals ?? [])].join(' ');
 
-  if (HIGH_RE.test(blob) || type === 'db-migration' || type === 'api-contract') {
+  if (HIGH_RE.test(blob) || INFRA_RE.test(blob) || type === 'db-migration' || type === 'api-contract') {
     return 'high';
   }
   if (type === 'docs' || type === 'review') {

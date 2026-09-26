@@ -51,7 +51,11 @@ async function hashFile(filePath: string): Promise<string> {
 }
 
 export async function freezeTestSuite(dirs: string[], lockDir: string): Promise<FreezeManifest> {
-  const basePath = process.cwd(); // Wait, the spec says "basePath" but `freezeTestSuite` does not take basePath. The signature is freezeTestSuite(dirs: string[], lockDir: string). I'll use lockDir as basePath or process.cwd(). Let's use process.cwd() as basePath for collectFiles? No, let's use process.cwd() if basePath is not provided. But let's assume `lockDir` is not the basePath. Let's just use process.cwd(). Wait, `verifyTestFreeze` takes `basePath: string`. So I'll modify `freezeTestSuite` to just use process.cwd().
+  // Only consumer today is runWorkflowPipeline() (src/core/pipeline/workflow-loop.ts),
+  // which src/cli/router.ts marks as an "experimental library-only 8-phase
+  // loop — not a shipped CLI runtime." The active production gate is
+  // rdd-receipt.ts + verification-runner.ts, not this module.
+  const basePath = process.cwd();
   const files = await collectFiles(dirs, process.cwd());
   
   const fileInfos = [];

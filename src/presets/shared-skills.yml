@@ -11,43 +11,43 @@ skills:
   - name: openspec
     targets: [claude, codex, cursor, opencode, agy]
   - name: security-ai-llm
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-blue-team
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-cloud
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-crypto
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-exploit-dev
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-grc
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-incident-response
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-log-analysis
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-malware-analysis
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-mobile
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-network
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-ot-ics
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-recon
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-red-team
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-reverse-engineering
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-soc-automation
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-threat-hunting
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-vuln-assessment
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: security-web
-    targets: [claude, cursor, opencode, agy]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: testing-strategy
     targets: [claude, codex]
   - name: testing-tdd
@@ -59,10 +59,46 @@ skills:
   - name: android-ui-design
     targets: [claude, codex, cursor, opencode, agy]
   - name: code-review
-    targets: [cursor, opencode]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: seo-analytics-injector
-    targets: [cursor, opencode]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: tdd-mutation-tester
-    targets: [cursor, opencode]
+    targets: [claude, codex, cursor, opencode, agy]
   - name: web-design-engineering
+    targets: [claude, codex, cursor, opencode, agy]
+  # Cursor keeps a `paths:` auto-attach block in its frontmatter (not
+  # supported by other targets) — intentional, not drift. Canonical source
+  # below is the opencode variant (no `paths:`); cursor and opencode keep
+  # their existing hand-maintained copies untouched.
+  - name: astro
+    targets: [claude, codex, agy]
+  - name: auth-token-inspector
+    targets: [claude, codex, agy]
+  - name: django-uv
+    targets: [claude, codex, agy]
+  - name: drizzle-schema-architect
+    targets: [claude, codex, agy]
+  - name: fastapi-pydantic-strict
+    targets: [claude, codex, agy]
+  - name: jpa-nplusone-detector
+    targets: [claude, codex, agy]
+  - name: livewire-alpine-bridge
+    targets: [claude, codex, agy]
+  - name: nextjs-typescript
+    targets: [claude, codex, agy]
+  - name: spring-auth-auditor
+    targets: [claude, codex, agy]
+  - name: spring-boot-testing-strategy
+    targets: [claude, codex, agy]
+  - name: tailwind-responsive-auditor
+    targets: [claude, codex, agy]
+  - name: python
+    targets: [claude, codex, cursor, opencode, agy]
+  - name: django-orm
+    targets: [claude, codex, cursor, opencode, agy]
+  - name: spring-boot-feature
+    targets: [claude, codex, cursor, opencode, agy]
+  - name: jpa-postgres
+    targets: [claude, codex, cursor, opencode, agy]
+  - name: api-versioning
     targets: [claude, codex, cursor, opencode, agy]

@@ -141,6 +141,22 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [x] help y --help son jerárquicos; install preset --help y help install preset muestran ayuda específica.
   - [x] El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell.
 
+### BC-026 | Migrar el resto de skills de stack duplicadas a shared-skills.yml
+
+- Priority: P3
+- Status: READY
+- Type: tech-debt
+- Depends on: none
+- Description: Tras BC-auditoría de seguridad y paridad de agentes (2026-09), ~20 skills de stack más (laravel-specialist, php-pro, spring-boot-kotlin, sqlalchemy, django-testing, pagespeed-perf, pagespeed-insights, entre otras) siguen presentes como copias manuales duplicadas en varios targets sin la protección de src/presets/shared-skills.yml + sync:skills. Hoy son idénticas entre targets, pero sin ese mecanismo pueden divergir igual que python, django-orm, spring-boot-feature, jpa-postgres y api-versioning ya divergieron antes de promoverse a canónicas.
+- Scope: Inventariar cada skill duplicada sin protección, confirmar que sus copias por target son byte-idénticas (o elegir la más completa si ya divergió), promoverla a skills/<name>/SKILL.md y registrarla en src/presets/shared-skills.yml.
+- Out of scope: Las skills con bloque `paths:` de auto-attach específico de Cursor (ya resueltas con targets parciales); cambiar el contenido técnico de cualquier skill.
+- Progress: 0
+- Reviewer: reviewer
+- Acceptance:
+  - [ ] Cada skill de stack duplicada sin protección queda listada en shared-skills.yml con su targets correcto
+  - [ ] bun run sync:skills && bun run scripts/check-drift.ts sale limpio tras la migración
+  - [ ] Ninguna copia por target pierde contenido (diff vacío entre versión pre-migración y post-sync, salvo la elegida como base en casos ya divergidos)
+
 ## Archive
 ### BC-025 | Evaluación de adopción y guía de flujos diarios
 

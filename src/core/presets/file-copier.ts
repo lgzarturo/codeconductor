@@ -189,10 +189,10 @@ function extractAgentRole(filePath: string): string | null {
  * within an agent section (e.g., "### Routing Decision" inside "### orchestrator") must
  * appear AFTER the --- separator and before the next agent section to parse correctly.
  */
-export function renderTemplate(content: string, modelConfig: ModelConfig, filePath: string, locale = 'en'): string {
+export async function renderTemplate(content: string, modelConfig: ModelConfig, filePath: string, locale = 'en'): Promise<string> {
   const cleanLocale = (locale === 'es' || locale === 'en') ? locale : 'en';
 
-  const tools = detectComplementaryTools();
+  const tools = await detectComplementaryTools();
   let complementaryRules = '';
   if (cleanLocale === 'es') {
     if (tools.rtk) {
@@ -375,7 +375,7 @@ function substituteToolNames(content: string, modelConfig: ModelConfig): string 
   return content.replace(fmMatch[0], `---${eol}${updatedFrontmatter}${eol}---`);
 }
 
-function injectMcpServers(jsonString: string, filePath: string): string {
+async function injectMcpServers(jsonString: string, filePath: string): Promise<string> {
   const isAgyMcpConfig = filePath.endsWith('mcp_config.json');
   const isClaudeSettings = filePath.endsWith('settings.json');
   const isOpencodeJsonc = filePath.endsWith('opencode.jsonc') || filePath.endsWith('opencode.json');
@@ -391,7 +391,7 @@ function injectMcpServers(jsonString: string, filePath: string): string {
     }
     
     const obj = JSON.parse(cleanJson);
-    const tools = detectComplementaryTools();
+    const tools = await detectComplementaryTools();
     const mcpServers: Record<string, any> = {};
     
     if (tools.tokenSavior) {
@@ -491,8 +491,8 @@ export async function applySingleFile(
   }
 
   let incomingContent =
-    isTemplate && modelConfig ? renderTemplate(content, modelConfig, srcPath, locale) : content;
-  incomingContent = injectMcpServers(incomingContent, destPath);
+    isTemplate && modelConfig ? await renderTemplate(content, modelConfig, srcPath, locale) : content;
+  incomingContent = await injectMcpServers(incomingContent, destPath);
   let finalContent = incomingContent;
   let action: FileAction = 'written';
 

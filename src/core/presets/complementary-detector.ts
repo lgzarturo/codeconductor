@@ -1,7 +1,10 @@
-import { execFileSync } from 'node:child_process';
+import { execFile } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
+import { promisify } from 'node:util';
+
+const execFileAsync = promisify(execFile);
 
 export interface ComplementaryToolsStatus {
   readonly rtk: boolean;
@@ -14,16 +17,16 @@ export interface ComplementaryToolsStatus {
 
 let cachedStatus: ComplementaryToolsStatus | null = null;
 
-export function detectComplementaryTools(): ComplementaryToolsStatus {
+export async function detectComplementaryTools(): Promise<ComplementaryToolsStatus> {
   if (cachedStatus) {
     return cachedStatus;
   }
 
-  const isCmdAvailable = (cmd: string): boolean => {
+  const isCmdAvailable = async (cmd: string): Promise<boolean> => {
     try {
       // `cmd` is always a literal from detectComplementaryTools, never user input.
       const binary = process.platform === 'win32' ? 'where' : 'which';
-      execFileSync(binary, [cmd], { stdio: 'ignore', timeout: 1000 });
+      await execFileAsync(binary, [cmd], { timeout: 1000 });
       return true;
     } catch {
       return false;
@@ -55,13 +58,22 @@ export function detectComplementaryTools(): ComplementaryToolsStatus {
     return false;
   };
 
+  const [rtk, codeReviewGraph, tokenSavior, tokenSaviorRecall, engram, gentleAi] = await Promise.all([
+    isCmdAvailable('rtk'),
+    isCmdAvailable('code-review-graph'),
+    isCmdAvailable('token-savior'),
+    isCmdAvailable('token-savior-recall'),
+    isCmdAvailable('engram'),
+    isCmdAvailable('gentle-ai'),
+  ]);
+
   cachedStatus = {
-    rtk: isCmdAvailable('rtk'),
-    codeReviewGraph: isCmdAvailable('code-review-graph'),
-    tokenSavior: isCmdAvailable('token-savior') || isCmdAvailable('token-savior-recall'),
+    rtk,
+    codeReviewGraph,
+    tokenSavior: tokenSavior || tokenSaviorRecall,
     caveman: hasCaveman(),
-    engram: isCmdAvailable('engram'),
-    gentleAi: isCmdAvailable('gentle-ai'),
+    engram,
+    gentleAi,
   };
 
   return cachedStatus;

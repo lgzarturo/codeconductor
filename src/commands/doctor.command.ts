@@ -369,7 +369,7 @@ export async function doctorCommand(
     }
 
     // Check complementary tools
-    const compTools = detectComplementaryTools();
+    const compTools = await detectComplementaryTools();
     const toolDetails = [
       { name: 'rtk', key: 'rtk' as const, label: 'RTK', desc: 'Run `brew install rtk` to compress command outputs' },
       { name: 'code-review-graph', key: 'codeReviewGraph' as const, label: 'code-review-graph', desc: 'Run `pipx install code-review-graph` to navigate symbol graph' },

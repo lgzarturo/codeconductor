@@ -17,8 +17,8 @@ describe('Complementary Tools Support', () => {
     await rm(TEST_DIR, { recursive: true, force: true });
   });
 
-  test('detectComplementaryTools checks PATH and environment', () => {
-    const status = detectComplementaryTools();
+  test('detectComplementaryTools checks PATH and environment', async () => {
+    const status = await detectComplementaryTools();
     // Should return an object with all tools mapped as boolean
     expect(status).toHaveProperty('rtk');
     expect(status).toHaveProperty('codeReviewGraph');
@@ -72,7 +72,7 @@ safety:
     }
   });
 
-  test('renderTemplate replaces COMPLEMENTARY_RULES placeholder', () => {
+  test('renderTemplate replaces COMPLEMENTARY_RULES placeholder', async () => {
     const templateContent = 'Some rules here:\n{{COMPLEMENTARY_RULES}}\nEnd of rules.';
     const modelConfig: any = {
       target: 'claude',
@@ -80,10 +80,10 @@ safety:
         architect: { claude: 'opus' }
       }
     };
-    
+
     // Test rendering when some tools are mocked/stubbed as available
     // First, let's verify renderTemplate runs without throwing
-    const rendered = renderTemplate(templateContent, modelConfig, 'architect.md', 'en');
+    const rendered = await renderTemplate(templateContent, modelConfig, 'architect.md', 'en');
     expect(rendered).toContain('Some rules here:');
     expect(rendered).toContain('End of rules.');
     expect(rendered).not.toContain('{{COMPLEMENTARY_RULES}}');
@@ -117,7 +117,7 @@ safety:
     const writtenContent = await readFile(destPath, 'utf-8');
     const parsed = JSON.parse(writtenContent);
     
-    const tools = detectComplementaryTools();
+    const tools = await detectComplementaryTools();
     if (tools.codeReviewGraph) {
       expect(parsed.mcpServers['code-review-graph']).toBeDefined();
     }
@@ -157,7 +157,7 @@ safety:
     expect(parsed.mcpServers).toBeUndefined(); // Should not use the Claude settings name
     expect(parsed.mcp.servers).toBeUndefined(); // Should not use the nested servers name
     
-    const tools = detectComplementaryTools();
+    const tools = await detectComplementaryTools();
     if (tools.codeReviewGraph) {
       expect(parsed.mcp['code-review-graph']).toBeDefined();
       expect(parsed.mcp['code-review-graph'].type).toBe('local');

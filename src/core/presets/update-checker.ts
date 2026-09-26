@@ -412,7 +412,7 @@ export async function checkUpdates(
         let expectedContent: string;
         try {
           const srcContent = await readFile(src, 'utf-8');
-          expectedContent = isTemplate && modelConfig ? renderTemplate(srcContent, modelConfig, src, locale) : srcContent;
+          expectedContent = isTemplate && modelConfig ? await renderTemplate(srcContent, modelConfig, src, locale) : srcContent;
         } catch {
           continue;
         }

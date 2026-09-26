@@ -73,20 +73,20 @@ describe('core/presets/file-copier', () => {
   });
 
   describe('renderTemplate', () => {
-    test('single agent file: substitutes the target model and per-provider models', () => {
-      const out = renderTemplate('M={{MODEL}} C={{MODEL_CLAUDE}}', MODEL_CONFIG, 'architect.md');
+    test('single agent file: substitutes the target model and per-provider models', async () => {
+      const out = await renderTemplate('M={{MODEL}} C={{MODEL_CLAUDE}}', MODEL_CONFIG, 'architect.md');
       expect(out).toBe('M=opus-x C=opus-x');
     });
 
-    test('replaces commit and complementary placeholders', () => {
-      const out = renderTemplate('{{COMMIT_STYLE}}|{{COMMIT_WORKFLOW}}|{{COMPLEMENTARY_RULES}}', MODEL_CONFIG, 'architect.md');
+    test('replaces commit and complementary placeholders', async () => {
+      const out = await renderTemplate('{{COMMIT_STYLE}}|{{COMMIT_WORKFLOW}}|{{COMPLEMENTARY_RULES}}', MODEL_CONFIG, 'architect.md');
       expect(out).not.toContain('{{COMMIT_STYLE}}');
       expect(out).not.toContain('{{COMMIT_WORKFLOW}}');
       expect(out).not.toContain('{{COMPLEMENTARY_RULES}}');
     });
 
-    test('monolithic file: renders the matching agent section', () => {
-      const out = renderTemplate('### architect\n{{MODEL_CLAUDE}}\n', MODEL_CONFIG, 'AGENTS.md');
+    test('monolithic file: renders the matching agent section', async () => {
+      const out = await renderTemplate('### architect\n{{MODEL_CLAUDE}}\n', MODEL_CONFIG, 'AGENTS.md');
       expect(out).toContain('opus-x');
     });
   });

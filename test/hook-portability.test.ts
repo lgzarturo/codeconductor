@@ -143,7 +143,7 @@ describe('preset configuration validation', () => {
   test('rendered OpenCode agents use provider defaults and keep reviewer permissions', async () => {
     const config = await loadModelConfig('opencode');
     const source = readFileSync(join(ROOT, 'presets/opencode/agents/reviewer.md'), 'utf8');
-    const content = renderTemplate(source, config, 'reviewer.md');
+    const content = await renderTemplate(source, config, 'reviewer.md');
     const frontmatter = parse(content.match(/^---\n([\s\S]*?)\n---/)![1]);
     for (const field of ['tools', 'temperature', 'effort']) expect(frontmatter[field]).toBeUndefined();
     expect(frontmatter.permission.edit).toBe('deny');

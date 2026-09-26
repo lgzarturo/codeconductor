@@ -27,6 +27,7 @@ import type { VersionOptions } from '../commands/version.command';
 import type { OutputMode } from '../utils/logger';
 import { RUNNER_TARGETS } from '../core/runner/runner-target';
 import { renderCompletion, renderDocs, renderHelp } from './command-registry';
+import { renderUsageGuide } from './usage-guide';
 
 /**
  * Parsed CLI arguments
@@ -178,149 +179,6 @@ export function getVersion(): string {
  */
 export function getHelp(): string {
   return renderHelp();
-}
-
-/** @deprecated Kept temporarily for historical references; command metadata owns help. */
-export function getLegacyHelp(): string {
-  return `CodeConductor CLI v${packageJson.version}
-
-Usage: npx cc-codeconductor <command> [options]
-
-Published commands (package ${packageJson.version}):
-  init                    Initialize CodeConductor in a project
-  detect                  Detect project stack and recommended presets
-  install council         Install generated council spec files to runner targets
-  install preset          Install full preset (agents, prompts, skills, commands)
-  install lsp             Install and configure LSP servers for AI coding tools
-  seo audit               Run SEO audit on a URL or sitemap
-  seo llms                Generate llms.txt from a URL or sitemap
-  doctor                  Validate configuration and generated files
-  update                  Update installed presets
-  migrate                 Repair leftover artifacts a reinstall can't fix:
-                          rewrite invalid Write(path) permission rules to
-                          Edit(path) and dedupe, and delete orphaned
-                          .{target}/prompts/v{old}/ directories
-  help                    Show general CLI usage and command list
-  ask                     Recommend a /cc: slash command from a natural-language problem
-  cc-help                 Show preset inventory (skills, subagents, commands)
-  debt-harvest / harvest  Scan source files for deferred debt items
-  ccep                    CCEP contracts: parse/profile/validate/evaluate/consensus/taskcard
-  openspec                OpenSpec loop: validate/scan/plan/analyze/status/next/start/done/block/unblock/archive
-  odd                     Opt-in delivery ledger: create/read/reconcile
-  scorecard               Record and aggregate evaluation outcomes
-                          (catalog / fingerprint / experiment / ablation / suite-run)
-  hook                    OS-agnostic agent hooks: pre-tool / post-tool / session-start
-
-v1.0.0 (in this repo, not in published ${packageJson.version}):
-  goal / cc-goal          Plan goal into task graph with dependencies
-  ingest                  Ingest repo knowledge into product graph
-  product                 Explore product graph and memory
-  orchestrate             Runtime orchestrator for goal execution
-  impact                  Analyze change impact on product graph
-  verify                  Verify task completion with evidence
-                          (--allow-compile-check trusts the repo-configured compile command)
-
-Options:
-  --help, -h              Show this help message
-  --version, -v           Show package version
-  --dry-run               Show what would happen without writing files
-  --force                 Allow overwriting existing files
-  --global                Install to home directory (~/.claude, ~/.opencode, etc.)
-  --output, -o            Output mode: human or json
-  --lang                  Comma-separated list of languages (e.g., typescript,php,python)
-  --locale                Instruction language for agent files: en (default) | es
-  --target                Runner target: opencode, claude, codex, gemini, cursor, agy, pi, all
-
-Stack-specific presets (v0.4.0, registered in preset-registry):
-  ts-next-drizzle         Next.js / Astro, Tailwind, Drizzle ORM, Bun, Postgres
-  spring-kotlin-jpa       Spring Boot, Kotlin/Java, Gradle, JPA, Hibernate
-  laravel-tall            Laravel, Blade, Livewire, Alpine.js
-  python-data-api         Python, FastAPI, Django, uv
-  Listed programmatically via listPresets() in src/core/presets/preset-registry.ts.
-  Detection wires matching specialized skills onto the generic target workflow.
-  Full stack-specific asset pruning/replacement is not implemented yet.
-
-Orchestration loops:
-  CCEP slash commands are the canonical consumer loop (profiles in
-  src/core/ccep/). Prefer /cc-iterative, /cc-triage, and /cc-handoff;
-  other CCEP commands are supporting profiles.
-  OpenSpec is a delivery loop (CLI openspec + /cc-openspec) on top of
-  BACKLOG.md — not only a scanner. Author BACKLOG.md with /cc-backlog.
-  runWorkflowPipeline() in src/core/pipeline/workflow-loop.ts is an
-  experimental library-only 8-phase loop — not a shipped CLI runtime.
-
-Council consensus v0.4.0:
-  Per-agent confidence thresholds (< 0.6 or average < 0.7 escalate)
-  and a complianceVeto channel that overrides majority like securityVeto.
-
-Examples:
-  npx cc-codeconductor init
-  npx cc-codeconductor init --global
-  npx cc-codeconductor init --locale=es
-  npx cc-codeconductor detect
-  npx cc-codeconductor install preset --target opencode
-  npx cc-codeconductor install preset --target claude
-  npx cc-codeconductor install preset --target codex
-  npx cc-codeconductor install preset --target cursor
-  npx cc-codeconductor install preset --target agy
-  npx cc-codeconductor install preset --target all
-  npx cc-codeconductor install preset --target claude --global
-  npx cc-codeconductor install preset --target claude --locale=es
-  npx cc-codeconductor install council --target opencode
-  npx cc-codeconductor install council --target claude
-  npx cc-codeconductor install council --target codex
-  npx cc-codeconductor install council --target agy
-  npx cc-codeconductor install council --target all
-  npx cc-codeconductor install lsp --target opencode
-  npx cc-codeconductor install lsp --target all --lang typescript,python
-  npx cc-codeconductor install lsp --target claude --dry-run
-  npx cc-codeconductor doctor
-  npx cc-codeconductor update --dry-run
-  npx cc-codeconductor migrate --dry-run
-  npx cc-codeconductor migrate --global
-  npx cc-codeconductor migrate --file .claude/settings.local.json
-  npx cc-codeconductor seo audit --url https://example.com
-  npx cc-codeconductor seo audit --sitemap https://example.com/sitemap.xml
-  npx cc-codeconductor seo audit --sitemap https://example.com/sitemap.xml --format markdown
-  npx cc-codeconductor seo llms --sitemap https://example.com/sitemap.xml
-  npx cc-codeconductor seo llms --url https://example.com --output llms.txt
-  npx cc-codeconductor goal "Add user authentication"
-  npx cc-codeconductor cc-goal "Implement CRUD for invoices"
-  npx cc-codeconductor ccep parse --command fix "login fails"
-  npx cc-codeconductor ccep profile council --output json
-  npx cc-codeconductor ccep resolve --command feature "Add CRUD"
-  npx cc-codeconductor ccep evaluate --command feature --input @planner.json
-  npx cc-codeconductor ccep consensus --input @verdicts.json
-  npx cc-codeconductor ccep taskcard --command feature --input @card.json
-  npx cc-codeconductor openspec validate
-  npx cc-codeconductor openspec scan
-  npx cc-codeconductor openspec plan BC-001
-  npx cc-codeconductor openspec analyze
-  npx cc-codeconductor openspec status
-  npx cc-codeconductor openspec next
-  npx cc-codeconductor openspec start BC-001-discover
-  npx cc-codeconductor openspec done BC-001-discover
-  npx cc-codeconductor openspec block BC-001-implement --reason "waiting on design"
-  npx cc-codeconductor openspec unblock BC-001-implement
-  npx cc-codeconductor openspec archive BC-001
-  npx cc-codeconductor odd read delivery-001
-  npx cc-codeconductor scorecard create --task BC-001 --from-diff
-  npx cc-codeconductor scorecard models
-  npx cc-codeconductor scorecard aggregate
-  npx cc-codeconductor scorecard catalog
-  npx cc-codeconductor scorecard experiment start --suite harness-v1 --components review
-  npx cc-codeconductor scorecard ablation --experiment <id>
-  npx cc-codeconductor help
-  npx cc-codeconductor ask "login fails with 500"
-  npx cc-codeconductor cc-help --target opencode
-  npx cc-codeconductor cc-help --target claude --output json
-
-Docs: https://github.com/lgzarturo/codeconductor/tree/main/docs
-  docs/v0.4.0-release-notes.md   v0.4.0 feature breakdown
-  docs/routing-policy.md         Risk-based routing (v0.4.0)
-  docs/prompt-versioning.md      Agent contract versions
-  docs/usage-cli.md              Detailed CLI reference
-`;
 }
 
 function cliContractError(command: string, errors: string[]) {
@@ -541,6 +399,9 @@ export async function routeCommand(
     case 'man':
       return { code: 0, data: { success: true, command, output: renderDocs(subcommand) } };
 
+    case 'usage':
+      return { code: 0, data: { success: true, command: 'usage', output: renderUsageGuide() } };
+
     case 'completion': {
       const output = renderCompletion(subcommand ?? '');
       return output
@@ -625,6 +486,8 @@ export async function routeCommand(
 
     case 'orchestrate':
     case 'cc-orchestrate': {
+      // runWorkflowPipeline() in src/core/pipeline/workflow-loop.ts is an
+      // experimental library-only 8-phase loop — not a shipped CLI runtime.
       const validSubs = ['status', 'next', 'run', 'cycle'];
       if (subcommand && !validSubs.includes(subcommand)) {
         return unknownSubcommand(command, subcommand, validSubs);

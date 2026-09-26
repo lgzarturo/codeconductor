@@ -17,6 +17,7 @@ export const COMMANDS: readonly CommandDefinition[] = [
   { name: 'setup', group: 'getting-started', summary: 'Configure and install CodeConductor.', usage: ['cc-codeconductor setup [--target <target>] [--locale en|es] [--yes] [--dry-run]'] },
   { name: 'detect', group: 'getting-started', summary: 'Inspect the project stack and recommended presets.', usage: ['cc-codeconductor detect'] },
   { name: 'init', group: 'getting-started', summary: 'Initialize low-level CodeConductor configuration.', usage: ['cc-codeconductor init [--locale en|es]'] },
+  { name: 'usage', group: 'getting-started', summary: 'Show installation examples for presets, council, and LSP.', usage: ['cc-codeconductor usage'] },
   { name: 'install', group: 'getting-started', summary: 'Install harness components.', usage: ['cc-codeconductor install preset --target <target>'], options: ['--target opencode|claude|codex|gemini|cursor|agy|pi|all'], subcommands: [
     { name: 'preset', group: 'getting-started', summary: 'Install agents, prompts, skills, and commands.', usage: ['cc-codeconductor install preset --target <target> [--locale en|es]'] },
     { name: 'council', group: 'getting-started', summary: 'Install generated council files.', usage: ['cc-codeconductor install council --target <target>'] },

@@ -24,6 +24,14 @@ Initialize low-level CodeConductor configuration.
 cc-codeconductor init [--locale en|es]
 ```
 
+## usage
+
+Show installation examples for presets, council, and LSP.
+
+```text
+cc-codeconductor usage
+```
+
 ## install
 
 Install harness components.

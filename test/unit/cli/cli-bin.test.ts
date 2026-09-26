@@ -111,6 +111,17 @@ describe('CLI binary resolution and usage formatting', () => {
       expect(allHelp).toContain('npx cc-codeconductor doctor');
       expect(allHelp).toContain('npx cc-codeconductor setup');
     });
+
+    test('usage command is registered and listed under getting-started', () => {
+      expect(COMMANDS.some((command) => command.name === 'usage')).toBe(true);
+
+      const allHelp = renderHelp(undefined, undefined, true, 'npx cc-codeconductor');
+      expect(allHelp).toContain('## usage');
+      expect(allHelp).toContain('npx cc-codeconductor usage');
+
+      const summaryHelp = renderHelp(undefined, undefined, false, 'npx cc-codeconductor');
+      expect(summaryHelp).toMatch(/usage\s+Show installation examples/);
+    });
   });
 
   describe('onboardingCommand and statusCommand hints', () => {

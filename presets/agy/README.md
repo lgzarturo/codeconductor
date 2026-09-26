@@ -39,7 +39,7 @@ To configure permissions, models, and execution modes for the Antigravity CLI, u
 Recommended settings:
 ```json
 {
-  "model": "gemini-3.5-pro",
+  "model": "gemini-3.8-flash-medium",
   "toolPermission": "request-review",
   "enableTerminalSandbox": true,
   "allowNonWorkspaceAccess": false

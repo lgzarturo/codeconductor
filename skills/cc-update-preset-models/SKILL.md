@@ -2,7 +2,7 @@
 name: cc-update-preset-models
 description: >
   Updates CodeConductor preset agent model slugs in src/presets/models/,
-  keeps all six YAML files consistent, and patches model-config tests.
+  updates the shared role map, preserves target overrides, and patches model-config tests.
   Use when the user asks to refresh available models, bump OpenCode Go /
   Claude / Codex / Gemini / Cursor / Grok IDs, sync preset model maps, or
   runs /cc-update-preset-models or /cc:update-preset-models. This repo only
@@ -32,14 +32,14 @@ tablas `{{MODEL_*}}`. Ejecutar cuando cambien los catálogos de los runners.
 `{{MODEL_OPENCODE}}`, `{{MODEL_CODEX}}`, `{{MODEL_GEMINI}}`, `{{MODEL_CURSOR}}`,
 `{{MODEL_GROK}}`.
 
-Las **seis** YAMLs deben compartir las mismas columnas cruzadas. Solo
-[`agy.yml`](../../src/presets/models/agy.yml) añade `agy:`, que usa el
-catálogo **nativo de Antigravity** (no es copia de `gemini:`): high-effort →
-`gemini-3.1-pro`, medium → `claude-sonnet-4.6-thinking`, low →
-`gemini-3.8-flash` (fuente: antigravity.google/docs/models).
+[`roles.yml`](../../src/presets/models/roles.yml) es la fuente única de modelos
+para los siete targets. Los YAML de cada target contienen solo overrides.
+La columna `agy:` usa slugs **nativos de Antigravity CLI**: high-effort →
+`gemini-3.1-pro-high`, medium → `claude-sonnet-4-6`, low →
+`gemini-3.8-flash-medium` (fuente: antigravity.google/docs/cli/headless/).
 La columna `cursor:` son **slugs de Cursor**, nunca IDs de GPT.
 
-Archivos: `src/presets/models/{opencode,claude,codex,gemini,cursor,agy}.yml`
+Archivo canónico: `src/presets/models/roles.yml`.
 
 ## Workflow
 
@@ -48,7 +48,7 @@ Copia este checklist y márcalo:
 ```
 - [ ] 1. Fuentes vivas
 - [ ] 2. Mapa high/medium/low
-- [ ] 3. Escribir las 6 YAMLs (columnas idénticas)
+- [ ] 3. Actualizar roles.yml y preservar los overrides por target
 - [ ] 4. Tests + CHANGELOG
 - [ ] 5. Verificar
 ```
@@ -79,14 +79,17 @@ Ajustar el mapa si el catálogo cambió de familia; conservar **tres niveles**
 
 ### 3. Escribir YAML
 
-1. Construir un dict de 14 roles con las 6 columnas (`claude`, `opencode`,
-   `codex`, `gemini`, `cursor`, `grok`).
-2. Copiarlo a los seis archivos; preservar `permissions:` (opencode) y
-   `tools:` (el resto). En agy, `agy:` usa el catálogo nativo de Antigravity
+1. Actualizar los 14 roles en `roles.yml`, conservando las columnas de los
+   proveedores que no requieran cambios.
+2. Preservar los overrides por target. En agy, `agy:` usa el catálogo nativo de Antigravity
    según el esfuerzo del rol (ver nota arriba), no la columna `gemini:`.
 3. Conservar el comentario de cabecera de cada archivo.
 4. No mezclar slugs: Claude CLI = IDs API (`claude-opus-5`); Cursor =
    `claude-opus-5-thinking-high`.
+5. OpenCode: usar `provider/model`; no añadir variantes o parámetros de
+   razonamiento sin verificar que el catálogo/proveedor los admite. Mantener
+   `permission` para el ejecutable `opencode` V1; `permissions` es exclusivo
+   de `opencode2`. Conservar los formatos de los demás targets.
 
 ### 4. Tests y changelog
 

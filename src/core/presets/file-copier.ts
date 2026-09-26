@@ -349,7 +349,9 @@ function substituteToolNames(content: string, modelConfig: ModelConfig): string 
   const eol = fmMatch[1];
   const frontmatter = fmMatch[2];
   if (target === 'opencode' && modelConfig.permissions) {
-    const updatedFrontmatter = frontmatter.replace(/^tools:\s*(.+)\r?\n?/m, '');
+    const updatedFrontmatter = frontmatter
+      .replace(/^tools:\s*(.+)\r?\n?/m, '')
+      .replace(/^(?:temperature|effort):[^\r\n]*\r?\n?/gm, '');
     return content.replace(fmMatch[0], `---${eol}${updatedFrontmatter}${eol}---`);
   }
 

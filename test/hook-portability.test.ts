@@ -3,7 +3,10 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, test } from 'bun:test';
+import { parse } from 'yaml';
 import { evaluateCommand, evaluateRoleAccess, formatHookOutput, parseAgyPayload } from '../src/core/hooks/hook-runner';
+import { loadModelConfig } from '../src/core/presets/manifest-loader';
+import { renderTemplate } from '../src/core/presets/file-copier';
 
 const ROOT = resolve(import.meta.dir, '..');
 const HOOK = join(ROOT, 'presets/shared/invoke-hook.cjs');
@@ -113,4 +116,38 @@ describe('preset configuration validation', () => {
     expect(settings.permissions.defaultMode).toBe('default');
   });
 
+  test('all OpenCode roles resolve to one of the four verified Go model IDs', async () => {
+    const config = await loadModelConfig('opencode');
+    const models = new Set(Object.values(config.agents).map(role => role.opencode));
+    expect([...models].sort()).toEqual(['opencode-go/deepseek-v4.1-flash', 'opencode-go/glm-5.3-flash', 'opencode-go/mimo-v2.6-flash', 'opencode-go/muse-spark-1.3-contributor']);
+  });
+
+  test('model updates leave canonical tool mappings intact', () => {
+    const roles = parse(readFileSync(join(ROOT, 'src/presets/models/roles.yml'), 'utf8'));
+    expect(roles.tools.Read.opencode).toBe('file_read / view_file');
+    expect(roles.tools.Bash.opencode).toBe('bash / run_command');
+    for (const tool of Object.values(roles.tools) as Record<string, string>[]) {
+      expect(tool.opencode).not.toContain('opencode-go/');
+    }
+  });
+
+  test('Antigravity selects documented CLI slugs for every role', async () => {
+    const config = await loadModelConfig('agy');
+    expect(config.agents.architect.agy).toBe('gemini-3.1-pro-high');
+    expect(config.agents.implementer.agy).toBe('claude-sonnet-4-6');
+    expect(config.agents.docs.agy).toBe('gemini-3.8-flash-medium');
+    const settings = JSON.parse(readFileSync(join(ROOT, 'presets/agy/settings.json'), 'utf8'));
+    expect(settings.model).toBe(config.agents.docs.agy);
+  });
+
+  test('rendered OpenCode agents use provider defaults and keep reviewer permissions', async () => {
+    const config = await loadModelConfig('opencode');
+    const source = readFileSync(join(ROOT, 'presets/opencode/agents/reviewer.md'), 'utf8');
+    const content = renderTemplate(source, config, 'reviewer.md');
+    const frontmatter = parse(content.match(/^---\n([\s\S]*?)\n---/)![1]);
+    for (const field of ['tools', 'temperature', 'effort']) expect(frontmatter[field]).toBeUndefined();
+    expect(frontmatter.permission.edit).toBe('deny');
+    expect(frontmatter.permission.bash['*']).toBe('deny');
+    expect(frontmatter.permission.bash['git diff*']).toBe('allow');
+  });
 });

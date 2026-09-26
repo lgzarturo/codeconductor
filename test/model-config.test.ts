@@ -62,7 +62,7 @@ describe('ModelConfigSchema', () => {
     const result = ModelConfigSchema.safeParse({
       target: 'opencode',
       agents: {
-        architect: { claude: 'claude-opus-4-7', opencode: 'deepseek-v4-pro', codex: 'gpt-5.5' },
+        architect: { claude: 'claude-opus-4-7', opencode: 'deepseek-v4.1-flash', codex: 'gpt-5.5' },
       },
     });
     expect(result.success).toBe(true);
@@ -194,7 +194,7 @@ describe('loadModelConfig', () => {
   test('opencode config has architect models for all providers', async () => {
     const config = await loadModelConfig('opencode');
     expect(config.agents.architect.claude).toBe('claude-opus-5');
-    expect(config.agents.architect.opencode).toBe('opencode-go/deepseek-v4-pro');
+    expect(config.agents.architect.opencode).toBe('opencode-go/deepseek-v4.1-flash');
     expect(config.agents.architect.codex).toBe('gpt-5.6-sol');
     expect(config.agents.architect.gemini).toBe('gemini-3.1-pro-preview');
     expect(config.agents.architect.cursor).toBe('claude-opus-5-thinking-high');
@@ -203,7 +203,7 @@ describe('loadModelConfig', () => {
   test('claude config has implementer models for all providers', async () => {
     const config = await loadModelConfig('claude');
     expect(config.agents.implementer.claude).toBe('claude-sonnet-5');
-    expect(config.agents.implementer.opencode).toBe('opencode-go/mimo-v2.5');
+    expect(config.agents.implementer.opencode).toBe('opencode-go/mimo-v2.6-flash');
     expect(config.agents.implementer.codex).toBe('gpt-5.6-terra');
     expect(config.agents.implementer.gemini).toBe('gemini-3.7-flash');
     expect(config.agents.implementer.cursor).toBe('composer-2.5-fast');
@@ -212,7 +212,7 @@ describe('loadModelConfig', () => {
   test('codex config has tester models for all providers', async () => {
     const config = await loadModelConfig('codex');
     expect(config.agents.tester.claude).toBe('claude-sonnet-5');
-    expect(config.agents.tester.opencode).toBe('opencode-go/minimax-m3');
+    expect(config.agents.tester.opencode).toBe('opencode-go/mimo-v2.6-flash');
     expect(config.agents.tester.codex).toBe('gpt-5.6-terra');
     expect(config.agents.tester.gemini).toBe('gemini-3.7-flash');
     expect(config.agents.tester.cursor).toBe('composer-2.5-fast');
@@ -354,7 +354,7 @@ describe('copyFromManifest with modelConfig', () => {
       expect(configResult?.action).toBe('merged');
       expect(content.custom).toBe(true);
       expect(content.permission.bash['custom *']).toBe('allow');
-      expect(content.model).toBe('opencode-go/qwen3.7-plus');
+      expect(content.model).toBe('opencode-go/deepseek-v4.1-flash');
     } finally {
       await rm(tempDir, { recursive: true, force: true });
     }
@@ -397,7 +397,7 @@ describe('copyFromManifest with modelConfig', () => {
       'utf-8'
     );
     // opencode install: only the opencode model appears in frontmatter
-    expect(architectContent).toContain('deepseek-v4-pro');
+    expect(architectContent).toContain('deepseek-v4.1-flash');
     expect(architectContent).not.toContain('{{MODEL}}');
     expect(architectContent).not.toContain('{{MODEL_CLAUDE}}');
     expect(architectContent).not.toContain('{{MODEL_OPENCODE}}');
@@ -711,7 +711,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
       'utf-8'
     );
     // opencode install: frontmatter has the opencode model for architect
-    expect(content).toContain('deepseek-v4-pro');
+    expect(content).toContain('deepseek-v4.1-flash');
     // Should NOT contain placeholders
     expect(content).not.toContain('{{MODEL}}');
     expect(content).not.toContain('{{MODEL_CLAUDE}}');
@@ -736,7 +736,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
 
     const content = await readFile(join(TEST_DIR, '.opencode', 'agents', 'tester.md'), 'utf-8');
     // opencode install: frontmatter has opencode model for tester
-    expect(content).toContain('minimax-m3');
+    expect(content).toContain('mimo-v2.6-flash');
     expect(content).not.toContain('{{MODEL}}');
   });
 
@@ -752,7 +752,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     expect(content).not.toContain('{{MODEL_OPENCODE}}');
     // claude and opencode models should NOT appear in codex AGENTS.md
     expect(content).not.toContain('claude-opus-4-7');
-    expect(content).not.toContain('deepseek-v4-pro');
+    expect(content).not.toContain('deepseek-v4.1-flash');
   });
 
   test('claude: architect.md should have claude model in frontmatter', async () => {
@@ -823,7 +823,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
     );
     expect(opencodeContent).not.toContain('{{MODEL}}');
     expect(opencodeContent).not.toContain('{{MODEL_');
-    expect(opencodeContent).toContain('deepseek-v4-pro');
+    expect(opencodeContent).toContain('deepseek-v4.1-flash');
 
     const claudeContent = await readFile(
       join(TEST_DIR, '.claude', 'agents', 'architect.md'),
@@ -863,7 +863,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
       'utf-8'
     );
     // opencode install: frontmatter has opencode model for orchestrator
-    expect(content).toContain('qwen3.7-plus');
+    expect(content).toContain('deepseek-v4.1-flash');
     expect(content).not.toContain('{{MODEL}}');
   });
 
@@ -873,7 +873,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
 
     const content = await readFile(join(TEST_DIR, '.opencode', 'agents', 'docs.md'), 'utf-8');
     // opencode install: frontmatter has opencode model for docs
-    expect(content).toContain('hy3');
+    expect(content).toContain('muse-spark-1.3-contributor');
     expect(content).not.toContain('{{MODEL}}');
   });
 });

@@ -2,8 +2,8 @@
 
 ## Model Selection Guide
 
-This preset supports both **Claude (Anthropic)** and **OpenCode Go (Chinese
-providers)** models.
+This preset uses the four requested **OpenCode Go** models. Claude (Anthropic)
+can be selected as an explicit override.
 
 ---
 
@@ -13,37 +13,39 @@ providers)** models.
 
 | Model                       | Strength                        | Best For                        |
 | --------------------------- | ------------------------------- | ------------------------------- |
-| `claude-opus-4-7`           | Complex reasoning, architecture | Architect, complex design       |
-| `claude-sonnet-4-6`         | Balanced, general purpose       | Default for most agents         |
+| `claude-opus-5`             | Complex reasoning, architecture | Architect, complex design       |
+| `claude-sonnet-5`           | Balanced, general purpose       | Implementation, testing         |
 | `claude-haiku-4-5-20251001` | Fast, lightweight               | Task Coach, Docs, Repo Explorer |
 
 ### OpenCode Go models
 
-Canonical slugs live in `src/presets/models/*.yml`. Production roles never use
-`muse-spark-1.2-contributor` (trains on prompts). `ox-alpha-free` is an optional
-fallback, not a default.
+Canonical role assignments live in `src/presets/models/roles.yml`. Model IDs
+were verified against [OpenCode Go](https://opencode.ai/docs/go/) and the live
+catalog on September 25, 2026.
 
 | Model | Best for |
 | --- | --- |
-| `deepseek-v4-pro` | Architect |
-| `kimi-k3` | Security reviewer |
-| `qwen3.8-max` | Reviewer, contract-builder |
-| `glm-5.3` | Devil, complexity-auditor |
-| `mimo-v2.5` | Implementer |
-| `minimax-m3` | Tester |
-| `qwen3.7-plus` | Orchestrator (TUI default) |
-| `gpt-5.6-luna` | Task coach, planner |
-| `deepseek-v4-flash` | Goal planner |
-| `longcat-2.0` | Repo explorer |
-| `hy3` | Docs |
+| `opencode-go/deepseek-v4.1-flash` | Architect, reviewer, contract-builder, orchestrator (TUI default), planner, goal-planner |
+| `opencode-go/mimo-v2.6-flash` | Implementer, tester |
+| `opencode-go/glm-5.3-flash` | Security-reviewer, devil, complexity-auditor, task-coach, repo-explorer |
+| `opencode-go/muse-spark-1.3-contributor` | Docs |
+
+These assignments are workflow choices, not a provider ranking. Generated
+agents leave sampling and reasoning settings at provider defaults rather than
+copying Claude-specific `effort` or forcing a shared `temperature` onto different
+models. No unverified variants are configured.
+
+Muse Contributor is included at the request of the maintainer. OpenCode documents
+that it uses prompts/completions for training, is not ZDR, and has regional
+restrictions. Do not send confidential material to that model; override the docs
+agent with another verified model when required.
 
 ---
 
 ## Agent Model Matrix
 
-See `skills/cc-update-preset-models/references/role-map.md`. OpenCode column
-examples: architect `deepseek-v4-pro`, implementer `mimo-v2.5`, tester
-`minimax-m3`, reviewer `qwen3.8-max`.
+See `skills/cc-update-preset-models/references/role-map.md` for the complete
+cross-preset role matrix.
 
 ---
 
@@ -66,6 +68,10 @@ examples: architect `deepseek-v4-pro`, implementer `mimo-v2.5`, tester
 
 This preset uses OpenCode's permission system (v1.1.1+) with granular control:
 
+Keep the V1-compatible `permission` dictionary for the `opencode` CLI. V2's
+`permissions` rule list is exclusive to `opencode2` and is rejected by OpenCode
+V1. Validate generated files with the actual CLI version before migrating formats.
+
 - **Global defaults**: Most operations require approval (`ask`)
 - **Read access**: Allowed by default, with sensitive files denied
 - **Write/Edit**: Requires approval, with protected paths denied
@@ -87,8 +93,8 @@ The following paths are denied by default:
 
 ### Simple Tasks (Q&A, intake, documentation)
 
-**Recommended:** `qwen3.6-plus` (OpenCode Go) or `claude-haiku-4-5-20251001`
-(Claude)
+**Preset choice:** `glm-5.3-flash` for intake/exploration;
+`muse-spark-1.3-contributor` for non-confidential docs.
 
 - Task Coach intake
 - Repo Explorer mapping
@@ -96,8 +102,8 @@ The following paths are denied by default:
 
 ### Medium Tasks (Implementation, testing)
 
-**Recommended:** `mimo-v2.5` or `minimax-m3` (OpenCode Go) or
-`claude-sonnet-4-6` (Claude)
+**Preset choice:** `mimo-v2.6-flash` for implementation and testing;
+`deepseek-v4.1-flash` for reviews.
 
 - Implementer code writing
 - Tester test generation
@@ -105,7 +111,8 @@ The following paths are denied by default:
 
 ### Complex Tasks (Architecture, security, multi-agent coordination)
 
-**Recommended:** `deepseek-v4-pro` (OpenCode Go) or `claude-opus-4-7` (Claude)
+**Preset choice:** `deepseek-v4.1-flash` for design/coordination;
+`glm-5.3-flash` for defensive security review.
 
 - Architect technical design
 - Orchestrator routing decisions
@@ -115,17 +122,14 @@ The following paths are denied by default:
 
 ## Usage in Agent Contracts
 
-Each agent file in `agents/` contains a model selection table in its
-frontmatter:
+Agent templates contain placeholders. Installation resolves the role model
+into YAML frontmatter:
 
 ```yaml
 ---
 description: ...
-# Model Selection
-| Provider | Model | Use Case |
-|----------|-------|----------|
-| Claude | claude-opus-4-7 | Complex architecture, ADRs |
-| OpenCode Go | deepseek-v4-pro | Best — excels at reasoning |
+model: opencode-go/deepseek-v4.1-flash
+mode: subagent
 ---
 ```
 
@@ -144,21 +148,10 @@ configuration in `opencode.jsonc`.
 
 ## Environment Variables
 
-OpenCode Go requires appropriate API keys. Set these in your environment:
-
-```bash
-# DeepSeek
-export DEEPSEEK_API_KEY="your-key"
-
-# Qwen (Alibaba)
-export DASHSCOPE_API_KEY="your-key"
-
-# MiniMax
-export MINIMAX_API_KEY="your-key"
-
-# Kimi (Moonshot)
-export KIMI_API_KEY="your-key"
-```
+Connect to **OpenCode Go** through `/connect` and use the Go API key. The
+`opencode-go/` provider does not use individual DeepSeek, GLM, MiMo, or Meta keys.
+Do not store API keys in the preset. Run `opencode models opencode-go` to check
+availability before using or overriding a role model.
 
 ---
 
@@ -166,10 +159,10 @@ export KIMI_API_KEY="your-key"
 
 | Scenario                        | Recommended                                        |
 | ------------------------------- | -------------------------------------------------- |
-| Complex reasoning, architecture | OpenCode Go (`deepseek-v4-pro`) or Claude (`opus`) |
-| Fast iteration, simple tasks    | OpenCode Go (`qwen3.6-plus`) or Claude (`haiku`)   |
-| Code implementation             | OpenCode Go (`mimo-v2.5`) or Claude (`sonnet`) |
-| Budget constraints              | OpenCode Go (generally lower cost)                 |
+| Complex reasoning, architecture | OpenCode Go (`deepseek-v4.1-flash`) or Claude (`opus`) |
+| Fast iteration, simple tasks    | OpenCode Go (`glm-5.3-flash`) or Claude (`haiku`)   |
+| Code implementation             | OpenCode Go (`mimo-v2.6-flash`) or Claude (`sonnet`) |
+| Non-confidential documentation   | OpenCode Go (`muse-spark-1.3-contributor`) |
 | Availability issues             | Switch to alternative from the matrix              |
 
 ## Approach

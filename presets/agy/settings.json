@@ -1,5 +1,5 @@
 {
-  "model": "gemini-3.5-pro",
+  "model": "gemini-3.8-flash-medium",
   "toolPermission": "request-review",
   "enableTerminalSandbox": true,
   "allowNonWorkspaceAccess": false,

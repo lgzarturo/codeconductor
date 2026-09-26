@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { loadManifest } from '../src/core/presets/manifest-loader';
+import { runHookShell } from './helpers/hook-shell';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
 const SHARED_HOOK = join(PROJECT_ROOT, 'presets/shared/invoke-hook.cjs');
@@ -39,7 +40,7 @@ describe('invoke-hook fail-open and parity tests', () => {
 
     const tmpDir = mkdtempSync(join(tmpdir(), 'cc-hook-test-'));
     try {
-      const result = spawnSync('sh', ['-c', preToolCmd], {
+      const result = runHookShell(preToolCmd, {
         cwd: tmpDir,
         env: { ...process.env, PROJECT_ROOT: tmpDir },
         encoding: 'utf-8',
@@ -59,7 +60,7 @@ describe('invoke-hook fail-open and parity tests', () => {
 
     const tmpDir = mkdtempSync(join(tmpdir(), 'cc-hook-test-'));
     try {
-      const result = spawnSync('sh', ['-c', postToolCmd], {
+      const result = runHookShell(postToolCmd, {
         cwd: tmpDir,
         env: { ...process.env, PROJECT_ROOT: tmpDir },
         encoding: 'utf-8',

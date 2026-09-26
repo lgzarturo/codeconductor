@@ -1,12 +1,14 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, resolve } from 'node:path';
 import {
   claudeExitCode,
   evaluatePreTool,
   formatHookOutput,
   formatSessionStart,
   parseAgyPayload,
+  parseClaudePayload,
   type HookEvent,
   type HookFormat,
   type PreToolInput,
@@ -25,8 +27,10 @@ export interface HookOptions {
 
 function detectFormat(explicit: HookFormat | undefined, stdinText: string): HookFormat {
   if (explicit) return explicit;
-  const trimmed = stdinText.trim();
-  if (trimmed.startsWith('{')) return 'agy';
+  try {
+    const payload = JSON.parse(stdinText);
+    if (payload && ('toolCall' in payload || 'toolName' in payload || 'workspacePaths' in payload)) return 'agy';
+  } catch { /* Empty or malformed stdin uses the default host contract. */ }
   return 'claude';
 }
 
@@ -39,16 +43,16 @@ export async function readStdinText(): Promise<string> {
   return Buffer.concat(chunks).toString('utf8');
 }
 
-function resolvePreToolInput(options: HookOptions, stdinText: string): PreToolInput {
-  const fromStdin = parseAgyPayload(stdinText);
+function resolvePreToolInput(options: HookOptions, stdinText: string, format: HookFormat): PreToolInput {
+  const fromStdin = format === 'agy' ? parseAgyPayload(stdinText) : parseClaudePayload(stdinText);
   return {
     command:
       options.command ??
-      process.env.CLAUDE_TOOL_INPUT_COMMAND ??
+      (process.env.CLAUDE_TOOL_INPUT_COMMAND || undefined) ??
       fromStdin.command,
     filePath:
       options.filePath ??
-      process.env.CLAUDE_TOOL_INPUT_FILE_PATH ??
+      (process.env.CLAUDE_TOOL_INPUT_FILE_PATH || undefined) ??
       fromStdin.filePath,
     toolName: fromStdin.toolName,
   };
@@ -85,16 +89,15 @@ export async function hookCommand(
   }
 
   if (event === 'post-tool') {
-    const filePath =
-      options.filePath ?? process.env.CLAUDE_TOOL_INPUT_FILE_PATH ?? parseAgyPayload(stdinText).filePath;
-    formatWrittenFile(filePath);
+    const filePath = resolvePreToolInput(options, stdinText, format).filePath;
+    formatWrittenFile(filePath, options.projectRoot);
     if (format === 'agy') {
       process.stdout.write('{}\n');
     }
     return { code: 0, data: { success: true, command: 'hook post-tool' } };
   }
 
-  const input = resolvePreToolInput(options, stdinText);
+  const input = resolvePreToolInput(options, stdinText, format);
   const verdict = evaluatePreTool(input);
 
   if (format === 'agy') {
@@ -108,23 +111,38 @@ export async function hookCommand(
   if (verdict.action === 'deny') {
     process.stderr.write(`${verdict.message}\n`);
   }
+  const output = formatHookOutput(verdict, 'claude');
+  if (output) process.stdout.write(`${output}\n`);
   return {
     code: claudeExitCode(verdict),
     data: { success: verdict.action !== 'deny', command: 'hook pre-tool', verdict },
   };
 }
 
-function formatWrittenFile(filePath: string | undefined): void {
-  if (!filePath || !existsSync(filePath)) return;
+function formatWrittenFile(filePath: string | undefined, projectRoot: string): void {
+  if (!filePath) return;
+  filePath = resolve(projectRoot, filePath);
+  if (!existsSync(filePath)) return;
   const prettier = /\.(ts|tsx|js|jsx|mjs|cjs|json|jsonc|md|mdx|css|scss|html|astro|ya?ml)$/i;
   const eslint = /\.(ts|tsx|js|jsx|mjs|cjs)$/i;
   const python = /\.py$/i;
-  const opts = { stdio: 'ignore' as const, windowsHide: true };
+  const opts = { cwd: projectRoot, stdio: 'ignore' as const, windowsHide: true, timeout: 5000 };
+  // Execute package JS entrypoints directly; npm's .cmd shims cannot be
+  // spawned without a shell on Windows. Missing optional formatters are skipped.
+  const require = createRequire(resolve(projectRoot, 'package.json'));
+  function runNodeTool(name: string, args: string[]): void {
+    try {
+      const manifestPath = require.resolve(`${name}/package.json`);
+      const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+      const bin = typeof manifest.bin === 'string' ? manifest.bin : manifest.bin?.[name];
+      if (typeof bin === 'string') spawnSync(process.execPath, [resolve(dirname(manifestPath), bin), ...args], opts);
+    } catch { /* The tool is optional and must be installed in the project. */ }
+  }
   if (prettier.test(filePath)) {
-    spawnSync('npx', ['--no-install', 'prettier', '--write', filePath], opts);
+    runNodeTool('prettier', ['--write', filePath]);
   }
   if (eslint.test(filePath)) {
-    spawnSync('npx', ['--no-install', 'eslint', '--fix', filePath], opts);
+    runNodeTool('eslint', ['--fix', filePath]);
   }
   if (python.test(filePath)) {
     spawnSync('ruff', ['format', filePath], opts);

@@ -141,7 +141,7 @@
       "Bash(docker compose up*)",
       "Bash(docker compose down*)"
     ],
-    "defaultMode": "bypassPermissions",
+    "defaultMode": "default",
     "disableBypassPermissionsMode": "disable"
   },
   "hooks": {
@@ -158,7 +158,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|Read|Write|Edit|MultiEdit",
         "hooks": [
           {
             "type": "command",

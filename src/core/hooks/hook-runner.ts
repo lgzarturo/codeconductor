@@ -20,19 +20,25 @@ export function evaluateRoleAccess(
   filePath: string,
   protectedDirs?: string[],
 ): RoleAccessResult {
-  const patterns = protectedDirs ?? DEFAULT_PROTECTED_PATTERNS;
+  const windowsPath = filePath.includes('\\') || /^[a-z]:\//i.test(filePath);
+  const normalizePath = (path: string): string => {
+    const normalized = path.replace(/\\/g, '/');
+    return windowsPath ? normalized.toLowerCase() : normalized;
+  };
+  const normalizedPath = normalizePath(filePath);
+  const patterns = (protectedDirs ?? DEFAULT_PROTECTED_PATTERNS).map(normalizePath);
   
   switch (role) {
     case 'implementer':
       // Implementer cannot write to test/spec directories
-      if (patterns.some(p => filePath.includes(p))) {
+      if (patterns.some(p => normalizedPath.includes(p))) {
         return { allowed: false, reason: `SecurityViolation: File '${filePath}' is READ-ONLY for the Implementer role.` };
       }
       return { allowed: true };
     
     case 'tester':
       // Tester can only write to test directories
-      if (!patterns.some(p => filePath.includes(p))) {
+      if (!patterns.some(p => normalizedPath.includes(p))) {
         return { allowed: false, reason: `SecurityViolation: Tester role can only modify test files. '${filePath}' is outside test scope.` };
       }
       return { allowed: true };
@@ -41,7 +47,7 @@ export function evaluateRoleAccess(
     case 'architect':
       // Reviewer and architect cannot write any source files
       // (architect can write docs/md — check for .md extension)
-      if (role === 'architect' && (filePath.endsWith('.md') || filePath.includes('docs/'))) {
+      if (role === 'architect' && (normalizedPath.endsWith('.md') || normalizedPath.includes('docs/'))) {
         return { allowed: true };
       }
       return { allowed: false, reason: `SecurityViolation: ${role} role has no write access to '${filePath}'.` };
@@ -81,7 +87,10 @@ export function normalizeCommand(raw: string): string {
 
 /** Treat `git.exe` / `C:\...\git.exe` as `git` for policy matching. */
 export function stripGitBinary(command: string): string {
-  return command.replace(/(?:^|[\\/])git(?:\.exe)?\b/i, 'git');
+  const match = command.match(/^(?:&\s*)?("[^"]+"|'[^']+'|[^\s]+)([\s\S]*)$/);
+  if (!match) return command;
+  const binary = match[1].replace(/^["']|["']$/g, '').replace(/\\/g, '/').split('/').pop();
+  return /^git(?:\.exe)?$/i.test(binary ?? '') ? `git${match[2]}` : command;
 }
 
 export function evaluatePath(filePath: string): HookVerdict {
@@ -92,8 +101,43 @@ export function evaluatePath(filePath: string): HookVerdict {
 }
 
 export function evaluateCommand(rawCommand: string): HookVerdict {
-  const command = stripGitBinary(normalizeCommand(rawCommand));
+  if (/(?:curl|wget)\b.+\|\s*(sh|bash|zsh|cmd)\b/i.test(normalizeCommand(rawCommand))) return deny(MSG_POLICY);
+  // Inspect shell segments while keeping separators inside quoted arguments intact.
+  const tokens = rawCommand.match(/"[^"]*"|'[^']*'|[^"';&|\r\n]+|[;&|\r\n]+/g) ?? [];
+  const commands: string[] = [];
+  let current = '';
+  for (const token of tokens) {
+    if (/^[;&|\r\n]+$/.test(token) && !(token === '&' && !current.trim())) {
+      commands.push(current);
+      current = '';
+    } else {
+      current += token;
+    }
+  }
+  commands.push(current);
+  let verdict = allow();
+  for (const part of commands) {
+    const result = evaluateSingleCommand(part);
+    if (result.action === 'deny') return result;
+    if (result.action === 'ask') verdict = result;
+  }
+  return verdict;
+}
+
+function evaluateSingleCommand(rawCommand: string): HookVerdict {
+  let command = stripGitBinary(normalizeCommand(rawCommand));
   if (!command) return allow();
+
+  // Git accepts global options before the subcommand on every OS.
+  if (/^git\s/i.test(command)) {
+    const words = command.match(/"[^"]*"|'[^']*'|\S+/g) ?? [];
+    let index = 1;
+    while (words[index]?.startsWith('-')) {
+      const option = words[index++];
+      if (/^(?:-C|-c|--git-dir|--work-tree|--namespace)$/.test(option)) index++;
+    }
+    command = ['git', ...words.slice(index)].join(' ');
+  }
 
   if (SENSITIVE_PATH.test(command) && READ_LIKE.test(command)) {
     return deny(MSG_SECRET);
@@ -111,8 +155,10 @@ export function evaluateCommand(rawCommand: string): HookVerdict {
   }
 
   if (/^rm\s+-rf\s+(\*|[\\/])/i.test(command)) return deny(MSG_POLICY);
+  const windowsTarget = /(?:^|\s)["']?(?:[a-z]:[\\/]|\\|\*)/i.test(command);
+  if (windowsTarget && /^Remove-Item\b/i.test(command) && /\s-(?:Recurse|r)\b/i.test(command) && /\s-(?:Force|f)\b/i.test(command)) return deny(MSG_POLICY);
+  if (windowsTarget && /^(?:rd|rmdir|del|erase)\b/i.test(command) && /\s\/s\b/i.test(command)) return deny(MSG_POLICY);
   if (/^sudo\s+/i.test(command)) return deny(MSG_POLICY);
-  if (/(?:curl|wget)\b.+\|\s*(sh|bash|zsh|cmd)\b/i.test(command)) return deny(MSG_POLICY);
   if (/^chmod\s+777\b/i.test(command)) return deny(MSG_POLICY);
   if (/^dd\s+/i.test(command)) return deny(MSG_POLICY);
   if (/^mkfs\b/i.test(command)) return deny(MSG_POLICY);
@@ -142,12 +188,15 @@ export function evaluatePreTool(input: PreToolInput): HookVerdict {
 export function formatHookOutput(verdict: HookVerdict, format: HookFormat): string {
   if (format === 'agy') {
     if (verdict.action === 'deny') {
-      return JSON.stringify({ decision: 'deny', error: verdict.message });
+      return JSON.stringify({ decision: 'deny', reason: verdict.message });
     }
     if (verdict.action === 'ask') {
       return JSON.stringify({ decision: 'ask' });
     }
     return JSON.stringify({ decision: 'allow' });
+  }
+  if (verdict.action === 'ask') {
+    return JSON.stringify({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'ask' } });
   }
   return '';
 }
@@ -160,6 +209,7 @@ export function parseAgyPayload(raw: string): PreToolInput {
   if (!raw.trim()) return {};
   try {
     const parsed = JSON.parse(raw) as {
+      toolCall?: { name?: string; args?: { CommandLine?: string; TargetFile?: string; AbsolutePath?: string } };
       toolName?: string;
       arguments?: {
         CommandLine?: string;
@@ -167,11 +217,25 @@ export function parseAgyPayload(raw: string): PreToolInput {
         AbsolutePath?: string;
       };
     };
-    const args = parsed.arguments ?? {};
+    const args = parsed.toolCall?.args ?? parsed.arguments ?? {};
     return {
-      toolName: parsed.toolName,
-      command: args.CommandLine,
-      filePath: args.TargetFile ?? args.AbsolutePath,
+      toolName: typeof (parsed.toolCall?.name ?? parsed.toolName) === 'string' ? parsed.toolCall?.name ?? parsed.toolName : undefined,
+      command: typeof args.CommandLine === 'string' ? args.CommandLine : undefined,
+      filePath: typeof args.TargetFile === 'string' ? args.TargetFile : typeof args.AbsolutePath === 'string' ? args.AbsolutePath : undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
+export function parseClaudePayload(raw: string): PreToolInput {
+  try {
+    const parsed = JSON.parse(raw);
+    const input = parsed.tool_input ?? {};
+    return {
+      toolName: typeof parsed.tool_name === 'string' ? parsed.tool_name : undefined,
+      command: typeof input.command === 'string' ? input.command : undefined,
+      filePath: typeof input.file_path === 'string' ? input.file_path : undefined,
     };
   } catch {
     return {};

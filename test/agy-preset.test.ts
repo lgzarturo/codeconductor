@@ -1,8 +1,8 @@
-import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { loadManifest, loadModelConfig } from '../src/core/presets/manifest-loader';
+import { runHookShell } from './helpers/hook-shell';
 
 const PROJECT_ROOT = resolve(import.meta.dir, '..');
 
@@ -155,7 +155,7 @@ describe('Antigravity CLI (agy) Hooks Runner', () => {
       toolName: 'run_command',
       arguments: { CommandLine: 'ls -la' },
     });
-    const result = spawnSync('sh', ['-c', preToolCmd], {
+    const result = runHookShell(preToolCmd, {
       cwd: join(PROJECT_ROOT, '.agents'),
       input,
       encoding: 'utf-8',
@@ -170,7 +170,7 @@ describe('Antigravity CLI (agy) Hooks Runner', () => {
       toolName: 'view_file',
       arguments: { AbsolutePath: join(PROJECT_ROOT, 'README.md') },
     });
-    const result = spawnSync('sh', ['-c', preToolCmd], {
+    const result = runHookShell(preToolCmd, {
       cwd: PROJECT_ROOT,
       input,
       encoding: 'utf-8',
@@ -185,7 +185,7 @@ describe('Antigravity CLI (agy) Hooks Runner', () => {
       toolName: 'view_file',
       arguments: { AbsolutePath: join(PROJECT_ROOT, '.env') },
     });
-    const result = spawnSync('sh', ['-c', preToolCmd], {
+    const result = runHookShell(preToolCmd, {
       cwd: join(PROJECT_ROOT, '.agents'),
       input,
       encoding: 'utf-8',
@@ -195,4 +195,3 @@ describe('Antigravity CLI (agy) Hooks Runner', () => {
     expect(parsed.decision).toBe('deny');
   });
 });
-

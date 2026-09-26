@@ -287,7 +287,7 @@ describe('PreToolUse git-guardrail hook — Acceptance Criteria', () => {
 
   test('AC3: settings.json invokes the OS-agnostic Node hook runner', async () => {
     const settings = JSON.parse(await readFile(SETTINGS_PATH, 'utf-8'));
-    const bashHook = settings.hooks.PreToolUse.find((h: { matcher: string }) => h.matcher === 'Bash');
+    const bashHook = settings.hooks.PreToolUse.find((h: { matcher: string }) => h.matcher.split('|').includes('Bash'));
     const command = bashHook.hooks[0].command as string;
     expect(command).toContain('invoke-hook.cjs');
     expect(command).toContain('pre-tool');

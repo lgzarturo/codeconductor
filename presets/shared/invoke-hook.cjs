@@ -2,8 +2,8 @@
 'use strict';
 
 const { spawnSync } = require('node:child_process');
-const { existsSync } = require('node:fs');
-const { join, resolve } = require('node:path');
+const { existsSync, readFileSync, realpathSync } = require('node:fs');
+const { delimiter, join, resolve } = require('node:path');
 
 const VALID_EVENTS = ['pre-tool', 'post-tool', 'session-start'];
 const SPAWN_TIMEOUT = 10000;
@@ -21,9 +21,10 @@ const isAgy = process.argv.some((a) => a === '--format=agy') || extra.includes('
 function findProjectRoot() {
   const candidates = [
     process.env.PROJECT_ROOT,
+    process.env.CLAUDE_PROJECT_DIR,
     process.env.WORKSPACE_DIR,
-    resolve(__dirname, '..', '..'),
     process.cwd(),
+    resolve(__dirname, '..', '..'),
   ].filter(Boolean);
 
   for (const dir of candidates) {
@@ -40,6 +41,8 @@ function findProjectRoot() {
 }
 
 const projectRoot = findProjectRoot();
+// Buffer once: each fallback attempt must receive the same host payload.
+const input = process.stdin.isTTY ? '' : readFileSync(0, 'utf8');
 
 /**
  * Run one candidate runner. Stdout/stderr are captured (not inherited) so a
@@ -54,7 +57,8 @@ function tryRun(bin, runArgs) {
   try {
     const result = spawnSync(bin, runArgs, {
       cwd: projectRoot,
-      stdio: ['inherit', 'pipe', 'pipe'],
+      stdio: ['pipe', 'pipe', 'pipe'],
+      input,
       windowsHide: true,
       env: process.env,
       encoding: 'utf8',
@@ -111,7 +115,18 @@ try {
     tryRun(process.execPath, [localDist, 'hook', event, ...extra]);
   }
 
-  tryRun('npx', ['--no-install', 'cc-codeconductor', 'hook', event, ...extra]);
+  // Locate global npm installs without invoking npx or Windows .cmd shims.
+  for (const binDir of (process.env.PATH || '').split(delimiter).filter(Boolean)) {
+    const candidates = [
+      join(binDir, 'node_modules', 'cc-codeconductor', 'dist', 'index.js'),
+      join(binDir, '..', 'lib', 'node_modules', 'cc-codeconductor', 'dist', 'index.js'),
+    ];
+    const executable = join(binDir, 'cc-codeconductor');
+    if (existsSync(executable)) candidates.push(realpathSync(executable));
+    for (const candidate of candidates) {
+      if (existsSync(candidate)) tryRun(process.execPath, [candidate, 'hook', event, ...extra]);
+    }
+  }
 } catch {
   // Ignore errors in runner attempts
 }

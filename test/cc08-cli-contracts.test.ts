@@ -18,6 +18,7 @@ describe('CC-08 CLI contracts', () => {
     ['ccep', 'nonsense'],
     ['scorecard', 'nonsense'],
     ['openspec', 'nonsense'],
+    ['odd', 'nonsense'],
   ] as const) {
     test(`${command} rejects unknown subcommand ${subcommand}`, async () => {
       const result = await route([command, subcommand, '--output=json']);
@@ -48,6 +49,12 @@ describe('CC-08 CLI contracts', () => {
   test('routes odd commands instead of treating them as an unknown command', async () => {
     const result = await route(['odd', 'read', 'delivery-001', '--output=json']);
     expect((result.data as { errors: string[] }).errors.join(' ')).not.toMatch(/unknown command/i);
+  });
+
+  test('routes odd handoff to the ledger handoff command', async () => {
+    const result = await route(['odd', 'handoff', '--output=json']);
+    expect(result.code).toBe(1);
+    expect((result.data as { errors: string[] }).errors).toEqual(['Missing ledger id']);
   });
 
   test('rejects invalid SEO enum and numeric options before network work', async () => {

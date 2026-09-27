@@ -122,6 +122,11 @@ describe('CLI binary resolution and usage formatting', () => {
       const summaryHelp = renderHelp(undefined, undefined, false, 'npx cc-codeconductor');
       expect(summaryHelp).toMatch(/usage\s+Show installation examples/);
     });
+
+    test('odd help includes the compact handoff command', () => {
+      const oddHelp = renderHelp('odd', undefined, false, 'bun run dev');
+      expect(oddHelp).toContain('bun run dev odd <create|read|reconcile|handoff>');
+    });
   });
 
   describe('onboardingCommand and statusCommand hints', () => {

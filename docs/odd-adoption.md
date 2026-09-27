@@ -38,3 +38,10 @@ against the working tree before taking the next action. Do not recreate the
 request or transcript. If reconciliation finds divergence, unresolved risk, or
 more than a bounded change, promote the work to OpenSpec and carry over ledger
 evidence as links.
+
+Use `bun run dev odd handoff --id <delivery-id> --output json` to derive the
+handoff envelope for the next agent or session. It is a read-only view over the
+Delivery Ledger: task objective and acceptance criteria, constraints, relevant
+files, evidence, current changed paths, next action, and any linked Technical
+Plan path. The envelope excludes
+the Task Card's free-form context, the ledger body, transcripts, and tool logs.

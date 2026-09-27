@@ -687,6 +687,7 @@ npx cc-codeconductor openspec block BC-001-implement --reason "waiting on design
 npx cc-codeconductor openspec unblock BC-001-implement
 npx cc-codeconductor openspec archive BC-001
 npx cc-codeconductor odd read delivery-001
+npx cc-codeconductor odd handoff --id delivery-001 --output json
 ```
 
 Subcommands: `validate` / `scan` / `plan` / `analyze` / `status` / `next` /
@@ -695,6 +696,10 @@ Subcommands: `validate` / `scan` / `plan` / `analyze` / `status` / `next` /
 archive synchronizes validated deltas into durable specs before filing the
 change. Illegal status transitions fail closed. See
 [docs/SDD.md](docs/SDD.md) and the OpenSpec skill.
+
+`odd handoff` derives a compact envelope from the Delivery Ledger and current
+workspace state. It contains the task, scope, evidence, changed paths, and next
+action; it does not return the ledger body or a conversation transcript.
 
 #### Product OS — `ingest` / `product` / `orchestrate` / `impact` / `verify`
 

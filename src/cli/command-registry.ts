@@ -37,6 +37,7 @@ export const COMMANDS: readonly CommandDefinition[] = [
   { name: 'ingest', group: 'workflow', summary: 'Ingest repository knowledge into the product graph.', usage: ['cc-codeconductor ingest'] },
   { name: 'product', group: 'workflow', summary: 'Explore the product graph and memory.', usage: ['cc-codeconductor product <subcommand>'] },
   { name: 'ccep', group: 'workflow', summary: 'Run CCEP contract workflows.', usage: ['cc-codeconductor ccep <subcommand>'] },
+  { name: 'odd', group: 'workflow', summary: 'Create, resume, and hand off tracked delivery work.', usage: ['cc-codeconductor odd <create|read|reconcile|handoff>'] },
   { name: 'openspec', group: 'workflow', summary: 'Run the OpenSpec delivery loop.', usage: ['cc-codeconductor openspec <subcommand>'] },
   { name: 'scorecard', group: 'workflow', summary: 'Record and aggregate outcomes.', usage: ['cc-codeconductor scorecard <subcommand>'] },
   { name: 'orchestrate', group: 'workflow', summary: 'Run goal execution orchestration.', usage: ['cc-codeconductor orchestrate <subcommand>'] },

@@ -1,5 +1,6 @@
 import { loadMemoryIndex } from '../core/memory/memory-index';
 import { resumeDecision } from '../core/ccep/context-assembly';
+import { buildHandoffEnvelope } from '../core/ccep/handoff-envelope';
 import { validateTaskCardForProfile } from '../core/ccep/task-card-validator';
 import { loadWorkflowProfile } from '../core/ccep/workflow-profile-loader';
 import {
@@ -14,6 +15,34 @@ export interface OddOptions {
   readonly projectRoot: string;
   readonly input?: unknown;
   readonly id?: string;
+}
+
+async function reconcileForResume(projectRoot: string, id: string) {
+  const result = await reconcileDeliveryLedger(projectRoot, id);
+  const memory = await loadMemoryIndex(projectRoot);
+  const { rddCommand } = await import('./rdd.command');
+  const rdd = await rddCommand({
+    subcommand: 'status',
+    projectRoot,
+    taskId: result.ledger.taskCard.id,
+  });
+  const receipts = (rdd.data as { receipts?: Array<{ valid?: boolean }> }).receipts ?? [];
+  const staleReceipt = receipts.some((receipt) => receipt.valid === false);
+  const changedPaths = staleReceipt
+    ? [...result.changedPaths, 'RDD receipt'].sort()
+    : result.changedPaths;
+
+  return {
+    ...result,
+    changedPaths,
+    resume: resumeDecision(changedPaths),
+    status: changedPaths.length === 0 ? 'ready' as const : 'conflict' as const,
+    rdd,
+    memory: memory.success ? 'available' as const : 'unavailable' as const,
+    memoryPointers: memory.success
+      ? memory.data.pointers.filter((pointer) => pointer.topic_key === result.ledger.memoryTopicKey)
+      : [],
+  };
 }
 
 export async function oddCommand(options: OddOptions): Promise<{ code: number; data?: unknown }> {
@@ -50,32 +79,25 @@ export async function oddCommand(options: OddOptions): Promise<{ code: number; d
       return { code: 0, data: { success: true, ledger: await loadDeliveryLedger(options.projectRoot, options.id) } };
     }
     if (options.subcommand === 'reconcile') {
-      const result = await reconcileDeliveryLedger(options.projectRoot, options.id);
-      const memory = await loadMemoryIndex(options.projectRoot);
-      const { rddCommand } = await import('./rdd.command');
-      const rdd = await rddCommand({
-        subcommand: 'status',
-        projectRoot: options.projectRoot,
-        taskId: result.ledger.taskCard.id,
-      });
-      const receipts = (rdd.data as { receipts?: Array<{ valid?: boolean }> }).receipts ?? [];
-      const staleReceipt = receipts.some((receipt) => receipt.valid === false);
-      const changedPaths = staleReceipt
-        ? [...result.changedPaths, 'RDD receipt'].sort()
-        : result.changedPaths;
+      const result = await reconcileForResume(options.projectRoot, options.id);
       return {
         code: 0,
         data: {
           success: true,
-          status: changedPaths.length === 0 ? 'ready' : 'conflict',
-          resume: resumeDecision(changedPaths),
-          rdd,
-          memory: memory.success ? 'available' : 'unavailable',
-          memoryPointers: memory.success
-            ? memory.data.pointers.filter((pointer) => pointer.topic_key === result.ledger.memoryTopicKey)
-            : [],
           ...result,
-          changedPaths,
+        },
+      };
+    }
+    if (options.subcommand === 'handoff') {
+      const result = await reconcileForResume(options.projectRoot, options.id);
+      return {
+        code: 0,
+        data: {
+          success: true,
+          status: result.status,
+          changedPaths: result.changedPaths,
+          resume: result.resume,
+          handoff: buildHandoffEnvelope(result.ledger, result.changedPaths),
         },
       };
     }

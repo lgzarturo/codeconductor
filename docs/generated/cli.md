@@ -152,6 +152,14 @@ Run CCEP contract workflows.
 cc-codeconductor ccep <subcommand>
 ```
 
+## odd
+
+Create, resume, and hand off tracked delivery work.
+
+```text
+cc-codeconductor odd <create|read|reconcile|handoff>
+```
+
 ## openspec
 
 Run the OpenSpec delivery loop.

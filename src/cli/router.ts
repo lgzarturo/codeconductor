@@ -638,7 +638,7 @@ export async function routeCommand(
     }
 
     case 'odd': {
-      const validSubs = ['create', 'read', 'reconcile'];
+      const validSubs = ['create', 'read', 'reconcile', 'handoff'];
       if (!subcommand || !validSubs.includes(subcommand)) {
         return unknownSubcommand(command, subcommand ?? '', validSubs);
       }

@@ -1170,8 +1170,46 @@ export const DeliveryLedgerSchema = z.object({
   nextStep: z.string().min(1),
   memoryTopicKey: z.string().min(1),
   workspace: z.record(z.string(), z.string()),
+  technicalPlanPath: z.string().min(1).optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
+});
+
+/**
+ * A compact, derived view of a Delivery Ledger for a new agent or session.
+ * It intentionally contains references and current evidence, never a transcript.
+ */
+export const HandoffEnvelopeSchema = z.object({
+  version: z.literal(1),
+  task: z.object({
+    id: z.string().min(1),
+    objective: z.string().min(1),
+    acceptanceCriteria: z.array(z.string().min(1)),
+    status: CanonicalTaskCardStatusSchema,
+  }),
+  decisions: z.object({
+    constraints: z.array(z.string()),
+    unresolved: z.array(z.string()),
+  }),
+  scope: z.object({
+    relevantFiles: z.array(z.string()),
+    boundaries: z.array(z.string()),
+  }),
+  verification: z.object({
+    evidence: z.array(z.string()),
+  }),
+  change: z.object({
+    touchedFiles: z.array(z.string()),
+  }),
+  next: z.object({
+    role: z.string().min(1),
+    objective: z.string().min(1),
+  }),
+  sources: z.object({
+    deliveryLedger: z.string().min(1),
+    memoryTopicKey: z.string().min(1),
+    technicalPlanPath: z.string().min(1).optional(),
+  }),
 });
 
 export const DeliveryLedgerRequestSchema = z.object({
@@ -1181,6 +1219,7 @@ export const DeliveryLedgerRequestSchema = z.object({
   taskCard: CanonicalTaskCardSchema,
   tasks: z.array(DeliveryLedgerTaskSchema).min(1),
   nextStep: z.string().min(1),
+  technicalPlanPath: z.string().min(1).optional(),
 });
 
 export const TaskOutcomeSchema = z.object({
@@ -1365,6 +1404,7 @@ export type HarnessSuiteTaskInput = z.infer<typeof HarnessSuiteTaskSchema>;
 export type HarnessSuiteInput = z.infer<typeof HarnessSuiteSchema>;
 export type WorkflowCommandInput = z.infer<typeof WorkflowCommandSchema>;
 export type DeliveryLedgerInput = z.infer<typeof DeliveryLedgerSchema>;
+export type HandoffEnvelopeInput = z.infer<typeof HandoffEnvelopeSchema>;
 export type DeliveryLedgerRequestInput = z.infer<typeof DeliveryLedgerRequestSchema>;
 export type CommandEnvelopeInput = z.infer<typeof CommandEnvelopeSchema>;
 export type WorkflowProfileInput = z.infer<typeof WorkflowProfileSchema>;

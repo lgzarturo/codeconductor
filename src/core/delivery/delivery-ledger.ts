@@ -72,6 +72,7 @@ export async function createDeliveryLedger(
     nextStep: request.nextStep,
     memoryTopicKey: `delivery:${request.id}`,
     workspace: await fingerprintWorkspace(projectRoot, request.taskCard.targetFiles),
+    technicalPlanPath: request.technicalPlanPath,
     createdAt: now,
     updatedAt: now,
   });

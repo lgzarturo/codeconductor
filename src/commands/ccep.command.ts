@@ -1,6 +1,7 @@
 import { readFileWithinRoot } from '../core/filesystem/path-containment';
 import { evaluateConfirmationGate } from '../core/ccep/confirmation-gate';
 import { compilePrompt } from '../core/ccep/prompt-compiler';
+import { appendEvent } from '../core/memory/episodic-store';
 import { parseJsonInput, validateOutputForRole } from '../core/ccep/output-validator';
 import { parseCommand } from '../core/ccep/command-parser';
 import { resolveContext } from '../core/ccep/context-resolver';
@@ -23,6 +24,8 @@ import {
 } from '../validation/schemas';
 import type { OutputMode } from '../utils/logger';
 
+const CONTEXT_STRATEGIES = ['sticky', 'isolated', 'artifact', 'compact', 'fork', 'full'] as const;
+
 export interface CcepOptions {
   readonly subcommand: string;
   readonly projectRoot: string;
@@ -34,6 +37,11 @@ export interface CcepOptions {
   readonly input?: string;
   readonly contextPath?: string;
   readonly promptVersion?: string;
+  readonly view?: string;
+  readonly recordTelemetry?: boolean;
+  readonly executionId?: string;
+  readonly taskId?: string;
+  readonly contextStrategy?: string;
   readonly config?: string;
   readonly rest?: string[];
 }
@@ -164,6 +172,11 @@ export async function ccepCommand(
     input,
     contextPath,
     promptVersion = 'v1.0.0',
+    view = 'full',
+    recordTelemetry = false,
+    executionId,
+    taskId,
+    contextStrategy,
     config,
     rest,
   } = options;
@@ -218,6 +231,34 @@ export async function ccepCommand(
     }
 
     case 'compile': {
+      if (!['prompt', 'layers', 'full'].includes(view)) {
+        return {
+          code: 1,
+          data: {
+            success: false,
+            command: 'ccep compile',
+            errors: [`Unknown compile view: ${view}`],
+          },
+        };
+      }
+      if (
+        contextStrategy !== undefined &&
+        !CONTEXT_STRATEGIES.includes(
+          contextStrategy as (typeof CONTEXT_STRATEGIES)[number],
+        )
+      ) {
+        return {
+          code: 1,
+          data: {
+            success: false,
+            command: 'ccep compile',
+            errors: [
+              `Invalid context strategy: ${contextStrategy}. Expected one of: ${CONTEXT_STRATEGIES.join(', ')}`,
+            ],
+          },
+        };
+      }
+
       const parsed = parseWorkflowCommand(command);
       if (!parsed.ok) {
         return {
@@ -273,12 +314,77 @@ export async function ccepCommand(
         };
       }
 
+      const compileStartedAt = Date.now();
       const compiled = compilePrompt({
         role: agentRole,
         phase: phaseId,
         context,
         promptVersion,
       });
+
+      if (recordTelemetry) {
+        const event = await appendEvent(projectRoot, {
+          type: 'context.compiled',
+          timestamp: new Date().toISOString(),
+          payload: {
+            workflow: parsed.command,
+            phase: phaseId,
+            agent: agentRole,
+            executionId: executionId ?? 'unknown',
+            taskId: taskId ?? 'unknown',
+            contextStrategy: contextStrategy ?? 'unknown',
+            promptVersion,
+            view,
+            source: 'compiler',
+            success: true,
+            provider: 'unknown',
+            model: 'unknown',
+            effort: 'unknown',
+            sessionId: 'unknown',
+            parentSessionId: 'unknown',
+            requestedModel: 'unknown',
+            effectiveModel: 'unknown',
+            inputTokens: 'unknown',
+            outputTokens: 'unknown',
+            reasoningTokens: 'unknown',
+            cacheReadTokens: 'unknown',
+            cacheWriteTokens: 'unknown',
+            cachedTokens: 'unknown',
+            contextTokensEstimate: 'unknown',
+            filesRead: 'unknown',
+            uniqueFilesRead: 'unknown',
+            repeatedFileReads: 'unknown',
+            toolCalls: 'unknown',
+            retries: 'unknown',
+            compactions: 'unknown',
+            modelSwitches: 'unknown',
+            promptBytes: Buffer.byteLength(compiled.prompt, 'utf-8'),
+            layerBytes: Object.fromEntries(
+              compiled.layers.map((layer) => [
+                layer.name,
+                Buffer.byteLength(layer.content, 'utf-8'),
+              ]),
+            ),
+            durationMs: Date.now() - compileStartedAt,
+          },
+        });
+        if (!event.success) {
+          return {
+            code: 1,
+            data: {
+              success: false,
+              command: 'ccep compile',
+              errors: [`Could not record compile telemetry: ${event.error.message}`],
+            },
+          };
+        }
+      }
+
+      const representation = view === 'prompt'
+        ? { prompt: compiled.prompt }
+        : view === 'layers'
+          ? { layers: compiled.layers }
+          : { layers: compiled.layers, prompt: compiled.prompt };
 
       return {
         code: 0,
@@ -287,10 +393,9 @@ export async function ccepCommand(
           command: 'ccep compile',
           phase: phaseId,
           role: agentRole,
-          outputSchema: resolvedPhase.outputSchema,
+          outputSchema: compiled.outputSchema,
           promptVersion,
-          layers: compiled.layers,
-          prompt: compiled.prompt,
+          ...representation,
         },
       };
     }

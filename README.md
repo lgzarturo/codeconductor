@@ -653,6 +653,7 @@ npx cc-codeconductor ccep parse --command review "PR #42" --output json
 npx cc-codeconductor ccep profile tdd-cycle --output json
 npx cc-codeconductor ccep resolve --command feature "Add CRUD" --output json
 npx cc-codeconductor ccep compile --command feature --phase intake --role task-coach "Add CRUD" --output json
+npx cc-codeconductor ccep compile --command feature --phase intake --view prompt --record-telemetry --execution-id exec-1 --task-id task-1 --context-strategy artifact "Add CRUD" --output json
 npx cc-codeconductor ccep validate --command feature --phase implement --role implementer --output json \
   --input @implementer-output.json
 npx cc-codeconductor ccep evaluate --command feature --input @planner.json --output json
@@ -664,6 +665,12 @@ Subcommands: `parse` / `profile` / `resolve` / `compile` / `validate` /
 `evaluate` / `consensus` / `taskcard`. `validate` checks agent JSON against the
 Zod schema for that role. `consensus` exit codes: `0` APPROVED, `1` REJECTED,
 `2` ESCALATED. Full protocol: [docs/CCEP.md](docs/CCEP.md).
+
+`compile --view prompt|layers|full` controls the returned representation;
+`full` remains the default. `--record-telemetry` appends local compilation
+sizes and timing to `.codeconductor/events.jsonl`; unavailable provider and
+token metrics are recorded as `unknown`. `--execution-id`, `--task-id`, and
+`--context-strategy` add correlation metadata when recording telemetry.
 
 #### `openspec` — backlog delivery loop
 

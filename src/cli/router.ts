@@ -51,6 +51,7 @@ const OutputModeSchema = z.enum(['json', 'human']);
 const SeoFormatSchema = z.enum(['cli', 'json', 'markdown']);
 const SeoFailOnSchema = z.enum(['error', 'warning', 'never']);
 const NonNegativeIntegerSchema = z.coerce.number().int().nonnegative();
+const BOOLEAN_OPTIONS = new Set(['record-telemetry']);
 
 /**
  * Parse command from args
@@ -137,6 +138,9 @@ export function parseArgs(args: string[]): CliArgs {
         }
       } else if (value !== undefined) {
         options[key] = value;
+        consumed.add(i);
+      } else if (BOOLEAN_OPTIONS.has(key)) {
+        options[key] = true;
         consumed.add(i);
       } else if (remaining[i + 1] && !remaining[i + 1].startsWith('-')) {
         options[key] = remaining[++i];
@@ -584,6 +588,12 @@ export async function routeCommand(
         input: options.input as string | undefined,
         contextPath: (options.context as string) || (options.contextPath as string),
         promptVersion: (options['prompt-version'] as string) || (options.promptVersion as string),
+        view: options.view as string | undefined,
+        recordTelemetry:
+          options['record-telemetry'] === true || options['record-telemetry'] === 'true',
+        executionId: options['execution-id'] as string | undefined,
+        taskId: options['task-id'] as string | undefined,
+        contextStrategy: options['context-strategy'] as string | undefined,
         config: options.config as string | undefined,
         rest: validateRest,
       } as CcepOptions);

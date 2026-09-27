@@ -194,6 +194,9 @@ bun run dev ccep resolve --command feature "Add CRUD" --output json
 
 ```bash
 bun run dev ccep compile --command feature "Add CRUD" --phase intake --output json
+bun run dev ccep compile --command feature "Add CRUD" --phase intake \
+  --view prompt --record-telemetry --execution-id exec-1 --task-id task-1 \
+  --context-strategy artifact --output json
 ```
 
 **Expected output:**
@@ -202,6 +205,12 @@ bun run dev ccep compile --command feature "Add CRUD" --phase intake --output js
 - `promptVersion: "v1.0.0"`
 - `layers[]` (system, agent, policies, knowledge, ast, task, output_schema)
 - `prompt` — compiled text ready for the agent
+
+`--view prompt|layers|full` selects the returned representation (`full` is the
+default). `--record-telemetry` writes a `context.compiled` event to
+`.codeconductor/events.jsonl`. Add `--execution-id`, `--task-id`, and
+`--context-strategy` to correlate that event with an orchestration run; metrics
+that the compiler cannot observe are recorded as `unknown`.
 
 **Valid phases (feature):** `intake`, `design`, `implement`, `test`, `review`, `docs`.
 Using `--phase plan` fails with `Unknown phase: plan`.

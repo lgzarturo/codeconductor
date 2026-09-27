@@ -30,6 +30,46 @@ describe('ccep output-validator', () => {
     expect(result.errors?.length).toBeGreaterThan(0);
   });
 
+  test('validates task-coach technical-plan output with the technical-plan schema', () => {
+    const result = validateOutputForRole('task-coach', 'technical-plan', {
+      approach: 'Keep routing and context transfer independent',
+      filesAffected: ['src/core/ccep/prompt-compiler.ts'],
+      risks: ['Prompt compatibility'],
+      openQuestions: [],
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.schema).toBe('technical-plan');
+  });
+
+  test('validates task-coach fix intake output with the explicit phase schema', () => {
+    const result = validateOutputForRole('task-coach', 'fix-intake-output', {
+      actualBehavior: 'Login fails on Safari',
+      expectedBehavior: 'Login succeeds',
+      reproductionSteps: ['Open Safari', 'Submit valid credentials'],
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.schema).toBe('fix-intake-output');
+  });
+
+  test('validates reviewer scorecard output with the explicit phase schema', () => {
+    const result = validateOutputForRole('reviewer', 'scorecard-record', {
+      id: 'score-1',
+      taskId: 'task-1',
+      agent: 'reviewer',
+      contractVersion: 'v1.0.0',
+      criteria: [],
+      weightedScore: 3,
+      verdict: 'PASS',
+      findings: [],
+      createdAt: '2026-09-26T12:00:00.000Z',
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.schema).toBe('scorecard-record');
+  });
+
   test('validates implementer-output', () => {
     const result = validateOutputForRole('implementer', 'agent-output', {
       status: 'success',

@@ -19,7 +19,7 @@ parseCommand → resolveContext → resolveWorkflowPhase → compilePrompt → v
 | Parse | `parseCommand` | `(command, userRequest, projectRoot) => CommandEnvelopeInput` | Validate the command against `CCEP_COMMANDS`, read `package.json`, produce the envelope. `parseCommandAsync` is the async variant. |
 | Resolve | `resolveContext` | `(envelope, profile, projectRoot) => Promise<ExecutionContextInput>` | Hydrate the envelope: product knowledge (product-graph), AST source, detected stack, policies. |
 | Phase | `resolveWorkflowPhase` | `(profile, phaseId) => ResolvedWorkflowPhase \| null` | Look up a phase in the workflow profile and extract its `role` and `outputSchema`. |
-| Compile | `compilePrompt` | `({ role, phase, context, promptVersion }) => CompiledPrompt` | Assemble the seven layers into `{ layers, prompt }`. |
+| Compile | `compilePrompt` | `({ role, phase, context, promptVersion }) => CompiledPrompt` | Assemble the seven layers into `{ layers, prompt, outputSchema }`; `outputSchema` is the effective role-aware schema. |
 | Validate | `validateAgentOutputBySchema` | `(schemaName, data, role?) => ValidationResult` | Validate the agent's JSON output against the named Zod schema. |
 
 `resolveFromCommand(command, userRequest, projectRoot, profile)` is a convenience
@@ -53,12 +53,12 @@ back to the bundled default via `loadWorkflowProfileFallback`.
 | # | Layer | Content |
 | --- | --- | --- |
 | 1 | `system` | CCEP-1 operating rules: do not invent context, ask via structured output when data is missing, return valid JSON only, match the schema exactly. |
-| 2 | `agent` | The role label (from `ROLE_LABELS`) and the assigned phase. Implementer/reviewer get role-specific output reminders. |
+| 2 | `agent` | The role label (from `ROLE_LABELS`), assigned phase, and instruction to return the effective output schema. |
 | 3 | `policies` | `context.policies` plus the `promptVersion` marker, JSON-serialized. |
-| 4 | `knowledge` | `context.knowledge` — product domains, decisions, risks — JSON-serialized. |
+| 4 | `knowledge` | Built-in product-graph knowledge scoped to the active role. If the record has extension keys, it is preserved in full for `--context` compatibility. OpenSpec uses its phase package. |
 | 5 | `ast` | `context.ast` — project structure (`source: 'product-graph' \| 'graphify' \| 'detect'`). |
-| 6 | `task` | The envelope essentials: command, intent, phase, `userRequest`, project name. |
-| 7 | `output_schema` | The expected output shape, selected by `context.outputSchema`. |
+| 6 | `task` | The envelope essentials: command, intent, phase, project name. The request appears once as `intent.goal`. |
+| 7 | `output_schema` | The effective output shape after shared schema resolution. A registered explicit phase schema wins; role mapping applies to generic `agent-output`. |
 
 Known roles (`ROLE_LABELS`): `task-coach`, `architect`, `implementer`, `tester`,
 `reviewer`, `docs`, `contract-builder`, `complexity-auditor`, `orchestrator`,
@@ -75,8 +75,11 @@ planner-output  implementer-output  review-report  technical-plan
 fix-intake-output  council-verdict  agent-output
 ```
 
-`resolveOutputSchemaName(schemaName, role?)` normalizes a requested schema name;
-unknown names fall back to `agent-output`. `parseJsonInput(raw)` parses agent
+`resolveOutputSchemaName(schemaName, role?)` normalizes a requested schema name.
+Registered explicit phase schemas take precedence. When the configured schema
+is generic `agent-output`, implementer, reviewer, architect, and task-coach map
+to their role contracts. The agent instruction uses that same effective schema.
+`parseJsonInput(raw)` parses agent
 output before validation, and `validateOutputForRole(role, outputSchema, data)`
 combines resolution and validation. A `ValidationResult` is
 `{ valid, schema, errors?, data? }`.
@@ -85,6 +88,16 @@ The prompt-side schema bodies (the JSON skeletons injected into layer 7) are
 defined in `prompt-compiler.ts` (`OUTPUT_SCHEMAS`); the validation-side Zod
 schemas live in `src/validation/schemas.ts`. Keep the two in sync when adding a
 schema.
+
+## Compile output and telemetry
+
+`ccep compile --view prompt|layers|full` selects the returned representation;
+`full` is the compatible default. `--record-telemetry` appends one local
+`context.compiled` event with prompt/layer byte sizes and duration. Optional
+`--execution-id`, `--task-id`, and
+`--context-strategy sticky|isolated|artifact|compact|fork|full` correlate the
+event. Provider, session, token, cache, file-read, and tool metrics unavailable
+to the compiler are recorded as `unknown`.
 
 ---
 

@@ -3,6 +3,7 @@ import {
   AgentOutputSchema,
   CanonicalTaskCardSchema,
   CouncilVerdictSchema,
+  FixIntakeOutputSchema,
   ImplementerOutputSchema,
   PlannerOutputSchema,
   ReviewerOutputSchema,
@@ -36,7 +37,7 @@ const SCHEMA_REGISTRY: Record<string, z.ZodTypeAny> = {
   'implementer-output': ImplementerOutputSchema,
   'review-report': ReviewerOutputSchema,
   'technical-plan': TechnicalPlanOutputSchema,
-  'fix-intake-output': AgentOutputSchema,
+  'fix-intake-output': FixIntakeOutputSchema,
   'council-verdict': CouncilVerdictSchema,
   'agent-output': AgentOutputSchema,
   taskcard: CanonicalTaskCardSchema,
@@ -77,31 +78,38 @@ export function resolveOutputSchemaName(
   return schemaName;
 }
 
+function validateResolvedOutputSchema(
+  schemaName: string,
+  data: unknown,
+): ValidationResult {
+  const schema = SCHEMA_REGISTRY[schemaName];
+  if (!schema) {
+    return {
+      valid: false,
+      schema: schemaName,
+      errors: [`Unknown output schema: ${schemaName}`],
+    };
+  }
+
+  const parsed = schema.safeParse(data);
+  if (parsed.success) {
+    return { valid: true, schema: schemaName, data: parsed.data };
+  }
+
+  return {
+    valid: false,
+    schema: schemaName,
+    errors: parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`),
+  };
+}
+
 export function validateAgentOutputBySchema(
   schemaName: string,
   data: unknown,
   role?: string,
 ): ValidationResult {
   const resolved = resolveOutputSchemaName(schemaName, role);
-  const schema = SCHEMA_REGISTRY[resolved];
-  if (!schema) {
-    return {
-      valid: false,
-      schema: resolved,
-      errors: [`Unknown output schema: ${resolved}`],
-    };
-  }
-
-  const parsed = schema.safeParse(data);
-  if (parsed.success) {
-    return { valid: true, schema: resolved, data: parsed.data };
-  }
-
-  return {
-    valid: false,
-    schema: resolved,
-    errors: parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`),
-  };
+  return validateResolvedOutputSchema(resolved, data);
 }
 
 export function parseJsonInput(raw: string): unknown {
@@ -114,7 +122,9 @@ export function validateOutputForRole(
   outputSchema: string,
   data: unknown,
 ): ValidationResult {
-  if (role === 'implementer') {
+  const resolved = resolveOutputSchemaName(outputSchema, role);
+
+  if (resolved === 'implementer-output') {
     try {
       return { valid: true, schema: 'implementer-output', data: validateImplementerOutput(data) };
     } catch (err) {
@@ -125,7 +135,7 @@ export function validateOutputForRole(
       };
     }
   }
-  if (role === 'reviewer') {
+  if (resolved === 'review-report') {
     try {
       return { valid: true, schema: 'review-report', data: validateReviewerOutput(data) };
     } catch (err) {
@@ -136,7 +146,7 @@ export function validateOutputForRole(
       };
     }
   }
-  if (outputSchema === 'planner-output' || role === 'task-coach') {
+  if (resolved === 'planner-output') {
     try {
       return { valid: true, schema: 'planner-output', data: validatePlannerOutput(data) };
     } catch (err) {
@@ -147,5 +157,5 @@ export function validateOutputForRole(
       };
     }
   }
-  return validateAgentOutputBySchema(outputSchema, data, role);
+  return validateResolvedOutputSchema(resolved, data);
 }

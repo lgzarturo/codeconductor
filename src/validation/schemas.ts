@@ -675,6 +675,7 @@ export const ProductEventTypeSchema = z.enum([
   'blocker.detected',
   'verification.completed',
   'feedback.processed',
+  'context.compiled',
 ]);
 
 export const ProductEventSchema = z.object({
@@ -1078,6 +1079,12 @@ export const TechnicalPlanOutputSchema = z.object({
   filesAffected: z.array(z.string()).default([]),
   risks: z.array(z.string()).default([]),
   openQuestions: z.array(z.string()).optional(),
+});
+
+export const FixIntakeOutputSchema = z.object({
+  actualBehavior: z.string(),
+  expectedBehavior: z.string(),
+  reproductionSteps: z.array(z.string()),
 });
 
 // ─── Evaluation / Scorecard Schemas ───────────────────────────────────────────

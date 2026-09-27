@@ -39,7 +39,8 @@ export type ProductEventType =
   | 'goal.updated'
   | 'blocker.detected'
   | 'verification.completed'
-  | 'feedback.processed';
+  | 'feedback.processed'
+  | 'context.compiled';
 
 export const PRODUCT_NODE_TYPES: readonly ProductNodeType[] = [
   'product',

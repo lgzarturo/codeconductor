@@ -13,11 +13,10 @@ Multi-agent council for code review and architecture decisions
 
 ## Agents
 - **Architect** (architect): architecture, design-patterns, code-structure
-- **Security** (security): security, vulnerabilities, compliance
 - **Product** (product): requirements, ux, business-value
 - **Delivery** (delivery): delivery, testing, deployment
 - **DataOps** (data-ops): data, pipelines, analytics
-- **Security Reviewer** (security-reviewer): security, vulnerabilities, credentials, injection, auth, supply-chain
+- **Security Reviewer** (security-reviewer): security, vulnerabilities, compliance, credentials, injection, auth, supply-chain
 - **Devil** (devil): review, edge-cases, failure-modes
 
 ## Usage

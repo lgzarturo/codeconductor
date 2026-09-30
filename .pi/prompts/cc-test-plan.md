@@ -24,11 +24,10 @@ If $ARGUMENTS is empty, describe the scope in your next message before invoking
 
 Command: `test-plan` (fixed for this workflow — do not infer from user text)
 
-1. Run: `npx cc-codeconductor ccep parse --command test-plan "$ARGUMENTS" --output json`
-2. Run: `npx cc-codeconductor ccep resolve --command test-plan "$ARGUMENTS" --output json`
-3. Run: `npx cc-codeconductor ccep profile test-plan --output json`
-4. After planner/intake JSON is available, run: `npx cc-codeconductor ccep evaluate --command test-plan --input <planner.json> --output json`. If `stop` is true, show questions or risks and wait for human input.
-5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+1. Run: `npx cc-codeconductor ccep profile test-plan --output json` to get the phases and their roles.
+2. For each delegated phase, run: `npx cc-codeconductor ccep compile --command test-plan --phase <phase-id> "$ARGUMENTS" --view prompt --output json`
+3. After planner/intake JSON is available, run: `npx cc-codeconductor ccep evaluate --command test-plan --input <planner.json> --output json`. If `stop` is true, show questions or risks and wait for human input.
+4. Pass each subagent only the compiled `prompt` for its phase — never forward raw `$ARGUMENTS` to planners.
 
 ---
 

@@ -22,9 +22,9 @@ permission:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-haiku-4-5-20251001 | Fast — intake, Q&A |
-| OpenCode Go | opencode-go/gpt-5.6-luna | Best — efficient Q&A |
+| OpenCode Go | opencode-go/glm-5.3-flash | Best — efficient Q&A |
 | Gemini | gemini-3.7-flash | Alternative |
-| Codex | gpt-5.6-luna | Alternative |
+| Codex | gpt-6.1-sol | Alternative |
 | Cursor | claude-4.5-haiku-thinking | Primary |
 | Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 

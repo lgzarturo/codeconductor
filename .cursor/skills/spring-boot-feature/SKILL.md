@@ -43,10 +43,8 @@ outputs:
 quality:
   reviewed_by: codeconductor-core
   version: 0.1.0
-paths:
-  - "**/*.kt"
-  - "**/build.gradle.kts"
 ---
+
 # Spring Boot Feature Creation
 
 When asked to create a feature, follow these steps **in order**. Do not skip

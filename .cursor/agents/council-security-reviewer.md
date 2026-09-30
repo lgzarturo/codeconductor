@@ -12,6 +12,7 @@ security-reasoning
 ## Focus Areas
 - security
 - vulnerabilities
+- compliance
 - credentials
 - injection
 - auth

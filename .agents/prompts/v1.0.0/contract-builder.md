@@ -29,10 +29,10 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | claude-opus-5 | Primary — contract design |
-| OpenCode Go | opencode-go/qwen3.8-max | Primary |
+| Claude | claude-sonnet-5-5 | Primary — contract design |
+| OpenCode Go | opencode-go/deepseek-v4.1-flash | Primary |
 | Gemini | gemini-3.1-pro-preview | Alternative |
-| Codex | gpt-5.6-sol | Alternative |
+| Codex | gpt-6.1-sol | Alternative |
 | Cursor | claude-sonnet-5-thinking-high | Primary |
 | Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 

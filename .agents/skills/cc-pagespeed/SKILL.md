@@ -28,9 +28,8 @@ without a key, but CrUX field data requires it.
 Call the PageSpeed Insights API for the URL provided above.
 
 - Strategy: `both` (mobile + desktop) unless the user specified otherwise.
-- If Bun is available, use `~/.claude/skills/pagespeed-perf/scripts/run.ts`.
-- If Bun is unavailable, call PSI directly via WebFetch and fetch the HTML
-  source for manual resource-hint analysis.
+- Call PSI directly via WebFetch and fetch the HTML source for manual
+  resource-hint analysis.
 
 ---
 

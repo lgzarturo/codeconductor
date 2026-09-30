@@ -26,10 +26,10 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | claude-opus-5 | Primary — deep security reasoning |
-| OpenCode Go | opencode-go/kimi-k3 | Primary |
+| Claude | claude-sonnet-5-5 | Primary — deep security reasoning |
+| OpenCode Go | opencode-go/glm-5.3-flash | Primary |
 | Gemini | gemini-3.1-pro-preview | Alternative |
-| Codex | gpt-5.6-sol | Alternative |
+| Codex | gpt-6.1-sol | Alternative |
 | Cursor | claude-opus-5-thinking-high | Primary |
 | Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 

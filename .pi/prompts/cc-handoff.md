@@ -10,11 +10,10 @@ Handoff request: $ARGUMENTS
 
 Command: `handoff` (fixed for this workflow — do not infer from user text)
 
-1. Run: `npx cc-codeconductor ccep parse --command handoff "$ARGUMENTS" --output json`
-2. Run: `npx cc-codeconductor ccep resolve --command handoff "$ARGUMENTS" --output json`
-3. Run: `npx cc-codeconductor ccep profile handoff --output json`
-4. After planner/intake JSON is available, run: `npx cc-codeconductor ccep evaluate --command handoff --input <planner.json> --output json`. If `stop` is true, show questions or risks and wait for human input.
-5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+1. Run: `npx cc-codeconductor ccep profile handoff --output json` to get the phases and their roles.
+2. For each delegated phase, run: `npx cc-codeconductor ccep compile --command handoff --phase <phase-id> "$ARGUMENTS" --view prompt --output json`
+3. After planner/intake JSON is available, run: `npx cc-codeconductor ccep evaluate --command handoff --input <planner.json> --output json`. If `stop` is true, show questions or risks and wait for human input.
+4. Pass each subagent only the compiled `prompt` for its phase — never forward raw `$ARGUMENTS` to planners.
 
 ---
 
@@ -31,7 +30,12 @@ and wait for a human (CCEP `stopOnHighRisk`).
 Include: goal, Task Card status (no secret fields), files touched, test
 pass/fail (not log dumps), open questions, and the next `/cc-` command.
 
-Do not edit source or tests.
+Link the Delivery Ledger and verification evidence when they exist; do not
+repeat the original request or transcript. Do not edit source or tests.
+
+If a Delivery Ledger exists, run `npx cc-codeconductor odd handoff --id <ledger-id> --output json`
+and use its `handoff` envelope as the source for these fields. Secret redaction
+still applies.
 
 ---
 

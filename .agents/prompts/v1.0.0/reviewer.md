@@ -27,10 +27,10 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | claude-opus-5 | Default — code review |
-| OpenCode Go | opencode-go/qwen3.8-max | Best — efficient reviews |
+| Claude | claude-sonnet-5-5 | Default — code review |
+| OpenCode Go | opencode-go/deepseek-v4.1-flash | Best — efficient reviews |
 | Gemini | gemini-3.1-pro-preview | Alternative |
-| Codex | gpt-5.6-sol | Alternative |
+| Codex | gpt-6.1-sol | Alternative |
 | Cursor | claude-sonnet-5-thinking-high | Primary |
 | Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 

@@ -40,10 +40,8 @@ outputs:
 quality:
   reviewed_by: codeconductor-core
   version: 0.1.0
-paths:
-  - "**/*.kt"
-  - "**/*.java"
 ---
+
 # JPA + PostgreSQL
 
 ## Entity Design

@@ -23,9 +23,9 @@ permission:
 | Provider | Model | Use Case |
 |----------|-------|----------|
 | Claude | claude-haiku-4-5-20251001 | Fast — graph planning |
-| OpenCode Go | opencode-go/deepseek-v4-flash | Primary |
+| OpenCode Go | opencode-go/deepseek-v4.1-flash | Primary |
 | Gemini | gemini-3.7-flash | Alternative |
-| Codex | gpt-5.6-luna | Alternative |
+| Codex | gpt-6.1-sol | Alternative |
 | Cursor | claude-4.5-haiku-thinking | Primary |
 | Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 

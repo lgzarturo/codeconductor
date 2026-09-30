@@ -8,11 +8,10 @@ Produces a prioritized report in the current working directory.
 
 Command: `pagespeed` (fixed for this workflow — do not infer from user text)
 
-1. Run: `npx cc-codeconductor ccep parse --command pagespeed "$ARGUMENTS" --output json`
-2. Run: `npx cc-codeconductor ccep resolve --command pagespeed "$ARGUMENTS" --output json`
-3. Run: `npx cc-codeconductor ccep profile pagespeed --output json`
-4. After planner/intake JSON is available, run: `npx cc-codeconductor ccep evaluate --command pagespeed --input <planner.json> --output json`. If `stop` is true, show questions or risks and wait for human input.
-5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+1. Run: `npx cc-codeconductor ccep profile pagespeed --output json` to get the phases and their roles.
+2. For each delegated phase, run: `npx cc-codeconductor ccep compile --command pagespeed --phase <phase-id> "$ARGUMENTS" --view prompt --output json`
+3. After planner/intake JSON is available, run: `npx cc-codeconductor ccep evaluate --command pagespeed --input <planner.json> --output json`. If `stop` is true, show questions or risks and wait for human input.
+4. Pass each subagent only the compiled `prompt` for its phase — never forward raw `$ARGUMENTS` to planners.
 
 ---
 
@@ -63,9 +62,8 @@ the following steps in order:
    the output filename: `{YYYY-MM-DD}_pagespeed-{hostname}-claude.md`.
 
 2. **Collect** — Call the PageSpeed Insights API for the requested strategy
-   (`mobile`, `desktop`, or `both`). Prefer the Bun scripts in
-   `~/.claude/skills/pagespeed-perf/scripts/run.ts` if Bun is available.
-   Otherwise, use `WebFetch` to call the PSI endpoint directly.
+   (`mobile`, `desktop`, or `both`) using `WebFetch` to call the PSI endpoint
+   directly.
 
 3. **Analyze** — Extract Core Web Vitals (LCP, INP, CLS, FCP, TTFB, TBT),
    identify the LCP element, enumerate third-party scripts by blocking time,

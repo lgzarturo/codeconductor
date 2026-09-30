@@ -40,6 +40,7 @@ quality:
   reviewed_by: codeconductor-core
   version: 0.1.0
 ---
+
 ## When to Use
 
 - Writing any Python code in the project
@@ -604,7 +605,7 @@ items = items_to_keep
 
 ## Resources
 
-- **PEP 8** — Style Guide: <https://peps.python.org/pep-0008/>
-- **PEP 484** — Type Hints: <https://peps.python.org/pep-0484/>
-- **Real Python**: <https://realpython.com/>
-- **Python Docs**: <https://docs.python.org/3/>
+- **PEP 8** — Style Guide: https://peps.python.org/pep-0008/
+- **PEP 484** — Type Hints: https://peps.python.org/pep-0484/
+- **Real Python**: https://realpython.com/
+- **Python Docs**: https://docs.python.org/3/

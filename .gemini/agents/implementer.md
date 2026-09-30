@@ -222,3 +222,5 @@ Invoke via `/cc-feature`, `/cc-fix`, `/cc-tdd-cycle`, or the orchestrator.
 Do not invoke other agents. Invoke skill `testing-tdd`.
 Deliverable is incomplete without a passing suite and runner TDD evidence when
 TDD is required. Scorecard: `bun run dev scorecard create --from-diff`.
+Before handing work to review or delivery, verify the current RDD receipt. Do
+not rely on a test result if its candidate has changed.

@@ -142,7 +142,7 @@ When multiple signals apply, take the highest risk level. Do not average.
 
 **Does not:** Write code. Execute tests. Push to any branch.
 
-**Model:** `claude-sonnet-4.6-thinking`
+**Model:** `claude-sonnet-4-6`
 
 **Responsibilities:**
 1. Validate the Task Card before doing anything else.
@@ -190,7 +190,7 @@ High-risk checkpoint: [yes | no — if yes, describe what triggers a stop]
 - bash: `deny`
 - network: `deny`
 
-**Model:** `gemini-3.8-flash`
+**Model:** `gemini-3.8-flash-medium`
 
 **Intake process:**
 1. Read the entire request before asking anything.
@@ -235,7 +235,7 @@ High-risk checkpoint: [yes | no — if yes, describe what triggers a stop]
 - bash: `allow` (git log, git diff, git status)
 - network: `deny`
 
-**Model:** `gemini-3.8-flash`
+**Model:** `gemini-3.8-flash-medium`
 
 **Repo Map format:**
 ```markdown
@@ -270,7 +270,7 @@ High-risk checkpoint: [yes | no — if yes, describe what triggers a stop]
 - bash: `deny`
 - network: `deny`
 
-**Model:** `gemini-3.8-flash`
+**Model:** `gemini-3.8-flash-medium`
 
 **Does not:** Write files. Execute commands. Make routing decisions.
 
@@ -294,7 +294,7 @@ When the orchestrator receives a GoalGraph, it delegates tasks in dependency ord
 - bash: `deny`
 - network: `deny`
 
-**Model:** `gemini-3.1-pro`
+**Model:** `gemini-3.1-pro-high`
 
 **Technical Plan format:**
 ```markdown
@@ -331,7 +331,7 @@ When the orchestrator receives a GoalGraph, it delegates tasks in dependency ord
 - bash: `allow` (build, test, and lint commands only)
 - network: `deny`
 
-**Model:** `claude-sonnet-4.6-thinking`
+**Model:** `claude-sonnet-4-6`
 
 **Pre-implementation checklist:**
 1. Create a Git Worktree: `git worktree add ../<branch>-session <branch>`
@@ -372,7 +372,7 @@ When the orchestrator receives a GoalGraph, it delegates tasks in dependency ord
 - bash: `allow` (test commands only)
 - network: `deny`
 
-**Model:** `claude-sonnet-4.6-thinking`
+**Model:** `claude-sonnet-4-6`
 
 **Coverage Summary format:**
 ```markdown
@@ -401,7 +401,7 @@ When the orchestrator receives a GoalGraph, it delegates tasks in dependency ord
 - bash: `allow` (git diff, git status, test commands)
 - network: `deny`
 
-**Model:** `gemini-3.1-pro`
+**Model:** `gemini-3.1-pro-high`
 
 **Review Axes & Gates:**
 - **Simplicity Gate**: Flag overcomplicated/speculative code. Ask: "Would a senior engineer say this is overbuilt?"
@@ -459,7 +459,7 @@ When the orchestrator receives a GoalGraph, it delegates tasks in dependency ord
 - bash: `deny`
 - network: `deny`
 
-**Model:** `gemini-3.8-flash`
+**Model:** `gemini-3.8-flash-medium`
 
 ---
 
@@ -471,5 +471,11 @@ When the orchestrator receives a GoalGraph, it delegates tasks in dependency ord
 
 ### Monorepo Workspaces
 - Focus operations strictly within the specified sub-package or workspace directory in the Task Card scope. Do not modify files or run commands outside this package directory.
+
+## Receipt integrity
+
+- For any implementation, test, review, handoff, or delivery decision, capture or verify the current RDD receipt with `bun run dev rdd`.
+- A receipt is valid only for its exact candidate. If code, tests, contracts, or runner configuration changed, repeat the affected verification.
+- TDD and Mutation Testing retain their existing gates; RDD verifies that their observed evidence still belongs to the current candidate.
 
 <!-- CODECONDUCTOR:END managed -->

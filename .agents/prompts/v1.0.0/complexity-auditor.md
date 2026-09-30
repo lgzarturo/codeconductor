@@ -24,10 +24,10 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | claude-sonnet-5 | Primary — complexity audit |
-| OpenCode Go | opencode-go/glm-5.3 | Primary |
+| Claude | claude-sonnet-5-5 | Primary — complexity audit |
+| OpenCode Go | opencode-go/glm-5.3-flash | Primary |
 | Gemini | gemini-3.7-flash | Alternative |
-| Codex | gpt-5.6-terra | Alternative |
+| Codex | gpt-6.1-sol | Alternative |
 | Cursor | claude-sonnet-5-thinking-high | Primary |
 | Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 

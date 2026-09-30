@@ -1,16 +1,3 @@
----
-description: "Delivery council agent. Focus: delivery, testing, deployment. Context: repo-readonly. Model hint: practical-coding."
-mode: subagent
-permission:
-  read: allow
-  edit: deny
-  bash: deny
-  glob: allow
-  grep: allow
-  webfetch: deny
-  websearch: deny
----
-
 # Delivery Agent
 
 ## Role

@@ -44,6 +44,7 @@ quality:
   reviewed_by: codeconductor-core
   version: 0.1.0
 ---
+
 # Spring Boot Feature Creation
 
 When asked to create a feature, follow these steps **in order**. Do not skip

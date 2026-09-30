@@ -41,6 +41,7 @@ quality:
   reviewed_by: codeconductor-core
   version: 0.1.0
 ---
+
 ## When to Use
 
 - Writing or reviewing queryset code in any `apps/*/`
@@ -456,5 +457,4 @@ def on_order_save(sender, instance, created, **kwargs):
 - **Annotation examples**: `apps/pos/views.py` lines 59-75
 - **Exists usage**: `apps/catalog/views.py` line 112
 - **Upload paths**: `apps/catalog/models.py`
-- **Django ORM docs**:
-  <https://docs.djangoproject.com/en/5.2/topics/db/queries/>
+- **Django ORM docs**: https://docs.djangoproject.com/en/5.2/topics/db/queries/

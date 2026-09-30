@@ -36,10 +36,10 @@ permission:
 # Model Selection
 | Provider | Model | Use Case |
 |----------|-------|----------|
-| Claude | claude-sonnet-5 | Default — code implementation |
-| OpenCode Go | opencode-go/mimo-v2.5 | Best — reasoning for code |
+| Claude | claude-sonnet-5-5 | Default — code implementation |
+| OpenCode Go | opencode-go/mimo-v2.6-flash | Best — reasoning for code |
 | Gemini | gemini-3.7-flash | Alternative |
-| Codex | gpt-5.6-terra | Alternative |
+| Codex | gpt-6.1-sol | Alternative |
 | Cursor | composer-2.5-fast | Primary |
 | Fallback (Grok) | cursor-grok-4.6-high-fast | When primary model unavailable |
 

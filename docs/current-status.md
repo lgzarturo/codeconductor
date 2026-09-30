@@ -2,7 +2,7 @@
 
 This file is the canonical shipped/planned matrix for the repository.
 
-**Published package version:** `1.5.0` — current stable line: `1.5.x` (from
+**Published package version:** `1.5.1` — current stable line: `1.5.x` (from
 `package.json`)
 
 Code present in the repository but assigned to a later release is
@@ -48,7 +48,7 @@ removes an older version's directory).
 
 ## Release documentation
 
-The package and operational documentation are synchronized at **v1.5.0**.
+The package and operational documentation are synchronized at **v1.5.1**.
 Historical release notes remain available alongside the
 [CHANGELOG.md](../CHANGELOG.md) release history.
 

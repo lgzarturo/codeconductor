@@ -109,6 +109,23 @@ export function renderCodexSkill(cmd: string, md: string): string {
     rewriteTaskToolInvocation(rewriteCodexCrossReferences(bodyFrom(md)), 'codex'),
     'codex',
   );
+  const contextBudget = cmd === 'openspec'
+    ? `## Model and context budget
+
+Use GPT-6.1 Sol with medium reasoning effort for every OpenSpec phase. Pass each
+role only its current TaskCard, relevant file paths, acceptance criteria, and a
+short handoff. Avoid replaying the full transcript or re-reading large files.
+
+`
+    : cmd === 'council'
+      ? `## Council context budget
+
+Use GPT-6.1 Sol with medium reasoning effort. Give each necessary council role
+the same short evidence summary and relevant diff. Reuse those findings in the
+verdict; avoid spawning roles for questions already answered by evidence.
+
+`
+      : '';
   return `---
 name: cc-${cmd}
 description: ${description}
@@ -118,7 +135,7 @@ description: ${description}
 
 Invoke as \`${invoke}\`. The user request follows the skill mention.
 
-${body}
+${contextBudget}${body}
 `;
 }
 

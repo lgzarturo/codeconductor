@@ -7,6 +7,12 @@ description: Council-driven workflow with CCEP-1 bootstrap
 
 Invoke as `$cc-council`. The user request follows the skill mention.
 
+## Council context budget
+
+Use GPT-6.1 Sol with medium reasoning effort. Give each necessary council role
+the same short evidence summary and relevant diff. Reuse those findings in the
+verdict; avoid spawning roles for questions already answered by evidence.
+
 # Council-Driven Workflow
 
 Task request: $ARGUMENTS

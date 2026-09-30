@@ -7,6 +7,12 @@ description: Run OpenSpec backlog delivery — validate BACKLOG.md, plan TaskCar
 
 Invoke as `$cc-openspec`. The user request follows the skill mention.
 
+## Model and context budget
+
+Use GPT-6.1 Sol with medium reasoning effort for every OpenSpec phase. Pass each
+role only its current TaskCard, relevant file paths, acceptance criteria, and a
+short handoff. Avoid replaying the full transcript or re-reading large files.
+
 # OpenSpec Backlog Workflow
 
 Scope: $ARGUMENTS

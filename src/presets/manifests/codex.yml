@@ -1,5 +1,8 @@
 target: codex
 entries:
+  - src: codex/config.toml
+    dest: .codex/config.toml
+    strategy: create-only
   - src: codex/AGENTS.md
     dest: .codex/AGENTS.md
     strategy: merge-managed

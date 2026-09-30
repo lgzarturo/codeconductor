@@ -10,6 +10,23 @@ Scope: $ARGUMENTS
 
 Orchestrate FIFO delivery from `BACKLOG.md`. CodeConductor owns planning; agents execute one TaskCard per phase with the installed preset model for each role.
 
+## Model and context budget
+
+Use Claude Sonnet 5.5 for documentation, validation, design, tests,
+implementation, and review. Use the lighter role model for simple discovery
+and routing. Keep each phase on its assigned role and pass only
+the current TaskCard, relevant file paths, acceptance criteria, and a short
+summary of the preceding phase. Avoid replaying the full transcript or reading
+the same large files in every phase.
+
+If design or implementation is blocked by a specific business rule that Sonnet
+cannot resolve from the available evidence, invoke the `architect` subagent once
+with `model: claude-opus-5-5`. Give it the exact question, relevant constraints,
+and affected files. Ask for a brief decision and rationale, then continue the
+remaining work on Sonnet 5.5. Do not switch the main session to Opus or use it
+for routine documentation, validation, code generation, or review. This is a
+routing goal, not a measured 90% usage guarantee.
+
 ---
 
 ## Web interface scope

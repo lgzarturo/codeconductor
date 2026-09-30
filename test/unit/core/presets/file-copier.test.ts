@@ -144,6 +144,16 @@ describe('core/presets/file-copier', () => {
       expect(existsSync(dest)).toBe(false);
     });
 
+    test('create-only preserves an existing Codex config even with force', async () => {
+      const src = await srcFile('model = "gpt-6.1-sol"\n');
+      const dir = await tmp('dst-');
+      const dest = join(dir, 'config.toml');
+      await writeFile(dest, 'model = "custom"\n');
+      const result = await applySingleFile(src, dest, 'create-only', true, false, false, null, 'en', dir);
+      expect(result.action).toBe('skipped');
+      expect(await readFile(dest, 'utf-8')).toBe('model = "custom"\n');
+    });
+
     test('rejects writes when baseDir is omitted', async () => {
       const src = await srcFile('hello');
       const dir = await tmp('dst-');

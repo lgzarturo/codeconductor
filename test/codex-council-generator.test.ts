@@ -35,6 +35,8 @@ describe('generateCodexFiles', () => {
       expect(file.content).toContain('description =');
       expect(file.content).toContain('nickname_candidates =');
       expect(file.content).toContain('developer_instructions =');
+      expect(file.content).toContain('model = "gpt-6.1-sol"');
+      expect(file.content).toContain('model_reasoning_effort = "medium"');
       // These fields cause "unknown field" errors in Codex
       expect(file.content).not.toContain('role =');
       expect(file.content).not.toContain('model_hint =');
@@ -117,9 +119,16 @@ describe('generateCodexFiles', () => {
 
     for (const agent of SPEC.agents) {
       expect(configFile!.content).toContain(`[agents.${agent.id}]`);
+      expect(configFile!.content).toContain(`config_file = "agents/council_${agent.id}.toml"`);
       expect(configFile!.content).toContain('description =');
       expect(configFile!.content).toContain('nickname_candidates =');
     }
+  });
+
+  test('council config uses GPT-6.1 Sol at medium effort', () => {
+    const configFile = generateCodexFiles(SPEC).find((f) => f.path.endsWith('config.toml'));
+    expect(configFile!.content).toContain('model = "gpt-6.1-sol"');
+    expect(configFile!.content).toContain('model_reasoning_effort = "medium"');
   });
 
   test('config.toml does not contain [agents.council] sub-table', () => {

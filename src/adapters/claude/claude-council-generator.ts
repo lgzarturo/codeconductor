@@ -53,6 +53,11 @@ ${spec.agents.map((a) => `- **${a.role}** (${a.id}): ${a.focus.join(', ')}`).joi
 
 ## Usage
 Use the council agents to get multi-perspective analysis on code changes, architecture decisions, and security reviews.
+Use Sonnet 5.5 for the routine council pass. Share one concise evidence summary and
+the relevant diff with the necessary roles. Invoke council-architect with
+\`model: claude-opus-5-5\` only for
+one unresolved business-logic question; return its short decision to Sonnet for
+the verdict. Do not run every council role on Opus or repeat full context.
 
 ## Context
 ${spec.outputContract}

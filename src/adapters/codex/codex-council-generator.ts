@@ -41,11 +41,15 @@ function generateCodexConfig(spec: CouncilSpec): string {
       return `
 [agents.${agent.id}]
 description = "${agent.role} council agent. Focus: ${focusAreas}. Context: ${agent.context}. Model hint: ${agent.modelHint}."
+config_file = "agents/council_${agent.id}.toml"
 nickname_candidates = ["${agent.role}", "Council ${agent.role}"]`;
     })
     .join('\n');
 
   return `# Codex Council Configuration
+
+model = "gpt-6.1-sol"
+model_reasoning_effort = "medium"
 
 [project]
 name = "council"
@@ -63,7 +67,9 @@ function generateCodexAgent(agent: {
 }): string {
   const focusAreas = agent.focus.join(', ');
   const checklist = checklistFor(agent.id).join('; ');
-  return `name = "${agent.role}"
+  return `model = "gpt-6.1-sol"
+model_reasoning_effort = "medium"
+name = "${agent.role}"
 description = "${agent.role} council agent. Focus: ${focusAreas}. Context: ${agent.context}. Model hint: ${agent.modelHint}."
 nickname_candidates = ["${agent.role}", "Council ${agent.role}"]
 developer_instructions = "You are the ${agent.role} council agent. Your focus areas are: ${focusAreas}. Context: ${agent.context}. Apply ${agent.modelHint} reasoning to your analysis. Review checklist: ${checklist}. Categorize findings as CRITICAL (blocks the verdict), WARNING, or SUGGESTION."
@@ -82,5 +88,8 @@ ${spec.agents.map((a) => `- **${a.role}** (${a.id}): ${a.focus.join(', ')}`).joi
 
 ## Usage
 Use the council agents to get multi-perspective analysis on code changes, architecture decisions, and security reviews.
+Keep GPT-6.1 Sol at medium reasoning effort. Share a concise evidence summary
+and relevant diff with only the necessary council roles. Reuse findings in the
+final verdict instead of replaying the full transcript or repeating analysis.
 `;
 }

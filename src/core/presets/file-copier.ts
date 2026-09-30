@@ -479,7 +479,7 @@ export async function applySingleFile(
     }
   }
 
-  if (strategy === 'overwrite' && !force && (await fileExists(destPath))) {
+  if ((strategy === 'overwrite' && !force || strategy === 'create-only') && (await fileExists(destPath))) {
     return { src: srcPath, dest: destPath, action: 'skipped', dryRun };
   }
 

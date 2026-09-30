@@ -116,6 +116,7 @@ export const InstallStrategySchema = z.enum([
   'append',
   'merge-json',
   'merge-managed',
+  'create-only',
   'skip',
 ]);
 

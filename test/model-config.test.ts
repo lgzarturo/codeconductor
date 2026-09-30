@@ -193,27 +193,27 @@ describe('loadModelConfig', () => {
 
   test('opencode config has architect models for all providers', async () => {
     const config = await loadModelConfig('opencode');
-    expect(config.agents.architect.claude).toBe('claude-opus-5');
+    expect(config.agents.architect.claude).toBe('claude-sonnet-5-5');
     expect(config.agents.architect.opencode).toBe('opencode-go/deepseek-v4.1-flash');
-    expect(config.agents.architect.codex).toBe('gpt-5.6-sol');
+    expect(config.agents.architect.codex).toBe('gpt-6.1-sol');
     expect(config.agents.architect.gemini).toBe('gemini-3.1-pro-preview');
     expect(config.agents.architect.cursor).toBe('claude-opus-5-thinking-high');
   });
 
   test('claude config has implementer models for all providers', async () => {
     const config = await loadModelConfig('claude');
-    expect(config.agents.implementer.claude).toBe('claude-sonnet-5');
+    expect(config.agents.implementer.claude).toBe('claude-sonnet-5-5');
     expect(config.agents.implementer.opencode).toBe('opencode-go/mimo-v2.6-flash');
-    expect(config.agents.implementer.codex).toBe('gpt-5.6-terra');
+    expect(config.agents.implementer.codex).toBe('gpt-6.1-sol');
     expect(config.agents.implementer.gemini).toBe('gemini-3.7-flash');
     expect(config.agents.implementer.cursor).toBe('composer-2.5-fast');
   });
 
   test('codex config has tester models for all providers', async () => {
     const config = await loadModelConfig('codex');
-    expect(config.agents.tester.claude).toBe('claude-sonnet-5');
+    expect(config.agents.tester.claude).toBe('claude-sonnet-5-5');
     expect(config.agents.tester.opencode).toBe('opencode-go/mimo-v2.6-flash');
-    expect(config.agents.tester.codex).toBe('gpt-5.6-terra');
+    expect(config.agents.tester.codex).toBe('gpt-6.1-sol');
     expect(config.agents.tester.gemini).toBe('gemini-3.7-flash');
     expect(config.agents.tester.cursor).toBe('composer-2.5-fast');
   });
@@ -541,9 +541,28 @@ describe('Manifest template flag', () => {
   });
 
 
-  test('codex manifest has exactly 3 entries', async () => {
+  test('codex manifest installs the project model config', async () => {
     const manifest = await loadManifest('codex');
-    expect(manifest.entries.length).toBe(3);
+    expect(manifest.entries.length).toBe(4);
+    expect(manifest.entries.some((entry) => entry.dest === '.codex/config.toml')).toBe(true);
+  });
+
+  test('OpenSpec runners use the intended default models and effort', async () => {
+    const claudeSettings = JSON.parse(await readFile(join(import.meta.dir, '..', 'presets/claude/settings.json'), 'utf-8'));
+    const codexConfig = await readFile(join(import.meta.dir, '..', 'presets/codex/config.toml'), 'utf-8');
+    expect(claudeSettings.model).toBe('claude-sonnet-5-5');
+    expect(claudeSettings.env.CLAUDE_CODE_SUBAGENT_MODEL).toBe('claude-sonnet-5-5');
+    expect(codexConfig).toContain('model = "gpt-6.1-sol"');
+    expect(codexConfig).toContain('model_reasoning_effort = "medium"');
+  });
+
+  test('Claude routes heavy roles to Sonnet and lighter roles to Haiku; Codex uses Sol', async () => {
+    const config = await loadModelConfig('claude');
+    const lightweight = new Set(['task-coach', 'repo-explorer', 'goal-planner', 'planner']);
+    for (const [name, role] of Object.entries(config.agents)) {
+      expect(role.claude).toBe(lightweight.has(name) ? 'claude-haiku-4-5-20251001' : 'claude-sonnet-5-5');
+      expect(role.codex).toBe('gpt-6.1-sol');
+    }
   });
 });
 
@@ -745,8 +764,11 @@ describe('End-to-end: CLI install preset renders model names', () => {
     await runCli(['install', 'preset', '--target=codex', '--force']);
 
     const content = await readFile(join(TEST_DIR, '.codex', 'AGENTS.md'), 'utf-8');
-    // codex install: only codex model names appear (e.g. gpt-5.6-sol for architect)
-    expect(content).toContain('gpt-5.6-sol');
+    const runtimeConfig = await readFile(join(TEST_DIR, '.codex', 'config.toml'), 'utf-8');
+    expect(runtimeConfig).toContain('model = "gpt-6.1-sol"');
+    expect(runtimeConfig).toContain('model_reasoning_effort = "medium"');
+    // codex install: only codex model names appear
+    expect(content).toContain('gpt-6.1-sol');
     expect(content).not.toContain('{{MODEL_CODEX}}');
     expect(content).not.toContain('{{MODEL_CLAUDE}}');
     expect(content).not.toContain('{{MODEL_OPENCODE}}');
@@ -764,7 +786,7 @@ describe('End-to-end: CLI install preset renders model names', () => {
       'utf-8'
     );
     // claude install: frontmatter has claude model for architect
-    expect(content).toContain('claude-opus-5');
+    expect(content).toContain('claude-sonnet-5-5');
     expect(content).not.toContain('{{MODEL}}');
     expect(content).not.toContain('{{MODEL_CLAUDE}}');
   });
@@ -831,11 +853,11 @@ describe('End-to-end: CLI install preset renders model names', () => {
     );
     expect(claudeContent).not.toContain('{{MODEL}}');
     expect(claudeContent).not.toContain('{{MODEL_');
-    expect(claudeContent).toContain('claude-opus-5');
+    expect(claudeContent).toContain('claude-sonnet-5-5');
 
     const codexContent = await readFile(join(TEST_DIR, '.codex', 'AGENTS.md'), 'utf-8');
     expect(codexContent).not.toContain('{{MODEL_');
-    expect(codexContent).toContain('gpt-5.6-sol');
+    expect(codexContent).toContain('gpt-6.1-sol');
 
     const geminiContent = await readFile(
       join(TEST_DIR, '.gemini', 'agents', 'architect.md'),

@@ -1213,6 +1213,15 @@ export const HandoffEnvelopeSchema = z.object({
   }),
 });
 
+/** Repository-relative path: no absolute POSIX/Windows roots and no `..` segments. */
+const RepoRelativePathSchema = z
+  .string()
+  .min(1)
+  .refine(
+    (path) => !/^([/\\]|[A-Za-z]:)/.test(path) && !path.split(/[/\\]/).includes('..'),
+    'Path must be relative to the repository and must not contain ".." segments',
+  );
+
 export const DeliveryLedgerRequestSchema = z.object({
   id: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/),
   authorized: z.boolean(),
@@ -1220,7 +1229,7 @@ export const DeliveryLedgerRequestSchema = z.object({
   taskCard: CanonicalTaskCardSchema,
   tasks: z.array(DeliveryLedgerTaskSchema).min(1),
   nextStep: z.string().min(1),
-  technicalPlanPath: z.string().min(1).optional(),
+  technicalPlanPath: RepoRelativePathSchema.optional(),
 });
 
 export const TaskOutcomeSchema = z.object({

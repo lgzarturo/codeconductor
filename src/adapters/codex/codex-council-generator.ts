@@ -13,6 +13,7 @@ export function generateCodexFiles(spec: CouncilSpec): GeneratedFile[] {
     path: '.codex/config.toml',
     content: generateCodexConfig(spec),
     overwrite: false,
+    mergeExisting: (existing) => mergeCodexCouncilConfig(existing, spec),
   });
 
   // Generate agents as TOML
@@ -34,17 +35,29 @@ export function generateCodexFiles(spec: CouncilSpec): GeneratedFile[] {
   return files;
 }
 
-function generateCodexConfig(spec: CouncilSpec): string {
-  const agentTables = spec.agents
-    .map((agent) => {
-      const focusAreas = agent.focus.join(', ');
-      return `
+function agentTable(agent: CouncilSpec['agents'][number]): string {
+  const focusAreas = agent.focus.join(', ');
+  return `
 [agents.${agent.id}]
 description = "${agent.role} council agent. Focus: ${focusAreas}. Context: ${agent.context}. Model hint: ${agent.modelHint}."
 config_file = "agents/council_${agent.id}.toml"
 nickname_candidates = ["${agent.role}", "Council ${agent.role}"]`;
-    })
-    .join('\n');
+}
+
+/**
+ * Append council `[agents.<id>]` tables missing from an existing config.toml.
+ * Existing content, including user edits and preset settings, is kept as-is.
+ */
+export function mergeCodexCouncilConfig(existing: string, spec: CouncilSpec): string {
+  const missing = spec.agents.filter(
+    (agent) => !existing.split('\n').some((line) => line.trim() === `[agents.${agent.id}]`)
+  );
+  if (missing.length === 0) return existing;
+  return `${existing.trimEnd()}\n${missing.map(agentTable).join('\n')}\n`;
+}
+
+function generateCodexConfig(spec: CouncilSpec): string {
+  const agentTables = spec.agents.map(agentTable).join('\n');
 
   return `# Codex Council Configuration
 

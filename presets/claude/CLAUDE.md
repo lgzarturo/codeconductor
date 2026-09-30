@@ -511,11 +511,11 @@ _(none)_ if no suggestions
 
 **Two-Axis Review Model (Standards + Spec)**
 
+_El modelo de dos ejes (Standards, Spec) es la estructura de ejecución de `/cc:review`; los review axes listados en la tabla anterior se aplican DENTRO de cada eje._
+
 The Reviewer role executes two independent, parallel sub-agents without reranking between them:
 
-1.
-
-_El modelo de dos ejes (Standards, Spec) es la estructura de ejecución de `/cc:review`; los review axes listados en la tabla anterior se aplican DENTRO de cada eje._ **Standards Axis** — Code smell detection against the Fowler baseline (Long Method, Large Class, Duplicated Code, Feature Envy, Shotgun Surgery, Primitive Obsession, Data Clumps, Switch Statements, Speculative Generality, Temporary Fields, Message Chains, Middle Man, Inappropriate Intimacy, Data Class, Comments-as-apology), with documented override allowed via repo standards documentation (e.g., CONTEXT.md or project norms).
+1. **Standards Axis** — Code smell detection against the Fowler baseline (Long Method, Large Class, Duplicated Code, Feature Envy, Shotgun Surgery, Primitive Obsession, Data Clumps, Switch Statements, Speculative Generality, Temporary Fields, Message Chains, Middle Man, Inappropriate Intimacy, Data Class, Comments-as-apology), with documented override allowed via repo standards documentation (e.g., CONTEXT.md or project norms).
 
 2. **Spec Axis** — Alignment with Task Card, acceptance criteria, and scope boundaries.
 
@@ -761,8 +761,9 @@ extending capabilities, apply `.claude/skills/find-skills/SKILL.md`.
 ## Teammate & Loop Agent Rules
 
 ### Teammate delegation (Presets supporting multi-teams)
-- Utilize parallel sub-agent execution by enabling `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` in `settings.json`.
-- Allocate tasks to specific teammates: use `sonnet` for Orchestrator and Architect, and delegate secondary tasks (e.g. testing, review, docs) to `haiku` to optimize token budgets.
+- Use Sonnet 5.5 as the default model for every role, including testing, review, and docs.
+- Use Haiku only for lightweight discovery and routing roles (task coach, repo explorer, goal planner, planner).
+- Escalate a single blocked decision to a subagent with `model: opus`; return to Sonnet afterward.
 
 ### Loop Agent Mode (Intense Workflows)
 - If tests or verifications fail, do not stop. Re-route the failure logs back to the Implementer teammate.

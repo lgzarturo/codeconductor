@@ -32,7 +32,7 @@ stays with the general `android` skill. Audit-only requests remain read-only, an
 unavailable visual or emulator checks remain pending rather than claimed complete.
 
 
-## Step 0 — Validate (mandatory gate)
+## Step 0a — Validate (mandatory gate)
 
 Run `npx cc-codeconductor openspec validate`. If invalid, show errors and recommendations, then **STOP**.
 
@@ -42,11 +42,10 @@ Run `npx cc-codeconductor openspec validate`. If invalid, show errors and recomm
 
 Command: `openspec` (fixed for this workflow — do not infer from user text)
 
-1. Run: `npx cc-codeconductor ccep parse --command openspec "$ARGUMENTS" --output json`
-2. Run: `npx cc-codeconductor ccep resolve --command openspec "$ARGUMENTS" --output json`
-3. Run: `npx cc-codeconductor ccep profile openspec --output json`
-4. After planner/intake JSON is available, run: `npx cc-codeconductor ccep evaluate --command openspec --input <planner.json> --output json`. If `stop` is true, show questions or risks and wait for human input.
-5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.
+1. Run: `npx cc-codeconductor ccep profile openspec --output json` to get the phases and their roles.
+2. For each delegated phase, run: `npx cc-codeconductor ccep compile --command openspec --phase <phase-id> "$ARGUMENTS" --view prompt --output json`
+3. After planner/intake JSON is available, run: `npx cc-codeconductor ccep evaluate --command openspec --input <planner.json> --output json`. If `stop` is true, show questions or risks and wait for human input.
+4. Pass each subagent only the compiled `prompt` for its phase — never forward raw `$ARGUMENTS` to planners.
    Canonical delivery order is test-before-implement whenever both phases apply.
 
 ---
@@ -95,7 +94,7 @@ For each pending card: `npx cc-codeconductor openspec next`, then invoke the lis
 - implement → `implementer`
 - review → `reviewer`
 
-Use isolated context (`/clear` between phases). Implementer uses a git worktree.
+Run each phase as a subagent with isolated context. Implementer uses a git worktree.
 
 ---
 

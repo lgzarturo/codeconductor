@@ -146,8 +146,9 @@ engineering skill. Re-install presets after upgrading.
   closed.
 - **Schemas.** `ExecutionContext.ast.source` includes `product-graph`.
   `ReviewerOutput` finding `axis` is extended with Staff Engineer axes.
-- **CCEP bootstrap.** Installed slash commands run `ccep parse` → `resolve` →
-  `profile` → `evaluate` before delegating to agents. Agent JSON must validate
+- **CCEP bootstrap.** Installed slash commands run `ccep profile` → `compile`
+  (one role-scoped prompt per delegated phase) → `evaluate` before delegating
+  to agents. Agent JSON must validate
   against Zod; unknown output schemas fail closed.
 
 ### Slash commands

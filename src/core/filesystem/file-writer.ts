@@ -1,4 +1,4 @@
-import { access } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import { relative } from 'node:path';
 import { CredentialGuardError, UnsafeOperationError, ValidationError } from '../../cli/errors';
 import { err, ok, type Result } from '../../utils/result';
@@ -66,8 +66,20 @@ export async function writeGeneratedFiles(
       continue;
     }
 
+    // Merge into an existing file when the generator supports it
+    let content = file.content;
+    let merged = false;
+    if (file.mergeExisting) {
+      try {
+        content = file.mergeExisting(await readFile(file.path, 'utf-8'));
+        merged = true;
+      } catch {
+        // File doesn't exist, write generated content
+      }
+    }
+
     // Check if file exists and not forcing
-    if (!options.force) {
+    if (!options.force && !merged) {
       try {
         await access(file.path);
         results.push({
@@ -94,7 +106,7 @@ export async function writeGeneratedFiles(
       await writeContainedFile(
         options.projectRoot,
         relative(options.projectRoot, file.path),
-        file.content,
+        content,
         { force: true }
       );
       results.push({

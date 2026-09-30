@@ -86,8 +86,11 @@ npx cc-codeconductor ccep evaluate --command feature --input @planner.json --out
 ## Slash command bootstrap
 
 Every preset command includes **Step 0 — CCEP Bootstrap** before workflow-specific
-steps. The bootstrap runs the CLI calls above and blocks delegation until
-`ccep evaluate` reports that ConfirmationGate allows progress. Workflows that
+steps. The bootstrap runs `ccep profile`, then one
+`ccep compile --command <cmd> --phase <id> "$ARGUMENTS" --view prompt` per
+delegated phase, and passes only the compiled `prompt` to that phase's subagent.
+It blocks delegation until `ccep evaluate` reports that ConfirmationGate allows
+progress. Workflows that
 include both `test` and `implement` phases use **test-before-implement** order.
 
 ## Schemas

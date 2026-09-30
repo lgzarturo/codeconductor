@@ -99,7 +99,13 @@ describe('release status document synchronization', () => {
   });
 
   test('release.sh dry-run computes patch, minor, and major versions', () => {
-    for (const [type, expected] of [['patch', '1.4.3'], ['minor', '1.5.0'], ['major', '2.0.0']]) {
+    const [major, minor, patch] = packageJson.version.split('.').map(Number);
+    const expectedVersions = [
+      ['patch', `${major}.${minor}.${patch + 1}`],
+      ['minor', `${major}.${minor + 1}.0`],
+      ['major', `${major + 1}.0.0`],
+    ];
+    for (const [type, expected] of expectedVersions) {
       const proc = Bun.spawnSync(['bash', 'release.sh', type, '--dry-run'], {
         cwd: join(import.meta.dir, '../../..'),
       });

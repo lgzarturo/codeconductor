@@ -507,7 +507,8 @@ export async function checkUpdates(
               let destContent: string;
               try {
                 destContent = await readFile(dest, 'utf-8');
-                if (destContent.trim() !== f.content.trim()) {
+                const expected = f.mergeExisting ? f.mergeExisting(destContent) : f.content;
+                if (destContent.trim() !== expected.trim()) {
                   changedFiles.push(dest);
                 }
               } catch {

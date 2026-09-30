@@ -87,9 +87,11 @@ describe('ccep preset bootstrap — multi-runner', () => {
           const content = await readFile(filePath, 'utf-8');
           expect(content).toContain('## Step 0 — CCEP Bootstrap');
           expect(content).toContain(`--command ${command}`);
-          expect(content).toContain('ccep parse');
-          expect(content).toContain('ccep resolve');
           expect(content).toContain('ccep profile');
+          expect(content).toContain('ccep compile');
+          expect(content).toContain('--view prompt');
+          expect(content).not.toContain('ccep parse');
+          expect(content).not.toContain('ccep resolve');
         });
       }
     });

@@ -99,6 +99,10 @@ schema.
 event. Provider, session, token, cache, file-read, and tool metrics unavailable
 to the compiler are recorded as `unknown`.
 
+Slash-command Step 0 calls `ccep compile --view prompt` once per delegated phase
+and forwards only `prompt`, so each subagent receives role-filtered knowledge
+instead of the full `resolve` context.
+
 ---
 
 ## Extending CCEP

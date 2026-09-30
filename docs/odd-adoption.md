@@ -45,3 +45,5 @@ Delivery Ledger: task objective and acceptance criteria, constraints, relevant
 files, evidence, current changed paths, next action, and any linked Technical
 Plan path. The envelope excludes
 the Task Card's free-form context, the ledger body, transcripts, and tool logs.
+`/cc:handoff` uses this envelope as its source when a Delivery Ledger exists.
+The Technical Plan path must be repository-relative, without `..` segments.

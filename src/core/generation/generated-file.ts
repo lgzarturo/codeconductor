@@ -5,6 +5,8 @@ export interface GeneratedFile {
   readonly path: string;
   readonly content: string;
   readonly overwrite: boolean;
+  /** When the file already exists, write this result instead of skipping or replacing it. */
+  readonly mergeExisting?: (existing: string) => string;
 }
 
 /**

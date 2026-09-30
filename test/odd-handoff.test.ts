@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { oddCommand } from '../src/commands/odd.command';
 import { buildHandoffEnvelope } from '../src/core/ccep/handoff-envelope';
-import type { DeliveryLedgerInput } from '../src/validation/schemas';
+import { DeliveryLedgerRequestSchema, type DeliveryLedgerInput } from '../src/validation/schemas';
 
 const roots: string[] = [];
 
@@ -112,5 +112,17 @@ describe('ODD artifact handoff', () => {
       },
     });
     expect(result.data).not.toHaveProperty('ledger');
+  });
+
+  test('rejects technical plan paths outside the repository', () => {
+    for (const technicalPlanPath of ['/etc/passwd', 'C:\\plans\\p.md', '\\\\server\\share\\p.md', '../plans/p.md', 'docs/../../p.md', 'docs\\..\\p.md']) {
+      expect(DeliveryLedgerRequestSchema.safeParse({ ...request(), technicalPlanPath }).success, technicalPlanPath).toBe(false);
+    }
+  });
+
+  test('accepts repository-relative technical plan paths', () => {
+    for (const technicalPlanPath of ['docs/plans/delivery-002.md', 'plan..v2.md']) {
+      expect(DeliveryLedgerRequestSchema.safeParse({ ...request(), technicalPlanPath }).success, technicalPlanPath).toBe(true);
+    }
   });
 });

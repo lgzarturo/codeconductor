@@ -557,6 +557,8 @@ describe('Manifest template flag', () => {
     expect(claudeSettings.permissions.deny).toContain('PowerShell(Remove-Item *)');
     expect(claudeSettings.permissions.deny).toContain('Read(!.env.example)');
     expect(claudeSettings.permissions.ask).not.toContain('Bash(git push --force*)');
+    expect(claudeSettings.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS).toBe('0');
+    expect(claudeSettings.effortLevel).toBe('medium');
     expect(codexConfig).toContain('model = "gpt-6.1-sol"');
     expect(codexConfig).toContain('model_reasoning_effort = "medium"');
   });
@@ -568,6 +570,32 @@ describe('Manifest template flag', () => {
       expect(role.claude).toBe(lightweight.has(name) ? 'claude-haiku-4-5-20251001' : 'claude-sonnet-5-5');
       expect(role.codex).toBe('gpt-6.1-sol');
     }
+  });
+
+  test('Claude instructions match role routing and keep the Two-Axis list intact', async () => {
+    for (const path of [join(PRESETS_DIR, 'claude/CLAUDE.md'), join(PROJECT_ROOT, '.claude/CLAUDE.md')]) {
+      const content = await readFile(path, 'utf-8');
+      expect(content).not.toContain('CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS');
+      expect(content).not.toContain('docs) to `haiku`');
+      expect(content).toContain('1. **Standards Axis**');
+      expect(content).not.toMatch(/^1\.\s*\n\s*\n/m);
+    }
+  });
+
+  test('Opus escalation uses the Agent tool alias, not a full model ID', async () => {
+    const openspec = await readFile(join(PRESETS_DIR, 'claude/commands/cc/openspec.md'), 'utf-8');
+    const { generateClaudeFiles } = await import('../src/adapters/claude/claude-council-generator');
+    expect(openspec).toContain('`model: opus`');
+    expect(openspec).not.toContain('model: claude-opus');
+    const skill = generateClaudeFiles({
+      name: 'test-council',
+      version: '1.0.0',
+      description: 'Test council',
+      outputContract: 'structured',
+      agents: [{ id: 'architect', role: 'Architect', context: 'repo-readonly', modelHint: 'strong-reasoning', focus: ['architecture'] }],
+    }).find((f) => f.path.endsWith('SKILL.md'));
+    expect(skill?.content).toContain('`model: opus`');
+    expect(skill?.content).not.toContain('model: claude-opus');
   });
 });
 

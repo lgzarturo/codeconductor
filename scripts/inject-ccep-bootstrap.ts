@@ -31,6 +31,10 @@ const RUNNER_PATHS: Array<{
 
 const COMMANDS = WORKFLOW_COMMANDS;
 
+const BOOTSTRAP_HEADING = '## Step 0 — CCEP Bootstrap';
+const DELEGATE_LINE =
+  '4. Pass each subagent only the compiled `prompt` for its phase — never forward raw `$ARGUMENTS` to planners.';
+
 /**
  * Workflows that carry both a test and an implementation phase. Only these get
  * the delivery-order line: on a review or a pagespeed report there is nothing to
@@ -45,6 +49,7 @@ const TDD_COMMANDS = new Set([
   'db-migration',
   'openspec',
   'iterative',
+  'security',
 ]);
 
 function bootstrap(cmd: string): string {
@@ -56,11 +61,10 @@ function bootstrap(cmd: string): string {
 
 Command: \`${cmd}\` (fixed for this workflow — do not infer from user text)${councilLine}
 
-1. Run: \`npx cc-codeconductor ccep parse --command ${cmd} "$ARGUMENTS" --output json\`
-2. Run: \`npx cc-codeconductor ccep resolve --command ${cmd} "$ARGUMENTS" --output json\`
-3. Run: \`npx cc-codeconductor ccep profile ${cmd} --output json\`
-4. After planner/intake JSON is available, run: \`npx cc-codeconductor ccep evaluate --command ${cmd} --input <planner.json> --output json\`. If \`stop\` is true, show questions or risks and wait for human input.
-5. Delegate to subagents using compiled CCEP prompts — never forward raw \`$ARGUMENTS\` to planners.${orderLine}
+1. Run: \`npx cc-codeconductor ccep profile ${cmd} --output json\` to get the phases and their roles.
+2. For each delegated phase, run: \`npx cc-codeconductor ccep compile --command ${cmd} --phase <phase-id> "$ARGUMENTS" --view prompt --output json\`
+3. After planner/intake JSON is available, run: \`npx cc-codeconductor ccep evaluate --command ${cmd} --input <planner.json> --output json\`. If \`stop\` is true, show questions or risks and wait for human input.
+${DELEGATE_LINE}${orderLine}
 
 ---
 
@@ -92,9 +96,7 @@ function injectSddGates(content: string, cmd: string, invoke: string): string {
     return content;
   }
   const block = sddGates(cmd, invoke);
-  const marker =
-    '5. Delegate to subagents using compiled CCEP prompts — never forward raw `$ARGUMENTS` to planners.';
-  const idx = content.indexOf(marker);
+  const idx = content.indexOf(DELEGATE_LINE);
   if (idx === -1) {
     return `${content.trimEnd()}\n\n${block}`;
   }
@@ -106,11 +108,14 @@ function injectSddGates(content: string, cmd: string, invoke: string): string {
 }
 
 function injectBootstrap(content: string, cmd: string): string {
-  if (content.includes('## Step 0 — CCEP Bootstrap')) {
-    return content;
-  }
-
   const block = bootstrap(cmd);
+
+  const start = content.indexOf(BOOTSTRAP_HEADING);
+  if (start !== -1) {
+    const end = content.indexOf('\n---\n\n', start);
+    if (end === -1) return content;
+    return content.slice(0, start) + block + content.slice(end + 6);
+  }
 
   if (content.includes('## Before you begin — mandatory pre-check')) {
     return content.replace(
@@ -134,8 +139,8 @@ function injectBootstrap(content: string, cmd: string): string {
     return content.replace('\n\n## Step 1', `\n\n${block}## Step 1`);
   }
 
-  if (content.includes('\n\n## Step 0 — Validate')) {
-    return content.replace('\n\n## Step 0 — Validate', `\n\n${block}## Step 0 — Validate`);
+  if (content.includes('\n\n## Step 0a — Validate')) {
+    return content.replace('\n\n## Step 0a — Validate', `\n\n${block}## Step 0a — Validate`);
   }
 
   if (content.includes('Scope: $ARGUMENTS\n\n1.')) {

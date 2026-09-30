@@ -67,6 +67,9 @@ describe('slash command parity (6 targets × workflows)', () => {
           const content = await readFile(join(ROOT, target.file(cmd)), 'utf-8');
           expect(content).toContain('## Step 0 — CCEP Bootstrap');
           expect(content).toContain(`--command ${cmd}`);
+          expect(content).toContain(`ccep profile ${cmd}`);
+          expect(content).toContain(`ccep compile --command ${cmd}`);
+          expect(content).not.toContain('ccep parse');
         });
 
         if (SDD_DELIVERY_COMMANDS.has(cmd)) {
@@ -90,6 +93,15 @@ describe('slash command parity (6 targets × workflows)', () => {
           });
         }
       }
+    });
+  }
+});
+
+describe('handoff uses the compact Delivery Ledger envelope', () => {
+  for (const target of TARGETS) {
+    test(`${target.name} handoff runs odd handoff`, async () => {
+      const content = await readFile(join(ROOT, target.file('handoff')), 'utf-8');
+      expect(content).toContain('odd handoff --id <ledger-id> --output json');
     });
   }
 });

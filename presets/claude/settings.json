@@ -9,7 +9,7 @@
     "DISABLE_FEEDBACK_COMMAND": "1",
     "CLAUDE_CODE_SIMPLE_SYSTEM_PROMPT": "1",
     "ENABLE_TOOL_SEARCH": "auto",
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0"
   },
   "attribution": {
     "commit": "",
@@ -180,6 +180,7 @@
   },
   "language": "spanish",
   "model": "sonnet",
+  "effortLevel": "medium",
   "feedbackSurveyRate": 0,
   "spinnerTipsEnabled": false,
   "awaySummaryEnabled": false,

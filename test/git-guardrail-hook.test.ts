@@ -54,6 +54,12 @@ describe('PreToolUse git-guardrail hook — Regression: sensible files', () => {
     const result = evaluatePath('C:\\Users\\dev\\.env');
     expect(result.action).toBe('deny');
   });
+
+  test('allows .env.example while blocking other environment variants', () => {
+    expect(evaluatePath('apps/web/.env.example').action).toBe('allow');
+    expect(evaluateCommand('cat apps/web/.env.example').action).toBe('allow');
+    expect(evaluatePath('apps/web/.env.production').action).toBe('deny');
+  });
 });
 
 describe('PreToolUse git-guardrail hook — git push blocking', () => {
@@ -288,6 +294,7 @@ describe('PreToolUse git-guardrail hook — Acceptance Criteria', () => {
   test('AC3: settings.json invokes the OS-agnostic Node hook runner', async () => {
     const settings = JSON.parse(await readFile(SETTINGS_PATH, 'utf-8'));
     const bashHook = settings.hooks.PreToolUse.find((h: { matcher: string }) => h.matcher.split('|').includes('Bash'));
+    expect(bashHook.matcher.split('|')).toContain('PowerShell');
     const command = bashHook.hooks[0].command as string;
     expect(command).toContain('invoke-hook.cjs');
     expect(command).toContain('pre-tool');

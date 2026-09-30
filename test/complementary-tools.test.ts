@@ -89,15 +89,12 @@ safety:
     expect(rendered).not.toContain('{{COMPLEMENTARY_RULES}}');
   });
 
-  test('applySingleFile injects MCP config for settings.json', async () => {
+  test('applySingleFile leaves Claude MCP configuration out of settings.json', async () => {
     const { applySingleFile } = await import('../src/core/presets/file-copier');
     const srcPath = join(TEST_DIR, 'src-settings.json');
     const destPath = join(TEST_DIR, 'settings.json');
     
-    const initialConfig = JSON.stringify({
-      env: {},
-      mcpServers: {}
-    }, null, 2);
+    const initialConfig = JSON.stringify({ env: {} }, null, 2);
     
     await writeFile(srcPath, initialConfig, 'utf-8');
     
@@ -117,13 +114,8 @@ safety:
     const writtenContent = await readFile(destPath, 'utf-8');
     const parsed = JSON.parse(writtenContent);
     
-    const tools = await detectComplementaryTools();
-    if (tools.codeReviewGraph) {
-      expect(parsed.mcpServers['code-review-graph']).toBeDefined();
-    }
-    if (tools.tokenSavior) {
-      expect(parsed.mcpServers['token-savior-recall']).toBeDefined();
-    }
+    expect(parsed).toEqual({ env: {} });
+    expect(parsed.mcpServers).toBeUndefined();
   });
 
   test('applySingleFile injects MCP config for opencode.jsonc in OpenCode format', async () => {

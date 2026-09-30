@@ -2,9 +2,6 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "env": {
     "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
-    "CLAUDE_CODE_DISABLE_1M_CONTEXT": "0",
-    "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
-    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
     "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1",
     "DISABLE_EXTRA_USAGE_COMMAND": "1",
     "DISABLE_TELEMETRY": "1",
@@ -12,12 +9,7 @@
     "DISABLE_FEEDBACK_COMMAND": "1",
     "CLAUDE_CODE_SIMPLE_SYSTEM_PROMPT": "1",
     "ENABLE_TOOL_SEARCH": "auto",
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "80",
-    "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "0",
-    "CLAUDE_CODE_SUBAGENT_MODEL": "claude-sonnet-5-5",
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0",
-    "MAX_THINKING_TOKENS": "24000",
-    "DISABLE_BUG_COMMAND": "1"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
   "attribution": {
     "commit": "",
@@ -27,29 +19,11 @@
   "includeGitInstructions": false,
   "permissions": {
     "allow": [
-      "Bash(git status*)",
-      "Bash(git diff*)",
-      "Bash(git log*)",
       "Bash(./gradlew test*)",
       "Bash(./gradlew build*)",
       "Bash(./gradlew check*)",
       "Bash(npm test*)",
       "Bash(npm run lint*)",
-      "Bash(ls *)",
-      "Bash(cat *)",
-      "Bash(grep *)",
-      "Bash(rg *)",
-      "Bash(find *)",
-      "Bash(tree *)",
-      "Bash(echo *)",
-      "Bash(pwd)",
-      "Bash(which *)",
-      "Bash(head *)",
-      "Bash(tail *)",
-      "Bash(wc *)",
-      "Bash(diff *)",
-      "Bash(git branch*)",
-      "Bash(git show*)",
       "Bash(git add*)",
       "Bash(git commit*)",
       "Bash(git stash*)",
@@ -113,30 +87,38 @@
       "Bash(rm -fr *)",
       "Bash(chmod -R *)",
       "Bash(eval *)",
-      "Bash(git push --force origin main*)",
-      "Bash(git push --force origin master*)",
-      "Bash(git push -f origin main*)",
-      "Bash(git push -f origin master*)",
-      "Read(./.env)",
-      "Read(./.env.*)",
-      "Read(./**/.env)",
-      "Read(./**/.env.*)",
-      "Read(./secrets/**)",
-      "Read(./**/credentials.json)",
-      "Read(./**/serviceAccount*.json)",
-      "Read(./**/*.pem)",
-      "Read(./**/*.key)",
-      "Read(./**/id_rsa*)",
+      "PowerShell(Remove-Item *)",
+      "PowerShell(git push --force*)",
+      "PowerShell(git push -f*)",
+      "PowerShell(git reset --hard*)",
+      "PowerShell(git rebase *)",
+      "PowerShell(Invoke-Expression *)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(!.env.example)",
+      "Edit(.env)",
+      "Edit(.env.*)",
+      "Edit(!.env.example)",
+      "Read(secrets/**)",
+      "Edit(secrets/**)",
+      "Read(**/credentials.json)",
+      "Edit(**/credentials.json)",
+      "Read(**/serviceAccount*.json)",
+      "Edit(**/serviceAccount*.json)",
+      "Read(**/*.pem)",
+      "Edit(**/*.pem)",
+      "Read(**/*.key)",
+      "Edit(**/*.key)",
+      "Read(**/id_rsa*)",
+      "Edit(**/id_rsa*)",
       "Read(~/.ssh/**)",
+      "Edit(~/.ssh/**)",
       "Read(~/.aws/**)",
+      "Edit(~/.aws/**)",
       "Read(~/.gnupg/**)",
-      "Edit(./.env)",
-      "Edit(./.env.*)",
-      "Edit(./**/.env)"
+      "Edit(~/.gnupg/**)"
     ],
     "ask": [
-      "Bash(git push --force*)",
-      "Bash(git reset --hard*)",
       "Bash(docker run*)",
       "Bash(docker compose up*)",
       "Bash(docker compose down*)"
@@ -158,7 +140,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash|Read|Write|Edit|MultiEdit",
+        "matcher": "Bash|PowerShell|Read|Write|Edit|MultiEdit",
         "hooks": [
           {
             "type": "command",
@@ -188,34 +170,6 @@
       }
     ]
   },
-  "sandbox": {
-    "enabled": false,
-    "failIfUnavailable": false,
-    "autoAllowBashIfSandboxed": true,
-    "network": {
-      "allowedDomains": [
-        "github.com",
-        "*.githubusercontent.com",
-        "registry.npmjs.org",
-        "*.npmjs.org",
-        "registry.yarnpkg.com",
-        "pypi.org",
-        "*.pythonhosted.org",
-        "repo.maven.apache.org",
-        "repo1.maven.org",
-        "services.gradle.org",
-        "plugins.gradle.org",
-        "*.gradle.org",
-        "*.googleapis.com",
-        "api.anthropic.com"
-      ],
-      "allowLocalBinding": true
-    },
-    "filesystem": {
-      "denyRead": ["~/.ssh", "~/.aws", "~/.gnupg", "./.env", "./.env.*"]
-    },
-    "excludedCommands": ["docker *"]
-  },
   "extraKnownMarketplaces": {
     "agricidaniel-claude-seo": {
       "source": {
@@ -225,14 +179,12 @@
     }
   },
   "language": "spanish",
-  "model": "claude-sonnet-5-5",
+  "model": "sonnet",
   "feedbackSurveyRate": 0,
   "spinnerTipsEnabled": false,
-  "alwaysThinkingEnabled": true,
-  "effortLevel": "medium",
   "awaySummaryEnabled": false,
   "showClearContextOnPlanAccept": true,
-  "autoUpdatesChannel": "stable",
+  "autoUpdatesChannel": "latest",
   "prefersReducedMotion": false,
   "autoMemoryEnabled": false,
   "showThinkingSummaries": true,

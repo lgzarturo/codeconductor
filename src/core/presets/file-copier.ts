@@ -377,10 +377,9 @@ function substituteToolNames(content: string, modelConfig: ModelConfig): string 
 
 async function injectMcpServers(jsonString: string, filePath: string): Promise<string> {
   const isAgyMcpConfig = filePath.endsWith('mcp_config.json');
-  const isClaudeSettings = filePath.endsWith('settings.json');
   const isOpencodeJsonc = filePath.endsWith('opencode.jsonc') || filePath.endsWith('opencode.json');
   
-  if (!isAgyMcpConfig && !isClaudeSettings && !isOpencodeJsonc) {
+  if (!isAgyMcpConfig && !isOpencodeJsonc) {
     return jsonString;
   }
 
@@ -398,7 +397,7 @@ async function injectMcpServers(jsonString: string, filePath: string): Promise<s
       mcpServers['token-savior-recall'] = {
         command: 'token-savior',
         env: {
-          TOKEN_SAVIOR_CLIENT: isClaudeSettings ? 'claude-code' : isOpencodeJsonc ? 'opencode' : 'agy',
+          TOKEN_SAVIOR_CLIENT: isOpencodeJsonc ? 'opencode' : 'agy',
         }
       };
     }
@@ -414,7 +413,7 @@ async function injectMcpServers(jsonString: string, filePath: string): Promise<s
       return jsonString;
     }
 
-    if (isClaudeSettings || isAgyMcpConfig) {
+    if (isAgyMcpConfig) {
       obj.mcpServers = mergeDeep(obj.mcpServers || {}, mcpServers);
     } else if (isOpencodeJsonc) {
       const opencodeMcp: Record<string, any> = {};

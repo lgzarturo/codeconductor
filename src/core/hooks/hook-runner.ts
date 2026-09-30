@@ -74,7 +74,7 @@ export interface PreToolInput {
 }
 
 const SENSITIVE_PATH =
-  /(?:\.env\b|secrets[/\\]|id_rsa|\.pem\b|\.key\b|(?:^|[/\\])\.ssh(?:[/\\]|$)|(?:^|[/\\])\.aws(?:[/\\]|$)|(?:^|[/\\])\.kube(?:[/\\]|$))/i;
+  /(?:\.env(?!\.example(?:$|[/\\]))\b|secrets[/\\]|id_rsa|\.pem\b|\.key\b|(?:^|[/\\])\.ssh(?:[/\\]|$)|(?:^|[/\\])\.aws(?:[/\\]|$)|(?:^|[/\\])\.kube(?:[/\\]|$))/i;
 const READ_LIKE = /(?:^|[\s;&|])(cat|less|more|head|tail|type|Get-Content|cp|copy|mv|move|scp)\b/i;
 
 const MSG_SECRET = 'Bloqueado: intento de leer archivos sensibles';

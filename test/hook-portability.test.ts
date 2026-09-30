@@ -25,6 +25,12 @@ describe('hook host contracts and portability', () => {
     expect(result.stderr).toContain('autoridad');
   });
 
+  test('Claude PowerShell tool reaches the same pre-tool guardrail', () => {
+    const result = invoke({ tool_name: 'PowerShell', tool_input: { command: 'git reset --hard' } });
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain('autoridad');
+  });
+
   test('Claude asks for confirmation through its native JSON contract', () => {
     const result = invoke({ tool_name: 'Bash', tool_input: { command: 'git commit -m example' } });
     expect(result.status).toBe(0);

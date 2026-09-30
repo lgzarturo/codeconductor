@@ -168,8 +168,8 @@ uvx code-review-graph install
 For **Claude Code**:
 
 ```bash
-# 1. Auto-detects Claude Code and configures the MCP + rules
-code-review-graph install --platform claude-code
+# 1. Register the MCP in your user scope (~/.claude.json)
+claude mcp add --transport stdio --scope user code-review-graph -- code-review-graph mcp
 
 # 2. Build the graph for your project (run in project directory)
 cd my-project
@@ -184,10 +184,8 @@ code-review-graph install --platform opencode
 code-review-graph build
 ```
 
-The `install` command writes MCP configuration to `~/.claude/settings.json` (for
-Claude Code) or equivalent for OpenCode, and injects instructions into the
-project's CLAUDE.md. The initial graph takes ~10 seconds on a 500-file project.
-After that, it updates automatically with each change.
+Claude Code stores user-scoped MCP servers in `~/.claude.json`; the preset does
+not add them to `settings.json`. Check the connection with `claude mcp list`.
 
 **Verify it works:** Open the agent in the project and write:
 
@@ -269,29 +267,16 @@ python3 -m venv ~/.local/venvs/token-savior
 
 ### Configure with CodeConductor
 
-Add the MCP server to your agent configuration.
-
-For **Claude Code**, edit `~/.claude/settings.json`:
-
-```json
-{
-  "mcpServers": {
-    "token-savior-recall": {
-      "command": "/path/to/venv/bin/token-savior",
-      "env": {
-        "WORKSPACE_ROOTS": "/path/to/your/project",
-        "TOKEN_SAVIOR_CLIENT": "claude-code"
-      }
-    }
-  }
-}
-```
-
-Or with the Claude Code CLI:
+For **Claude Code**, register the server in user scope:
 
 ```bash
-claude mcp add token-savior -- ~/.local/venvs/token-savior/bin/token-savior
+claude mcp add --env TOKEN_SAVIOR_CLIENT=claude-code --transport stdio --scope user token-savior-recall -- token-savior
+claude mcp list
 ```
+
+If the executable is outside your `PATH`, replace `token-savior` with its
+absolute path. Verify both servers with `claude mcp list` before removing old
+`mcpServers` entries from an existing `settings.json`.
 
 For **OpenCode**, add to its MCP configuration following OpenCode docs.
 
@@ -563,10 +548,10 @@ rtk init -g --force  # reinstall the hook
 **code-review-graph doesn't find the MCP:**
 
 ```bash
-# Verify it's in the agent config
-cat ~/.claude/settings.json | grep -A5 "code-review-graph"
-# If not present, re-run:
-code-review-graph install --platform claude-code
+# Verify user-scoped MCP status
+claude mcp list
+# If absent, register it:
+claude mcp add --transport stdio --scope user code-review-graph -- code-review-graph mcp
 ```
 
 **token-savior doesn't start:**

@@ -550,8 +550,13 @@ describe('Manifest template flag', () => {
   test('OpenSpec runners use the intended default models and effort', async () => {
     const claudeSettings = JSON.parse(await readFile(join(import.meta.dir, '..', 'presets/claude/settings.json'), 'utf-8'));
     const codexConfig = await readFile(join(import.meta.dir, '..', 'presets/codex/config.toml'), 'utf-8');
-    expect(claudeSettings.model).toBe('claude-sonnet-5-5');
-    expect(claudeSettings.env.CLAUDE_CODE_SUBAGENT_MODEL).toBe('claude-sonnet-5-5');
+    expect(claudeSettings.model).toBe('sonnet');
+    expect(claudeSettings.autoUpdatesChannel).toBe('latest');
+    expect(claudeSettings.env.CLAUDE_CODE_SUBAGENT_MODEL).toBeUndefined();
+    expect(claudeSettings.env.MAX_THINKING_TOKENS).toBeUndefined();
+    expect(claudeSettings.permissions.deny).toContain('PowerShell(Remove-Item *)');
+    expect(claudeSettings.permissions.deny).toContain('Read(!.env.example)');
+    expect(claudeSettings.permissions.ask).not.toContain('Bash(git push --force*)');
     expect(codexConfig).toContain('model = "gpt-6.1-sol"');
     expect(codexConfig).toContain('model_reasoning_effort = "medium"');
   });

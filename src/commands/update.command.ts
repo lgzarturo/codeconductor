@@ -1,6 +1,7 @@
 import { homedir } from 'node:os';
-import { resolve, dirname } from 'node:path';
-import { mkdir, readFile, writeFile, stat } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
+import { readFile, stat } from 'node:fs/promises';
+import { writeContainedFile } from '../core/filesystem/path-containment';
 import { loadConfig } from '../core/config/config-loader';
 import type { OutputMode } from '../utils/logger';
 import {
@@ -155,13 +156,16 @@ export async function updateCommand(
 
     // Update council preset
     if (updateResults.council) {
-      const localCouncil = resolve(basePath, '.codeconductor', 'presets', 'council.yml');
       const bundledCouncil = resolve(SRC_PRESETS_DIR, 'council', 'council.yml');
       try {
         const content = await readFile(bundledCouncil, 'utf-8');
-        await mkdir(dirname(localCouncil), { recursive: true });
-        await writeFile(localCouncil, content, 'utf-8');
-        updated.push(localCouncil);
+        const written = await writeContainedFile(
+          basePath,
+          join('.codeconductor', 'presets', 'council.yml'),
+          content,
+          { force: true },
+        );
+        updated.push(written);
       } catch (e) {
         throw new Error(`Failed to update council.yml: ${e}`);
       }
@@ -169,12 +173,15 @@ export async function updateCommand(
 
     // Update policy file
     if (updateResults.policy) {
-      const localPolicy = resolve(basePath, '.codeconductor', 'presets', 'policy.yml');
       try {
         const content = await readFile(POLICY_PATH, 'utf-8');
-        await mkdir(dirname(localPolicy), { recursive: true });
-        await writeFile(localPolicy, content, 'utf-8');
-        updated.push(localPolicy);
+        const written = await writeContainedFile(
+          basePath,
+          join('.codeconductor', 'presets', 'policy.yml'),
+          content,
+          { force: true },
+        );
+        updated.push(written);
       } catch (e) {
         throw new Error(`Failed to update policy.yml: ${e}`);
       }
@@ -195,7 +202,8 @@ export async function updateCommand(
           false, // dryRun
           force,
           modelConfig,
-          locale
+          locale,
+          updateResults.rendered
         );
         for (const r of results) {
           if (r.action !== 'skipped' && r.action !== 'error') {
@@ -281,14 +289,14 @@ export async function updateCommand(
       }
 
       // Find where to write: if .codeconductor/presets exists or .agents exists
-      let lockDest = resolve(basePath, '.codeconductor', 'skills-lock.json');
+      let lockRel = join('.codeconductor', 'skills-lock.json');
       // If .codeconductor doesn't exist but .agents does, write to .agents/skills-lock.json
       try {
         const statAgents = await stat(resolve(basePath, '.agents'));
         if (statAgents.isDirectory()) {
           const statCodeConductor = await stat(resolve(basePath, '.codeconductor')).catch(() => null);
           if (!statCodeConductor) {
-            lockDest = resolve(basePath, '.agents', 'skills-lock.json');
+            lockRel = join('.agents', 'skills-lock.json');
           }
         }
       } catch {
@@ -296,9 +304,13 @@ export async function updateCommand(
       }
 
       try {
-        await mkdir(dirname(lockDest), { recursive: true });
-        await writeFile(lockDest, JSON.stringify(newSkillsLock, null, 2), 'utf-8');
-        updated.push(lockDest);
+        const written = await writeContainedFile(
+          basePath,
+          lockRel,
+          JSON.stringify(newSkillsLock, null, 2),
+          { force: true },
+        );
+        updated.push(written);
       } catch (e) {
         throw new Error(`Failed to write skills-lock.json: ${e}`);
       }

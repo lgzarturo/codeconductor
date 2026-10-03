@@ -145,7 +145,7 @@ describe('core/pipeline/workflow-loop', () => {
   test('COUNCIL rejection (security veto) halts at COUNCIL', async () => {
     const result = await run({
       runCouncilReview: async () => [
-        { agentId: 's', agentRole: 'security', status: 'REJECTED', securityVeto: true, confidence: 1, findings: [], summary: 'veto' },
+        { agentId: 'security', agentRole: 'security', status: 'REJECTED', securityVeto: true, confidence: 1, findings: [], summary: 'veto' },
       ],
     });
     expect(result.success).toBe(false);

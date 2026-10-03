@@ -224,11 +224,13 @@ export async function verifyRenderedFiles(
     const isTemplateFile = templatePrefixes.some((p) => r.dest === p || r.dest.startsWith(p + sep));
     if (!isTemplateFile) continue;
 
-    let content: string;
-    try {
-      content = await readFile(r.dest, 'utf-8');
-    } catch {
-      continue;
+    let content: string | undefined = r.renderedContent;
+    if (content === undefined) {
+      try {
+        content = await readFile(r.dest, 'utf-8');
+      } catch {
+        continue;
+      }
     }
 
     const leaked = [...new Set(content.match(/\{\{[A-Z_]+\}\}/g) ?? [])];

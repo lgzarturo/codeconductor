@@ -1,8 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { loadBacklog } from '../core/openspec/backlog-parser';
-import { validateBacklog } from '../core/openspec/backlog-validator';
-import { scanBacklog, buildItemSnapshot } from '../core/openspec/backlog-scanner';
+import {
+  loadBacklogSession,
+  BacklogSessionError,
+  type BacklogSession,
+} from '../core/openspec/backlog-session';
+import { buildItemSnapshot } from '../core/openspec/backlog-scanner';
 import {
   planTaskCardsForItem,
   selectNextItem,
@@ -40,11 +43,14 @@ import { BACKLOG_FILENAME } from '../core/openspec/backlog-parser';
 import { runLoopForProject, shouldRunAgentLoop } from '../core/loop/loop-engine';
 import type { OutputMode } from '../utils/logger';
 import type {
+  BacklogDocumentInput,
   BacklogItemInput,
   BacklogStatusInput,
   OpenspecStateInput,
   OpenspecTaskCardInput,
 } from '../validation/schemas';
+import type { ValidationReport } from '../core/openspec/backlog-validator';
+import type { Result } from '../utils/result';
 
 export interface OpenspecOptions {
   readonly subcommand: string;
@@ -133,23 +139,19 @@ async function persistState(
   return { ok: true };
 }
 
-async function readBacklogMarkdown(projectRoot: string): Promise<string> {
-  return readFile(resolve(projectRoot, BACKLOG_FILENAME), 'utf-8');
-}
-
 async function transitionItem(
   projectRoot: string,
   item: BacklogItemInput,
   to: BacklogStatusInput,
-  progress?: number,
-): Promise<{ ok: true } | { ok: false; error: string }> {
-  const content = await readBacklogMarkdown(projectRoot);
+  progress: number | undefined,
+  content: string,
+): Promise<{ ok: true; content: string } | { ok: false; error: string }> {
   const next = applyBacklogTransition(content, item.id, item.status, to, progress);
   if (!next.success) {
     return { ok: false, error: next.error.message };
   }
   await persistBacklog(projectRoot, next.data);
-  return { ok: true };
+  return { ok: true, content: next.data };
 }
 
 function findCard(
@@ -186,22 +188,20 @@ function resolveActiveChange(
 
 async function collectAnalyzeReport(
   projectRoot: string,
-  state: OpenspecStateInput,
+  session: BacklogSession,
   targetId: string,
   changePath: string,
 ): Promise<{ tddRequired: boolean; report: SpecAnalyzeReport }> {
-  const backlog = await loadBacklog(projectRoot);
-  const tddRequired = backlog.success ? backlog.data.global.tddRequired : false;
+  const tddRequired = session.doc.global.tddRequired;
   const policyParts: string[] = [];
-  for (const name of ['AGENTS.md', 'BACKLOG.md'] as const) {
-    try {
-      policyParts.push(await readFile(resolve(projectRoot, name), 'utf-8'));
-    } catch {
-      // optional
-    }
+  try {
+    policyParts.push(await readFile(resolve(projectRoot, 'AGENTS.md'), 'utf-8'));
+  } catch {
+    // optional
   }
+  policyParts.push(session.raw);
 
-  const cards = itemCards(state, targetId);
+  const cards = itemCards(session.state, targetId);
   const tddCards = cards.filter((c) => c.phase === 'test' || c.phase === 'implement');
   let hasTddEvidence: boolean | undefined;
   if (tddCards.length > 0) {
@@ -272,33 +272,16 @@ function buildNextSteps(input: {
   return steps;
 }
 
-async function handleValidate(projectRoot: string): Promise<{ code: number; data?: unknown }> {
-  const loadResult = await loadBacklog(projectRoot);
-  if (!loadResult.success) {
-    return {
-      code: 1,
-      data: {
-        success: false,
-        command: 'openspec validate',
-        errors: [loadResult.error.message],
-        recommendations: [
-          'Create BACKLOG.md at project root using the CodeConductor template.',
-        ],
-      },
-    };
-  }
-
-  const report = validateBacklog(loadResult.data);
-  const errors = report.errors.map((e) => e.message);
-  const recommendations = [...report.recommendations];
+async function assessActiveChangeSpecs(
+  projectRoot: string,
+  state: OpenspecStateInput,
+): Promise<{ specValid: boolean; errors: string[]; recommendations: string[] }> {
+  const errors: string[] = [];
+  const recommendations: string[] = [];
   let specValid = true;
 
-  const stateResult = await loadOpenspecState(projectRoot);
-  const activeId = stateResult.success ? stateResult.data.activeItemId : undefined;
-  const changePath =
-    activeId && stateResult.success
-      ? stateResult.data.changePaths[activeId]
-      : undefined;
+  const activeId = state.activeItemId;
+  const changePath = activeId ? state.changePaths[activeId] : undefined;
   if (changePath && !changePath.includes('/archive/')) {
     const specReport = await assessChangeFolder(projectRoot, changePath);
     specValid = specReport.valid;
@@ -312,7 +295,48 @@ async function handleValidate(projectRoot: string): Promise<{ code: number; data
     }
   }
 
-  const valid = report.valid && specValid;
+  return { specValid, errors, recommendations };
+}
+
+interface SessionParts {
+  readonly doc: BacklogDocumentInput;
+  readonly state: OpenspecStateInput;
+  readonly report: ValidationReport;
+}
+
+function sessionParts(session: BacklogSession | BacklogSessionError): SessionParts {
+  return { doc: session.doc, state: session.state, report: session.report };
+}
+
+async function buildValidationResponse(
+  projectRoot: string,
+  sessionResult: Result<BacklogSession, Error>,
+): Promise<{ code: number; data?: unknown }> {
+  if (!sessionResult.success && !(sessionResult.error instanceof BacklogSessionError)) {
+    return {
+      code: 1,
+      data: {
+        success: false,
+        command: 'openspec validate',
+        errors: [sessionResult.error.message],
+        recommendations: [
+          'Create BACKLOG.md at project root using the CodeConductor template.',
+        ],
+      },
+    };
+  }
+
+  const { doc, state, report } = sessionParts(
+    sessionResult.success ? sessionResult.data : sessionResult.error as BacklogSessionError
+  );
+  const errors = report.errors.map((e) => e.message);
+  const recommendations = [...report.recommendations];
+
+  const spec = await assessActiveChangeSpecs(projectRoot, state);
+  errors.push(...spec.errors);
+  recommendations.push(...spec.recommendations);
+
+  const valid = report.valid && spec.specValid;
   return {
     code: valid ? 0 : 1,
     data: {
@@ -321,42 +345,40 @@ async function handleValidate(projectRoot: string): Promise<{ code: number; data
       valid,
       errors,
       recommendations,
-      itemCount: loadResult.data.items.length,
-      archiveCount: loadResult.data.archive.length,
+      itemCount: doc.items.length,
+      archiveCount: doc.archive.length,
     },
   };
 }
 
-async function handleScan(projectRoot: string): Promise<{ code: number; data?: unknown }> {
-  const stateResult = await loadOpenspecState(projectRoot);
-  const prevSnap =
-    stateResult.success ? stateResult.data.itemSnapshots ?? {} : {};
+async function handleValidate(projectRoot: string): Promise<{ code: number; data?: unknown }> {
+  return buildValidationResponse(projectRoot, await loadBacklogSession(projectRoot));
+}
 
-  const scanResult = await scanBacklog(projectRoot, prevSnap);
-  if (!scanResult.success) {
+async function handleScan(projectRoot: string): Promise<{ code: number; data?: unknown }> {
+  const sessionResult = await loadBacklogSession(projectRoot);
+  if (!sessionResult.success) {
     return {
       code: 1,
       data: {
         success: false,
         command: 'openspec scan',
-        errors: [scanResult.error.message],
+        errors: [sessionResult.error.message],
       },
     };
   }
 
-  const loadResult = await loadBacklog(projectRoot);
-  if (loadResult.success && stateResult.success) {
-    const snapshots = buildItemSnapshot(loadResult.data.items, loadResult.data.archive);
-    const state = {
-      ...stateResult.data,
-      lastScanHash: scanResult.data.contentHash,
-      lastScanAt: new Date().toISOString(),
-      itemSnapshots: snapshots,
-    };
-    const written = await persistState(projectRoot, state);
-    if (!written.ok) {
-      return fail('openspec scan', [written.error]);
-    }
+  const { doc, state: loadedState, scan } = sessionResult.data;
+  const snapshots = buildItemSnapshot(doc.items, doc.archive);
+  const state = {
+    ...loadedState,
+    lastScanHash: scan.contentHash,
+    lastScanAt: new Date().toISOString(),
+    itemSnapshots: snapshots,
+  };
+  const written = await persistState(projectRoot, state);
+  if (!written.ok) {
+    return fail('openspec scan', [written.error]);
   }
 
   return {
@@ -364,7 +386,7 @@ async function handleScan(projectRoot: string): Promise<{ code: number; data?: u
     data: {
       success: true,
       command: 'openspec scan',
-      ...scanResult.data,
+      ...scan,
     },
   };
 }
@@ -373,15 +395,13 @@ async function handlePlan(
   projectRoot: string,
   itemId?: string
 ): Promise<{ code: number; data?: unknown }> {
-  const validateFirst = await handleValidate(projectRoot);
+  const sessionResult = await loadBacklogSession(projectRoot);
+  const validateFirst = await buildValidationResponse(projectRoot, sessionResult);
   if (validateFirst.code !== 0) return validateFirst;
+  if (!sessionResult.success) return validateFirst;
 
-  const loadResult = await loadBacklog(projectRoot);
-  if (!loadResult.success) {
-    return { code: 1, data: { success: false, errors: [loadResult.error.message] } };
-  }
-
-  const doc = loadResult.data;
+  const session = sessionResult.data;
+  const doc = session.doc;
   const item = selectNextItem(doc, itemId);
   if (!item) {
     return {
@@ -398,13 +418,7 @@ async function handlePlan(
     };
   }
 
-  const stateResult = await loadOpenspecState(projectRoot);
-  const existingState = stateResult.success ? stateResult.data : {
-    version: 1 as const,
-    taskCards: [],
-    changePaths: {},
-    itemSnapshots: {},
-  };
+  const existingState = session.state;
 
   if (item.status !== 'PLANNED' && !canTransition(item.status, 'PLANNED')) {
     return fail('openspec plan', [
@@ -444,9 +458,8 @@ async function handlePlan(
     return fail('openspec plan', [written.error]);
   }
 
-  const content = await readBacklogMarkdown(projectRoot);
   const transition = applyBacklogTransition(
-    content,
+    session.raw,
     item.id,
     item.status,
     'PLANNED',
@@ -477,14 +490,15 @@ async function handleAnalyze(
   itemId?: string,
 ): Promise<{ code: number; data?: unknown }> {
   const command = 'openspec analyze';
-  const loaded = await loadStateOrFail(projectRoot, command);
-  if (!loaded.ok) return loaded.response;
-  const resolved = resolveActiveChange(loaded.state, command, itemId);
+  const sessionResult = await loadBacklogSession(projectRoot);
+  if (!sessionResult.success) return fail(command, [sessionResult.error.message]);
+  const session = sessionResult.data;
+  const resolved = resolveActiveChange(session.state, command, itemId);
   if (!resolved.ok) return resolved.response;
 
   const { report } = await collectAnalyzeReport(
     projectRoot,
-    loaded.state,
+    session,
     resolved.targetId,
     resolved.changePath,
   );
@@ -562,18 +576,19 @@ async function handleVerify(
   itemId?: string,
 ): Promise<{ code: number; data?: unknown }> {
   const command = 'openspec verify';
-  const loaded = await loadStateOrFail(projectRoot, command);
-  if (!loaded.ok) return loaded.response;
-  const resolved = resolveActiveChange(loaded.state, command, itemId);
+  const sessionResult = await loadBacklogSession(projectRoot);
+  if (!sessionResult.success) return fail(command, [sessionResult.error.message]);
+  const session = sessionResult.data;
+  const resolved = resolveActiveChange(session.state, command, itemId);
   if (!resolved.ok) return resolved.response;
   const { targetId, changePath } = resolved;
 
-  const itemLoaded = await loadItemOrFail(projectRoot, targetId, command);
+  const itemLoaded = findItemOrFail(session, targetId, command);
   if (!itemLoaded.ok) return itemLoaded.response;
 
-  const { report } = await collectAnalyzeReport(projectRoot, loaded.state, targetId, changePath);
+  const { report } = await collectAnalyzeReport(projectRoot, session, targetId, changePath);
   const progress = await readArtifactProgress(projectRoot, changePath);
-  const cards = itemCards(loaded.state, targetId);
+  const cards = itemCards(session.state, targetId);
   const doneCount = cards.filter((c) => c.status === 'done').length;
 
   const issues: VerifyIssue[] = [];
@@ -667,11 +682,22 @@ async function handleVerify(
 }
 
 async function handleStatus(projectRoot: string): Promise<{ code: number; data?: unknown }> {
-  const loadResult = await loadBacklog(projectRoot);
-  const stateResult = await loadOpenspecState(projectRoot);
+  const sessionResult = await loadBacklogSession(projectRoot);
 
-  const nextItem = loadResult.success ? selectNextItem(loadResult.data) : null;
-  const state = stateResult.success ? stateResult.data : null;
+  let doc: BacklogDocumentInput | null = null;
+  let state: OpenspecStateInput | null = null;
+  if (sessionResult.success) {
+    doc = sessionResult.data.doc;
+    state = sessionResult.data.state;
+  } else if (sessionResult.error instanceof BacklogSessionError) {
+    doc = sessionResult.error.doc;
+    state = sessionResult.error.state;
+  } else {
+    const fallback = await loadOpenspecState(projectRoot);
+    state = fallback.success ? fallback.data : null;
+  }
+
+  const nextItem = doc ? selectNextItem(doc) : null;
   const pendingCards = state?.taskCards.filter((c) => c.status === 'pending').length ?? 0;
   const doneCards = state?.taskCards.filter((c) => c.status === 'done').length ?? 0;
 
@@ -758,28 +784,23 @@ async function loadStateOrFail(
   return { ok: true, state: stateResult.data };
 }
 
-async function loadItemOrFail(
-  projectRoot: string,
+function findItemOrFail(
+  session: BacklogSession,
   itemId: string,
   command: string,
-): Promise<
+):
   | { ok: true; item: BacklogItemInput; reviewRequired: boolean }
-  | { ok: false; response: { code: number; data?: unknown } }
-> {
-  const loadResult = await loadBacklog(projectRoot);
-  if (!loadResult.success) {
-    return { ok: false, response: fail(command, [loadResult.error.message]) };
-  }
+  | { ok: false; response: { code: number; data?: unknown } } {
   const item =
-    loadResult.data.items.find((i) => i.id === itemId) ??
-    loadResult.data.archive.find((i) => i.id === itemId);
+    session.doc.items.find((i) => i.id === itemId) ??
+    session.doc.archive.find((i) => i.id === itemId);
   if (!item) {
     return { ok: false, response: fail(command, [`Backlog item ${itemId} not found`]) };
   }
   return {
     ok: true,
     item,
-    reviewRequired: loadResult.data.global.reviewRequired,
+    reviewRequired: session.doc.global.reviewRequired,
   };
 }
 
@@ -791,9 +812,10 @@ async function handleStart(
   if (!cardId) {
     return fail(command, ['Missing card id. Usage: openspec start <cardId>']);
   }
-  const loaded = await loadStateOrFail(projectRoot, command);
-  if (!loaded.ok) return loaded.response;
-  const card = findCard(loaded.state, cardId);
+  const sessionResult = await loadBacklogSession(projectRoot);
+  if (!sessionResult.success) return fail(command, [sessionResult.error.message]);
+  const session = sessionResult.data;
+  const card = findCard(session.state, cardId);
   if (!card) {
     return fail(command, [`Task card ${cardId} not found`]);
   }
@@ -801,10 +823,10 @@ async function handleStart(
     return fail(command, [`Card ${cardId} cannot start from status ${card.status}`]);
   }
 
-  const itemLoaded = await loadItemOrFail(projectRoot, card.backlogId, command);
+  const itemLoaded = findItemOrFail(session, card.backlogId, command);
   if (!itemLoaded.ok) return itemLoaded.response;
 
-  let state = loaded.state;
+  let state = session.state;
   if (card.status === 'pending') {
     state = setTaskCardStatus(state, cardId, 'doing');
     const written = await persistState(projectRoot, state);
@@ -816,6 +838,7 @@ async function handleStart(
     itemLoaded.item,
     'IN_PROGRESS',
     itemLoaded.item.progress,
+    session.raw,
   );
   if (!transition.ok) return fail(command, [transition.error]);
 
@@ -840,9 +863,10 @@ async function handleDone(
   if (!cardId) {
     return fail(command, ['Missing card id. Usage: openspec done <cardId>']);
   }
-  const loaded = await loadStateOrFail(projectRoot, command);
-  if (!loaded.ok) return loaded.response;
-  const card = findCard(loaded.state, cardId);
+  const sessionResult = await loadBacklogSession(projectRoot);
+  if (!sessionResult.success) return fail(command, [sessionResult.error.message]);
+  const session = sessionResult.data;
+  const card = findCard(session.state, cardId);
   if (!card) {
     return fail(command, [`Task card ${cardId} not found`]);
   }
@@ -856,11 +880,10 @@ async function handleDone(
     return fail(command, [`Card ${cardId} must be doing before done (got ${card.status})`]);
   }
 
-  const itemLoaded = await loadItemOrFail(projectRoot, card.backlogId, command);
+  const itemLoaded = findItemOrFail(session, card.backlogId, command);
   if (!itemLoaded.ok) return itemLoaded.response;
 
-  const backlog = await loadBacklog(projectRoot);
-  const tddRequired = backlog.success ? backlog.data.global.tddRequired : false;
+  const tddRequired = session.doc.global.tddRequired;
   if (tddRequired && (card.phase === 'test' || card.phase === 'implement')) {
     const expectedPhase = card.phase === 'test' ? 'red' : 'green';
     const evidenced = await hasTddRunnerEvidence(projectRoot, cardId, expectedPhase);
@@ -871,7 +894,7 @@ async function handleDone(
     }
   }
 
-  const state = setTaskCardStatus(loaded.state, cardId, 'done');
+  const state = setTaskCardStatus(session.state, cardId, 'done');
   const cards = itemCards(state, card.backlogId);
   const doneCount = cards.filter((c) => c.status === 'done').length;
   const progress = cards.length === 0 ? 0 : Math.round((doneCount / cards.length) * 100);
@@ -889,7 +912,7 @@ async function handleDone(
   }
 
   const nextStatus: BacklogStatusInput = allDone ? 'REVIEW' : 'IN_PROGRESS';
-  const transition = await transitionItem(projectRoot, itemLoaded.item, nextStatus, progress);
+  const transition = await transitionItem(projectRoot, itemLoaded.item, nextStatus, progress, session.raw);
   if (!transition.ok) return fail(command, [transition.error]);
 
   return {
@@ -919,21 +942,22 @@ async function handleBlock(
   if (!reason || !reason.trim()) {
     return fail(command, ['--reason is required']);
   }
-  const loaded = await loadStateOrFail(projectRoot, command);
-  if (!loaded.ok) return loaded.response;
-  const card = findCard(loaded.state, cardId);
+  const sessionResult = await loadBacklogSession(projectRoot);
+  if (!sessionResult.success) return fail(command, [sessionResult.error.message]);
+  const session = sessionResult.data;
+  const card = findCard(session.state, cardId);
   if (!card) {
     return fail(command, [`Task card ${cardId} not found`]);
   }
 
-  const itemLoaded = await loadItemOrFail(projectRoot, card.backlogId, command);
+  const itemLoaded = findItemOrFail(session, card.backlogId, command);
   if (!itemLoaded.ok) return itemLoaded.response;
 
-  const state = setTaskCardStatus(loaded.state, cardId, 'blocked');
+  const state = setTaskCardStatus(session.state, cardId, 'blocked');
   const written = await persistState(projectRoot, state);
   if (!written.ok) return fail(command, [written.error]);
 
-  const transition = await transitionItem(projectRoot, itemLoaded.item, 'BLOCKED');
+  const transition = await transitionItem(projectRoot, itemLoaded.item, 'BLOCKED', undefined, session.raw);
   if (!transition.ok) return fail(command, [transition.error]);
 
   return {
@@ -959,9 +983,10 @@ async function handleUnblock(
     return fail(command, ['Missing card id. Usage: openspec unblock <cardId>']);
   }
 
-  const loaded = await loadStateOrFail(projectRoot, command);
-  if (!loaded.ok) return loaded.response;
-  const card = findCard(loaded.state, cardId);
+  const sessionResult = await loadBacklogSession(projectRoot);
+  if (!sessionResult.success) return fail(command, [sessionResult.error.message]);
+  const session = sessionResult.data;
+  const card = findCard(session.state, cardId);
   if (!card) {
     return fail(command, [`Task card ${cardId} not found`]);
   }
@@ -969,7 +994,7 @@ async function handleUnblock(
     return fail(command, [`Card ${cardId} must be blocked before unblock (got ${card.status})`]);
   }
 
-  const itemLoaded = await loadItemOrFail(projectRoot, card.backlogId, command);
+  const itemLoaded = findItemOrFail(session, card.backlogId, command);
   if (!itemLoaded.ok) return itemLoaded.response;
   if (itemLoaded.item.status !== 'BLOCKED') {
     return fail(command, [
@@ -977,20 +1002,19 @@ async function handleUnblock(
     ]);
   }
 
-  const state = setTaskCardStatus(loaded.state, cardId, 'pending');
+  const state = setTaskCardStatus(session.state, cardId, 'pending');
   const written = await persistState(projectRoot, state);
   if (!written.ok) return fail(command, [written.error]);
 
   const changePath = state.changePaths[card.backlogId];
   if (changePath) {
-    const backlog = await loadBacklog(projectRoot);
     await writeTasksMarkdown(projectRoot, changePath, itemCards(state, card.backlogId), {
-      tddRequired: backlog.success ? backlog.data.global.tddRequired : false,
+      tddRequired: session.doc.global.tddRequired,
       acceptanceCriteria: itemLoaded.item.acceptanceCriteria,
     });
   }
 
-  const transition = await transitionItem(projectRoot, itemLoaded.item, 'READY');
+  const transition = await transitionItem(projectRoot, itemLoaded.item, 'READY', undefined, session.raw);
   if (!transition.ok) return fail(command, [transition.error]);
 
   return {
@@ -1015,12 +1039,13 @@ async function handleArchive(
   if (!itemId) {
     return fail(command, ['Missing item id. Usage: openspec archive <itemId>']);
   }
-  const loaded = await loadStateOrFail(projectRoot, command);
-  if (!loaded.ok) return loaded.response;
-  const itemLoaded = await loadItemOrFail(projectRoot, itemId, command);
+  const sessionResult = await loadBacklogSession(projectRoot);
+  if (!sessionResult.success) return fail(command, [sessionResult.error.message]);
+  const session = sessionResult.data;
+  const itemLoaded = findItemOrFail(session, itemId, command);
   if (!itemLoaded.ok) return itemLoaded.response;
 
-  const cards = itemCards(loaded.state, itemId);
+  const cards = itemCards(session.state, itemId);
   if (cards.length === 0) {
     return fail(command, [`No task cards found for ${itemId}. Run openspec plan first.`]);
   }
@@ -1047,7 +1072,7 @@ async function handleArchive(
   }
 
   let archivedPath: string | undefined;
-  const changePath = loaded.state.changePaths[itemId];
+  const changePath = session.state.changePaths[itemId];
   const warnings: string[] = [];
   if (changePath && !changePath.includes('/archive/')) {
     const progress = await readArtifactProgress(projectRoot, changePath);
@@ -1057,7 +1082,7 @@ async function handleArchive(
         `Cannot archive ${itemId}: change folder is missing ${missing.join(', ')}. Re-run openspec plan ${itemId} or restore them.`,
       ]);
     }
-    const { report } = await collectAnalyzeReport(projectRoot, loaded.state, itemId, changePath);
+    const { report } = await collectAnalyzeReport(projectRoot, session, itemId, changePath);
     const critical = report.findings.filter((f) => f.severity === 'CRITICAL');
     if (critical.length > 0) {
       return fail(command, [
@@ -1082,22 +1107,23 @@ async function handleArchive(
     }
   }
 
+  let content = session.raw;
   if (itemLoaded.item.status !== 'DONE') {
-    const toDone = await transitionItem(projectRoot, itemLoaded.item, 'DONE', 100);
+    const toDone = await transitionItem(projectRoot, itemLoaded.item, 'DONE', 100, content);
     if (!toDone.ok) return fail(command, [toDone.error]);
+    content = toDone.content;
   }
 
-  const content = await readBacklogMarkdown(projectRoot);
   const archived = archiveItemInMarkdown(content, itemId);
   await persistBacklog(projectRoot, archived);
 
   const nextState: OpenspecStateInput = {
-    ...loaded.state,
+    ...session.state,
     activeItemId:
-      loaded.state.activeItemId === itemId ? undefined : loaded.state.activeItemId,
+      session.state.activeItemId === itemId ? undefined : session.state.activeItemId,
     changePaths: archivedPath
-      ? { ...loaded.state.changePaths, [itemId]: archivedPath }
-      : loaded.state.changePaths,
+      ? { ...session.state.changePaths, [itemId]: archivedPath }
+      : session.state.changePaths,
   };
   const written = await persistState(projectRoot, nextState);
   if (!written.ok) return fail(command, [written.error]);

@@ -14,10 +14,16 @@ import {
   type ConsensusConfig,
   type CouncilVerdictInput,
 } from '../domain/council/council-consensus';
+import {
+  defaultCouncilSpec,
+  selectCouncilPanel,
+} from '../domain/council/council-spec';
+import { classifyRisk, type RiskLevel } from '../core/ccep/risk-classifier';
 import { validateTaskCardForProfile } from '../core/ccep/task-card-validator';
 import {
   CanonicalTaskCardSchema,
   ConsensusConfigSchema,
+  CouncilVerdictInputSchema,
   validateExecutionContext,
   validatePlannerOutput,
   WorkflowCommandSchema,
@@ -44,6 +50,10 @@ export interface CcepOptions {
   readonly contextStrategy?: string;
   readonly config?: string;
   readonly rest?: string[];
+  readonly panel?: boolean;
+  readonly panelType?: string;
+  readonly panelScope?: string;
+  readonly panelRisk?: string;
 }
 
 function parseWorkflowCommand(command: string | undefined): {
@@ -132,18 +142,41 @@ function consensusExitCode(status: 'APPROVED' | 'REJECTED' | 'ESCALATED'): numbe
   return 2;
 }
 
+function parseConsensusBallots(verdicts: unknown):
+  | { ok: true; verdicts: CouncilVerdictInput[] }
+  | { ok: false; error: string } {
+  if (!Array.isArray(verdicts)) {
+    return { ok: false, error: 'Consensus input must be a verdicts array or { verdicts, config? }' };
+  }
+  const parsed: CouncilVerdictInput[] = [];
+  for (let i = 0; i < verdicts.length; i++) {
+    const ballot = CouncilVerdictInputSchema.safeParse(verdicts[i]);
+    if (!ballot.success) {
+      return {
+        ok: false,
+        error: ballot.error.issues
+          .map((issue) => `verdicts[${i}].${issue.path.join('.')}: ${issue.message}`)
+          .join('; '),
+      };
+    }
+    parsed.push(ballot.data);
+  }
+  return { ok: true, verdicts: parsed };
+}
+
 function parseConsensusPayload(data: unknown):
   | { ok: true; verdicts: CouncilVerdictInput[]; config?: ConsensusConfig }
   | { ok: false; error: string } {
   if (Array.isArray(data)) {
-    return { ok: true, verdicts: data as CouncilVerdictInput[] };
+    return parseConsensusBallots(data);
   }
   if (typeof data !== 'object' || data === null) {
     return { ok: false, error: 'Consensus input must be a verdicts array or { verdicts, config? }' };
   }
   const record = data as { verdicts?: unknown; config?: unknown };
-  if (!Array.isArray(record.verdicts)) {
-    return { ok: false, error: 'Consensus input must be a verdicts array or { verdicts, config? }' };
+  const ballots = parseConsensusBallots(record.verdicts);
+  if (!ballots.ok) {
+    return ballots;
   }
   let config: ConsensusConfig | undefined;
   if (record.config !== undefined) {
@@ -156,7 +189,24 @@ function parseConsensusPayload(data: unknown):
     }
     config = parsed.data;
   }
-  return { ok: true, verdicts: record.verdicts as CouncilVerdictInput[], config };
+  return { ok: true, verdicts: ballots.verdicts, config };
+}
+
+function resolvePanelRisk(
+  panelRisk: string | undefined,
+  type: string,
+  scope: readonly string[],
+): { ok: true; risk: RiskLevel } | { ok: false; error: string } {
+  if (panelRisk === undefined || panelRisk === '') {
+    return { ok: true, risk: classifyRisk({ type, signals: scope }) };
+  }
+  if (panelRisk !== 'low' && panelRisk !== 'medium' && panelRisk !== 'high') {
+    return {
+      ok: false,
+      error: `Invalid --risk: ${panelRisk}. Expected one of: low, medium, high`,
+    };
+  }
+  return { ok: true, risk: panelRisk };
 }
 
 export async function ccepCommand(
@@ -179,6 +229,10 @@ export async function ccepCommand(
     contextStrategy,
     config,
     rest,
+    panel,
+    panelType,
+    panelScope,
+    panelRisk,
   } = options;
 
   switch (subcommand) {
@@ -393,6 +447,7 @@ export async function ccepCommand(
           command: 'ccep compile',
           phase: phaseId,
           role: agentRole,
+          phaseRoles: resolvedPhase.roles,
           outputSchema: compiled.outputSchema,
           promptVersion,
           ...representation,
@@ -517,6 +572,34 @@ export async function ccepCommand(
     }
 
     case 'consensus': {
+      let panelConfig: ConsensusConfig | undefined;
+      if (panel) {
+        const type = panelType ?? '';
+        const scope = (panelScope ?? '')
+          .split(',')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0);
+        const risk = resolvePanelRisk(panelRisk, type, scope);
+        if (!risk.ok) {
+          return {
+            code: 1,
+            data: { success: false, command: 'ccep consensus', errors: [risk.error] },
+          };
+        }
+        panelConfig = selectCouncilPanel(defaultCouncilSpec(), { type, risk: risk.risk, scope });
+        const hasBallots = (input ?? rest?.join(' ').trim() ?? '') !== '';
+        if (!hasBallots) {
+          return {
+            code: 0,
+            data: {
+              success: true,
+              command: 'ccep consensus',
+              panel: panelConfig,
+            },
+          };
+        }
+      }
+
       const payload = await readInputPayload(projectRoot, input, rest);
       if (!payload.ok) {
         return {
@@ -533,7 +616,7 @@ export async function ccepCommand(
         };
       }
 
-      let mergedConfig = parsedBallots.config;
+      let mergedConfig = panelConfig ?? parsedBallots.config;
       if (config) {
         const configPayload = await readInputPayload(projectRoot, config);
         if (!configPayload.ok) {

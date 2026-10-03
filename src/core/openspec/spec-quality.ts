@@ -1,5 +1,6 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
+import { requirementBlocks, walkMarkdownFiles } from './spec-files';
 
 const RFC2119 = /\b(MUST(?: NOT)?|SHALL(?: NOT)?|SHOULD(?: NOT)?|MAY)\b/;
 const FR_ID = /\bFR-\d{3}\b/g;
@@ -36,11 +37,6 @@ export interface SpecQualityReport {
 
 function uniqueIds(matches: RegExpMatchArray | null): string[] {
   return [...new Set(matches ?? [])];
-}
-
-function requirementBlocks(content: string): string[] {
-  const parts = content.split(/^### Requirement:/m);
-  return parts.slice(1).map((block) => `### Requirement:${block}`);
 }
 
 export function assessSpecMarkdown(content: string, path: string): SpecQualityReport {
@@ -90,8 +86,9 @@ export function assessSpecMarkdown(content: string, path: string): SpecQualityRe
   }
 
   for (const block of blocks) {
-    const heading = block.split('\n', 1)[0] ?? '';
-    if (!RFC2119.test(block)) {
+    const text = block.markdown;
+    const heading = text.split('\n', 1)[0] ?? '';
+    if (!RFC2119.test(text)) {
       issues.push({
         code: 'MISSING_RFC2119',
         message: `Requirement "${heading}" MUST use RFC 2119 keywords (MUST/SHALL/SHOULD/MAY)`,
@@ -99,7 +96,7 @@ export function assessSpecMarkdown(content: string, path: string): SpecQualityRe
         severity: 'error',
       });
     }
-    if (!GWT.test(block)) {
+    if (!GWT.test(text)) {
       issues.push({
         code: 'MISSING_GWT',
         message: `Requirement "${heading}" MUST include a Given/When/Then scenario`,
@@ -162,25 +159,6 @@ export function mergeSpecQualityReports(reports: SpecQualityReport[]): SpecQuali
   };
 }
 
-async function walkMarkdown(dir: string): Promise<string[]> {
-  const out: string[] = [];
-  let entries;
-  try {
-    entries = await readdir(dir, { withFileTypes: true });
-  } catch {
-    return out;
-  }
-  for (const entry of entries) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      out.push(...(await walkMarkdown(full)));
-    } else if (entry.isFile() && entry.name.endsWith('.md')) {
-      out.push(full);
-    }
-  }
-  return out;
-}
-
 /**
  * Validate spec artifacts in an OpenSpec change folder.
  * Only `specs/**` are fail-closed for FR/SC/GWT. proposal/design still
@@ -211,7 +189,7 @@ export async function assessChangeFolder(
   }
 
   const specDir = join(changeRoot, 'specs');
-  const specFiles = await walkMarkdown(specDir);
+  const specFiles = await walkMarkdownFiles(specDir);
   const extra = ['proposal.md', 'design.md'].map((name) => join(changeRoot, name));
   const reports: SpecQualityReport[] = [];
 

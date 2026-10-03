@@ -171,4 +171,16 @@ The system MUST use an unambiguous requirement.
     expect(result.success).toBe(false);
     expect(await readFile(join(root, 'openspec/specs/auth/spec.md'), 'utf-8')).toBe(duplicate);
   });
+
+  test('writes `$` patterns in delta content literally instead of expanding them', async () => {
+    const root = await project();
+    await write(root, 'openspec/specs/auth/spec.md', existing);
+    await write(root, 'openspec/changes/login/specs/auth/spec.md', `# Delta\n\n## MODIFIED Requirements\n\n### Requirement: FR-001 Existing login\n\nThe system MUST show prices like $& and $1 literally.\n\n#### Scenario: SC-001 Login\n\n- GIVEN a user\n- WHEN credentials are submitted\n- THEN the session starts\n`);
+
+    const result = await syncChangeSpecs(root, 'openspec/changes/login');
+
+    expect(result.success).toBe(true);
+    const synced = await readFile(join(root, 'openspec/specs/auth/spec.md'), 'utf-8');
+    expect(synced).toContain('prices like $& and $1 literally.');
+  });
 });

@@ -37,6 +37,20 @@ export interface CouncilPanelRequest {
 }
 
 /**
+ * Default council spec: the 6-agent roster used by `ccep consensus --panel`
+ * when no project preset overrides it.
+ */
+export function defaultCouncilSpec(): CouncilSpec {
+  return {
+    name: 'council',
+    version: '0.1.0',
+    description: 'Multi-agent council',
+    outputContract: 'v1',
+    agents: DEFAULT_COUNCIL_AGENTS,
+  };
+}
+
+/**
  * Default council agents
  */
 export const DEFAULT_COUNCIL_AGENTS: CouncilAgentSpec[] = [

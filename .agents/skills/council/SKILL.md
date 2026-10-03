@@ -22,5 +22,8 @@ Use the council agents to get multi-perspective analysis on code changes, archit
 ## Instructions
 Coordinate with the council agents and synthesize their perspectives into the configured output contract.
 
+## Review rounds
+At most 3 review rounds per change -- after the third round, deliver the verdict with the unresolved findings instead of looping. One compiled prompt per voter; select the panel with `ccep consensus --panel --type <type> --scope <a,b> [--risk low|medium|high]`.
+
 ## Context
 v1

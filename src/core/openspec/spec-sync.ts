@@ -1,6 +1,7 @@
-import { mkdir, readFile, readdir } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { writeFileAtomic } from './openspec-state';
+import { requirementBlocks, walkMarkdownFiles } from './spec-files';
 
 type DeltaOperation = 'ADDED' | 'MODIFIED' | 'REMOVED';
 
@@ -21,35 +22,7 @@ export interface SpecSyncResult {
   readonly errors: string[];
 }
 
-const REQUIREMENT_HEADING = /^### Requirement:.*?\b(FR-\d{3})\b.*$/m;
 const SECTION_HEADING = /^## (ADDED|MODIFIED|REMOVED) Requirements\s*$/gm;
-
-async function markdownFiles(dir: string): Promise<string[]> {
-  let entries;
-  try {
-    entries = await readdir(dir, { withFileTypes: true });
-  } catch {
-    return [];
-  }
-  const files: string[] = [];
-  for (const entry of entries) {
-    const path = join(dir, entry.name);
-    if (entry.isDirectory()) files.push(...await markdownFiles(path));
-    else if (entry.isFile() && entry.name.endsWith('.md')) files.push(path);
-  }
-  return files;
-}
-
-function requirementBlocks(markdown: string): Array<{ id: string; markdown: string }> {
-  const starts = [...markdown.matchAll(/^### Requirement:.*$/gm)];
-  return starts.flatMap((match, index) => {
-    const start = match.index ?? 0;
-    const end = starts[index + 1]?.index ?? markdown.length;
-    const block = markdown.slice(start, end).trim();
-    const id = block.match(REQUIREMENT_HEADING)?.[1];
-    return id ? [{ id, markdown: block }] : [];
-  });
-}
 
 function deltaRequirements(markdown: string): DeltaRequirement[] {
   const sections = [...markdown.matchAll(SECTION_HEADING)];
@@ -57,10 +30,13 @@ function deltaRequirements(markdown: string): DeltaRequirement[] {
     const start = (section.index ?? 0) + section[0].length;
     const end = sections[index + 1]?.index ?? markdown.length;
     const operation = section[1] as DeltaOperation;
-    return requirementBlocks(markdown.slice(start, end)).map((requirement) => ({
-      ...requirement,
-      operation,
-    }));
+    return requirementBlocks(markdown.slice(start, end))
+      .filter((requirement) => requirement.id !== null)
+      .map((requirement) => ({
+        id: requirement.id as string,
+        markdown: requirement.markdown,
+        operation,
+      }));
   });
 }
 
@@ -69,8 +45,12 @@ function upsertRequirements(
   deltas: DeltaRequirement[],
   source: string,
 ): { ok: true; content: string } | { ok: false; error: string } {
-  const requirements = requirementBlocks(existing);
-  const byId = new Map(requirements.map((requirement) => [requirement.id, requirement]));
+  const requirements = requirementBlocks(existing).filter(
+    (requirement) => requirement.id !== null
+  );
+  const byId = new Map(
+    requirements.map((requirement) => [requirement.id as string, requirement])
+  );
   if (byId.size !== requirements.length) {
     return { ok: false, error: `${source}: durable spec has duplicate requirement IDs` };
   }
@@ -100,7 +80,9 @@ function upsertRequirements(
     }
     if (!current) continue;
     if (delta.operation === 'MODIFIED') {
-      next = next.replace(current.markdown, delta.markdown);
+      // Replacer function: a replacement string would expand `$` patterns
+      // (`$&`, `$1`) from spec content instead of writing them literally.
+      next = next.replace(current.markdown, () => delta.markdown);
       byId.set(delta.id, { id: delta.id, markdown: delta.markdown });
     } else {
       next = next.replace(current.markdown, '').replace(/\n{3,}/g, '\n\n').trimEnd();
@@ -125,7 +107,7 @@ export async function syncChangeSpecs(
     return { success: false, syncedPaths: [], errors: ['Change path escapes project root'] };
   }
 
-  const files = await markdownFiles(changeSpecs);
+  const files = await walkMarkdownFiles(changeSpecs);
   if (files.length === 0) {
     return { success: false, syncedPaths: [], errors: ['Change folder has no delta specs'] };
   }

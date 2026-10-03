@@ -1,5 +1,6 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+import { readMarkdownFiles } from './spec-files';
 import { assessSpecMarkdown, type SpecQualityReport } from './spec-quality';
 
 export type AnalyzeSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
@@ -64,22 +65,11 @@ function testSection(tasksMarkdown: string): string {
 }
 
 async function readDeltaSpecs(specDir: string): Promise<string> {
-  let entries;
-  try {
-    entries = await readdir(specDir, { withFileTypes: true });
-  } catch {
-    return '';
-  }
-  const contents: string[] = [];
-  for (const entry of entries) {
-    const path = join(specDir, entry.name);
-    if (entry.isDirectory()) {
-      contents.push(await readDeltaSpecs(path));
-    } else if (entry.isFile() && entry.name.endsWith('.md')) {
-      contents.push(await readFile(path, 'utf-8'));
-    }
-  }
-  return contents.filter(Boolean).join('\n\n');
+  const files = await readMarkdownFiles(specDir);
+  return files
+    .map((f) => f.content)
+    .filter(Boolean)
+    .join('\n\n');
 }
 
 /**

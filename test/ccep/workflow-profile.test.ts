@@ -3,6 +3,7 @@ import { CCEP_COMMANDS } from '../../src/core/ccep/command-parser';
 import {
   loadWorkflowProfile,
   loadAllWorkflowProfiles,
+  resolveWorkflowPhase,
 } from '../../src/core/ccep/workflow-profile-loader';
 import { validateWorkflowProfile } from '../../src/validation/schemas';
 
@@ -164,5 +165,23 @@ describe('ccep workflow profiles', () => {
     expect(loadWorkflowProfile('handoff').phases[0]?.agent).toBe('docs');
     expect(loadWorkflowProfile('handoff').confirmationGate.stopOnHighRisk).toBe(true);
     expect(loadWorkflowProfile('clarify').confirmationGate.stopOnQuestions).toBe(true);
+  });
+
+  test('council phases resolve every voter role, not just the first', () => {
+    const profile = loadWorkflowProfile('council');
+
+    const deliberation = resolveWorkflowPhase(profile, 'deliberation');
+    expect(deliberation?.roles).toEqual(['task-coach', 'architect', 'devil']);
+    expect(deliberation?.role).toBe('task-coach');
+
+    const review = resolveWorkflowPhase(profile, 'council-review');
+    expect(review?.roles).toEqual([
+      'architect',
+      'product',
+      'delivery',
+      'data-ops',
+      'security-reviewer',
+      'devil',
+    ]);
   });
 });

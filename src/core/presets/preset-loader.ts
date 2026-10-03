@@ -13,10 +13,15 @@ import { SRC_PRESETS_DIR } from './package-paths';
  *   1. .codeconductor/presets/<name>.yml  (user-customizable)
  *   2. src/presets/<name>/<name>.yml      (bundled, dev fallback)
  */
+const PRESET_NAME_RE = /^[a-z0-9-]+$/;
+
 export async function loadPreset(
   name: string,
   projectRoot = process.cwd()
 ): Promise<Result<CouncilSpec, ValidationError>> {
+  if (!PRESET_NAME_RE.test(name)) {
+    return err(new ValidationError(`Invalid preset name: ${name}`));
+  }
   const candidates = [
     resolve(projectRoot, '.codeconductor', 'presets', `${name}.yml`),
     resolve(SRC_PRESETS_DIR, name, `${name}.yml`),

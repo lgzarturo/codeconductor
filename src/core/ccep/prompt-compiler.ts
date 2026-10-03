@@ -1,5 +1,6 @@
 import type { ExecutionContextInput } from '../../validation/schemas';
 import { buildOpenspecPhaseContext } from '../openspec/openspec-context';
+import { markUntrusted } from '../shared/untrusted-text';
 import { resolveOutputSchemaName } from './output-validator';
 
 export interface PromptLayer {
@@ -31,6 +32,11 @@ const ROLE_LABELS: Record<string, string> = {
   'complexity-auditor': 'Complexity Auditor',
   orchestrator: 'Orchestrator',
   'repo-explorer': 'Repo Explorer',
+  product: 'Product',
+  delivery: 'Delivery',
+  'data-ops': 'DataOps',
+  'security-reviewer': 'Security Reviewer',
+  devil: 'Devil',
 };
 
 const OUTPUT_SCHEMAS: Record<string, string> = {
@@ -106,6 +112,11 @@ const KNOWLEDGE_KEYS_BY_ROLE: Record<string, readonly string[]> = {
   'complexity-auditor': ['productName', 'decisions', 'requirements', 'risks'],
   orchestrator: ['productName', 'domains', 'decisions', 'requirements', 'risks'],
   'repo-explorer': ['productName', 'domains', 'requirements'],
+  product: ['productName', 'requirements'],
+  delivery: ['productName', 'requirements', 'risks'],
+  'data-ops': ['productName', 'domains', 'requirements'],
+  'security-reviewer': ['productName', 'decisions', 'requirements', 'risks'],
+  devil: ['decisions', 'requirements', 'risks'],
 };
 
 const PRODUCT_GRAPH_KNOWLEDGE_KEYS = new Set([
@@ -142,13 +153,18 @@ function buildAgentLayer(role: string, phase: string, outputSchema: string): str
 }
 
 function buildTaskLayer(context: ExecutionContextInput, phase: string): string {
+  const goal = markUntrusted('user-request', context.intent.goal);
   if (context.envelope.command === 'openspec') {
-    return JSON.stringify(buildOpenspecPhaseContext(context, phase).task, null, 2);
+    return JSON.stringify(
+      { ...buildOpenspecPhaseContext(context, phase).task, goal },
+      null,
+      2,
+    );
   }
   return JSON.stringify(
     {
       command: context.envelope.command,
-      intent: context.intent,
+      intent: { ...context.intent, goal },
       phase,
       project: context.project.name,
     },

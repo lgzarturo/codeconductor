@@ -4,25 +4,15 @@ import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import {
   DEFAULT_COUNCIL_AGENTS,
+  defaultCouncilSpec as defaultSpec,
   deriveConsensusConfig,
   hasSecurityFocusedAgent,
   selectCouncilPanel,
   SEO_HOTEL_COUNCIL_AGENTS,
-  type CouncilSpec,
 } from '../../../../src/domain/council/council-spec';
 import { ConsensusConfigSchema, validateCouncilSpec } from '../../../../src/validation/schemas';
 
 const YAML_PATH = join(import.meta.dir, '../../../../src/presets/council/council.yml');
-
-function defaultSpec(): CouncilSpec {
-  return {
-    name: 'council',
-    version: '0.1.0',
-    description: 'Multi-agent council',
-    outputContract: 'v1',
-    agents: DEFAULT_COUNCIL_AGENTS,
-  };
-}
 
 describe('deriveConsensusConfig', () => {
   test('uses roster ids and ceil(n/2) quorum from the spec', () => {

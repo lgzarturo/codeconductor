@@ -6,6 +6,7 @@ import type {
 } from '../../validation/schemas';
 import { routePhaseToAgent } from './agent-router';
 import { hashContent, serializeItemSnapshot } from './openspec-state';
+import { markUntrusted } from '../shared/untrusted-text';
 
 const DEFAULT_PHASE_ORDER: OpenspecTaskCardPhaseInput[] = [
   'discover',
@@ -43,7 +44,10 @@ function phaseTitle(phase: OpenspecTaskCardPhaseInput, item: BacklogItemInput): 
 }
 
 function phasePrompt(phase: OpenspecTaskCardPhaseInput, item: BacklogItemInput): string {
-  const base = `Backlog item ${item.id} — ${item.title}\n\nDescription: ${item.description}\nScope: ${item.scope}`;
+  const base =
+    `Backlog item ${item.id} — ${item.title}\n\n` +
+    `Description:\n${markUntrusted('description', item.description)}\n\n` +
+    `Scope:\n${markUntrusted('scope', item.scope)}`;
   switch (phase) {
     case 'discover':
       return `${base}\n\nMap repository structure, conventions, and impact radius for this change.`;

@@ -114,6 +114,45 @@ describe('councilConsensus — security veto override', () => {
     expect(result.vetoApplied).toBe(false);
   });
 
+  test('veto flag from a non-security emitter does not veto', () => {
+    const verdicts = [
+      makeVerdict('architect', 'APPROVED'),
+      makeVerdict('product', 'APPROVED'),
+      makeVetoVerdict('devil'),
+    ];
+    const result = councilConsensus(verdicts, MAJORITY_CONFIG);
+    expect(result.vetoApplied).toBe(false);
+    expect(result.vetoByAgentId).toBeUndefined();
+    expect(result.status).toBe('ESCALATED');
+  });
+
+  test('critical security finding from a non-security emitter escalates instead of vetoing', () => {
+    const verdicts: CouncilVerdictInput[] = [
+      makeVerdict('architect', 'APPROVED'),
+      makeVerdict('product', 'APPROVED'),
+      {
+        agentId: 'devil',
+        agentRole: 'Devil',
+        status: 'APPROVED',
+        securityVeto: false,
+        confidence: 1,
+        findings: [
+          {
+            category: 'injection',
+            severity: 'critical',
+            message: 'Possible injection',
+            agentId: 'devil',
+          },
+        ],
+        summary: 'Approved with a critical note.',
+      },
+    ];
+    const result = councilConsensus(verdicts, MAJORITY_CONFIG);
+    expect(result.vetoApplied).toBe(false);
+    expect(result.status).toBe('ESCALATED');
+    expect(result.summary).toContain('escalated by criticalFindingsPolicy');
+  });
+
   test('veto only applies when status is REJECTED', () => {
     const verdicts: CouncilVerdictInput[] = [
       makeVerdict('architect', 'APPROVED'),

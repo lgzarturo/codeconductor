@@ -19,6 +19,12 @@ export interface UpdateCheckResults {
   readonly policy: boolean;
   readonly targets: Array<{ target: string; hasUpdate: boolean; files: string[] }>;
   readonly skills: Array<{ id: string; currentVersion: string; latestVersion: string; hasUpdate: boolean }>;
+  /**
+   * Expected incoming content keyed by absolute destination, rendered during
+   * the check. Pass it to copyFromManifest so the apply pass reuses the
+   * render instead of reading and rendering every source again.
+   */
+  readonly rendered: Record<string, string>;
 }
 
 /**
@@ -373,6 +379,8 @@ export async function checkUpdates(
     // Ignore config load error
   }
 
+  const rendered: Record<string, string> = {};
+
   const checkTarget = async (
     target: IndividualRunnerTarget
   ): Promise<{ target: string; hasUpdate: boolean; files: string[] } | null> => {
@@ -413,6 +421,7 @@ export async function checkUpdates(
         try {
           const srcContent = await readFile(src, 'utf-8');
           expectedContent = isTemplate && modelConfig ? await renderTemplate(srcContent, modelConfig, src, locale) : srcContent;
+          rendered[dest] = expectedContent;
         } catch {
           continue;
         }
@@ -570,6 +579,7 @@ export async function checkUpdates(
     policy: policyHasUpdate,
     targets: targetResults,
     skills: skillResults,
+    rendered,
   };
 }
 

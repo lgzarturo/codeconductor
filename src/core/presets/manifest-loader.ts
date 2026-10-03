@@ -17,13 +17,33 @@ const MODELS_DIR = join(SRC_PRESETS_DIR, 'models');
 const TARGETS_DIR = join(SRC_PRESETS_DIR, 'targets');
 export const PRESETS_DIR = ROOT_PRESETS_DIR;
 
+/**
+ * Bundled preset YAML never changes during a process, but every check, copy
+ * and verify pass used to re-read and re-parse it (roles.yml is shared by
+ * all targets, so one doctor run parsed it a dozen times). The caches below
+ * make each target pay one parse per process.
+ */
+const manifestCache = new Map<IndividualRunnerTarget, InstallManifest>();
+const modelConfigCache = new Map<IndividualRunnerTarget, ModelConfig>();
+const capabilitiesCache = new Map<IndividualRunnerTarget, TargetCapabilities>();
+
+export function clearPresetCache(): void {
+  manifestCache.clear();
+  modelConfigCache.clear();
+  capabilitiesCache.clear();
+}
+
 export async function loadManifest(
   target: IndividualRunnerTarget
 ): Promise<InstallManifest> {
+  const cached = manifestCache.get(target);
+  if (cached) return cached;
   const manifestPath = join(MANIFESTS_DIR, `${target}.yml`);
   const content = await readFile(manifestPath, 'utf-8');
   const data = parse(content);
-  return InstallManifestSchema.parse(data);
+  const manifest = InstallManifestSchema.parse(data);
+  manifestCache.set(target, manifest);
+  return manifest;
 }
 
 /**
@@ -36,6 +56,8 @@ export async function loadManifest(
 export async function loadModelConfig(
   target: IndividualRunnerTarget
 ): Promise<ModelConfig> {
+  const cached = modelConfigCache.get(target);
+  if (cached) return cached;
   const [rolesRaw, targetRaw] = await Promise.all([
     readFile(join(MODELS_DIR, 'roles.yml'), 'utf-8'),
     readFile(join(MODELS_DIR, `${target}.yml`), 'utf-8'),
@@ -43,12 +65,14 @@ export async function loadModelConfig(
   const roles = parse(rolesRaw) as Pick<ModelConfig, 'agents' | 'tools'>;
   const targetData = parse(targetRaw) as Pick<ModelConfig, 'target' | 'permissions'>;
 
-  return ModelConfigSchema.parse({
+  const config = ModelConfigSchema.parse({
     target: targetData.target,
     agents: roles.agents,
     tools: targetData.permissions ? undefined : roles.tools,
     permissions: targetData.permissions,
   });
+  modelConfigCache.set(target, config);
+  return config;
 }
 
 /**
@@ -58,6 +82,10 @@ export async function loadModelConfig(
 export async function loadTargetCapabilities(
   target: IndividualRunnerTarget
 ): Promise<TargetCapabilities> {
+  const cached = capabilitiesCache.get(target);
+  if (cached) return cached;
   const content = await readFile(join(TARGETS_DIR, `${target}.yml`), 'utf-8');
-  return TargetCapabilitiesSchema.parse(parse(content));
+  const capabilities = TargetCapabilitiesSchema.parse(parse(content));
+  capabilitiesCache.set(target, capabilities);
+  return capabilities;
 }

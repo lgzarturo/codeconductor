@@ -105,4 +105,101 @@ describe('ccep consensus', () => {
     expect(result.code).toBe(1);
     expect((result.data as { success: boolean }).success).toBe(false);
   });
+
+  test('rejects a ballot that fails the schema', async () => {
+    const result = await ccepCommand({
+      subcommand: 'consensus',
+      projectRoot: ROOT,
+      output: 'json',
+      input: JSON.stringify([
+        ballot('a'),
+        { agentId: 'b', status: 'APPROVED' },
+      ]),
+    });
+    expect(result.code).toBe(1);
+    const errors = (result.data as { errors: string[] }).errors;
+    expect(errors.join(';')).toContain('verdicts[1]');
+  });
+
+  test('--panel selects the minimal panel for low-risk docs', async () => {
+    const result = await ccepCommand({
+      subcommand: 'consensus',
+      projectRoot: ROOT,
+      output: 'json',
+      panel: true,
+      panelType: 'docs',
+      panelRisk: 'low',
+    });
+    expect(result.code).toBe(0);
+    const panel = (result.data as { panel: { expectedAgentIds: string[]; quorum: number } }).panel;
+    expect(panel.expectedAgentIds).toEqual(['delivery', 'security-reviewer', 'devil']);
+    expect(panel.quorum).toBe(2);
+  });
+
+  test('--panel selects the full roster for high-risk features with data scope', async () => {
+    const result = await ccepCommand({
+      subcommand: 'consensus',
+      projectRoot: ROOT,
+      output: 'json',
+      panel: true,
+      panelType: 'feature',
+      panelScope: 'db migration, analytics',
+      panelRisk: 'high',
+    });
+    expect(result.code).toBe(0);
+    const panel = (result.data as { panel: { expectedAgentIds: string[] } }).panel;
+    expect(panel.expectedAgentIds).toEqual([
+      'architect',
+      'product',
+      'delivery',
+      'data-ops',
+      'security-reviewer',
+      'devil',
+    ]);
+  });
+
+  test('--panel defaults risk through the risk classifier', async () => {
+    const result = await ccepCommand({
+      subcommand: 'consensus',
+      projectRoot: ROOT,
+      output: 'json',
+      panel: true,
+      panelType: 'docs',
+    });
+    expect(result.code).toBe(0);
+    const panel = (result.data as { panel: { expectedAgentIds: string[] } }).panel;
+    expect(panel.expectedAgentIds).toEqual(['delivery', 'security-reviewer', 'devil']);
+  });
+
+  test('--panel rejects an unknown risk level', async () => {
+    const result = await ccepCommand({
+      subcommand: 'consensus',
+      projectRoot: ROOT,
+      output: 'json',
+      panel: true,
+      panelType: 'feature',
+      panelRisk: 'extreme',
+    });
+    expect(result.code).toBe(1);
+    const errors = (result.data as { errors: string[] }).errors;
+    expect(errors.join(';')).toContain('Invalid --risk');
+  });
+
+  test('--panel with ballots runs consensus under the selected panel', async () => {
+    const result = await ccepCommand({
+      subcommand: 'consensus',
+      projectRoot: ROOT,
+      output: 'json',
+      panel: true,
+      panelType: 'docs',
+      panelRisk: 'low',
+      input: JSON.stringify([
+        ballot('delivery'),
+        ballot('security-reviewer'),
+        ballot('devil'),
+      ]),
+    });
+    expect(result.code).toBe(0);
+    expect((result.data as { verdict: { status: string } }).verdict.status).toBe('APPROVED');
+  });
 });

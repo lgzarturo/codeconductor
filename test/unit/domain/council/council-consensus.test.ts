@@ -55,11 +55,11 @@ describe('domain/council/council-consensus', () => {
     const v = councilConsensus([
       verdict({ agentId: 'a1', status: 'APPROVED' }),
       verdict({ agentId: 'a2', status: 'APPROVED' }),
-      verdict({ agentId: 'sec', agentRole: 'security', status: 'REJECTED', securityVeto: true }),
+      verdict({ agentId: 'security', agentRole: 'security', status: 'REJECTED', securityVeto: true }),
     ]);
     expect(v.status).toBe('REJECTED');
     expect(v.vetoApplied).toBe(true);
-    expect(v.vetoByAgentId).toBe('sec');
+    expect(v.vetoByAgentId).toBe('security');
     expect(v.summary).toContain('Security veto');
   });
 
@@ -396,12 +396,12 @@ describe('domain/council/council-consensus — unanimous with expected roster', 
 
   test('security veto still rejects even when the roster is incomplete', () => {
     const v = councilConsensus(
-      [verdict({ agentId: 'sec', agentRole: 'security', status: 'REJECTED', securityVeto: true })],
-      roster(['a1', 'a2', 'sec']),
+      [verdict({ agentId: 'security', agentRole: 'security', status: 'REJECTED', securityVeto: true })],
+      roster(['a1', 'a2', 'security']),
     );
     expect(v.status).toBe('REJECTED');
     expect(v.vetoApplied).toBe(true);
-    expect(v.vetoByAgentId).toBe('sec');
+    expect(v.vetoByAgentId).toBe('security');
   });
 
   test('compliance veto still rejects even when the roster is incomplete', () => {

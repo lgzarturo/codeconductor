@@ -56,6 +56,12 @@ export interface FileCopyResult {
   action: FileAction;
   dryRun?: boolean;
   error?: string;
+  /**
+   * Final content decided for this destination (post-render, post-merge).
+   * Present on written/appended/merged results so verify passes can reuse it
+   * instead of re-reading the file from disk.
+   */
+  renderedContent?: string;
 }
 
 export async function listFilesRecursive(dir: string, base = dir): Promise<string[]> {
@@ -453,7 +459,13 @@ export async function applySingleFile(
   modelConfig: ModelConfig | null,
   locale: string,
   /** Containment root for the final write. Required for any non-dry-run write. */
-  baseDir?: string
+  baseDir?: string,
+  /**
+   * Pre-rendered incoming content (post-render, pre-inject/merge). When
+   * present the source read and template render are skipped; MCP injection,
+   * strategy merge and the write still run.
+   */
+  preRendered?: string
 ): Promise<FileCopyResult> {
   if (strategy === 'skip') {
     return { src: srcPath, dest: destPath, action: 'skipped', dryRun };
@@ -482,15 +494,19 @@ export async function applySingleFile(
     return { src: srcPath, dest: destPath, action: 'skipped', dryRun };
   }
 
-  let content: string;
-  try {
-    content = await readFile(srcPath, 'utf-8');
-  } catch (e) {
-    return { src: srcPath, dest: destPath, action: 'error', error: `Cannot read source: ${e}` };
+  let incomingContent: string;
+  if (preRendered !== undefined) {
+    incomingContent = preRendered;
+  } else {
+    let content: string;
+    try {
+      content = await readFile(srcPath, 'utf-8');
+    } catch (e) {
+      return { src: srcPath, dest: destPath, action: 'error', error: `Cannot read source: ${e}` };
+    }
+    incomingContent =
+      isTemplate && modelConfig ? await renderTemplate(content, modelConfig, srcPath, locale) : content;
   }
-
-  let incomingContent =
-    isTemplate && modelConfig ? await renderTemplate(content, modelConfig, srcPath, locale) : content;
   incomingContent = await injectMcpServers(incomingContent, destPath);
   let finalContent = incomingContent;
   let action: FileAction = 'written';
@@ -546,7 +562,7 @@ export async function applySingleFile(
   }
 
   if (dryRun) {
-    return { src: srcPath, dest: destPath, action, dryRun: true };
+    return { src: srcPath, dest: destPath, action, dryRun: true, renderedContent: finalContent };
   }
 
   if (baseDir === undefined) {
@@ -565,7 +581,7 @@ export async function applySingleFile(
     await writeContainedFile(baseDir, relative(baseDir, destPath), finalContent, {
       force: true,
     });
-    return { src: srcPath, dest: destPath, action };
+    return { src: srcPath, dest: destPath, action, renderedContent: finalContent };
   } catch (e) {
     return { src: srcPath, dest: destPath, action: 'error', error: String(e) };
   }
@@ -579,7 +595,12 @@ export async function copyFromManifest(
   dryRun: boolean,
   force: boolean,
   modelConfig: ModelConfig | null = null,
-  locale = 'en'
+  locale = 'en',
+  /**
+   * Pre-rendered incoming content keyed by absolute destination, as produced
+   * by checkUpdates. Entries present here skip the source read and render.
+   */
+  preRendered?: Readonly<Record<string, string>>
 ): Promise<FileCopyResult[]> {
   const results: FileCopyResult[] = [];
 
@@ -609,7 +630,8 @@ export async function copyFromManifest(
           isTemplate,
           modelConfig,
           locale,
-          resolvedBaseDir
+          resolvedBaseDir,
+          preRendered?.[dest]
         )
       );
     }

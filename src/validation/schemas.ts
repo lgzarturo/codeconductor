@@ -1,3 +1,4 @@
+import { isAbsolute } from 'node:path';
 import { z } from 'zod';
 import { INDIVIDUAL_TARGETS, RUNNER_TARGETS } from '../core/runner/runner-target';
 
@@ -120,9 +121,25 @@ export const InstallStrategySchema = z.enum([
   'skip',
 ]);
 
+/**
+ * Manifest paths are relative by contract: absolute paths and `..` segments
+ * would let an edited manifest plant outside content into the project (src)
+ * or write outside the install root (dest).
+ */
+function isContainedRelativePath(value: string): boolean {
+  if (value === '' || isAbsolute(value)) return false;
+  return !value.replace(/\\/g, '/').split('/').includes('..');
+}
+
+const ContainedRelativePathSchema = z
+  .string()
+  .refine(isContainedRelativePath, (value) => ({
+    message: `Path must be relative without ".." segments: ${value}`,
+  }));
+
 export const ManifestEntrySchema = z.object({
-  src: z.string(),
-  dest: z.string(),
+  src: ContainedRelativePathSchema,
+  dest: ContainedRelativePathSchema,
   strategy: InstallStrategySchema,
   globalStrategy: InstallStrategySchema.optional(),
   template: z.boolean().optional(),

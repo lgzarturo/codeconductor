@@ -596,6 +596,10 @@ export async function routeCommand(
         contextStrategy: options['context-strategy'] as string | undefined,
         config: options.config as string | undefined,
         rest: validateRest,
+        panel: options.panel === true || options.panel === 'true',
+        panelType: options.type as string | undefined,
+        panelScope: options.scope as string | undefined,
+        panelRisk: options.risk as string | undefined,
       } as CcepOptions);
     }
 

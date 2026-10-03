@@ -252,6 +252,7 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
       { id: 'implement', agent: 'implementer' },
       {
         id: 'council-review',
+        agents: ['architect', 'product', 'delivery', 'data-ops', 'security-reviewer', 'devil'],
         skill: 'council',
         outputSchema: 'council-verdict',
       },

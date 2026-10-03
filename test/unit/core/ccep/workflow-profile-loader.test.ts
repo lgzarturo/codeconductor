@@ -25,6 +25,7 @@ describe('core/ccep/workflow-profile-loader', () => {
       expect(resolveWorkflowPhase(profile, 'intake')).toEqual({
         id: 'intake',
         role: 'task-coach',
+        roles: ['task-coach'],
         outputSchema: 'planner-output',
       });
     });
@@ -33,6 +34,7 @@ describe('core/ccep/workflow-profile-loader', () => {
       expect(resolveWorkflowPhase(profile, 'design')).toEqual({
         id: 'design',
         role: 'architect',
+        roles: ['architect', 'reviewer'],
         outputSchema: 'agent-output',
       });
     });
@@ -41,6 +43,7 @@ describe('core/ccep/workflow-profile-loader', () => {
       expect(resolveWorkflowPhase(profile, 'bare')).toEqual({
         id: 'bare',
         role: 'orchestrator',
+        roles: ['orchestrator'],
         outputSchema: 'agent-output',
       });
     });

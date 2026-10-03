@@ -344,7 +344,9 @@ Additional verification loops:
 - `bun run dev doctor` — checks install health, agent markers/sizes, and
   complementary-tool detection.
 - `bun run dev ccep validate` / `taskcard` / `consensus` — validate an
-  envelope, a Task Card, or a council verdict offline.
+  envelope, a Task Card, or a council verdict offline. `consensus --panel
+  --type <type> --scope <a,b> [--risk low|medium|high]` selects the minimal
+  voter panel (risk defaults through the risk classifier).
 - `bun test` — exercises the TDD state machine, confirmation gate, and
   risk classifier; run it after touching any determinism source.
 - Mutation contract: keep `presets/shared/mutation_runner.py` as the

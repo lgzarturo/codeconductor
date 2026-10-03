@@ -89,6 +89,15 @@ function isSecurityCategory(category: string): boolean {
   return SECURITY_CATEGORIES.has(category.trim().toLowerCase());
 }
 
+/**
+ * Only a security-focused emitter can trigger the security veto — otherwise
+ * any ballot could force REJECTED by setting the flag or a magic category.
+ * Same convention as ConsensusConfigSchema: the agent id contains 'security'.
+ */
+function isSecurityEmitter(agentId: string): boolean {
+  return canonicalAgentId(agentId).includes('security');
+}
+
 export function resolveQuorum(
   config: ConsensusConfig,
   ballotCount: number,
@@ -287,7 +296,12 @@ export function councilConsensus(
       hasLowConfidence = true;
     }
 
-    if (config.allowSecurityVeto && v.securityVeto && v.status === 'REJECTED') {
+    if (
+      config.allowSecurityVeto &&
+      v.securityVeto &&
+      v.status === 'REJECTED' &&
+      isSecurityEmitter(v.agentId)
+    ) {
       vetoApplied = true;
       vetoByAgentId = v.agentId;
     }
@@ -302,7 +316,8 @@ export function councilConsensus(
       if (
         config.allowSecurityVeto &&
         finding.severity === 'critical' &&
-        isSecurityCategory(finding.category)
+        isSecurityCategory(finding.category) &&
+        isSecurityEmitter(v.agentId)
       ) {
         vetoApplied = true;
         vetoByAgentId = v.agentId;

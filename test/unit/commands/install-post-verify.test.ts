@@ -97,6 +97,16 @@ describe('verifyRenderedFiles', () => {
     expect(warnings).toEqual([]);
   });
 
+  test('verifies attached content without touching disk', async () => {
+    const dest = join(base, 'attached', 'AGENTS.md');
+    // Never create the file: renderedContent must be verified in memory.
+    const warnings = await verifyRenderedFiles(manifestWithTemplateEntry('attached'), base, [
+      { src: 'x', dest, action: 'written', renderedContent: 'Model: {{MODEL}}\n' },
+    ]);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('{{MODEL}}');
+  });
+
   test('skips results that errored, were skipped, or were a dry run', async () => {
     const dest = join(base, 'skipped-case', 'AGENTS.md');
     // Never actually create the file — an errored/skipped/dry-run result

@@ -2,6 +2,7 @@ import { access, mkdir, rename, writeFile } from 'node:fs/promises';
 import { basename, resolve } from 'node:path';
 import type { BacklogItemInput, OpenspecTaskCardInput } from '../../validation/schemas';
 import { buildChangeSlug } from './backlog-planner';
+import { markUntrusted } from '../shared/untrusted-text';
 
 export interface OpenspecTasksOptions {
   readonly tddRequired?: boolean;
@@ -25,13 +26,13 @@ function proposalContent(item: BacklogItemInput): string {
 
 ## Why
 
-${item.description}
+${markUntrusted('description', item.description)}
 
-${item.businessValue ? `**Business value:** ${item.businessValue}` : ''}
+${item.businessValue ? `**Business value:**\n${markUntrusted('business-value', item.businessValue)}` : ''}
 
 ## What Changes
 
-- ${item.scope}
+- ${markUntrusted('scope', item.scope)}
 
 ## Capabilities
 
@@ -40,9 +41,10 @@ ${item.businessValue ? `**Business value:** ${item.businessValue}` : ''}
 
 ## Impact
 
-${item.risks ? `Risks: ${item.risks}` : 'See design.md for technical impact.'}
+${item.risks ? `Risks:\n${markUntrusted('risks', item.risks)}` : 'See design.md for technical impact.'}
 
-**Out of scope:** ${item.outOfScope || 'None specified.'}
+**Out of scope:**
+${markUntrusted('out-of-scope', item.outOfScope || 'None specified.')}
 `;
 }
 
@@ -51,15 +53,19 @@ function designContent(item: BacklogItemInput): string {
 
 ## Approach
 
-Deliver "${item.title}" inside ${item.scope}. The architect MUST refine files and risks before implementation.
+Deliver "${item.title}" inside:
+
+${markUntrusted('scope', item.scope)}
+
+The architect MUST refine files and risks before implementation.
 
 ## Files Affected
 
-${item.scope}
+${markUntrusted('scope', item.scope)}
 
 ## Acceptance Criteria
 
-${item.acceptanceCriteria.map((c) => `- ${c}`).join('\n')}
+${item.acceptanceCriteria.map((c) => markUntrusted('acceptance-criterion', c)).join('\n\n')}
 
 ## Complexity Tracking
 

@@ -62,7 +62,7 @@ implementer must:
 1. Write the minimal code required to pass the tests.
 2. Touch ONLY the files specified in the Technical Plan (Surgical Changes).
 3. NOT refactor adjacent code, change existing styles, or build speculative features.
-4. Run the tests. Loop `implementer` -> `tester` until all tests pass (Green state).
+4. Run the tests. Loop `implementer` -> `tester` until all tests pass (Green state), at most 3 iterations -- then stop and report the failing tests instead of looping.
 
 ---
 
@@ -74,7 +74,7 @@ The council will evaluate the diff against the 6 axes (Architecture, Security, P
 
 If ANY agent votes CRITICAL (especially due to over-engineering, scope creep, or missing the verifiable goals):
 - The Review Report status is **BLOCKED**.
-- Return to Step 4 with the feedback.
+- Return to Step 4 with the feedback (at most 3 review rounds in total -- then deliver the BLOCKED verdict with the unresolved findings instead of looping).
 
 If APPROVED (no CRITICAL findings):
 - Deliver the final Council Verdict and the diff summary.

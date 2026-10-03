@@ -5,6 +5,7 @@ import { WORKFLOW_PROFILES } from './profiles';
 export interface ResolvedWorkflowPhase {
   readonly id: string;
   readonly role: string;
+  readonly roles: readonly string[];
   readonly outputSchema: string;
 }
 
@@ -16,9 +17,14 @@ export function resolveWorkflowPhase(
   if (!phase) {
     return null;
   }
-  const role = phase.agent ?? phase.agents?.[0] ?? 'orchestrator';
+  const roles: readonly string[] =
+    phase.agent !== undefined
+      ? [phase.agent]
+      : phase.agents !== undefined && phase.agents.length > 0
+        ? [...phase.agents]
+        : ['orchestrator'];
   const outputSchema = phase.outputSchema ?? profile.intakeSchema ?? 'agent-output';
-  return { id: phase.id, role, outputSchema };
+  return { id: phase.id, role: roles[0], roles, outputSchema };
 }
 
 export function loadWorkflowProfile(

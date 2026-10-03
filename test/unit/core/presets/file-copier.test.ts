@@ -401,6 +401,45 @@ describe('core/presets/file-copier', () => {
       expect(await readFile(join(base, 'file.md'), 'utf-8')).toBe('content');
     });
 
+    test('attaches the decided content to written results', async () => {
+      const presets = await tmp('pre-');
+      await writeFile(join(presets, 'file.md'), 'content');
+      const base = await tmp('base-');
+      const results = await copyFromManifest(
+        { target: 'claude', entries: [{ src: 'file.md', dest: 'file.md', strategy: 'overwrite' }] },
+        presets,
+        base,
+        false,
+        false,
+        true,
+      );
+      expect(results[0]?.renderedContent).toBe('content');
+    });
+
+    test('reuses pre-rendered content instead of reading and rendering the source', async () => {
+      const presets = await tmp('pre-');
+      await writeFile(join(presets, 'agent.md'), 'LIVE {{MODEL}}');
+      const base = await tmp('base-');
+      const dest = join(base, 'agent.md');
+      const results = await copyFromManifest(
+        {
+          target: 'claude',
+          entries: [{ src: 'agent.md', dest: 'agent.md', strategy: 'overwrite', template: true }],
+        },
+        presets,
+        base,
+        false,
+        false,
+        true,
+        MODEL_CONFIG,
+        'en',
+        { [dest]: 'PINNED' },
+      );
+      expect(results[0]?.action).toBe('written');
+      expect(await readFile(dest, 'utf-8')).toBe('PINNED');
+      expect(results[0]?.renderedContent).toBe('PINNED');
+    });
+
     test('directory entries produce results in lexicographic order', async () => {
       const presets = await tmp('pre-');
       await mkdir(join(presets, 'agents', 'nested'), { recursive: true });

@@ -7,6 +7,7 @@ import {
   type WorkflowCommandInput,
   type WorkflowProfileInput,
 } from '../../validation/schemas';
+import { COUNCIL_FALLBACK_PROFILE } from './council-fallback.generated';
 
 const baseGate = { stopOnHighRisk: true, stopOnQuestions: true };
 
@@ -16,34 +17,10 @@ const baseGate = { stopOnHighRisk: true, stopOnQuestions: true };
  * entry live-reads it so the two can never drift in the repo.
  *
  * The packaged `node` bundle does not ship the YAML asset, so when the file
- * is absent (ENOENT only — parse/validation errors still throw) the frozen
- * copy below is used. Keep that copy in sync with `council.yml`.
+ * is absent (ENOENT only — parse/validation errors still throw) the
+ * generated fallback below is used. That copy is generated from
+ * `council.yml` by renderAll() — never hand-synced (Q3).
  */
-const COUNCIL_FALLBACK_PROFILE: WorkflowProfileInput = {
-  id: 'council',
-  version: 1,
-  command: 'council',
-  phases: [
-    { id: 'wayfinding', agent: 'repo-explorer', outputSchema: 'agent-output' },
-    {
-      id: 'deliberation',
-      agents: ['task-coach', 'architect', 'devil'],
-      skill: 'council',
-      outputSchema: 'planner-output',
-      stopGate: 'confirmation',
-    },
-    { id: 'tdd', agent: 'tester', requires: 'red-state' },
-    { id: 'implement', agent: 'implementer' },
-    {
-      id: 'council-review',
-      agents: ['architect', 'product', 'delivery', 'data-ops', 'security-reviewer', 'devil'],
-      skill: 'council',
-      outputSchema: 'council-verdict',
-    },
-  ],
-  routing: { default: ['wayfinding', 'deliberation', 'tdd', 'implement', 'council-review'] },
-  confirmationGate: baseGate,
-};
 
 function loadCouncilMirror(): WorkflowProfileInput {
   try {

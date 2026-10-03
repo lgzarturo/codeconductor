@@ -6,7 +6,8 @@
  *
  * Two independent generators, two independent canonical sources:
  * - Codex skills + Gemini TOML commands, derived from
- *   presets/cursor/commands/cc/*.md (renderAll()).
+ *   presets/cursor/commands/cc/*.md (renderAll()), plus the Q3 council
+ *   fallback mirror derived from src/core/ccep/workflows/council.yml.
  * - Shared skill copies, derived from skills/<name>/SKILL.md (syncAll()).
  */
 import { spawnSync } from 'node:child_process';
@@ -27,6 +28,9 @@ const generatedPaths = [
     `presets/gemini/commands/cc/${cmd}.toml`,
     `presets/codex/skills/cc-${cmd}/SKILL.md`,
   ]),
+  // Q3: the council fallback mirror is generated from council.yml by
+  // renderAll() — drift-covered so it can never silently desync.
+  'src/core/ccep/council-fallback.generated.ts',
   ...loadSharedSkills().flatMap((entry) =>
     entry.targets.map((target) => `presets/${target}/skills/${entry.name}/SKILL.md`)
   ),

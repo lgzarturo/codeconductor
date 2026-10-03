@@ -54,6 +54,7 @@
     "test:fast": "bun run scripts/test-fast.ts",
     "typecheck": "tsc --noEmit",
     "lint": "bun run scripts/lint.ts",
+    "check:council-redirect": "bun run scripts/check-council-redirect.ts",
     "check:coverage": "bun run scripts/check-coverage.ts",
     "check:prompt-changelog": "bun run scripts/check-prompt-changelog.ts",
     "check:drift": "bun run scripts/check-drift.ts",

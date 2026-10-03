@@ -150,8 +150,17 @@ function injectBootstrap(content: string, cmd: string): string {
   return content;
 }
 
-const COUNCIL_GENERATED_BANNER =
-  '<!-- GENERATED from presets/agy/workflows/cc-council.md by scripts/inject-ccep-bootstrap.ts — DO NOT EDIT. -->';
+const COUNCIL_CANONICAL = 'presets/agy/workflows/cc-council.md';
+
+/**
+ * D3 redirect mode: the non-canonical council copies are minimal stubs
+ * (GENERATED banner + canonical pointer + compressed Step 0 entry line),
+ * never full Steps bodies. Kept under 400 bytes so the 5 copies stop
+ * duplicating ~19KB of identical prompt text.
+ */
+const COUNCIL_REDIRECT_BANNER = `<!-- GENERATED redirect to ${COUNCIL_CANONICAL} by scripts/inject-ccep-bootstrap.ts — DO NOT EDIT. -->`;
+
+const COUNCIL_REDIRECT_POINTER = `command: council. Read \`${COUNCIL_CANONICAL}\`, then \`ccep profile council\` + \`ccep compile --command council --view prompt\`.`;
 
 /**
  * Rewrite the backtick-wrapped `/cc:x` cross-references the template carries
@@ -165,13 +174,16 @@ function rewriteCouncilInvocation(body: string, surface: CommandSurface): string
   return body.replace(/`\/cc:([a-z0-9-]+)`/g, (_match, name: string) => `\`/cc-${name}\``);
 }
 
+function councilRedirectStub(surface: CommandSurface): string {
+  const body = `${COUNCIL_REDIRECT_BANNER}\n\n${BOOTSTRAP_HEADING}\n\n${COUNCIL_REDIRECT_POINTER}\n`;
+  // The stub carries no invocation spellings, so the per-target rewrite is a
+  // no-op by construction — kept in the pipeline so a future pointer that
+  // names another command still renders in the runner's native surface.
+  return `---\ndescription: Council-driven workflow with CCEP-1 bootstrap\n---\n\n${rewriteCouncilInvocation(body, surface)}`;
+}
+
 function writeCouncilPreset(targetPath: string, surface: CommandSurface): boolean {
-  const template = readFileSync(join(ROOT, 'presets/agy/workflows/cc-council.md'), 'utf-8');
-  let body = template.replace(/^---[\s\S]*?---\n\n/, '');
-  body = body.replace(/^<!--[\s\S]*?-->\n\n/, '');
-  body = injectBootstrap(body, 'council');
-  body = rewriteCouncilInvocation(body, surface);
-  const wrapped = `---\ndescription: Council-driven workflow with CCEP-1 bootstrap\n---\n\n${COUNCIL_GENERATED_BANNER}\n\n${body}`;
+  const wrapped = councilRedirectStub(surface);
   const before = existsSync(targetPath) ? readFileSync(targetPath, 'utf-8') : null;
   if (before === wrapped) return false;
   mkdirSync(dirname(targetPath), { recursive: true });
@@ -184,8 +196,8 @@ for (const runner of RUNNER_PATHS) {
   for (const cmd of COMMANDS) {
     const filePath = join(ROOT, runner.dir, runner.resolve(cmd));
     if (cmd === 'council' && runner.dir !== 'presets/agy/workflows') {
-      // Council copies are fully derived from the agy template — always
-      // re-render so they can never drift from the source of truth.
+      // Council copies are redirect stubs pointing at the agy canonical
+      // source — always re-render so they can never drift from it.
       if (writeCouncilPreset(filePath, runner.surface)) updated++;
       continue;
     }

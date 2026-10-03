@@ -2,7 +2,7 @@
 
 The canonical shipped/planned matrix is
 [current-status.md](current-status.md). The published package version is
-`1.6.0`, the current stable release in the `1.6.x` line.
+`1.6.1`, the current stable release in the `1.6.x` line.
 
 ## Workflow Runtime
 

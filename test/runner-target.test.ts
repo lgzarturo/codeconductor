@@ -1,6 +1,6 @@
 /**
  * Tests for Runner Target validation and parsing.
- * Ensures 7 AI tool targets (including agy and pi) are properly supported.
+ * Ensures 8 AI tool targets (including agy, pi and muse) are properly supported.
  */
 import { describe, expect, test } from 'bun:test';
 import {
@@ -13,7 +13,7 @@ import {
 
 describe('RunnerTarget', () => {
   describe('RUNNER_TARGETS constant', () => {
-    test('contains all 8 targets including all', () => {
+    test('contains all 9 targets including all', () => {
       expect(RUNNER_TARGETS).toContain('opencode');
       expect(RUNNER_TARGETS).toContain('claude');
       expect(RUNNER_TARGETS).toContain('codex');
@@ -21,13 +21,14 @@ describe('RunnerTarget', () => {
       expect(RUNNER_TARGETS).toContain('cursor');
       expect(RUNNER_TARGETS).toContain('agy');
       expect(RUNNER_TARGETS).toContain('pi');
+      expect(RUNNER_TARGETS).toContain('muse');
       expect(RUNNER_TARGETS).toContain('all');
-      expect(RUNNER_TARGETS).toHaveLength(8);
+      expect(RUNNER_TARGETS).toHaveLength(9);
     });
   });
 
   describe('INDIVIDUAL_TARGETS constant', () => {
-    test('contains all 7 individual targets', () => {
+    test('contains all 8 individual targets', () => {
       expect(INDIVIDUAL_TARGETS).toContain('opencode');
       expect(INDIVIDUAL_TARGETS).toContain('claude');
       expect(INDIVIDUAL_TARGETS).toContain('codex');
@@ -35,7 +36,8 @@ describe('RunnerTarget', () => {
       expect(INDIVIDUAL_TARGETS).toContain('cursor');
       expect(INDIVIDUAL_TARGETS).toContain('agy');
       expect(INDIVIDUAL_TARGETS).toContain('pi');
-      expect(INDIVIDUAL_TARGETS).toHaveLength(7);
+      expect(INDIVIDUAL_TARGETS).toContain('muse');
+      expect(INDIVIDUAL_TARGETS).toHaveLength(8);
     });
 
     test('does not contain all', () => {
@@ -52,6 +54,7 @@ describe('RunnerTarget', () => {
       expect(isRunnerTarget('cursor')).toBe(true);
       expect(isRunnerTarget('agy')).toBe(true);
       expect(isRunnerTarget('pi')).toBe(true);
+      expect(isRunnerTarget('muse')).toBe(true);
       expect(isRunnerTarget('all')).toBe(true);
     });
 
@@ -72,6 +75,7 @@ describe('RunnerTarget', () => {
       expect(parseRunnerTarget('cursor')).toBe('cursor');
       expect(parseRunnerTarget('agy')).toBe('agy');
       expect(parseRunnerTarget('pi')).toBe('pi');
+      expect(parseRunnerTarget('muse')).toBe('muse');
       expect(parseRunnerTarget('all')).toBe('all');
     });
 
@@ -90,11 +94,12 @@ describe('RunnerTarget', () => {
       expect(getIndividualTargets('cursor')).toEqual(['cursor']);
       expect(getIndividualTargets('agy')).toEqual(['agy']);
       expect(getIndividualTargets('pi')).toEqual(['pi']);
+      expect(getIndividualTargets('muse')).toEqual(['muse']);
     });
 
     test('returns all individual targets for all', () => {
       const targets = getIndividualTargets('all');
-      expect(targets).toHaveLength(7);
+      expect(targets).toHaveLength(8);
       expect(targets).toContain('opencode');
       expect(targets).toContain('claude');
       expect(targets).toContain('codex');
@@ -102,6 +107,7 @@ describe('RunnerTarget', () => {
       expect(targets).toContain('cursor');
       expect(targets).toContain('agy');
       expect(targets).toContain('pi');
+      expect(targets).toContain('muse');
     });
   });
 });
@@ -126,5 +132,10 @@ describe('New AI Tool Targets', () => {
   test('pi is a valid runner target', () => {
     expect(isRunnerTarget('pi')).toBe(true);
     expect(parseRunnerTarget('pi')).toBe('pi');
+  });
+
+  test('muse is a valid runner target', () => {
+    expect(isRunnerTarget('muse')).toBe(true);
+    expect(parseRunnerTarget('muse')).toBe('muse');
   });
 });

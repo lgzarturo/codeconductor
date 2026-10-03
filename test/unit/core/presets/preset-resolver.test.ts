@@ -92,6 +92,7 @@ describe('core/presets/preset-resolver', () => {
       expect(resolvePreset('codex', profile()).assets).toContain('AGENTS.md');
       expect(resolvePreset('cursor', profile()).assets).toContain('.cursorignore');
       expect(resolvePreset('agy', profile()).assets).toContain('workflows');
+      expect(resolvePreset('muse', profile()).assets).toContain('hooks.json');
     });
   });
 

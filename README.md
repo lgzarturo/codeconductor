@@ -27,7 +27,7 @@ contracts, task cards, and risk-based routing.
 >   `.codeconductor/config.yml`, copies `council.yml` and `policy.yml` into
 >   `.codeconductor/presets/`
 > - `npx cc-codeconductor install council --target <opencode|claude|codex|agy|all>`
-> - `npx cc-codeconductor install preset --target <opencode|claude|codex|gemini|cursor|agy|all>`
+> - `npx cc-codeconductor install preset --target <opencode|claude|codex|gemini|cursor|agy|muse|all>`
 > - `npx cc-codeconductor install lsp --target <…>`
 > - `npx cc-codeconductor detect` / `status` / `version` / `doctor` / `update` /
 >   `migrate`

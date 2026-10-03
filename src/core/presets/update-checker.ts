@@ -38,6 +38,9 @@ export function getTargetInstallationPath(
   if (target === 'agy') {
     return isGlobal ? resolve(basePath, '.gemini', 'config') : resolve(basePath, '.agents');
   }
+  if (target === 'muse' && isGlobal) {
+    return resolve(basePath, '.agents');
+  }
   return resolve(basePath, `.${target}`);
 }
 

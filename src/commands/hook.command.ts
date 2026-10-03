@@ -9,6 +9,7 @@ import {
   formatSessionStart,
   parseAgyPayload,
   parseClaudePayload,
+  parseMusePayload,
   type HookEvent,
   type HookFormat,
   type PreToolInput,
@@ -44,7 +45,12 @@ export async function readStdinText(): Promise<string> {
 }
 
 function resolvePreToolInput(options: HookOptions, stdinText: string, format: HookFormat): PreToolInput {
-  const fromStdin = format === 'agy' ? parseAgyPayload(stdinText) : parseClaudePayload(stdinText);
+  const fromStdin =
+    format === 'agy'
+      ? parseAgyPayload(stdinText)
+      : format === 'muse'
+        ? parseMusePayload(stdinText)
+        : parseClaudePayload(stdinText);
   return {
     command:
       options.command ??

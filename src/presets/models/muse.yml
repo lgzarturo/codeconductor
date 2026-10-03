@@ -1,0 +1,4 @@
+# Model configuration for Muse preset
+# Agent models and tool-name mappings live in roles.yml; loadModelConfig()
+# merges this file with it. See roles.yml for the shared table.
+target: muse

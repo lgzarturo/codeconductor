@@ -1,0 +1,18 @@
+target: muse
+entries:
+  - src: muse/AGENTS.md
+    dest: AGENTS.md
+    strategy: merge-managed
+    globalStrategy: skip
+    template: true
+  - src: opencode/skills
+    dest: .agents/skills
+    strategy: overwrite
+  - src: muse/hooks.json
+    dest: .muse/hooks.json
+    strategy: overwrite
+    globalStrategy: skip
+  - src: shared/invoke-hook.cjs
+    dest: .muse/hooks/invoke-hook.cjs
+    strategy: overwrite
+    globalStrategy: skip

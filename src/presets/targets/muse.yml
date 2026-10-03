@@ -1,0 +1,12 @@
+target: muse
+invocation: colon
+commandFormat: skill
+contextFile: AGENTS.md
+# Roles are invoked directly with step-specific context; Muse slash entries
+# are skill-invocation shortcuts, not separately rendered prompt templates.
+subagentInvocationStyle: invoke-with-context
+capabilities:
+  subagents: true
+  hooks: true
+  mcp: true
+  council: false

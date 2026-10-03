@@ -111,5 +111,7 @@ function resolveAssets(target: Exclude<RunnerTargetInput, 'all'>): string[] {
       return ['AGENTS.md', 'rules', 'workflows', 'skills', 'prompts/v1.0.0'];
     case 'pi':
       return ['AGENTS.md', 'settings.json', 'prompts', 'skills', 'agents', 'prompts/v1.0.0'];
+    case 'muse':
+      return ['AGENTS.md', 'skills', 'hooks.json'];
   }
 }

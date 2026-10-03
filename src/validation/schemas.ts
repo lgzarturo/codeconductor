@@ -172,6 +172,7 @@ export const ModelConfigSchema = z.object({
       agy: z.string().optional(),
       pi: z.string().optional(),
       grok: z.string().optional(),
+      muse: z.string().optional(),
     })
   ),
   tools: z.record(z.string(), ToolProviderNamesSchema).optional(),

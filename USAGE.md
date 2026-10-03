@@ -47,6 +47,7 @@ All commands ship per runner from one source
 | OpenCode            | `.opencode/commands/cc-<name>.md`   | `/cc-<name>`                        |
 | Codex               | `.codex/skills/cc-*/SKILL.md`       | via `AGENTS.md` routing             |
 | Antigravity (agy)   | `.agents/workflows/cc-<name>.md`    | `/cc-<name>`                        |
+| Muse                | `.agents/skills/` (shared), `.muse/hooks.json` | via skill shortcuts      |
 
 Utility commands outside the CCEP set: `/commit` (Conventional Commits from
 staged diff) and `/graphify` (knowledge-graph pipeline).

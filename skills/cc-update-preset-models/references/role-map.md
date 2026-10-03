@@ -22,6 +22,7 @@ docs in the skill workflow; replace IDs, keep the three-tier shape.
 | `agy` | `gemini-3.1-pro-high` | `claude-sonnet-4-6` | `gemini-3.8-flash-medium` |
 | `cursor` | `claude-opus-5-thinking-high` | implementer / tester / repo-explorer `composer-2.5-fast`; orchestrator `composer-2.5`; reviewer / complexity-auditor / contract-builder `claude-sonnet-5-thinking-high` | `claude-4.5-haiku-thinking` |
 | `grok` | `cursor-grok-4.6-high-fast` on every role | same | same |
+| `muse` | `muse-spark-1.3` on every role | same | same |
 
 OpenCode default TUI (`presets/opencode/opencode.jsonc`): `opencode-go/deepseek-v4.1-flash`.
 

@@ -58,7 +58,7 @@ export function evaluateRoleAccess(
 }
 
 export type HookEvent = 'pre-tool' | 'post-tool' | 'session-start';
-export type HookFormat = 'claude' | 'agy';
+export type HookFormat = 'claude' | 'agy' | 'muse';
 export type HookAction = 'allow' | 'ask' | 'deny';
 
 export interface HookVerdict {
@@ -203,6 +203,16 @@ export function formatHookOutput(verdict: HookVerdict, format: HookFormat): stri
 
 export function claudeExitCode(verdict: HookVerdict): number {
   return verdict.action === 'deny' ? 2 : 0;
+}
+
+/**
+ * Parse a Muse PreToolUse payload. Muse speaks the Claude-compatible hook
+ * protocol (`hook_event_name` / `tool_name` / `tool_input` over stdin), so
+ * this shares the field extraction — kept as its own function so future
+ * Muse-only fields have a home without disturbing the Claude path.
+ */
+export function parseMusePayload(stdinText: string): PreToolInput {
+  return parseClaudePayload(stdinText);
 }
 
 export function parseAgyPayload(raw: string): PreToolInput {

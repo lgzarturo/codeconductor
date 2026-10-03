@@ -177,6 +177,7 @@ npx cc-codeconductor install preset --target opencode --force
 | `codex`    | `.codex/AGENTS.md`, `.codex/skills/cc-*/SKILL.md` (`$cc-name`)    |
 | `gemini`   | `.gemini/commands/cc/*.toml` (`/cc:name`), `.gemini/skills/`     |
 | `agy`      | `.agents/AGENTS.md`, `.agents/skills/`, `.agents/workflows/`, etc. |
+| `muse`     | `AGENTS.md`, `.agents/skills/`, `.muse/hooks.json`                  |
 
 ---
 
@@ -236,7 +237,7 @@ npx cc-codeconductor install lsp --target cursor --force
 
 | Flag       | Description                                                        |
 | ---------- | ------------------------------------------------------------------ |
-| `--target` | Required. One of `opencode`, `claude`, `codex`, `gemini`, `cursor`, `agy`, `all` |
+| `--target` | Required. One of `opencode`, `claude`, `codex`, `gemini`, `cursor`, `agy`, `muse`, `all` |
 | `--lang`   | Optional. Comma-separated languages (e.g., `typescript,python`). Overrides auto-detection |
 
 ---

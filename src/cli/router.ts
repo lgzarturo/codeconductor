@@ -613,6 +613,8 @@ export async function routeCommand(
         'block',
         'unblock',
         'archive',
+        'sync',
+        'verify',
       ];
       let openspecSub = 'validate';
       let itemId: string | undefined = (options.item as string) || undefined;

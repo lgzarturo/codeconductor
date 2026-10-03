@@ -1,4 +1,4 @@
-import { mkdir, rename, writeFile } from 'node:fs/promises';
+import { access, mkdir, rename, writeFile } from 'node:fs/promises';
 import { basename, resolve } from 'node:path';
 import type { BacklogItemInput, OpenspecTaskCardInput } from '../../validation/schemas';
 import { buildChangeSlug } from './backlog-planner';
@@ -204,6 +204,15 @@ export async function archiveChangeFolder(
   const destDir = resolve(projectRoot, 'openspec', 'changes', 'archive');
   await mkdir(destDir, { recursive: true });
   const dest = resolve(destDir, slug);
+  try {
+    await access(dest);
+    throw new Error(`Archive destination already exists: openspec/changes/archive/${slug}`);
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith('Archive destination already exists')) {
+      throw error;
+    }
+    // Destination is free; anything else from access means "not found".
+  }
   await rename(src, dest);
   return `openspec/changes/archive/${slug}`;
 }

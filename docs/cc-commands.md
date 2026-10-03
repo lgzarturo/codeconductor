@@ -596,10 +596,12 @@ and return the next executable card.
 | `scan` | Git diff + item-level change detection vs last snapshot |
 | `plan [BC-id]` | Generate TaskCards and `openspec/changes/<slug>/` with FR/SC specs |
 | `analyze` | Read-only FR/SC → tasks → tests coverage; exit 1 on CRITICAL |
-| `status` | Active item, next READY item, task card counts |
+| `status` | Active item, next READY item, task card counts, artifact presence, checkbox progress, next steps |
 | `next` | JSON for the next pending TaskCard (respects dependencies) |
 | `done` | Mark a card done; test/implement require verification-runner evidence when TDD is on |
-| `archive` | Cards done + PASS scorecard when review is required |
+| `sync [BC-id]` | Merge delta specs into `openspec/specs/` without closing the item |
+| `verify [BC-id]` | Advisory pre-archive checklist (`archiveReady`, Completeness/Correctness/Coherence); always exit 0 |
+| `archive` | Cards done + PASS scorecard when review is required; re-checks artifacts and analyze CRITICALs |
 
 **Examples:**
 
@@ -610,6 +612,8 @@ npx cc-codeconductor openspec plan BC-001
 npx cc-codeconductor openspec analyze --output json
 npx cc-codeconductor openspec status --output json
 npx cc-codeconductor openspec next --output json
+npx cc-codeconductor openspec sync BC-001
+npx cc-codeconductor openspec verify BC-001 --output json
 ```
 
 **State files:**

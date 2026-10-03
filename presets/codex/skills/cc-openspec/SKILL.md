@@ -128,6 +128,13 @@ Show:
 
 Update BACKLOG item status to `PLANNED` (CLI does this automatically).
 
+`plan` is planning-only: it writes TaskCards plus proposal/design/tasks/specs
+and stops. Before Step 5, review the plan in this order — proposal → delta
+specs → tasks — and confirm: intent is right, no scope creep, every FR is
+testable with a scenario that exercises it, edge/error cases are covered, and
+each task traces to an FR/SC. Fix the Markdown directly or ask for revisions.
+Do not `start` any card until the plan reads correctly.
+
 ---
 
 ## Drive card status (CLI)
@@ -138,10 +145,12 @@ Do not edit `.codeconductor/openspec-state.json` by hand.
 npx cc-codeconductor openspec start <cardId>
 npx cc-codeconductor openspec done <cardId>
 npx cc-codeconductor openspec block <cardId> --reason "waiting on design"
+npx cc-codeconductor openspec sync <itemId>
+npx cc-codeconductor openspec verify <itemId>
 npx cc-codeconductor openspec archive <itemId>
 ```
 
-`start` moves the card `pending → doing` and the item `PLANNED → IN_PROGRESS`. `done` marks the card complete, updates Progress, and moves the item to `REVIEW` when every card is done and review is required. `archive` requires all cards done (and review evidence when Global review is required) and moves `openspec/changes/<slug>` to `archive/`.
+`start` moves the card `pending → doing` and the item `PLANNED → IN_PROGRESS`. `done` marks the card complete, updates Progress, and moves the item to `REVIEW` when every card is done and review is required. `sync` merges delta specs into `openspec/specs/` without closing the item (optional before archive). `verify` is the advisory pre-archive checklist: exit 0 with `archiveReady` plus Completeness/Correctness/Coherence issues. `archive` requires all cards done (and review evidence when Global review is required), re-checks planning artifacts and analyze CRITICALs, warns on unchecked `tasks.md` boxes, then moves `openspec/changes/<slug>` to `archive/`.
 
 For test and implementation cards, `done` also requires a current RDD-backed
 RED or GREEN receipt respectively. Do not reuse evidence after candidate files
@@ -182,6 +191,14 @@ After each phase:
 
 Implementer: create a Git worktree before editing (`git worktree add ../<branch>-session <branch>`).
 
+Discover is read-only: `repo-explorer` never writes code. The implementer ticks
+`tasks.md` boxes (`- [ ]` → `- [x]`) as each FR lands — only `x`/`X` counts as
+done. If implementation reveals a design problem, pause and reconcile the
+planning artifacts first (any direction: a later artifact may force revising an
+earlier one). Planning artifacts only in that step — never code — and confirm
+each edit. If the item's intent changed rather than its details, open a fresh
+item with `$cc-backlog` instead of warping this one.
+
 ---
 
 ## Step 6 — Review gate
@@ -206,6 +223,8 @@ If **approved**: proceed to Step 6.
 ---
 
 ## Step 7 — Scorecard and update backlog
+
+First run the advisory pre-archive check (`npx cc-codeconductor openspec verify <BC-id> --output json`): confirm `archiveReady` and clear any Completeness/Correctness/Coherence issues. Optionally run `openspec sync <BC-id>` to merge delta specs into `openspec/specs/` without closing the item. Then:
 
 1. `npx cc-codeconductor scorecard create --task <BC-id> --from-diff`
 2. Complete criteria; `scorecard record` with verdict and optional cost/tokens

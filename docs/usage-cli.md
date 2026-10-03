@@ -283,12 +283,16 @@ npx cc-codeconductor openspec validate
 npx cc-codeconductor openspec analyze --output json
 npx cc-codeconductor openspec plan BC-001
 npx cc-codeconductor openspec done --card <id>
+npx cc-codeconductor openspec sync BC-001
+npx cc-codeconductor openspec verify BC-001 --output json
 npx cc-codeconductor openspec archive
 ```
 
 `validate` also checks the **active** change folder (RFC 2119, Given/When/Then,
 `FR-###` / `SC-###`, max 3 `[NEEDS CLARIFICATION]`). `analyze` is read-only
-coverage (FR/SC → tasks → tests) and exits 1 on CRITICAL. With
+coverage (FR/SC → tasks → tests) and exits 1 on CRITICAL. `verify` is the
+advisory pre-archive checklist (`archiveReady`, always exit 0); `sync` merges
+delta specs without closing the item. With
 `TDD required: yes`, `done` on test/implement needs verification-runner
 evidence. With `Review required: yes`, `archive` needs a PASS scorecard.
 

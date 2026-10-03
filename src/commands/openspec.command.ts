@@ -15,7 +15,13 @@ import {
 } from '../core/openspec/openspec-generator';
 import { assessChangeFolder } from '../core/openspec/spec-quality';
 import { analyzeChangeFolder } from '../core/openspec/spec-analyzer';
+import type { SpecAnalyzeReport } from '../core/openspec/spec-analyzer';
 import { syncChangeSpecs } from '../core/openspec/spec-sync';
+import {
+  missingArtifacts,
+  readArtifactProgress,
+} from '../core/openspec/artifact-progress';
+import type { ArtifactProgress } from '../core/openspec/artifact-progress';
 import { SpecAnalyzeReportSchema } from '../validation/schemas';
 import { hasTddRunnerEvidence } from '../core/verification/verification-runner';
 import { hasPassingScorecard } from '../core/evaluation/outcome-store';
@@ -49,7 +55,7 @@ export interface OpenspecOptions {
 }
 
 const KNOWN_SUBCOMMANDS =
-  'validate, scan, plan, analyze, status, next, start, done, block, unblock, archive';
+  'validate, scan, plan, analyze, status, next, start, done, block, unblock, archive, sync, verify';
 
 /**
  * Openspec CLI — validate, scan, plan, status, next, start, done, block, unblock, archive
@@ -83,6 +89,10 @@ export async function openspecCommand(
       return handleUnblock(projectRoot, itemId);
     case 'archive':
       return handleArchive(projectRoot, itemId);
+    case 'sync':
+      return handleSync(projectRoot, itemId);
+    case 'verify':
+      return handleVerify(projectRoot, itemId);
     default:
       return {
         code: 1,
@@ -151,6 +161,115 @@ function findCard(
 
 function itemCards(state: OpenspecStateInput, backlogId: string): OpenspecTaskCardInput[] {
   return state.taskCards.filter((c) => c.backlogId === backlogId);
+}
+
+function resolveActiveChange(
+  state: OpenspecStateInput,
+  command: string,
+  itemId?: string,
+):
+  | { ok: true; targetId: string; changePath: string }
+  | { ok: false; response: { code: number; data?: unknown } } {
+  const targetId = itemId ?? state.activeItemId;
+  if (!targetId) {
+    return {
+      ok: false,
+      response: fail(command, ['No active change. Run openspec plan or pass an item id.']),
+    };
+  }
+  const changePath = state.changePaths[targetId];
+  if (!changePath || changePath.includes('/archive/')) {
+    return { ok: false, response: fail(command, [`No active change folder for ${targetId}`]) };
+  }
+  return { ok: true, targetId, changePath };
+}
+
+async function collectAnalyzeReport(
+  projectRoot: string,
+  state: OpenspecStateInput,
+  targetId: string,
+  changePath: string,
+): Promise<{ tddRequired: boolean; report: SpecAnalyzeReport }> {
+  const backlog = await loadBacklog(projectRoot);
+  const tddRequired = backlog.success ? backlog.data.global.tddRequired : false;
+  const policyParts: string[] = [];
+  for (const name of ['AGENTS.md', 'BACKLOG.md'] as const) {
+    try {
+      policyParts.push(await readFile(resolve(projectRoot, name), 'utf-8'));
+    } catch {
+      // optional
+    }
+  }
+
+  const cards = itemCards(state, targetId);
+  const tddCards = cards.filter((c) => c.phase === 'test' || c.phase === 'implement');
+  let hasTddEvidence: boolean | undefined;
+  if (tddCards.length > 0) {
+    hasTddEvidence = true;
+    for (const card of tddCards) {
+      const expectedPhase = card.phase === 'test' ? 'red' : 'green';
+      if (!(await hasTddRunnerEvidence(projectRoot, card.id, expectedPhase))) {
+        hasTddEvidence = false;
+        break;
+      }
+    }
+  }
+
+  const report = await analyzeChangeFolder(projectRoot, changePath, {
+    tddRequired,
+    policyText: policyParts.join('\n'),
+    hasTddEvidence,
+  });
+  return { tddRequired, report };
+}
+
+function buildNextSteps(input: {
+  state: OpenspecStateInput | null;
+  nextItemId: string | undefined;
+  progress: ArtifactProgress | undefined;
+}): string[] {
+  const { state, nextItemId, progress } = input;
+  if (!state || !state.activeItemId) {
+    return [
+      nextItemId
+        ? `Run openspec plan ${nextItemId} to start the next READY item.`
+        : 'No active change and no READY item. Author one with /cc-backlog, then run openspec plan <BC-id>.',
+    ];
+  }
+  const itemId = state.activeItemId;
+  const steps: string[] = [];
+  if (progress) {
+    const missing = missingArtifacts(progress.artifacts);
+    if (missing.length > 0) {
+      steps.push(
+        `Change folder is missing ${missing.join(', ')} — re-run openspec plan ${itemId} or restore them.`,
+      );
+    }
+  }
+  const cards = itemCards(state, itemId);
+  const blocked = cards.find((c) => c.status === 'blocked');
+  if (blocked) {
+    steps.push(`Run openspec unblock ${blocked.id} to resume the blocked card.`);
+    return steps;
+  }
+  const next = getNextTaskCard(state);
+  if (next && next.backlogId === itemId) {
+    steps.push(`Run openspec start ${next.id} then delegate to ${next.agent}.`);
+    return steps;
+  }
+  const doing = cards.find((c) => c.status === 'doing');
+  if (doing) {
+    steps.push(`Run openspec done ${doing.id} when the ${doing.phase} phase completes.`);
+    return steps;
+  }
+  if (cards.length > 0 && cards.every((c) => c.status === 'done')) {
+    steps.push(
+      `Run openspec verify ${itemId}, record a scorecard verdict, then run openspec archive ${itemId}.`,
+    );
+    return steps;
+  }
+  steps.push(`Run openspec next to get the next TaskCard for ${itemId}.`);
+  return steps;
 }
 
 async function handleValidate(projectRoot: string): Promise<{ code: number; data?: unknown }> {
@@ -358,49 +477,17 @@ async function handleAnalyze(
   itemId?: string,
 ): Promise<{ code: number; data?: unknown }> {
   const command = 'openspec analyze';
-  const stateResult = await loadOpenspecState(projectRoot);
-  if (!stateResult.success) {
-    return fail(command, [stateResult.error.message]);
-  }
-  const targetId = itemId ?? stateResult.data.activeItemId;
-  if (!targetId) {
-    return fail(command, ['No active change. Run openspec plan or pass an item id.']);
-  }
-  const changePath = stateResult.data.changePaths[targetId];
-  if (!changePath || changePath.includes('/archive/')) {
-    return fail(command, [`No active change folder for ${targetId}`]);
-  }
+  const loaded = await loadStateOrFail(projectRoot, command);
+  if (!loaded.ok) return loaded.response;
+  const resolved = resolveActiveChange(loaded.state, command, itemId);
+  if (!resolved.ok) return resolved.response;
 
-  const backlog = await loadBacklog(projectRoot);
-  const tddRequired = backlog.success ? backlog.data.global.tddRequired : false;
-  const policyParts: string[] = [];
-  for (const name of ['AGENTS.md', 'BACKLOG.md'] as const) {
-    try {
-      policyParts.push(await readFile(resolve(projectRoot, name), 'utf-8'));
-    } catch {
-      // optional
-    }
-  }
-
-  const cards = itemCards(stateResult.data, targetId);
-  const tddCards = cards.filter((c) => c.phase === 'test' || c.phase === 'implement');
-  let hasTddEvidence: boolean | undefined;
-  if (tddCards.length > 0) {
-    hasTddEvidence = true;
-    for (const card of tddCards) {
-      const expectedPhase = card.phase === 'test' ? 'red' : 'green';
-      if (!(await hasTddRunnerEvidence(projectRoot, card.id, expectedPhase))) {
-        hasTddEvidence = false;
-        break;
-      }
-    }
-  }
-
-  const report = await analyzeChangeFolder(projectRoot, changePath, {
-    tddRequired,
-    policyText: policyParts.join('\n'),
-    hasTddEvidence,
-  });
+  const { report } = await collectAnalyzeReport(
+    projectRoot,
+    loaded.state,
+    resolved.targetId,
+    resolved.changePath,
+  );
   const data = SpecAnalyzeReportSchema.parse({
     changePath: report.changePath,
     frIds: report.frIds,
@@ -426,6 +513,159 @@ async function handleAnalyze(
   };
 }
 
+async function handleSync(
+  projectRoot: string,
+  itemId?: string,
+): Promise<{ code: number; data?: unknown }> {
+  const command = 'openspec sync';
+  const loaded = await loadStateOrFail(projectRoot, command);
+  if (!loaded.ok) return loaded.response;
+  const resolved = resolveActiveChange(loaded.state, command, itemId);
+  if (!resolved.ok) return resolved.response;
+
+  const synced = await syncChangeSpecs(projectRoot, resolved.changePath);
+  if (!synced.success) {
+    return fail(command, [
+      `Spec sync failed for ${resolved.targetId}: ${synced.errors.join('; ')}`,
+    ]);
+  }
+  return {
+    code: 0,
+    data: {
+      success: true,
+      command,
+      itemId: resolved.targetId,
+      changePath: resolved.changePath,
+      syncedPaths: synced.syncedPaths,
+    },
+  };
+}
+
+type VerifySeverity = 'CRITICAL' | 'WARNING' | 'SUGGESTION';
+type VerifyDimension = 'Completeness' | 'Correctness' | 'Coherence';
+
+interface VerifyIssue {
+  readonly severity: VerifySeverity;
+  readonly code: string;
+  readonly message: string;
+  readonly dimension: VerifyDimension;
+}
+
+function analyzeSeverityToVerify(severity: string): VerifySeverity {
+  if (severity === 'CRITICAL') return 'CRITICAL';
+  if (severity === 'HIGH') return 'WARNING';
+  return 'SUGGESTION';
+}
+
+async function handleVerify(
+  projectRoot: string,
+  itemId?: string,
+): Promise<{ code: number; data?: unknown }> {
+  const command = 'openspec verify';
+  const loaded = await loadStateOrFail(projectRoot, command);
+  if (!loaded.ok) return loaded.response;
+  const resolved = resolveActiveChange(loaded.state, command, itemId);
+  if (!resolved.ok) return resolved.response;
+  const { targetId, changePath } = resolved;
+
+  const itemLoaded = await loadItemOrFail(projectRoot, targetId, command);
+  if (!itemLoaded.ok) return itemLoaded.response;
+
+  const { report } = await collectAnalyzeReport(projectRoot, loaded.state, targetId, changePath);
+  const progress = await readArtifactProgress(projectRoot, changePath);
+  const cards = itemCards(loaded.state, targetId);
+  const doneCount = cards.filter((c) => c.status === 'done').length;
+
+  const issues: VerifyIssue[] = [];
+  for (const finding of report.findings) {
+    const dimension: VerifyDimension =
+      finding.code === 'POLICY_CONFLICT' || finding.code === 'NEEDS_CLARIFICATION'
+        ? 'Coherence'
+        : 'Correctness';
+    issues.push({
+      severity: analyzeSeverityToVerify(finding.severity),
+      code: finding.code,
+      message: finding.message,
+      dimension,
+    });
+  }
+
+  if (cards.length === 0) {
+    issues.push({
+      severity: 'WARNING',
+      code: 'NO_CARDS',
+      message: `No task cards for ${targetId}. Run openspec plan ${targetId}.`,
+      dimension: 'Completeness',
+    });
+  } else if (doneCount < cards.length) {
+    const pending = cards.filter((c) => c.status !== 'done').map((c) => c.id);
+    issues.push({
+      severity: 'WARNING',
+      code: 'CARDS_PENDING',
+      message: `${cards.length - doneCount} card(s) not done (${pending.join(', ')}).`,
+      dimension: 'Completeness',
+    });
+  }
+
+  for (const name of missingArtifacts(progress.artifacts)) {
+    issues.push({
+      severity: 'WARNING',
+      code: 'ARTIFACT_MISSING',
+      message: `Change folder is missing ${name}.`,
+      dimension: 'Completeness',
+    });
+  }
+
+  if (progress.checkboxes.remaining > 0) {
+    issues.push({
+      severity: 'WARNING',
+      code: 'CHECKBOXES_REMAINING',
+      message:
+        `${progress.checkboxes.remaining} of ${progress.checkboxes.total} tasks.md boxes are unchecked. ` +
+        'Tick them as FRs complete (only [x]/[X] counts).',
+      dimension: 'Completeness',
+    });
+  }
+
+  const scorecardOk =
+    !itemLoaded.reviewRequired || (await hasPassingScorecard(projectRoot, targetId));
+  if (!scorecardOk) {
+    issues.push({
+      severity: 'WARNING',
+      code: 'SCORECARD_PENDING',
+      message: `Global review is required but no PASS scorecard exists for ${targetId}.`,
+      dimension: 'Coherence',
+    });
+  }
+
+  const archiveReady =
+    !issues.some((i) => i.severity === 'CRITICAL') &&
+    cards.length > 0 &&
+    doneCount === cards.length &&
+    missingArtifacts(progress.artifacts).length === 0 &&
+    scorecardOk;
+
+  return {
+    code: 0,
+    data: {
+      success: true,
+      command,
+      advisory: true,
+      itemId: targetId,
+      changePath,
+      archiveReady,
+      artifacts: progress.artifacts,
+      checkboxProgress: progress.checkboxes,
+      cardsTotal: cards.length,
+      cardsDone: doneCount,
+      frCoveragePct: report.frCoveragePct,
+      scCoveragePct: report.scCoveragePct,
+      testCoveragePct: report.testCoveragePct,
+      issues,
+    },
+  };
+}
+
 async function handleStatus(projectRoot: string): Promise<{ code: number; data?: unknown }> {
   const loadResult = await loadBacklog(projectRoot);
   const stateResult = await loadOpenspecState(projectRoot);
@@ -434,6 +674,12 @@ async function handleStatus(projectRoot: string): Promise<{ code: number; data?:
   const state = stateResult.success ? stateResult.data : null;
   const pendingCards = state?.taskCards.filter((c) => c.status === 'pending').length ?? 0;
   const doneCards = state?.taskCards.filter((c) => c.status === 'done').length ?? 0;
+
+  const changePath = state?.activeItemId ? state.changePaths[state.activeItemId] : undefined;
+  const progress =
+    changePath && !changePath.includes('/archive/')
+      ? await readArtifactProgress(projectRoot, changePath)
+      : undefined;
 
   return {
     code: 0,
@@ -446,6 +692,9 @@ async function handleStatus(projectRoot: string): Promise<{ code: number; data?:
       taskCardsPending: pendingCards,
       taskCardsDone: doneCards,
       changePaths: state?.changePaths ?? {},
+      artifacts: progress?.artifacts,
+      checkboxProgress: progress?.checkboxes,
+      nextSteps: buildNextSteps({ state, nextItemId: nextItem?.id, progress }),
     },
   };
 }
@@ -799,7 +1048,27 @@ async function handleArchive(
 
   let archivedPath: string | undefined;
   const changePath = loaded.state.changePaths[itemId];
+  const warnings: string[] = [];
   if (changePath && !changePath.includes('/archive/')) {
+    const progress = await readArtifactProgress(projectRoot, changePath);
+    const missing = missingArtifacts(progress.artifacts);
+    if (missing.length > 0) {
+      return fail(command, [
+        `Cannot archive ${itemId}: change folder is missing ${missing.join(', ')}. Re-run openspec plan ${itemId} or restore them.`,
+      ]);
+    }
+    const { report } = await collectAnalyzeReport(projectRoot, loaded.state, itemId, changePath);
+    const critical = report.findings.filter((f) => f.severity === 'CRITICAL');
+    if (critical.length > 0) {
+      return fail(command, [
+        `Cannot archive ${itemId}: analyze reports ${critical.length} CRITICAL finding(s): ${critical.map((f) => f.code).join(', ')}. Resolve them first.`,
+      ]);
+    }
+    if (progress.checkboxes.remaining > 0) {
+      warnings.push(
+        `${progress.checkboxes.remaining} of ${progress.checkboxes.total} tasks.md checkboxes are unchecked; tick them as FRs complete (only [x]/[X] counts as done).`,
+      );
+    }
     const synced = await syncChangeSpecs(projectRoot, changePath);
     if (!synced.success) {
       return fail(command, [`Cannot archive ${itemId}: spec sync failed: ${synced.errors.join('; ')}`]);
@@ -840,6 +1109,7 @@ async function handleArchive(
       command,
       itemId,
       archivedPath: archivedPath ?? changePath,
+      warnings,
     },
   };
 }

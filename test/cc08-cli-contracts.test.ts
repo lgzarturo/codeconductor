@@ -46,6 +46,15 @@ describe('CC-08 CLI contracts', () => {
     expect(data.errors.join(' ')).toMatch(/missing card id/i);
   });
 
+  test('routes openspec sync and verify instead of unknown subcommand', async () => {
+    for (const sub of ['sync', 'verify'] as const) {
+      const result = await route(['openspec', sub, 'BC-999', '--output=json']);
+      const data = result.data as { command: string; errors?: string[] };
+      expect(data.command).toBe(`openspec ${sub}`);
+      expect((data.errors ?? []).join(' ')).not.toMatch(/unknown subcommand/i);
+    }
+  });
+
   test('routes odd commands instead of treating them as an unknown command', async () => {
     const result = await route(['odd', 'read', 'delivery-001', '--output=json']);
     expect((result.data as { errors: string[] }).errors.join(' ')).not.toMatch(/unknown command/i);

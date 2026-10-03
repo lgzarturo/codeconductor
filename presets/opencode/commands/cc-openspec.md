@@ -80,7 +80,9 @@ Use `$ARGUMENTS` BC-id or `npx cc-codeconductor openspec status` for next READY 
 
 Run `npx cc-codeconductor openspec plan <BC-id>`. Show TaskCards and `openspec/changes/` path.
 
-Drive status with CLI (do not edit openspec-state.json): `openspec start <cardId>`, `openspec done <cardId>`, `openspec block <cardId> --reason "…"`, `openspec archive <itemId>`.
+`plan` is planning-only: it writes TaskCards plus proposal/design/tasks/specs and stops. Before Step 4, review the plan in order — proposal → delta specs → tasks — and confirm intent, scope, testable FR/SC, and edge-case scenarios. Do not `start` any card until the plan reads correctly.
+
+Drive status with CLI (do not edit openspec-state.json): `openspec start <cardId>`, `openspec done <cardId>`, `openspec block <cardId> --reason "…"`, `openspec sync <itemId>` (merge specs without closing, optional), `openspec verify <itemId>` (advisory pre-archive checklist), `openspec archive <itemId>` (re-checks artifacts and analyze CRITICALs).
 
 ---
 
@@ -94,7 +96,7 @@ For each pending card: `npx cc-codeconductor openspec next`, then invoke the lis
 - implement → `implementer`
 - review → `reviewer`
 
-Run each phase as a subagent with isolated context. Implementer uses a git worktree.
+Run each phase as a subagent with isolated context. Implementer uses a git worktree. Discover is read-only (never writes code); implementer ticks `tasks.md` boxes (`- [ ]` → `- [x]`, only `x`/`X` counts). If implementation reveals a design problem, pause and reconcile planning artifacts first (any direction, planning-only, confirm each edit); if the intent changed, open a fresh item with `/cc-backlog`.
 
 ---
 
@@ -106,6 +108,6 @@ Reviewer approves or rejects against acceptance criteria. Reject → `IN_PROGRES
 
 ## Step 6 — Update
 
-Mark DONE with `openspec archive <itemId>` (all cards must be done), then run `openspec scan`.
+First `openspec verify <itemId> --output json` (advisory: confirm `archiveReady`). Mark DONE with `openspec archive <itemId>` (all cards must be done), then run `openspec scan`.
 
 Apply skill `openspec` for format and state rules.

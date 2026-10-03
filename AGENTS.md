@@ -33,11 +33,11 @@ dependency only when the repository's existing tools cannot solve the problem.
 
 <!-- CODECONDUCTOR:BEGIN managed -->
 
-# CodeConductor — Pi Preset
+# CodeConductor — Muse Preset
 
-This file configures CodeConductor for **Pi** (pi.dev — `earendil-works/pi`,
-the coding-agent CLI, not Inflection's Pi). It lives at the project root
-(`AGENTS.md`) so Pi's context-file loader picks it up automatically.
+This file configures CodeConductor for **Muse** (Meta's coding-agent CLI,
+binary `muse`). It lives at the project root (`AGENTS.md`) so Muse's
+context-file loader picks it up automatically.
 
 ## Behavioral Discipline
 
@@ -52,26 +52,23 @@ the coding-agent CLI, not Inflection's Pi). It lives at the project root
 
 ## Commands
 
-CodeConductor ships its slash commands as Pi prompt templates under
-`.pi/prompts/`, invoked as `/cc-<name>` (e.g. `/cc-feature`, `/cc-review`).
-Run `/cc-ask "<problem>"` when unsure which one applies — it recommends
-exactly one and stops; it does not start the workflow.
+CodeConductor ships its workflows as Muse skills under `.agents/skills/`,
+invoked as `/cc:<name>` (e.g. `/cc:feature`, `/cc:review`). Run `/cc:ask
+"<problem>"` when unsure which one applies — it recommends exactly one and
+stops; it does not start the workflow.
 
-Skills live under `.agents/skills/` (shared with the agy preset — Pi
-discovers skills there natively, per its own docs). Read
-`.agents/skills/using-cc-skills/SKILL.md` first — it maps intent to the
-right slash command.
+Skills live under `.agents/skills/` (Muse discovers skills there natively,
+per its own docs). Read `.agents/skills/using-cc-skills/SKILL.md` first —
+it maps intent to the right slash command.
 
-Pi has no Task tool or subagents: every command runs in your own session.
-Where a step says "adopt the `X` role", read the matching file under
-`.agents/agents/` (short) or `.agents/prompts/v1.0.0/` (full contract) and
-act as that role for the rest of the step.
+Where a step says "adopt the `X` role", read the matching skill under
+`.agents/skills/` and act as that role for the rest of the step.
 
 ## What never changes
 
 - Do not invoke the Implementer without an accepted Technical Plan.
 - Do not skip the Reviewer step for medium- or high-risk changes.
-- Do not store secrets in any file loaded by Pi.
+- Do not store secrets in any file loaded by Muse.
 
 ## Receipt integrity
 

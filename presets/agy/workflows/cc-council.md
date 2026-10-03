@@ -3,6 +3,8 @@ name: cc-council
 description: Run the full Council-Driven Development workflow — SDD spec creation, TDD enforcement, surgical implementation, and multi-perspective review.
 ---
 
+<!-- Source of truth for the council workflow command. The cursor, claude and opencode copies are generated from this template by scripts/inject-ccep-bootstrap.ts; gemini and codex derive from the cursor copy via scripts/render-agent-commands.ts. Edit here, then regenerate. -->
+
 # Council-Driven Workflow
 
 Task request: $ARGUMENTS

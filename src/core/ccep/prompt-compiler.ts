@@ -129,14 +129,9 @@ const PRODUCT_GRAPH_KNOWLEDGE_KEYS = new Set([
 ]);
 
 function buildSystemLayer(): string {
-  return [
-    'You are a CodeConductor agent operating under CCEP-1.',
-    'Rules:',
-    '- Do not invent context.',
-    '- If critical data is missing, return questions in structured output.',
-    '- Produce valid JSON only — no free-form prose as the final answer.',
-    '- Match the output schema exactly.',
-  ].join('\n');
+  // Single-line rules: this block is stamped into every compiled prompt, so
+  // every char here is paid once per phase at runtime (D2/Q6).
+  return 'You are a CodeConductor agent (CCEP-1): never invent context; missing critical data goes to structured output as questions; the final answer is valid JSON only, matching the output schema exactly.';
 }
 
 function buildAgentLayer(role: string, phase: string, outputSchema: string): string {
@@ -145,9 +140,9 @@ function buildAgentLayer(role: string, phase: string, outputSchema: string): str
   if (role === 'task-coach' && phase === 'intake') {
     instruction = `You are the Planner / ${label} of CodeConductor.\nConvert product intent into a structured plan without writing code.`;
   } else if (role === 'implementer') {
-    instruction = `You are the ${label}.\nExecute only your assigned phase: ${phase}.\nWrite the minimal diff.`;
+    instruction = `You are the ${label}.\nWork only on phase ${phase}.\nWrite the minimal diff.`;
   } else {
-    instruction = `You are the ${label}.\nExecute only your assigned phase: ${phase}.`;
+    instruction = `You are the ${label}.\nWork only on phase ${phase}.`;
   }
   return `${instruction}\nReturn ${outputSchema} JSON only.`;
 }

@@ -1,6 +1,64 @@
-import type { WorkflowCommandInput, WorkflowProfileInput } from '../../validation/schemas';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parse as parseYaml } from 'yaml';
+import {
+  validateWorkflowProfile,
+  type WorkflowCommandInput,
+  type WorkflowProfileInput,
+} from '../../validation/schemas';
 
 const baseGate = { stopOnHighRisk: true, stopOnQuestions: true };
+
+/**
+ * Mirror of the canonical council workflow (`workflows/council.yml`, same
+ * directory as this file). The YAML is the single source of truth; this
+ * entry live-reads it so the two can never drift in the repo.
+ *
+ * The packaged `node` bundle does not ship the YAML asset, so when the file
+ * is absent (ENOENT only — parse/validation errors still throw) the frozen
+ * copy below is used. Keep that copy in sync with `council.yml`.
+ */
+const COUNCIL_FALLBACK_PROFILE: WorkflowProfileInput = {
+  id: 'council',
+  version: 1,
+  command: 'council',
+  phases: [
+    { id: 'wayfinding', agent: 'repo-explorer', outputSchema: 'agent-output' },
+    {
+      id: 'deliberation',
+      agents: ['task-coach', 'architect', 'devil'],
+      skill: 'council',
+      outputSchema: 'planner-output',
+      stopGate: 'confirmation',
+    },
+    { id: 'tdd', agent: 'tester', requires: 'red-state' },
+    { id: 'implement', agent: 'implementer' },
+    {
+      id: 'council-review',
+      agents: ['architect', 'product', 'delivery', 'data-ops', 'security-reviewer', 'devil'],
+      skill: 'council',
+      outputSchema: 'council-verdict',
+    },
+  ],
+  routing: { default: ['wayfinding', 'deliberation', 'tdd', 'implement', 'council-review'] },
+  confirmationGate: baseGate,
+};
+
+function loadCouncilMirror(): WorkflowProfileInput {
+  try {
+    const raw = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), 'workflows', 'council.yml'),
+      'utf-8',
+    );
+    return validateWorkflowProfile(parseYaml(raw));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException)?.code !== 'ENOENT') throw error;
+    return COUNCIL_FALLBACK_PROFILE;
+  }
+}
+
+const councilMirror = loadCouncilMirror();
 
 export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInput> = {
   feature: {
@@ -235,31 +293,7 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     routing: { default: ['analyze', 'create', 'evaluate'] },
     confirmationGate: { stopOnHighRisk: false, stopOnQuestions: false },
   },
-  council: {
-    id: 'council',
-    version: 1,
-    command: 'council',
-    phases: [
-      { id: 'wayfinding', agent: 'repo-explorer', outputSchema: 'agent-output' },
-      {
-        id: 'deliberation',
-        agents: ['task-coach', 'architect', 'devil'],
-        skill: 'council',
-        outputSchema: 'planner-output',
-        stopGate: 'confirmation',
-      },
-      { id: 'tdd', agent: 'tester', requires: 'red-state' },
-      { id: 'implement', agent: 'implementer' },
-      {
-        id: 'council-review',
-        agents: ['architect', 'product', 'delivery', 'data-ops', 'security-reviewer', 'devil'],
-        skill: 'council',
-        outputSchema: 'council-verdict',
-      },
-    ],
-    routing: { default: ['wayfinding', 'deliberation', 'tdd', 'implement', 'council-review'] },
-    confirmationGate: baseGate,
-  },
+  council: councilMirror,
   iterative: {
     id: 'iterative',
     version: 1,

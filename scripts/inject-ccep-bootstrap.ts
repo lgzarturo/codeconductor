@@ -150,25 +150,46 @@ function injectBootstrap(content: string, cmd: string): string {
   return content;
 }
 
-function writeCouncilPreset(targetPath: string): void {
+const COUNCIL_GENERATED_BANNER =
+  '<!-- GENERATED from presets/agy/workflows/cc-council.md by scripts/inject-ccep-bootstrap.ts — DO NOT EDIT. -->';
+
+/**
+ * Rewrite the backtick-wrapped `/cc:x` cross-references the template carries
+ * in its own (hyphen) spelling to the target runner's native surface, so a
+ * regenerated copy never leaks another runner's invocation spelling.
+ */
+function rewriteCouncilInvocation(body: string, surface: CommandSurface): string {
+  if (surface === 'colon') {
+    return body.replace(/`\/cc-([a-z0-9-]+)`/g, (_match, name: string) => `\`/cc:${name}\``);
+  }
+  return body.replace(/`\/cc:([a-z0-9-]+)`/g, (_match, name: string) => `\`/cc-${name}\``);
+}
+
+function writeCouncilPreset(targetPath: string, surface: CommandSurface): boolean {
   const template = readFileSync(join(ROOT, 'presets/agy/workflows/cc-council.md'), 'utf-8');
   let body = template.replace(/^---[\s\S]*?---\n\n/, '');
+  body = body.replace(/^<!--[\s\S]*?-->\n\n/, '');
   body = injectBootstrap(body, 'council');
-  const wrapped = `---\ndescription: Council-driven workflow with CCEP-1 bootstrap\n---\n\n${body}`;
+  body = rewriteCouncilInvocation(body, surface);
+  const wrapped = `---\ndescription: Council-driven workflow with CCEP-1 bootstrap\n---\n\n${COUNCIL_GENERATED_BANNER}\n\n${body}`;
+  const before = existsSync(targetPath) ? readFileSync(targetPath, 'utf-8') : null;
+  if (before === wrapped) return false;
   mkdirSync(dirname(targetPath), { recursive: true });
   writeFileSync(targetPath, wrapped);
+  return true;
 }
 
 let updated = 0;
 for (const runner of RUNNER_PATHS) {
   for (const cmd of COMMANDS) {
     const filePath = join(ROOT, runner.dir, runner.resolve(cmd));
+    if (cmd === 'council' && runner.dir !== 'presets/agy/workflows') {
+      // Council copies are fully derived from the agy template — always
+      // re-render so they can never drift from the source of truth.
+      if (writeCouncilPreset(filePath, runner.surface)) updated++;
+      continue;
+    }
     if (!existsSync(filePath)) {
-      if (cmd === 'council') {
-        writeCouncilPreset(filePath);
-        updated++;
-        continue;
-      }
       console.warn('skip missing', filePath);
       continue;
     }

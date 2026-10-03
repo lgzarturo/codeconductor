@@ -211,6 +211,16 @@ export function checklistFor(agentId: string): readonly string[] {
   return profileFor(agentId).checklist;
 }
 
+/** Responsibilities for an agent id, for the same condensed-format generators. */
+export function responsibilitiesFor(agentId: string): readonly string[] {
+  return profileFor(agentId).responsibilities;
+}
+
+/** Veto note for an agent id, if its role carries veto semantics. */
+export function vetoNoteFor(agentId: string): string | undefined {
+  return profileFor(agentId).vetoNote;
+}
+
 export function generateAgentContent(agent: CouncilAgentSpec): string {
   const profile = profileFor(agent.id);
   const vetoSection = profile.vetoNote ? `\n## Veto\n${profile.vetoNote}\n` : '';

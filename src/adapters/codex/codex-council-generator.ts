@@ -1,5 +1,10 @@
 import type { GeneratedFile } from '../../core/generation/generated-file';
-import { checklistFor, yamlString } from '../../domain/council/council-agent';
+import {
+  checklistFor,
+  responsibilitiesFor,
+  vetoNoteFor,
+  yamlString,
+} from '../../domain/council/council-agent';
 import type { CouncilSpec } from '../../domain/council/council-spec';
 
 /**
@@ -79,13 +84,16 @@ function generateCodexAgent(agent: {
   focus: readonly string[];
 }): string {
   const focusAreas = agent.focus.join(', ');
+  const responsibilities = responsibilitiesFor(agent.id).join('; ');
   const checklist = checklistFor(agent.id).join('; ');
+  const veto = vetoNoteFor(agent.id);
+  const vetoSentence = veto ? ` ${veto}` : '';
   return `model = "gpt-6.1-sol"
 model_reasoning_effort = "medium"
 name = "${agent.role}"
 description = "${agent.role} council agent. Focus: ${focusAreas}. Context: ${agent.context}. Model hint: ${agent.modelHint}."
 nickname_candidates = ["${agent.role}", "Council ${agent.role}"]
-developer_instructions = "You are the ${agent.role} council agent. Your focus areas are: ${focusAreas}. Context: ${agent.context}. Apply ${agent.modelHint} reasoning to your analysis. Review checklist: ${checklist}. Categorize findings as CRITICAL (blocks the verdict), WARNING, or SUGGESTION."
+developer_instructions = "You are the ${agent.role} council agent. Your focus areas are: ${focusAreas}. Context: ${agent.context}. Apply ${agent.modelHint} reasoning to your analysis. Responsibilities: ${responsibilities}. Review checklist: ${checklist}.${vetoSentence} Categorize findings as CRITICAL (blocks the verdict), WARNING, or SUGGESTION."
 `;
 }
 

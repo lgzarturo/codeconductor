@@ -2,6 +2,8 @@
 description: Council-driven workflow with CCEP-1 bootstrap
 ---
 
+<!-- GENERATED from presets/agy/workflows/cc-council.md by scripts/inject-ccep-bootstrap.ts — DO NOT EDIT. -->
+
 # Council-Driven Workflow
 
 Task request: $ARGUMENTS

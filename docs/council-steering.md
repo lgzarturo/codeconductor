@@ -18,17 +18,14 @@ The bundled preset (`council.yml`) ships **six** agents:
 | id | Role | Context | Model hint | Focus |
 | --- | --- | --- | --- | --- |
 | `architect` | Architect | repo-readonly | strong-reasoning | architecture, design-patterns, code-structure |
-| `security` | Security | repo-readonly | security-reasoning | security, vulnerabilities, compliance |
+| `security-reviewer` | Security Reviewer | repo-readonly | security-reasoning | security, vulnerabilities, compliance, credentials, injection, auth, supply-chain |
 | `product` | Product | prompt-only | balanced | requirements, ux, business-value |
 | `delivery` | Delivery | repo-readonly | practical-coding | delivery, testing, deployment |
 | `data-ops` | DataOps | repo-readonly | analytical | data, pipelines, analytics |
 | `devil` | Devil | repo-readonly | adversarial | review, edge-cases, failure-modes |
 
-> **Divergence to reconcile:** `DEFAULT_COUNCIL_AGENTS` in
-> `council-spec.ts` defines **seven** agents — the six above plus
-> `security-reviewer` (security-reasoning; credentials, injection, auth,
-> supply-chain). Keep the preset and the code default aligned, or declare which
-> one is canonical. Tracked in `docs/reports/2026-07-audit.md`.
+> Canonical roster: `src/presets/council/council.yml` (six agents).
+> `DEFAULT_COUNCIL_AGENTS` in `council-spec.ts` matches it exactly.
 
 An alternate roster, `SEO_HOTEL_COUNCIL_AGENTS`, provides five domain agents
 (`seo-auditor`, `schema-validator`, `geo-specialist`, `content-strategist`,

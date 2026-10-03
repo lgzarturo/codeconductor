@@ -1,5 +1,5 @@
-import { createHash } from 'node:crypto';
-import { readdir, readFile } from 'node:fs/promises';
+import { createHash, randomBytes } from 'node:crypto';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join, relative, resolve, sep } from 'node:path';
 
 export type RddPhase = 'red' | 'green' | 'refactor' | 'verification' | 'mutation' | 'review';
@@ -19,6 +19,14 @@ export interface RddReceipt {
   readonly command?: string;
   readonly outcome: 'passed' | 'failed';
   readonly capturedAt: string;
+  /**
+   * Random capture binding minted by captureReceipt and registered under
+   * `.codeconductor/rdd-receipts/`. A receipt whose nonce was never
+   * registered — including hand-written JSON with correct hashes — never
+   * verifies. Optional so previously persisted shapes still parse (and then
+   * fail closed at verification).
+   */
+  readonly nonce?: string;
 }
 
 export interface ReceiptVerification {
@@ -72,6 +80,36 @@ function manifestHash(paths: readonly RddReceiptPath[]): string {
   return sha256(paths.map((entry) => `${entry.path}\0${entry.hash}`).join('\n'));
 }
 
+interface ReceiptRegistryEntry {
+  readonly manifestHash: string;
+  readonly taskId: string;
+  readonly capturedAt: string;
+}
+
+function receiptRegistryDir(projectRoot: string): string {
+  return join(resolve(projectRoot), '.codeconductor', 'rdd-receipts');
+}
+
+function isWellFormedNonce(nonce: unknown): nonce is string {
+  return typeof nonce === 'string' && /^[0-9a-f]{32}$/.test(nonce);
+}
+
+/**
+ * True only when this receipt was minted by captureReceipt in this project:
+ * the nonce is well-formed, a registry entry exists for it, and the entry
+ * binds the nonce to this exact manifest. Anything else fails closed.
+ */
+async function isRegisteredReceipt(projectRoot: string, receipt: RddReceipt): Promise<boolean> {
+  if (!isWellFormedNonce(receipt.nonce)) return false;
+  try {
+    const raw = await readFile(join(receiptRegistryDir(projectRoot), `${receipt.nonce}.json`), 'utf-8');
+    const entry = JSON.parse(raw) as Partial<ReceiptRegistryEntry>;
+    return entry.manifestHash === receipt.manifestHash;
+  } catch {
+    return false;
+  }
+}
+
 export function isRddReceipt(value: unknown): value is RddReceipt {
   if (!value || typeof value !== 'object') return false;
   const receipt = value as Partial<RddReceipt>;
@@ -105,17 +143,26 @@ export async function captureReceipt(
     throw new Error('RDD receipts require at least one protected path');
   }
   const paths = await fingerprint(projectRoot, input.paths);
-  return {
+  const hashed = manifestHash(paths);
+  const nonce = randomBytes(16).toString('hex');
+  const capturedAt = new Date().toISOString();
+  const receipt: RddReceipt = {
     version: 1,
     taskId: input.taskId,
     phase: input.phase,
     paths,
     coverage: input.coverage ?? 'paths',
-    manifestHash: manifestHash(paths),
+    manifestHash: hashed,
     command: input.command,
     outcome: input.outcome,
-    capturedAt: new Date().toISOString(),
+    capturedAt,
+    nonce,
   };
+  const directory = receiptRegistryDir(projectRoot);
+  await mkdir(directory, { recursive: true });
+  const entry: ReceiptRegistryEntry = { manifestHash: hashed, taskId: input.taskId, capturedAt };
+  await writeFile(join(directory, `${nonce}.json`), JSON.stringify(entry, null, 2), 'utf-8');
+  return receipt;
 }
 
 /**
@@ -143,6 +190,7 @@ export async function collectReceiptPaths(projectRoot: string): Promise<string[]
 }
 
 export async function verifyReceipt(projectRoot: string, receipt: RddReceipt): Promise<ReceiptVerification> {
+  const registered = await isRegisteredReceipt(projectRoot, receipt);
   const expected = new Map(receipt.paths.map((entry) => [entry.path, entry.hash]));
   const changedPaths: string[] = [];
   const current: RddReceiptPath[] = [];
@@ -172,9 +220,32 @@ export async function verifyReceipt(projectRoot: string, receipt: RddReceipt): P
   changedPaths.sort();
   const actualHash = manifestHash(current.sort((left, right) => left.path.localeCompare(right.path)));
   return {
-    valid: changedPaths.length === 0 && actualHash === receipt.manifestHash,
+    valid: registered && changedPaths.length === 0 && actualHash === receipt.manifestHash,
     expectedHash: receipt.manifestHash,
     actualHash,
     changedPaths,
   };
+}
+
+export interface ReceiptLockVerification {
+  readonly valid: boolean;
+  readonly changedPaths: readonly string[];
+}
+
+/**
+ * Re-verify a persisted receipt lock (cc-spec-mutation pattern: freeze
+ * specs+tests behind a SHA-256 lock, recompute before every gate, abort on
+ * any single-byte difference). A missing, corrupt, or non-receipt lock fails
+ * closed — it reports invalid, never valid.
+ */
+export async function verifyReceiptLock(projectRoot: string, lockPath: string): Promise<ReceiptLockVerification> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(await readFile(resolve(projectRoot, lockPath), 'utf-8'));
+  } catch {
+    return { valid: false, changedPaths: [] };
+  }
+  if (!isRddReceipt(parsed)) return { valid: false, changedPaths: [] };
+  const verification = await verifyReceipt(projectRoot, parsed);
+  return { valid: verification.valid, changedPaths: verification.changedPaths };
 }

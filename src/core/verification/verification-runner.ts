@@ -379,6 +379,33 @@ export async function gateTaskCompletion(
   return ok(true);
 }
 
+export interface SpecTestDiffGateOptions {
+  readonly changedFiles: readonly string[];
+  /** True only when the mutation_testing HANDS_OFF protocol routed back to add the missing test. */
+  readonly handover?: boolean;
+}
+
+export interface SpecTestDiffGateResult {
+  readonly passed: boolean;
+  readonly violations: readonly string[];
+}
+
+/**
+ * No specs/tests diffs except via HANDS_OFF (cc-spec-mutation Stage 3 hard
+ * rule + Stage 5 hands-off): specs/ and tests/ are read-only for
+ * implementers, and only the mutation runner routing back to the craftsman
+ * may add the missing test.
+ */
+export function gateSpecTestDiffs(options: SpecTestDiffGateOptions): SpecTestDiffGateResult {
+  if (options.handover === true) return { passed: true, violations: [] };
+  const violations = options.changedFiles.filter((file) => {
+    const normalized = file.replace(/\\/g, '/').replace(/^\.\//, '');
+    return normalized === 'specs' || normalized === 'tests' ||
+      normalized.startsWith('specs/') || normalized.startsWith('tests/');
+  });
+  return { passed: violations.length === 0, violations };
+}
+
 export const TDD_EVIDENCE_SOURCE = 'cc verify';
 export const TDD_CAPTURED_BY = 'verification-runner';
 

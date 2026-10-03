@@ -4,6 +4,7 @@ import {
   formatHookOutput,
   parseMusePayload,
 } from '../../../../src/core/hooks/hook-runner';
+import { parseHookFormat } from '../../../../src/commands/hook.command';
 
 const MUSE_PRETOOL_FIXTURE = JSON.stringify({
   hook_event_name: 'PreToolUse',
@@ -61,5 +62,16 @@ describe('core/hooks/muse-hook-format', () => {
   test('contract: allow and deny verdicts emit no output body (exit code carries them)', () => {
     expect(formatHookOutput({ action: 'allow', message: '', exitCode: 0 }, 'muse')).toBe('');
     expect(formatHookOutput({ action: 'deny', message: 'no', exitCode: 2 }, 'muse')).toBe('');
+  });
+
+  test('regression (W1): --format=muse is accepted, not silently dropped', () => {
+    expect(parseHookFormat('muse')).toBe('muse');
+  });
+
+  test('regression (W1): known formats pass through, unknown values are rejected', () => {
+    expect(parseHookFormat('claude')).toBe('claude');
+    expect(parseHookFormat('agy')).toBe('agy');
+    expect(parseHookFormat('bogus')).toBeUndefined();
+    expect(parseHookFormat(undefined)).toBeUndefined();
   });
 });

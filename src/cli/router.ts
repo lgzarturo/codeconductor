@@ -665,10 +665,8 @@ export async function routeCommand(
       const event = validHookEvents.includes(subcommand as (typeof validHookEvents)[number])
         ? (subcommand as (typeof validHookEvents)[number])
         : 'pre-tool';
-      const formatRaw = options.format;
-      const format =
-        formatRaw === 'agy' || formatRaw === 'claude' ? formatRaw : undefined;
-      const { hookCommand, readStdinText } = await import('../commands/hook.command');
+      const { hookCommand, parseHookFormat, readStdinText } = await import('../commands/hook.command');
+      const format = parseHookFormat(options.format);
       const stdinText = await readStdinText();
       return hookCommand({
         event,

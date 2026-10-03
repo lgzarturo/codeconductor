@@ -20,7 +20,7 @@ context-file loader picks it up automatically.
 ## Commands
 
 CodeConductor ships its workflows as Muse skills under `.agents/skills/`,
-invoked as `/cc-<name>` (e.g. `/cc-feature`, `/cc-review`). Run `/cc-ask
+invoked as `/cc:<name>` (e.g. `/cc:feature`, `/cc:review`). Run `/cc:ask
 "<problem>"` when unsure which one applies — it recommends exactly one and
 stops; it does not start the workflow.
 
@@ -28,9 +28,8 @@ Skills live under `.agents/skills/` (Muse discovers skills there natively,
 per its own docs). Read `.agents/skills/using-cc-skills/SKILL.md` first —
 it maps intent to the right slash command.
 
-Where a step says "adopt the `X` role", read the matching file under
-`.agents/agents/` (short) or `.agents/prompts/v1.0.0/` (full contract) and
-act as that role for the rest of the step.
+Where a step says "adopt the `X` role", read the matching skill under
+`.agents/skills/` and act as that role for the rest of the step.
 
 ## What never changes
 

@@ -26,6 +26,10 @@ export interface HookOptions {
   readonly stdinText?: string;
 }
 
+export function parseHookFormat(raw: unknown): HookFormat | undefined {
+  return raw === 'agy' || raw === 'claude' || raw === 'muse' ? raw : undefined;
+}
+
 function detectFormat(explicit: HookFormat | undefined, stdinText: string): HookFormat {
   if (explicit) return explicit;
   try {

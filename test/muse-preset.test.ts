@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -114,6 +114,26 @@ describe('Muse target capabilities', () => {
   test('invocation matches surfaceForRunner("muse")', async () => {
     const caps = await loadTargetCapabilities('muse');
     expect(caps.invocation).toBe(surfaceForRunner('muse'));
+  });
+});
+
+describe('Muse AGENTS.md (review W2/W3)', () => {
+  const agentsMd = () =>
+    readFileSync(join(PROJECT_ROOT, 'presets/muse/AGENTS.md'), 'utf-8');
+
+  test('command spelling matches the colon invocation in capabilities', async () => {
+    const caps = await loadTargetCapabilities('muse');
+    expect(caps.invocation).toBe('colon');
+    expect(agentsMd()).toContain('/cc:<name>');
+    expect(agentsMd()).not.toContain('/cc-<name>');
+  });
+
+  test('references only paths the manifest installs', async () => {
+    const manifest = await loadManifest('muse');
+    const dests = manifest.entries.map((e) => e.dest);
+    expect(dests).not.toContain('.agents/agents');
+    expect(agentsMd()).not.toContain('.agents/agents/');
+    expect(agentsMd()).not.toContain('.agents/prompts/');
   });
 });
 

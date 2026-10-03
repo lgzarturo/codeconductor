@@ -66,32 +66,31 @@ not invoke implementer until the plan is approved.**
 
 ---
 
-## Step 3 — Test coverage (tester)
+## Step 3 — Implementation (implementer)
 
-Invoke `tester` with the approved Technical Plan and the Task Card.
-
-tester must:
-
-1. Write failing tests to cover the new behavior (RED)
-2. Ensure all acceptance criteria from the Task Card have at least one test
-3. Confirm the new tests fail for the right reason before implementation
-4. Produce a Coverage Summary: test files added or modified, cases covered
-
----
-
-## Step 4 — Implementation (implementer)
-
-Invoke `implementer` with the approved Technical Plan, the Task Card, and the
-failing tests from Step 3.
+Invoke `implementer` with the approved Technical Plan and the Task Card.
 Implementer creates a Git Worktree before touching any file; all edits happen inside it.
 
 implementer must:
 
 1. Read the Technical Plan before touching any file
-2. Apply the minimal diff to make the failing tests pass — only what the plan specifies
+2. Apply the minimal diff — only what the plan specifies
 3. Run the project test suite after implementation
 4. Produce an Implementation Summary: what changed, which files, how to verify
    locally
+
+---
+
+## Step 4 — Test coverage (tester)
+
+Invoke `tester` with the Implementation Summary and the Task Card.
+
+tester must:
+
+1. Write or extend tests to cover the new behavior
+2. Ensure all acceptance criteria from the Task Card have at least one test
+3. Run the full test suite and confirm it passes
+4. Produce a Coverage Summary: test files added or modified, cases covered
 
 ---
 

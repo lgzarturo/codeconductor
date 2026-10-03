@@ -21,17 +21,24 @@ Provide the following information in $ARGUMENTS:
 
 ## Web interface scope
 
-Same web scope as `cc-feature`: when the fix concerns web layout, component
-states, feedback, motion, or a requested UI audit, apply skill
-`web-design-engineering` during test/implementation and review; keep this
-workflow's gates and TDD order. See `cc-feature` for the full scope rule.
+When the task concerns web layout, component states, feedback, motion, or a
+requested UI audit, apply skill `web-design-engineering` from the installed skill
+library. Use it during intake/discovery, design, test/implement, and review as
+applicable; keep this workflow’s gates and TDD order. Framework presence alone
+does not activate it; backend-only and native mobile work are excluded. Record
+required visual checks as pending when unavailable. Keep findings in the existing
+Review Report: contract failures in Spec Axis, technical issues in existing
+subchecks, and aesthetic preferences as suggestions; do not add an axis.
 
 ## Android phone interface scope
 
-Same Android scope as `cc-feature`: when the fix concerns concrete Jetpack
-Compose phone UI or a requested UI audit, apply skill `android-ui-design`
-during test/implementation and review; keep this workflow's gates and TDD
-order. See `cc-feature` for the full scope rule.
+When the task concerns concrete Jetpack Compose phone layout, component states,
+interaction, accessibility, visual behavior, or a requested UI audit, apply skill
+`android-ui-design`. Use it during design, test/implementation, and review as
+applicable while keeping this workflow's gates and TDD order. Kotlin, Compose,
+framework, or dependency presence alone does not activate it; non-UI Android work
+stays with the general `android` skill. Audit-only requests remain read-only, and
+unavailable visual or emulator checks remain pending rather than claimed complete.
 
 
 ## Step 1 — Task Card validation (task-coach)
@@ -64,7 +71,7 @@ the affected code, and no public API or shared state is involved.
 
 Route: `task-coach` → `tester` → `implementer`
 
-Proceed directly to Step 3.
+Proceed directly to Step 3a.
 
 ### Medium or high-risk route
 
@@ -85,7 +92,31 @@ before continuing.**
 
 ---
 
-## Step 3 — Regression tests (tester)
+## Step 3a — Implementation, low-risk (implementer)
+
+Invoke `implementer` with the Task Card.
+Implementer creates a Git Worktree before touching any file; all edits happen inside it.
+
+implementer must:
+
+1. Locate the defect using the reproduction steps
+2. Apply the minimal fix — no unrelated changes
+3. Run the test suite
+4. Produce an Implementation Summary: root cause, fix applied, files changed
+
+---
+
+## Step 3b — Implementation, medium/high-risk (implementer)
+
+Invoke `implementer` with the approved Technical Plan and the Task Card.
+Implementer creates a Git Worktree before touching any file; all edits happen inside it.
+
+implementer must follow the plan exactly. Any deviation requires a new Technical
+Plan approval. After implementation, run the full test suite.
+
+---
+
+## Step 4 — Regression tests (tester)
 
 Invoke `tester` for all risk levels.
 
@@ -95,31 +126,6 @@ tester must:
    fix, passes after)
 2. Verify that existing tests still pass
 3. Produce a Coverage Summary: test added, case covered
-
----
-
-## Step 4a — Implementation, low-risk (implementer)
-
-Invoke `implementer` with the Task Card and the failing regression test from Step 3.
-Implementer creates a Git Worktree before touching any file; all edits happen inside it.
-
-implementer must:
-
-1. Locate the defect using the reproduction steps
-2. Apply the minimal fix to make the regression test pass — no unrelated changes
-3. Run the test suite
-4. Produce an Implementation Summary: root cause, fix applied, files changed
-
----
-
-## Step 4b — Implementation, medium/high-risk (implementer)
-
-Invoke `implementer` with the approved Technical Plan, the Task Card, and the
-failing regression test from Step 3.
-Implementer creates a Git Worktree before touching any file; all edits happen inside it.
-
-implementer must follow the plan exactly. Any deviation requires a new Technical
-Plan approval. After implementation, run the full test suite.
 
 ---
 

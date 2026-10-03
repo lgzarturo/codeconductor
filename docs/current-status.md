@@ -12,7 +12,9 @@ entry does not by itself mean that version was published.
 | Capability                                                                                                 | Repository status                     | Available in stable 1.5.x |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------- |
 | Core CLI (`setup`, `init`, `detect`, `install`, `version`, `status`, `doctor`, `update`, `migrate`)          | shipped                               | yes                       |
-| Preset and council installation (7 targets: agy, claude, codex, cursor, gemini, opencode, pi)              | shipped                               | yes                       |
+| Preset and council installation (8 targets: agy, claude, codex, cursor, gemini, muse, opencode, pi)        | shipped                               | partial (muse preset unreleased; council N/A on muse) |
+| ODD loop (`odd create/read/reconcile` + `odd handoff` envelope)                                          | shipped                               | yes                       |
+| OpenSpec `sync` / `verify` gates                                                                        | implemented, unreleased               | no                        |
 | SEO audit / `llms.txt` commands                                                                            | shipped                               | yes                       |
 | Scorecard and outcome evaluation                                                                           | shipped                               | yes                       |
 | Harness ablation (leave-one-out catalog + experiment + report)                                             | shipped                               | yes                       |

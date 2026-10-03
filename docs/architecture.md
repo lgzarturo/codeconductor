@@ -133,6 +133,18 @@ Applies the file plan to the project without clobbering user content.
   marker boundaries, warns and aborts unless `--force` is passed
 - Produces a write report: files created, files updated, files skipped
 
+Each manifest entry declares a strategy (`InstallStrategySchema` in
+`src/validation/schemas.ts`):
+
+| Strategy | Behavior |
+| -------- | -------- |
+| `overwrite` | Always write; requires `--force` when the destination exists |
+| `append` | Append rendered content to the existing file |
+| `merge-json` | Deep-merge rendered JSON into the existing file |
+| `merge-managed` | Replace only the `CODECONDUCTOR` managed section, preserve the rest |
+| `create-only` | Write only when the destination is missing (shipped in 1.5.1); never overwrites, even with `--force` |
+| `skip` | Do not install this entry (used as `globalStrategy` for project-only files) |
+
 ### Doctor
 
 **Status:** Shipped (published 0.5.0)
@@ -156,6 +168,8 @@ Validates the installed configuration.
 | Cursor   | Shipped (0.5.0) | `install preset --target cursor`   |
 | Gemini   | Shipped (0.5.0) | `install preset --target gemini`   |
 | AGY      | Shipped (0.5.0) | `install preset --target agy`      |
+| Pi       | Shipped (1.3.0) | `install preset --target pi`       |
+| Muse     | Implemented, unreleased | `install preset --target muse` |
 
 Target-specific rendering means the same preset content is rendered differently
 per target. Agent contracts that work for OpenCode's `AGENTS.md` format are not

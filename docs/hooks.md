@@ -21,6 +21,8 @@ not.
 
 Claude reads `tool_name` and `tool_input` from stdin. Deny → stderr + exit 2;
 ask → `hookSpecificOutput.permissionDecision: "ask"` with exit 0.
+Muse speaks the same protocol over `--format=muse`: identical stdin fields,
+exit codes, and `ask` output.
 Antigravity reads `toolCall.name` and `toolCall.args`, returning JSON
 `{ "decision": "deny", "reason": "…" }` or `decision: "allow" / "ask"`.
 See [Claude hooks](https://code.claude.com/docs/en/hooks) and
@@ -35,6 +37,8 @@ formatters are skipped, with a five-second timeout per formatter.
 Windows drive paths, quoted `git.exe` paths, PowerShell Git invocation, Git
 global options, and command chains are covered by policy tests. Absolute or
 wildcard recursive Windows deletions (`Remove-Item`, `rd`, `del`) are denied.
+`.env` paths are denied except `.env.example`, which stays readable so agents
+can see the expected variable shape without real secrets.
 These checks are guardrails, not a full shell parser or security sandbox.
 
 ## Fail-Open Semantics & Per-Project Scope

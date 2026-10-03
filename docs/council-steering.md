@@ -100,6 +100,35 @@ The result (`CouncilVerdict`) carries the tallies (`approvedCount`,
 
 ---
 
+## Panel selection (`ccep consensus --panel`)
+
+Instead of convening the full roster, `--panel` selects the smallest
+deterministic panel that covers the declared work
+(`selectCouncilPanel` in `src/domain/council/council-spec.ts`):
+
+```bash
+ccep consensus --panel --type feature --scope "database,migration" --risk high --input @verdicts.json
+```
+
+- `--type` describes the work (`feature`, `api`, `refactor`, `migration`,
+  `database`, …). `--scope` is a comma-separated hint list; `--risk` is
+  `low|medium|high` and, when omitted, is classified from type + scope.
+- Every panel starts from `delivery`, `security-reviewer`, and `devil`.
+  `architect` joins features/APIs, structural work, and non-low risk;
+  `product` joins features/APIs and high risk; `data-ops` joins when the
+  scope mentions data, database, migration, analytics, pipeline, or SQL.
+- Quorum is half the panel (rounded up); vetoes and confidence thresholds
+  from the decision order above still apply.
+- With no ballots (`--input` omitted and no positional JSON), the command
+  returns the selected panel config instead of a verdict (exit 0).
+- With ballots, each verdict is schema-validated before the consensus
+  engine runs; exit code is 0/1/2 for APPROVED/REJECTED/ESCALATED.
+
+The input is deliberately descriptive rather than inferred from the tree,
+so panel planning stays repeatable and review scope auditable.
+
+---
+
 ## Design intent
 
 - **Safety and compliance are non-negotiable.** A single security or compliance

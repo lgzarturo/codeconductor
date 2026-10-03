@@ -26,8 +26,8 @@ contracts, task cards, and risk-based routing.
 > - `npx cc-codeconductor init` — detects project stack, writes
 >   `.codeconductor/config.yml`, copies `council.yml` and `policy.yml` into
 >   `.codeconductor/presets/`
-> - `npx cc-codeconductor install council --target <opencode|claude|codex|agy|all>`
-> - `npx cc-codeconductor install preset --target <opencode|claude|codex|gemini|cursor|agy|muse|all>`
+> - `npx cc-codeconductor install council --target <opencode|claude|codex|gemini|cursor|agy|pi|all>`
+> - `npx cc-codeconductor install preset --target <opencode|claude|codex|gemini|cursor|agy|pi|muse|all>`
 > - `npx cc-codeconductor install lsp --target <…>`
 > - `npx cc-codeconductor detect` / `status` / `version` / `doctor` / `update` /
 >   `migrate`
@@ -246,7 +246,7 @@ Details: [docs/v1.3.0-release-notes.md](docs/v1.3.0-release-notes.md) and
 ### Migrate from v0.5.0
 
 ```bash
-npx cc-codeconductor install preset --target=<opencode|claude|cursor|codex|gemini|agy> --force
+npx cc-codeconductor install preset --target=<opencode|claude|cursor|codex|gemini|agy|pi|muse> --force
 ```
 
 ---

@@ -109,8 +109,8 @@ Detected:
 
 ### `install council` — Install Council Preset
 
-Generates and writes preset configuration files for AI agent runners (OpenCode,
-Claude Code, Codex).
+Generates and writes preset configuration files for AI agent runners (all
+targets except Muse, whose council adapter is planned for Phase 2).
 
 ```bash
 # Install for a specific target
@@ -139,13 +139,16 @@ npx cc-codeconductor install council --target opencode --force
 | `opencode` | `.opencode/commands/cc-council.md`, `.opencode/agents/council-*.md` |
 | `claude`   | `.claude/skills/council/SKILL.md`, `.claude/agents/council-*.md` |
 | `codex`    | `.codex/config.toml`, `.codex/agents/council_*.toml`             |
+| `cursor`   | `.cursor/commands/cc/council.md`, `.cursor/agents/council-*.md`  |
+| `gemini`   | `.gemini/commands/cc/council.toml`, `.gemini/agents/council-*.md` |
 | `agy`      | `.agents/skills/council/SKILL.md`, `.agents/agents/council-*.md` |
+| `pi`       | `.pi/prompts/cc-council.md`, `.agents/agents/council-*.md`       |
 
 ---
 
 ### `install preset` — Install Full Agent Preset
 
-Generates and writes full preset configuration files (agents, prompts, skills, commands) for AI agent runners (OpenCode, Claude Code, Codex, Antigravity CLI).
+Generates and writes full preset configuration files (agents, prompts, skills, commands) for AI agent runners (all 8 targets — see the table below).
 
 ```bash
 # Install for a specific target

@@ -233,6 +233,27 @@ bun run dev ccep validate --command feature --phase implement --role implementer
 - Use inline JSON at the end of the command, or `--input @path/to/file.json`
 - There is no `--payload` flag; use `--input` or positional JSON
 
+### consensus — verdict reduction and panel selection
+
+```bash
+bun run dev ccep consensus --input @verdicts.json --output json
+bun run dev ccep consensus --panel --type feature --scope "database" --output json
+bun run dev ccep consensus --panel --type refactor --risk low --input @verdicts.json --output json
+```
+
+**Expected output (ballots):**
+- `status: "APPROVED" | "REJECTED" | "ESCALATED"`, exit code `0` / `1` / `2`
+- tallies, veto flags, `averageConfidence`, merged `findings`, `summary`
+
+**Expected output (`--panel` without ballots):**
+- `panel` — the selected `ConsensusConfig` (`expectedAgentIds`, `quorum`), exit code `0`
+
+**Notes:**
+- `--type` / `--scope` describe the work; `--risk low|medium|high` overrides
+  the classified risk. See [council steering](council-steering.md) for the
+  selection rules.
+- Malformed ballots fail with exit code `1` and a Zod error list.
+
 ---
 
 ## OpenSpec

@@ -39,7 +39,7 @@ test('every supported target exposes the canonical ODD route', async () => {
 
 test('pi declares its CLI-only ODD limitation explicitly', async () => {
   const content = await readFile(join(ROOT, 'src/presets/targets/pi.yml'), 'utf-8');
-  expect(content).toContain('ODD is available through `bun run dev odd`');
+  expect(content).toContain('ODD is available through `npx cc-codeconductor odd`');
 });
 
 test('handoff instructions link durable artifacts without repeating a transcript', async () => {

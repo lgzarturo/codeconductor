@@ -24,7 +24,7 @@ coding rules.
 
 ## Process
 
-Local CLI is `bun run dev`. Published package is `npx cc-codeconductor`.
+The CLI is always `npx cc-codeconductor`; never `npx cc-codeconductor` in a consumer project.
 
 1. `openspec validate` — must pass before delivery. If you reached this
    workflow on your own (the user did not ask for OpenSpec) and there is no
@@ -40,9 +40,13 @@ Local CLI is `bun run dev`. Published package is `npx cc-codeconductor`.
 5. Phases: discover (`repo-explorer`) → design (`architect`) → test (`tester`) →
    implement (`implementer`) → review (`reviewer`). If Global `TDD required: yes`,
    test runs before implement. Discover is read-only: it never writes code.
-6. `openspec done` on test/implement requires `captureTddSuiteEvidence`. Handmade
-   evidence JSON is rejected. The implementer ticks `tasks.md` boxes
-   (`- [ ]` → `- [x]`) as each FR lands; only `x`/`X` counts as done.
+6. `openspec done` on test/implement needs runner evidence: run
+   `npx cc-codeconductor tdd capture --task <cardId> --phase red|green --command "<test command>"`
+   first (RED on the test card, GREEN on the implement card). Handmade evidence JSON is
+   rejected. It is `ev-tdd-*` evidence, not an RDD receipt (`ev-rdd-*`, `rdd verify`).
+   `done` ticks that card's `tasks.md` boxes and keeps your edits; the implementer ticks
+   any other box it adds (`- [ ]` → `- [x]`, only `x`/`X` counts). `archive` fails while
+   boxes stay unchecked (override: `--allow-unchecked`).
 7. When implementation reveals a design problem, pause and reconcile the planning
    artifacts first — in any direction (a later artifact may force revising an
    earlier one). Planning artifacts only in that step, never code; confirm each
@@ -54,7 +58,7 @@ Local CLI is `bun run dev`. Published package is `npx cc-codeconductor`.
 9. `scorecard create --task BC-xxx --from-diff` then record a verdict.
 10. `openspec archive` only after human review when `Review required: yes` and
     the scorecard is PASS. Archive re-checks planning artifacts and analyze
-    CRITICALs, and warns on unchecked `tasks.md` boxes.
+    CRITICALs, and fails on unchecked `tasks.md` boxes (override: `--allow-unchecked`), ticks the BACKLOG acceptance criteria.
 
 Status machine: `TODO` → `READY` → `PLANNED` → `IN_PROGRESS` → `REVIEW` → `DONE`
 → Archive. `BLOCKED` returns to `READY`. Reviewer rejection: `REVIEW` →
@@ -111,4 +115,4 @@ delivery read-only and record unavailable visual or emulator evidence as pending
 - [ ] `tasks.md` boxes ticked as FRs land
 - [ ] `openspec verify --output json` checked before archive
 - [ ] `scorecard create --from-diff` recorded
-- [ ] Suite check (optional): `bun run dev scorecard suite-run --suite workflow-gates`
+- [ ] Suite check (optional): `npx cc-codeconductor scorecard suite-run --suite workflow-gates`

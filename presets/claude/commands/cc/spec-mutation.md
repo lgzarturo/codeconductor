@@ -39,7 +39,7 @@ If `openspec status` reports an active change folder:
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
 4. Next command spelling on this runner: `/cc:spec-mutation`
 
-Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
+Run the CLI as `npx cc-codeconductor <same argv>`.
 
 ---
 
@@ -101,7 +101,7 @@ aborts the pipeline with scorecard 0 (Specification Gaming).
 ## Stage 3 — TDD under the three laws (`tdd_craftsman`)
 
 Delegates to the `/cc:tdd-cycle` state machine (`tddCycleStateMachine` in
-`domain/loop`). Evidence must be captured with `captureTddSuiteEvidence` — do
+`domain/loop`). Evidence must be captured with `npx cc-codeconductor tdd capture` — do
 not hand-edit JSON under `.codeconductor/evidence/`.
 
 1. **Law 1 (RED):** no production code except to make a failing test pass. A

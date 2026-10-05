@@ -30,7 +30,7 @@ If `openspec status` reports an active change folder:
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
 4. Next command spelling on this runner: `/cc-db-migration`
 
-Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
+Run the CLI as `npx cc-codeconductor <same argv>`.
 
 ---
 

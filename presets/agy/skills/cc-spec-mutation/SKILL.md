@@ -77,7 +77,7 @@ aborts the pipeline with scorecard 0 (Specification Gaming).
 ## Stage 3 — TDD under the three laws (`tdd_craftsman`)
 
 Delegates to the `/cc-tdd-cycle` state machine (`tddCycleStateMachine` in
-`domain/loop`). Evidence must be captured with `captureTddSuiteEvidence` — do
+`domain/loop`). Evidence must be captured with `npx cc-codeconductor tdd capture` — do
 not hand-edit JSON under `.codeconductor/evidence/`.
 
 1. **Law 1 (RED):** no production code except to make a failing test pass. A

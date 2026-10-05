@@ -39,7 +39,7 @@ If `openspec status` reports an active change folder:
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
 4. Next command spelling on this runner: `/cc:tdd-cycle`
 
-Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
+Run the CLI as `npx cc-codeconductor <same argv>`.
 
 ---
 
@@ -59,7 +59,7 @@ Mixing phases invalidates the cycle.
 ## Verifiable phase gates
 
 RED → GREEN and GREEN → REFACTOR are enforced by `tddCycleStateMachine` in
-`domain/loop`. Evidence must be captured with `captureTddSuiteEvidence` (verification
+`domain/loop`. Evidence must be captured with `npx cc-codeconductor tdd capture` (verification
 runner) — do not hand-edit JSON under `.codeconductor/evidence/`.
 
 - RED→GREEN requires runner evidence that the suite **failed**.

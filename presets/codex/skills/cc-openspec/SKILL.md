@@ -66,7 +66,7 @@ If `openspec status` reports an active change folder:
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
 4. Next command spelling on this runner: `$cc-openspec`
 
-Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
+Run the CLI as `npx cc-codeconductor <same argv>`.
 
 ---
 
@@ -150,11 +150,13 @@ npx cc-codeconductor openspec verify <itemId>
 npx cc-codeconductor openspec archive <itemId>
 ```
 
-`start` moves the card `pending → doing` and the item `PLANNED → IN_PROGRESS`. `done` marks the card complete, updates Progress, and moves the item to `REVIEW` when every card is done and review is required. `sync` merges delta specs into `openspec/specs/` without closing the item (optional before archive). `verify` is the advisory pre-archive checklist: exit 0 with `archiveReady` plus Completeness/Correctness/Coherence issues. `archive` requires all cards done (and review evidence when Global review is required), re-checks planning artifacts and analyze CRITICALs, warns on unchecked `tasks.md` boxes, then moves `openspec/changes/<slug>` to `archive/`.
+`start` moves the card `pending → doing` and the item `PLANNED → IN_PROGRESS`. `done` marks the card complete, updates Progress, and moves the item to `REVIEW` when every card is done and review is required. `sync` merges delta specs into `openspec/specs/` without closing the item (optional before archive). `verify` is the advisory pre-archive checklist: exit 0 with `archiveReady` plus Completeness/Correctness/Coherence issues. `archive` requires all cards done (and review evidence when Global review is required), re-checks planning artifacts and analyze CRITICALs, fails on unchecked `tasks.md` boxes (override: `--allow-unchecked`), ticks the BACKLOG acceptance criteria, then moves `openspec/changes/<slug>` to `archive/`.
 
-For test and implementation cards, `done` also requires a current RDD-backed
-RED or GREEN receipt respectively. Do not reuse evidence after candidate files
-change; capture and verify the matching receipt again.
+For test and implementation cards, `done` requires current runner-captured TDD
+evidence: `npx cc-codeconductor tdd capture --task <cardId> --phase red|green --command "<test command>"`
+(RED for the test card, GREEN for the implement card). It is `ev-tdd-*` evidence,
+not an RDD receipt: do not pass it to `rdd verify`. Do not reuse evidence after
+candidate files change; capture it again.
 
 ---
 
@@ -191,9 +193,9 @@ After each phase:
 
 Implementer: create a Git worktree before editing (`git worktree add ../<branch>-session <branch>`).
 
-Discover is read-only: `repo-explorer` never writes code. The implementer ticks
-`tasks.md` boxes (`- [ ]` → `- [x]`) as each FR lands — only `x`/`X` counts as
-done. If implementation reveals a design problem, pause and reconcile the
+Discover is read-only: `repo-explorer` never writes code. `openspec done` ticks the boxes tagged
+with that card and keeps your edits; the implementer ticks any other `tasks.md` box
+it adds (`- [ ]` → `- [x]`) — only `x`/`X` counts as done. If implementation reveals a design problem, pause and reconcile the
 planning artifacts first (any direction: a later artifact may force revising an
 earlier one). Planning artifacts only in that step — never code — and confirm
 each edit. If the item's intent changed rather than its details, open a fresh

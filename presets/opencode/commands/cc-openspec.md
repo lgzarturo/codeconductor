@@ -59,7 +59,7 @@ If `openspec status` reports an active change folder:
 3. If analyze `stop` is true or any finding is CRITICAL, stop. Do not delegate to implementer.
 4. Next command spelling on this runner: `/cc-openspec`
 
-Local development: `bun run dev <same argv>`. Published package: `npx cc-codeconductor`.
+Run the CLI as `npx cc-codeconductor <same argv>`.
 
 ---
 
@@ -96,7 +96,7 @@ For each pending card: `npx cc-codeconductor openspec next`, then invoke the lis
 - implement → `implementer`
 - review → `reviewer`
 
-Run each phase as a subagent with isolated context. Implementer uses a git worktree. Discover is read-only (never writes code); implementer ticks `tasks.md` boxes (`- [ ]` → `- [x]`, only `x`/`X` counts). If implementation reveals a design problem, pause and reconcile planning artifacts first (any direction, planning-only, confirm each edit); if the intent changed, open a fresh item with `/cc-backlog`.
+Run each phase as a subagent with isolated context. Implementer uses a git worktree. Discover is read-only (never writes code); `done` ticks each card's boxes and the implementer ticks any other `tasks.md` box (`- [ ]` → `- [x]`, only `x`/`X` counts). If implementation reveals a design problem, pause and reconcile planning artifacts first (any direction, planning-only, confirm each edit); if the intent changed, open a fresh item with `/cc-backlog`.
 
 ---
 

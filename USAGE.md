@@ -10,6 +10,11 @@ Deeper references: [`docs/cc-commands.md`](docs/cc-commands.md) (CLI),
 (spec-driven delivery), [`docs/routing-policy.md`](docs/routing-policy.md)
 (routing), [`docs/usage-cc.md`](docs/usage-cc.md) (end-user quickstart).
 
+> **CLI invocation.** `bun run dev` only works inside this repository (it is the
+> package's own `dev` script). In any project that consumes CodeConductor — and
+> in every shipped skill, preset, hook, and command — run the published package:
+> `npx cc-codeconductor <command>`.
+
 ---
 
 ## 1. Golden rules

@@ -25,7 +25,7 @@ Pass threshold: weighted score >= 2.0 and no criterion at 0.
 
 ## Process
 
-Local: `bun run dev`. Published: `npx cc-codeconductor`.
+The CLI is always `npx cc-codeconductor`.
 
 ```text
 scorecard create --task BC-001 --from-diff

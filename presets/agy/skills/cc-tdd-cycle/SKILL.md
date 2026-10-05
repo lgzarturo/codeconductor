@@ -33,7 +33,7 @@ Mixing phases invalidates the cycle.
 ## Verifiable phase gates
 
 RED → GREEN and GREEN → REFACTOR are enforced by `tddCycleStateMachine` in
-`domain/loop`. Evidence must be captured with `captureTddSuiteEvidence` (verification
+`domain/loop`. Evidence must be captured with `npx cc-codeconductor tdd capture` (verification
 runner) — do not hand-edit JSON under `.codeconductor/evidence/`.
 
 - RED→GREEN requires runner evidence that the suite **failed**.

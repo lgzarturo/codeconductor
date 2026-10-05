@@ -29,7 +29,7 @@ the item here.
 4. Create `BACKLOG.md` from `presets/templates/BACKLOG.md` or append under
    `## Items`. Do not rewrite `## Global` or `## Archive`.
 5. Next ID = max numeric suffix in Items + Archive + 1, zero-padded (`BC-013`).
-6. `bun run dev openspec validate` (or `npx cc-codeconductor`). Fix until valid.
+6. `npx cc-codeconductor openspec validate`. Fix until valid.
 7. `openspec plan BC-xxx` for each **new** item this run. Then tell the user
    to run `/cc-openspec`.
 

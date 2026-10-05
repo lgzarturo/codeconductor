@@ -15,10 +15,10 @@ Do **not** run the recommended `/cc:` command unless the human confirms.
 
 ## Step 1 — Recommend (deterministic)
 
-Run (local repo: `bun run dev`; published package: `npx cc-codeconductor`):
+Run `npx cc-codeconductor`:
 
 ```bash
-bun run dev ask "$ARGUMENTS" --output json
+npx cc-codeconductor ask "$ARGUMENTS" --output json
 ```
 
 or:

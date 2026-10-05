@@ -105,8 +105,8 @@ function formatTaskCard(task: HarnessSuiteTaskInput, experimentId: string, varia
     'When done:',
     '',
     '```',
-    `bun run dev scorecard create --task ${task.id} --from-diff`,
-    `bun run dev scorecard record --task ${task.id} --verdict PASS|REVISE|REJECT --score <n> --experiment ${experimentId} --variant ${variantId} --suite-task ${task.id}`,
+    `npx cc-codeconductor scorecard create --task ${task.id} --from-diff`,
+    `npx cc-codeconductor scorecard record --task ${task.id} --verdict PASS|REVISE|REJECT --score <n> --experiment ${experimentId} --variant ${variantId} --suite-task ${task.id}`,
     '```',
     task.testCommand ? `\nFixture test command: \`${task.testCommand}\`\n` : '',
   ].join('\n');
@@ -128,7 +128,7 @@ function formatExperimentMarkdown(experiment: HarnessExperimentInput): string {
     'Compare with:',
     '',
     '```',
-    `bun run dev scorecard ablation --experiment ${experiment.id}`,
+    `npx cc-codeconductor scorecard ablation --experiment ${experiment.id}`,
     '```',
     '',
   ].join('\n');

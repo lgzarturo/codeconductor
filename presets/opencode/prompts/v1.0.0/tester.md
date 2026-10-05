@@ -301,4 +301,4 @@ and confirmed failing; list the failing test paths in `artifacts` so the
 
 Invoke via `/cc-tdd-cycle`, `/cc-feature`, or the orchestrator (test before
 implement). Do not invoke other agents. Invoke skill `testing-tdd`.
-Deliverable is incomplete without `captureTddSuiteEvidence` when TDD is required.
+Deliverable is incomplete without `npx cc-codeconductor tdd capture` when TDD is required.

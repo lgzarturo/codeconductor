@@ -75,13 +75,13 @@ async function sessionLines(projectRoot: string): Promise<string[]> {
     '[CodeConductor] Session start',
     'Skills: openspec, backlog, evaluation, testing-tdd — invoke via /cc-* then CLI.',
     existsSync(backlogPath)
-      ? 'BACKLOG.md present — run: bun run dev openspec status'
+      ? 'BACKLOG.md present — run: npx cc-codeconductor openspec status'
       : 'No BACKLOG.md — author with /cc-backlog if you need an item queue.',
     existsSync(profilePath)
-      ? 'Scorecard profile on disk — run: bun run dev scorecard models'
-      : 'Scorecard: bun run dev scorecard create --task <id> --from-diff',
-    'Hooks: bun run dev hook pre-tool | post-tool | session-start',
-    'Eval suites: bun run dev scorecard suite-run --suite workflow-gates',
+      ? 'Scorecard profile on disk — run: npx cc-codeconductor scorecard models'
+      : 'Scorecard: npx cc-codeconductor scorecard create --task <id> --from-diff',
+    'Hooks: npx cc-codeconductor hook pre-tool | post-tool | session-start',
+    'Eval suites: npx cc-codeconductor scorecard suite-run --suite workflow-gates',
   ];
 }
 

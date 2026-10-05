@@ -28,6 +28,6 @@ Conductor Agents as a shipped workflow, and must **never** be copied into
 
 ```bash
 bun run typecheck
-bun run dev help
+npx cc-codeconductor help
 graphify query "CodeConductor architecture security CLI"
 ```

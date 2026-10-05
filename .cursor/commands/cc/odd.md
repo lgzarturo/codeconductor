@@ -7,8 +7,8 @@ description: Create or resume an opt-in Delivery Ledger for substantial authoriz
 ## Step 0 — CCEP Bootstrap
 
 ```bash
-bun run dev ccep profile odd --output json
-bun run dev ccep compile --command odd --phase <phase-id> "$ARGUMENTS" --view prompt --output json
+npx cc-codeconductor ccep profile odd --output json
+npx cc-codeconductor ccep compile --command odd --phase <phase-id> "$ARGUMENTS" --view prompt --output json
 ```
 
 Pass each subagent only the compiled `prompt` for its phase.

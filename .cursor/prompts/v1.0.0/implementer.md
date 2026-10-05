@@ -232,4 +232,4 @@ tests. On **REJECT**, stop and escalate to the orchestrator.
 Invoke via `/cc-feature`, `/cc-fix`, `/cc-tdd-cycle`, or the orchestrator.
 Do not invoke other agents. Invoke skill `testing-tdd`.
 Deliverable is incomplete without a passing suite and runner TDD evidence when
-TDD is required. Scorecard: `bun run dev scorecard create --from-diff`.
+TDD is required. Scorecard: `npx cc-codeconductor scorecard create --from-diff`.

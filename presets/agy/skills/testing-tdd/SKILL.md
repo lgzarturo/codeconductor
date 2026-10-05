@@ -11,7 +11,7 @@ description:
 ## Overview
 
 Red (failing test) → Green (minimal code) → Refactor. Evidence comes from
-`captureTddSuiteEvidence`, not handmade JSON.
+`npx cc-codeconductor tdd capture`, not handmade JSON.
 
 ## When to Use
 
@@ -29,7 +29,7 @@ Red (failing test) → Green (minimal code) → Refactor. Evidence comes from
    when TDD is required).
 5. Cover happy path, edge, and error for each behavior.
 
-Local: `bun run dev`. Pyramid default: many unit, fewer integration, rare E2E.
+Pyramid default: many unit, fewer integration, rare E2E.
 
 ## Common Rationalizations
 
@@ -50,4 +50,4 @@ Local: `bun run dev`. Pyramid default: many unit, fewer integration, rare E2E.
 - [ ] Suite failed before implement
 - [ ] Suite passed after implement
 - [ ] Runner evidence exists (not handmade)
-- [ ] Optional: `bun run dev scorecard suite-run --suite workflow-gates`
+- [ ] Optional: `npx cc-codeconductor scorecard suite-run --suite workflow-gates`

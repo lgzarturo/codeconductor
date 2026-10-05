@@ -327,8 +327,8 @@ export async function runCompileCheck(
       proc.on('error', (err) =>
         resolvePromise({ stdout: '', stderr: String(err), exitCode: -1 }),
       );
-      proc.on('close', (code, signal) =>
-        resolvePromise({ stdout, stderr, exitCode: code ?? (signal ? -1 : 0) }),
+      proc.on('close', (code) =>
+        resolvePromise({ stdout, stderr, exitCode: code ?? -1 }),
       );
     },
   );
@@ -345,7 +345,10 @@ export async function runCompileCheck(
       timedOut = true;
       try {
         if (process.platform === 'win32') {
-          spawn('taskkill', ['/PID', String(proc.pid), '/T', '/F'], { stdio: 'ignore' });
+          spawn('taskkill', ['/PID', String(proc.pid), '/T', '/F'], { stdio: 'ignore' }).on(
+            'error',
+            () => proc.kill('SIGKILL'),
+          );
         } else {
           process.kill(-proc.pid!, 'SIGKILL');
         }

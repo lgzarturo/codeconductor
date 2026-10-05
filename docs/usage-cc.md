@@ -4,6 +4,9 @@ This guide explains how to **validate CodeConductor commands locally** without
 publishing the npm package. It complements [`usage-cli.md`](usage-cli.md)
 (installation and `npx`) and [`cc-commands.md`](cc-commands.md) (full reference).
 
+> `bun run dev` only works inside this repository. In projects that consume
+> CodeConductor, run `npx cc-codeconductor <command>`.
+
 ## Execution convention
 
 From the repository root:

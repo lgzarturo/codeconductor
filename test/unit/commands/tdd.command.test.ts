@@ -73,6 +73,19 @@ describe('tdd capture', () => {
     expect(JSON.stringify(result.data)).toContain('allowlist');
   });
 
+  test('RED is not recorded when the suite command cannot run at all', async () => {
+    const root = await projectWithSuite(PASS);
+    const result = await capture(root, {
+      taskId: 'BC-1-test',
+      phase: 'red',
+      command: 'nonexistent-command-xyz',
+      allowCompileCheck: true,
+    });
+
+    expect(result.code).toBe(1);
+    expect(await hasTddRunnerEvidence(root, 'BC-1-test', 'red')).toBe(false);
+  });
+
   test('requires --task, --phase red|green and --command', async () => {
     const root = await projectWithSuite(PASS);
     for (const extra of [

@@ -209,9 +209,11 @@ export function archiveItemInMarkdown(content: string, itemId: string): string {
   }
 
   // Archiving requires every gate to pass, so the acceptance criteria are met.
-  const block = lines
-    .slice(itemStart, itemEnd)
-    .map((l) => l.replace(/^(\s*-\s+)\[ \]/, '$1[x]'));
+  let inAcceptance = false;
+  const block = lines.slice(itemStart, itemEnd).map((l) => {
+    if (/^-\s+\w+:/.test(l)) inAcceptance = /^-\s+Acceptance:/i.test(l);
+    return inAcceptance ? l.replace(/^(\s*-\s+)\[ \]/, '$1[x]') : l;
+  });
   const statusLine = block.findIndex((l) => l.match(/^-\s+Status:/i));
   if (statusLine >= 0) block[statusLine] = '- Status: DONE';
 

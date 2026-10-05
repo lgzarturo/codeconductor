@@ -123,8 +123,9 @@ export async function syncTaskCardCheckbox(
   let content: string;
   try {
     content = await readFile(file, 'utf-8');
-  } catch {
-    return;
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return;
+    throw e;
   }
   const suffix = `(${cardId})`;
   const updated = content

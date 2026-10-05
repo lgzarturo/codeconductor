@@ -3,6 +3,7 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { openspecCommand } from '../../src/commands/openspec.command';
+import { archiveItemInMarkdown } from '../../src/core/openspec/openspec-state';
 import { countCheckboxes } from '../../src/core/openspec/artifact-progress';
 import type { OpenspecTaskCardInput } from '../../src/validation/schemas';
 
@@ -100,5 +101,29 @@ describe('openspec completion marking', () => {
     const archived = backlog.slice(backlog.indexOf('## Archive'));
     expect(archived).toContain('- [x] openspec validate accepts well-formed BACKLOG.md');
     expect(archived).not.toContain('- [ ] openspec validate accepts well-formed BACKLOG.md');
+  });
+});
+
+describe('archiveItemInMarkdown', () => {
+  test('ticks only the Acceptance list, not other checkboxes in the item block', () => {
+    const backlog = [
+      '## Items',
+      '',
+      '### BC-001: Thing',
+      '- Status: REVIEW',
+      '- Acceptance:',
+      '  - [ ] criterion one',
+      '  - [ ] criterion two',
+      '- Notes:',
+      '  - [ ] manual todo',
+      '- Progress: 90%',
+      '',
+    ].join('\n');
+
+    const archived = archiveItemInMarkdown(backlog, 'BC-001');
+
+    expect(archived).toContain('  - [x] criterion one');
+    expect(archived).toContain('  - [x] criterion two');
+    expect(archived).toContain('  - [ ] manual todo');
   });
 });

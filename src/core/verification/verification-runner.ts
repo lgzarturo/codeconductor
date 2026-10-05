@@ -459,7 +459,8 @@ export async function captureTddSuiteEvidence(
   });
 
   const suitePassed = result.success && !result.timedOut && result.exitCode === 0;
-  const suiteFailed = !result.timedOut && result.exitCode !== 0;
+  // exitCode -1 means the suite never ran (spawn error or signal): not a failing test.
+  const suiteFailed = !result.timedOut && result.exitCode > 0;
   const receipt = { ...before, outcome: suitePassed ? 'passed' as const : 'failed' as const };
   const receiptResult = await verifyReceipt(projectRoot, receipt);
   if (!receiptResult.valid) {

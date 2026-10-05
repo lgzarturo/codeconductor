@@ -24,7 +24,7 @@ coding rules.
 
 ## Process
 
-The CLI is always `npx cc-codeconductor`; never `npx cc-codeconductor` in a consumer project.
+The CLI is always `npx cc-codeconductor`.
 
 1. `openspec validate` — must pass before delivery. If you reached this
    workflow on your own (the user did not ask for OpenSpec) and there is no

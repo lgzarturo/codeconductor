@@ -885,7 +885,7 @@ async function handleDone(
     const evidenced = await hasTddRunnerEvidence(projectRoot, cardId, expectedPhase);
     if (!evidenced) {
       return fail(command, [
-        `Card ${cardId} (${card.phase}) requires current ${expectedPhase.toUpperCase()} verification-runner TDD evidence. Run captureTddSuiteEvidence before openspec done.`,
+        `Card ${cardId} (${card.phase}) requires current ${expectedPhase.toUpperCase()} verification-runner TDD evidence. Run: tdd capture --task ${cardId} --phase ${expectedPhase} --command "<test command>", then openspec done.`,
       ]);
     }
   }

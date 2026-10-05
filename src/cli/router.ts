@@ -535,6 +535,20 @@ export async function routeCommand(
       } as VerifyOptions);
     }
 
+    case 'tdd': {
+      const { tddCommand } = await import('../commands/tdd.command');
+      return tddCommand({
+        subcommand: subcommand ?? '',
+        projectRoot,
+        output: flags.output,
+        taskId: (options.task as string | undefined) ?? args.rest?.[0],
+        phase: options.phase as string | undefined,
+        command: options.command as string | undefined,
+        allowCompileCheck:
+          options['allow-compile-check'] === true || options['allow-compile-check'] === 'true',
+      });
+    }
+
     case 'rdd': {
       const validSubs = ['capture', 'verify', 'status', 'git-check', 'install-hooks'] as const;
       if (!subcommand || !validSubs.includes(subcommand as (typeof validSubs)[number])) {

@@ -200,6 +200,14 @@ Verify task completion with evidence.
 cc-codeconductor verify --task <id>
 ```
 
+## tdd
+
+Capture runner-verified RED/GREEN TDD evidence.
+
+```text
+cc-codeconductor tdd capture --task <cardId> --phase red|green --command "<test command>"
+```
+
 ## rdd
 
 Capture and validate Receipt-Driven Development evidence.

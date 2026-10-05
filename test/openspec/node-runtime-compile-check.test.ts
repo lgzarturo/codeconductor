@@ -6,7 +6,7 @@
  * `node` binary — `bun test` alone cannot catch it.
  */
 import { beforeAll, describe, expect, test } from 'bun:test';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -79,4 +79,40 @@ describe('verification under Node runtime', () => {
       await rm(cwd, { recursive: true, force: true });
     }
   }, 60_000);
+});
+
+describe('openspec delivery flow under Node runtime', () => {
+  const cli = join(repoRoot, 'dist/index.js');
+  const fixture = join(repoRoot, 'test/fixtures/backlog/BACKLOG.md');
+
+  test('next, tdd capture and done close a test card with no Bun runtime', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'cc-node-flow-'));
+    try {
+      await cp(fixture, join(cwd, 'BACKLOG.md'));
+      await writeFile(
+        join(cwd, 'package.json'),
+        JSON.stringify({ name: 'fixture', scripts: { test: 'node -e "process.exit(1)"' } }),
+      );
+      const cc = (...args: string[]) =>
+        spawnSync('node', [cli, ...args, '--output=json'], { cwd, encoding: 'utf-8' });
+
+      expect(cc('openspec', 'plan', 'BC-001').status).toBe(0);
+      for (const phase of ['discover', 'design']) {
+        expect(cc('openspec', 'start', `BC-001-${phase}`).status).toBe(0);
+        expect(cc('openspec', 'done', `BC-001-${phase}`).status).toBe(0);
+      }
+
+      const next = cc('openspec', 'next');
+      expect(next.status).toBe(0);
+      expect(JSON.parse(next.stdout).taskCard.id).toBe('BC-001-test');
+
+      expect(cc('openspec', 'start', 'BC-001-test').status).toBe(0);
+      const red = cc('tdd', 'capture', '--task', 'BC-001-test', '--phase', 'red', '--command', 'npm test');
+      expect(red.stderr).not.toContain('Bun is not defined');
+      expect(red.status).toBe(0);
+      expect(cc('openspec', 'done', 'BC-001-test').status).toBe(0);
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  }, 120_000);
 });

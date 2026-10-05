@@ -13,7 +13,7 @@ import {
 import {
   generateOpenspecChange,
   ensureOpenspecConfig,
-  writeTasksMarkdown,
+  syncTaskCardCheckbox,
   archiveChangeFolder,
 } from '../core/openspec/openspec-generator';
 import { assessChangeFolder } from '../core/openspec/spec-quality';
@@ -55,6 +55,7 @@ export interface OpenspecOptions {
   readonly subcommand: string;
   readonly itemId?: string;
   readonly reason?: string;
+  readonly allowUnchecked?: boolean;
   readonly projectRoot: string;
   readonly output: OutputMode;
 }
@@ -68,7 +69,7 @@ const KNOWN_SUBCOMMANDS =
 export async function openspecCommand(
   options: OpenspecOptions
 ): Promise<{ code: number; data?: unknown }> {
-  const { subcommand, itemId, projectRoot, output, reason } = options;
+  const { subcommand, itemId, projectRoot, output, reason, allowUnchecked } = options;
   void output;
 
   switch (subcommand) {
@@ -93,7 +94,7 @@ export async function openspecCommand(
     case 'unblock':
       return handleUnblock(projectRoot, itemId);
     case 'archive':
-      return handleArchive(projectRoot, itemId);
+      return handleArchive(projectRoot, itemId, allowUnchecked);
     case 'sync':
       return handleSync(projectRoot, itemId);
     case 'verify':
@@ -657,6 +658,7 @@ async function handleVerify(
     cards.length > 0 &&
     doneCount === cards.length &&
     missingArtifacts(progress.artifacts).length === 0 &&
+    progress.checkboxes.remaining === 0 &&
     scorecardOk;
 
   return {
@@ -898,12 +900,7 @@ async function handleDone(
   if (!written.ok) return fail(command, [written.error]);
 
   const changePath = state.changePaths[card.backlogId];
-  if (changePath) {
-    await writeTasksMarkdown(projectRoot, changePath, cards, {
-      tddRequired,
-      acceptanceCriteria: itemLoaded.item.acceptanceCriteria,
-    });
-  }
+  if (changePath) await syncTaskCardCheckbox(projectRoot, changePath, cardId, true);
 
   const nextStatus: BacklogStatusInput = allDone ? 'REVIEW' : 'IN_PROGRESS';
   const transition = await transitionItem(projectRoot, itemLoaded.item, nextStatus, progress, session.raw);
@@ -1001,12 +998,7 @@ async function handleUnblock(
   if (!written.ok) return fail(command, [written.error]);
 
   const changePath = state.changePaths[card.backlogId];
-  if (changePath) {
-    await writeTasksMarkdown(projectRoot, changePath, itemCards(state, card.backlogId), {
-      tddRequired: session.doc.global.tddRequired,
-      acceptanceCriteria: itemLoaded.item.acceptanceCriteria,
-    });
-  }
+  if (changePath) await syncTaskCardCheckbox(projectRoot, changePath, cardId, false);
 
   const transition = await transitionItem(projectRoot, itemLoaded.item, 'READY', undefined, session.raw);
   if (!transition.ok) return fail(command, [transition.error]);
@@ -1028,6 +1020,7 @@ async function handleUnblock(
 async function handleArchive(
   projectRoot: string,
   itemId?: string,
+  allowUnchecked = false,
 ): Promise<{ code: number; data?: unknown }> {
   const command = 'openspec archive';
   if (!itemId) {
@@ -1084,9 +1077,13 @@ async function handleArchive(
       ]);
     }
     if (progress.checkboxes.remaining > 0) {
-      warnings.push(
-        `${progress.checkboxes.remaining} of ${progress.checkboxes.total} tasks.md checkboxes are unchecked; tick them as FRs complete (only [x]/[X] counts as done).`,
-      );
+      const unchecked = `${progress.checkboxes.remaining} of ${progress.checkboxes.total} tasks.md checkboxes are unchecked (only [x]/[X] counts as done)`;
+      if (!allowUnchecked) {
+        return fail(command, [
+          `Cannot archive ${itemId}: ${unchecked}. Tick them as the work completes, or pass --allow-unchecked to archive anyway.`,
+        ]);
+      }
+      warnings.push(`${unchecked}; archived with --allow-unchecked.`);
     }
     const synced = await syncChangeSpecs(projectRoot, changePath);
     if (!synced.success) {

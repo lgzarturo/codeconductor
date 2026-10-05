@@ -1,4 +1,4 @@
-import { access, mkdir, rename, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { basename, resolve } from 'node:path';
 import type { BacklogItemInput, OpenspecTaskCardInput } from '../../validation/schemas';
 import { buildChangeSlug } from './backlog-planner';
@@ -108,18 +108,34 @@ export function tasksMarkdown(
   return tasksContent(cards, options);
 }
 
-export async function writeTasksMarkdown(
+/**
+ * Set the checkbox of every `tasks.md` line that ends with `(<cardId>)`.
+ * Edits made by agents to other lines are left untouched; a missing file is a
+ * no-op (archive reports the missing artifact).
+ */
+export async function syncTaskCardCheckbox(
   projectRoot: string,
   changePath: string,
-  cards: OpenspecTaskCardInput[],
-  options: OpenspecTasksOptions = {},
+  cardId: string,
+  done: boolean,
 ): Promise<void> {
-  await mkdir(resolve(projectRoot, changePath), { recursive: true });
-  await writeFile(
-    resolve(projectRoot, changePath, 'tasks.md'),
-    tasksContent(cards, options),
-    'utf-8',
-  );
+  const file = resolve(projectRoot, changePath, 'tasks.md');
+  let content: string;
+  try {
+    content = await readFile(file, 'utf-8');
+  } catch {
+    return;
+  }
+  const suffix = `(${cardId})`;
+  const updated = content
+    .split('\n')
+    .map((line) =>
+      /^\s*-\s*\[[ xX]\]/.test(line) && line.trimEnd().endsWith(suffix)
+        ? line.replace(/\[[ xX]\]/, done ? '[x]' : '[ ]')
+        : line,
+    )
+    .join('\n');
+  if (updated !== content) await writeFile(file, updated, 'utf-8');
 }
 
 function tasksContent(
@@ -127,31 +143,36 @@ function tasksContent(
   options: OpenspecTasksOptions = {},
 ): string {
   const criteria = options.acceptanceCriteria ?? [];
+  // Tie each box to the card whose completion proves it, so `done` can tick it.
+  const tag = (phase: OpenspecTaskCardInput['phase']): string => {
+    const card = cards.find((c) => c.phase === phase);
+    return card ? ` (${card.id})` : '';
+  };
   const lines = [
     '# Implementation Tasks',
     '',
     '## Setup',
     '',
-    '- [ ] Confirm scope and OpenSpec change folder',
+    `- [ ] Confirm scope and OpenSpec change folder${tag('discover')}`,
     '',
     '## Foundational',
     '',
-    '- [ ] Read existing conventions in scope',
+    `- [ ] Read existing conventions in scope${tag('discover')}`,
     '',
     '## Requirements',
     '',
   ];
 
   if (criteria.length === 0) {
-    lines.push('- [ ] Implementation tasks (generated after plan)');
+    lines.push(`- [ ] Implementation tasks (generated after plan)${tag('implement')}`);
   } else {
     for (const [index, criterion] of criteria.entries()) {
       const n = pad3(index + 1);
       if (options.tddRequired) {
-        lines.push(`- [ ] Write failing test for FR-${n} (${criterion})`);
+        lines.push(`- [ ] Write failing test for FR-${n} (${criterion})${tag('test')}`);
       }
-      lines.push(`- [ ] Implement FR-${n} (${criterion})`);
-      lines.push(`- [ ] Verify SC-${n}`);
+      lines.push(`- [ ] Implement FR-${n} (${criterion})${tag('implement')}`);
+      lines.push(`- [ ] Verify SC-${n}${tag('review')}`);
     }
   }
 
@@ -165,7 +186,12 @@ function tasksContent(
     lines.push('- [ ] Implementation tasks (generated after plan)');
   }
 
-  lines.push('', '## Polish', '', '- [ ] Run openspec analyze and scorecard create --from-diff');
+  lines.push(
+    '',
+    '## Polish',
+    '',
+    `- [ ] Run openspec analyze and scorecard create --from-diff${tag('review')}`,
+  );
   return lines.join('\n');
 }
 

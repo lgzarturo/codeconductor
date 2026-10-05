@@ -638,6 +638,8 @@ export async function routeCommand(
         subcommand: openspecSub,
         itemId,
         reason: typeof options.reason === 'string' ? options.reason : undefined,
+        allowUnchecked:
+          options['allow-unchecked'] === true || options['allow-unchecked'] === 'true',
         projectRoot,
         output: flags.output,
       } as OpenspecOptions);

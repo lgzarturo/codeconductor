@@ -208,7 +208,7 @@ describe('openspec verify (advisory)', () => {
     expect(data.issues.some((i) => i.code === 'CARDS_PENDING')).toBe(true);
   });
 
-  test('finished change is archive-ready with checkbox warnings', async () => {
+  test('finished change is archive-ready with every generated checkbox ticked', async () => {
     const root = await makeRoot(true);
     await planAndFinish(root);
     const verified = await openspecCommand({
@@ -222,9 +222,7 @@ describe('openspec verify (advisory)', () => {
       issues: Array<{ severity: string; code: string }>;
     };
     expect(data.archiveReady).toBe(true);
-    expect(
-      data.issues.some((i) => i.code === 'CHECKBOXES_REMAINING' && i.severity === 'WARNING'),
-    ).toBe(true);
+    expect(data.issues.some((i) => i.code === 'CHECKBOXES_REMAINING')).toBe(false);
   });
 
   test('fails without an active change', async () => {
@@ -307,12 +305,15 @@ describe('openspec archive guards (opsx-adapted)', () => {
     expect(JSON.stringify(archived.data)).toMatch(/CRITICAL/);
   });
 
-  test('success carries warnings for unchecked task boxes', async () => {
+  test('--allow-unchecked archives with a warning for unchecked task boxes', async () => {
     const root = await makeRoot(true);
-    await planAndFinish(root);
+    const changePath = await planAndFinish(root);
+    const tasksPath = join(root, changePath, 'tasks.md');
+    await writeFile(tasksPath, `${await readFile(tasksPath, 'utf-8')}\n- [ ] Manual pass\n`, 'utf-8');
     const archived = await openspecCommand({
       subcommand: 'archive',
       itemId: 'BC-001',
+      allowUnchecked: true,
       projectRoot: root,
       output: 'json',
     });

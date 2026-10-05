@@ -89,7 +89,14 @@ describe('openspec start/done/block/archive', () => {
     expect((started.data as { cardStatus: string }).cardStatus).toBe('doing');
 
     const nextWhileDoing = await run(root, 'next');
-    expect((nextWhileDoing.data as { taskCard: OpenspecTaskCardInput | null }).taskCard).toBeNull();
+    const whileDoing = nextWhileDoing.data as {
+      taskCard: OpenspecTaskCardInput | null;
+      inProgressCardId?: string;
+      message: string;
+    };
+    expect(whileDoing.taskCard).toBeNull();
+    expect(whileDoing.inProgressCardId).toBe(first.id);
+    expect(whileDoing.message).toContain(`openspec done ${first.id}`);
 
     const done = await run(root, 'done', first.id);
     expect(done.code).toBe(0);
@@ -111,6 +118,28 @@ describe('openspec start/done/block/archive', () => {
 
     const backlog = await readFile(join(root, 'BACKLOG.md'), 'utf-8');
     expect(backlog).toMatch(/- Status: IN_PROGRESS/);
+  });
+
+  test('next only reads state: a test card is returned without running a compile check', async () => {
+    const root = await tempProject();
+    roots.push(root);
+    await run(root, 'plan', 'BC-001');
+    for (const phase of ['discover', 'design']) {
+      await run(root, 'start', `BC-001-${phase}`);
+      await run(root, 'done', `BC-001-${phase}`);
+    }
+    // A failing compile command must not affect `next`.
+    await mkdir(join(root, '.codeconductor'), { recursive: true });
+    await writeFile(
+      join(root, '.codeconductor', 'config.yml'),
+      'compileCheck:\n  enabled: true\n  command: "npm run nonexistent-script"\n',
+    );
+
+    const next = await run(root, 'next');
+    expect(next.code).toBe(0);
+    const data = next.data as { taskCard: { phase: string }; loop?: unknown };
+    expect(data.taskCard.phase).toBe('test');
+    expect(data.loop).toBeUndefined();
   });
 
   test('plan does not rewind IN_PROGRESS to PLANNED', async () => {

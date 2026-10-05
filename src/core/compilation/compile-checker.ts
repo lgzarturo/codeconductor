@@ -1,7 +1,9 @@
 /**
- * Compile Check — runs a build command via Bun.spawn, captures output,
+ * Compile Check — runs a build command via node:child_process, captures output,
  * parses errors, and returns structured results for re-injection.
  */
+
+import { spawn, type ChildProcess } from 'node:child_process';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -273,7 +275,8 @@ export function parseCompileErrors(stderr: string): CompileError[] {
 }
 
 /**
- * Run a compile check via Bun.spawn with configurable timeout.
+ * Run a compile check with configurable timeout. Uses `node:child_process`
+ * because the published bundle runs under Node (`npx cc-codeconductor`).
  */
 export async function runCompileCheck(
   options?: CompileCheckOptions
@@ -285,52 +288,54 @@ export async function runCompileCheck(
   const startTime = performance.now();
   let timedOut = false;
 
-  // Parse command into parts for Bun.spawn
   const parts = Array.isArray(command) ? command : tokenizeCommand(command);
 
-  let proc: ReturnType<typeof Bun.spawn>;
+  const failure = (stderr: string): CompileResult => ({
+    success: false,
+    exitCode: -1,
+    stdout: '',
+    stderr,
+    errors: [],
+    durationMs: performance.now() - startTime,
+    timedOut: false,
+  });
+
+  let proc: ChildProcess;
   try {
-    proc = Bun.spawn(parts, {
+    proc = spawn(parts[0]!, parts.slice(1), {
       cwd,
-      stdout: 'pipe',
-      stderr: 'pipe',
+      stdio: ['ignore', 'pipe', 'pipe'],
       env: minimalChildEnv(),
       // On POSIX this creates a process group so timeout cleanup can terminate
       // descendants as well as the direct child.
       detached: process.platform !== 'win32',
     });
   } catch (err) {
-    const durationMs = performance.now() - startTime;
-    return {
-      success: false,
-      exitCode: -1,
-      stdout: '',
-      stderr: String(err),
-      errors: [],
-      durationMs,
-      timedOut: false,
-    };
+    return failure(String(err));
   }
 
   // Reading both pipes to completion is what keeps the child from blocking on a
   // full buffer, but it only settles once the child exits — so it is raced
   // against the timeout instead of relying on a timer to interrupt it.
-  const collectOutput = (async () => {
-    const stdoutStream = proc.stdout as ReadableStream<Uint8Array>;
-    const stderrStream = proc.stderr as ReadableStream<Uint8Array>;
-    const [stdout, stderr] = await Promise.all([
-      new Response(stdoutStream).text(),
-      new Response(stderrStream).text(),
-    ]);
-    return { stdout, stderr, exitCode: await proc.exited };
-  })();
-  collectOutput.catch(() => {
-    // Swallowed here so a post-timeout rejection is never unhandled.
-  });
+  const collectOutput = new Promise<{ stdout: string; stderr: string; exitCode: number }>(
+    (resolvePromise) => {
+      let stdout = '';
+      let stderr = '';
+      proc.stdout!.setEncoding('utf-8').on('data', (chunk: string) => (stdout += chunk));
+      proc.stderr!.setEncoding('utf-8').on('data', (chunk: string) => (stderr += chunk));
+      // A spawn failure (e.g. ENOENT) surfaces as an event, not a throw.
+      proc.on('error', (err) =>
+        resolvePromise({ stdout: '', stderr: String(err), exitCode: -1 }),
+      );
+      proc.on('close', (code, signal) =>
+        resolvePromise({ stdout, stderr, exitCode: code ?? (signal ? -1 : 0) }),
+      );
+    },
+  );
 
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<'timeout'>((resolve) => {
-    timeoutId = setTimeout(() => resolve('timeout'), timeoutMs);
+  const timeout = new Promise<'timeout'>((resolvePromise) => {
+    timeoutId = setTimeout(() => resolvePromise('timeout'), timeoutMs);
   });
 
   try {
@@ -340,13 +345,9 @@ export async function runCompileCheck(
       timedOut = true;
       try {
         if (process.platform === 'win32') {
-          const taskkill = Bun.spawn(
-            ['taskkill', '/PID', String(proc.pid), '/T', '/F'],
-            { stdout: 'ignore', stderr: 'ignore' },
-          );
-          await taskkill.exited;
+          spawn('taskkill', ['/PID', String(proc.pid), '/T', '/F'], { stdio: 'ignore' });
         } else {
-          process.kill(-proc.pid, 'SIGKILL');
+          process.kill(-proc.pid!, 'SIGKILL');
         }
       } catch {
         try {
@@ -355,7 +356,6 @@ export async function runCompileCheck(
           // Process may have already exited.
         }
       }
-      await proc.exited;
 
       return {
         success: false,
@@ -378,15 +378,7 @@ export async function runCompileCheck(
       timedOut,
     };
   } catch (err) {
-    return {
-      success: false,
-      exitCode: -1,
-      stdout: '',
-      stderr: String(err),
-      errors: [],
-      durationMs: performance.now() - startTime,
-      timedOut,
-    };
+    return { ...failure(String(err)), timedOut };
   } finally {
     clearTimeout(timeoutId);
   }

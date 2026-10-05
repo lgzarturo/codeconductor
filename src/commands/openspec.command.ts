@@ -40,7 +40,6 @@ import {
   serializeItemSnapshot,
 } from '../core/openspec/openspec-state';
 import { BACKLOG_FILENAME } from '../core/openspec/backlog-parser';
-import { runLoopForProject, shouldRunAgentLoop } from '../core/loop/loop-engine';
 import type { OutputMode } from '../utils/logger';
 import type {
   BacklogDocumentInput,
@@ -740,32 +739,27 @@ async function handleNext(projectRoot: string): Promise<{ code: number; data?: u
 
   const next = getNextTaskCard(stateResult.data);
   if (!next) {
+    const doing = stateResult.data.taskCards.find((c) => c.status === 'doing');
     return {
       code: 0,
       data: {
         success: true,
         command: 'openspec next',
         taskCard: null,
-        message: 'No pending task cards. Run openspec plan first.',
+        ...(doing ? { inProgressCardId: doing.id } : {}),
+        message: doing
+          ? `${doing.id} is in progress. Finish it with: openspec done ${doing.id}`
+          : 'No pending task cards. Run openspec plan first.',
       },
     };
   }
 
-  let loop = undefined;
-  if (shouldRunAgentLoop(undefined, next.agent, next.phase)) {
-    loop = await runLoopForProject(projectRoot, {
-      taskTitle: next.title,
-      originalTask: next.prompt,
-    });
-  }
-
   return {
-    code: loop && !loop.success ? 1 : 0,
+    code: 0,
     data: {
-      success: !(loop && !loop.success),
+      success: true,
       command: 'openspec next',
       taskCard: next,
-      ...(loop ? { loop } : {}),
     },
   };
 }

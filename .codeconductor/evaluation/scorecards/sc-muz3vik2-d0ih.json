@@ -1,0 +1,73 @@
+{
+  "id": "sc-muz3vik2-d0ih",
+  "taskId": "BC-026",
+  "agent": "reviewer",
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "contractVersion": "1.6.1",
+  "criteria": [
+    {
+      "id": "acceptance",
+      "label": "Acceptance criteria met",
+      "weight": 0.3,
+      "score": 3,
+      "notes": "All FR/SC mapped to tasks",
+      "autoSuggested": true
+    },
+    {
+      "id": "minimal_diff",
+      "label": "Minimal diff (no scope creep)",
+      "weight": 0.2,
+      "score": 2,
+      "notes": "No diff detected",
+      "autoSuggested": true
+    },
+    {
+      "id": "tests",
+      "label": "Tests present and passing",
+      "weight": 0.15,
+      "score": 2,
+      "notes": "Manual (approved by user): 23/23 tests, tsc clean, check:drift clean, green TDD evidence valid. Red RDD receipt is stale by design (project-wide coverage) and cannot be regenerated without falsifying it."
+    },
+    {
+      "id": "regressions",
+      "label": "No regressions introduced",
+      "weight": 0.15,
+      "score": 2
+    },
+    {
+      "id": "conventions",
+      "label": "Code follows project conventions",
+      "weight": 0.05,
+      "score": 2
+    },
+    {
+      "id": "documentation",
+      "label": "Documentation updated if required",
+      "weight": 0.05,
+      "score": 2
+    },
+    {
+      "id": "context_discipline",
+      "label": "Context discipline",
+      "weight": 0.05,
+      "score": 2
+    },
+    {
+      "id": "cc_gain",
+      "label": "Complexity diffusion (cc-gain)",
+      "weight": 0.05,
+      "score": 0,
+      "notes": "Measured before commit: raw=-121.7, verdict=negative (+~4300 LOC of canonical skill copies; duplication reduction is not captured). Kept at 0 by user decision; post-commit auto value 2 is a default with no diff to measure."
+    }
+  ],
+  "weightedScore": 2.2,
+  "verdict": "REVISE",
+  "findings": [
+    "Review: approved with warnings (0 CRITICAL; S1, S2 fixed).",
+    "cc-gain negative is inherent to adding canonical skill copies.",
+    "Committed as 56d9407: diff vs HEAD is empty, so auto signals are not measured."
+  ],
+  "createdAt": "2026-10-08T05:38:25.600Z",
+  "backlogId": "BC-026",
+  "source": "manual"
+}

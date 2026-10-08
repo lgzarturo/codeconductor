@@ -4,8 +4,8 @@
     {
       "id": "tests_pass",
       "required": false,
-      "passed": false,
-      "message": "Command failed: npm test — Command failed: npm test\n[loop] 2026-08-25T05:30:53.495Z phase=IDLE action=INIT iteration=0\n[loop] 2026-08-25T05:30:53.496Z phase=RUNNING action=START iteration=1\n[loop] 2026-08-25T05:30:53.496Z phase"
+      "passed": true,
+      "message": "Command succeeded: npm test"
     },
     {
       "id": "doctor_config",
@@ -20,5 +20,5 @@
       "message": "diff_scope check requires task context; skipped in CLI (manual in workflow)"
     }
   ],
-  "timestamp": "2026-08-25T05:31:30.124Z"
+  "timestamp": "2026-10-08T05:10:15.031Z"
 }

@@ -1,0 +1,75 @@
+{
+  "id": "sc-muz30z0p-p4g8",
+  "taskId": "BC-026",
+  "agent": "reviewer",
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "contractVersion": "1.6.1",
+  "criteria": [
+    {
+      "id": "acceptance",
+      "label": "Acceptance criteria met",
+      "weight": 0.3,
+      "score": 3,
+      "notes": "All FR/SC mapped to tasks",
+      "autoSuggested": true
+    },
+    {
+      "id": "minimal_diff",
+      "label": "Minimal diff (no scope creep)",
+      "weight": 0.2,
+      "score": 0,
+      "notes": "Files outside scope: .codeconductor/evaluation/regression-last.json, .codeconductor/events.jsonl, .codeconductor/openspec-state.json, BACKLOG.md, CHANGELOG.md",
+      "autoSuggested": true
+    },
+    {
+      "id": "tests",
+      "label": "Tests present and passing",
+      "weight": 0.15,
+      "score": 0,
+      "notes": "TDD required but no verification-runner evidence",
+      "autoSuggested": true
+    },
+    {
+      "id": "regressions",
+      "label": "No regressions introduced",
+      "weight": 0.15,
+      "score": 2
+    },
+    {
+      "id": "conventions",
+      "label": "Code follows project conventions",
+      "weight": 0.05,
+      "score": 2
+    },
+    {
+      "id": "documentation",
+      "label": "Documentation updated if required",
+      "weight": 0.05,
+      "score": 2
+    },
+    {
+      "id": "context_discipline",
+      "label": "Context discipline",
+      "weight": 0.05,
+      "score": 2
+    },
+    {
+      "id": "cc_gain",
+      "label": "Complexity diffusion (cc-gain)",
+      "weight": 0.05,
+      "score": 0,
+      "notes": "cc-gain raw=-121.7, verdict=negative",
+      "autoSuggested": true
+    }
+  ],
+  "weightedScore": 1.5,
+  "verdict": "REJECT",
+  "findings": [
+    "Scope creep detected in 28 file(s).",
+    "Complexity auditor: 45 finding(s).",
+    "Tests auto-suggested 0: missing verification-runner evidence."
+  ],
+  "createdAt": "2026-10-08T05:14:40.597Z",
+  "backlogId": "BC-026",
+  "source": "manual"
+}

@@ -102,3 +102,33 @@ skills:
     targets: [claude, codex, cursor, opencode, agy]
   - name: api-versioning
     targets: [claude, codex, cursor, opencode, agy]
+  # Stack skills migrated from duplicated preset copies (BC-026). Never list
+  # cursor here: its copies keep `paths:` or differ and stay hand-maintained.
+  - name: android
+    targets: [claude, codex, opencode]
+  - name: backlog
+    targets: [claude, codex, opencode, agy]
+  - name: conductor-setup
+    targets: [claude, codex, opencode]
+  - name: django-testing
+    targets: [claude, codex, opencode]
+  - name: find-skills
+    targets: [claude, codex, opencode, seo-hotel]
+  - name: laravel-specialist
+    targets: [claude, codex, opencode]
+  - name: pagespeed-insights
+    targets: [claude, codex, opencode, seo-hotel]
+  - name: pagespeed-perf
+    targets: [claude, codex, opencode]
+  - name: php-pro
+    targets: [claude, codex, opencode]
+  - name: python-django-stack
+    targets: [claude, codex, opencode]
+  - name: python-fastapi-stack
+    targets: [claude, codex, opencode]
+  - name: spring-boot-kotlin
+    targets: [claude, codex, opencode]
+  - name: sqlalchemy
+    targets: [claude, codex, opencode]
+  - name: security
+    targets: [claude, opencode]

@@ -144,13 +144,13 @@ Formato validable por `cc openspec validate`. Análisis completo en
 ### BC-026 | Migrar el resto de skills de stack duplicadas a shared-skills.yml
 
 - Priority: P3
-- Status: READY
+- Status: REVIEW
 - Type: tech-debt
 - Depends on: none
-- Description: Tras BC-auditoría de seguridad y paridad de agentes (2026-09), ~20 skills de stack más (laravel-specialist, php-pro, spring-boot-kotlin, sqlalchemy, django-testing, pagespeed-perf, pagespeed-insights, entre otras) siguen presentes como copias manuales duplicadas en varios targets sin la protección de src/presets/shared-skills.yml + sync:skills. Hoy son idénticas entre targets, pero sin ese mecanismo pueden divergir igual que python, django-orm, spring-boot-feature, jpa-postgres y api-versioning ya divergieron antes de promoverse a canónicas.
+- Description: Tras BC-auditoría de seguridad y paridad de agentes (2026-09), 14 skills más (laravel-specialist, php-pro, spring-boot-kotlin, sqlalchemy, django-testing, pagespeed-perf, pagespeed-insights, security, entre otras) siguen presentes como copias manuales duplicadas en varios targets sin la protección de src/presets/shared-skills.yml + sync:skills. Hoy son idénticas entre targets, pero sin ese mecanismo pueden divergir igual que python, django-orm, spring-boot-feature, jpa-postgres y api-versioning ya divergieron antes de promoverse a canónicas.
 - Scope: Inventariar cada skill duplicada sin protección, confirmar que sus copias por target son byte-idénticas (o elegir la más completa si ya divergió), promoverla a skills/<name>/SKILL.md y registrarla en src/presets/shared-skills.yml.
 - Out of scope: Las skills con bloque `paths:` de auto-attach específico de Cursor (ya resueltas con targets parciales); cambiar el contenido técnico de cualquier skill.
-- Progress: 0
+- Progress: 100%
 - Reviewer: reviewer
 - Acceptance:
   - [ ] Cada skill de stack duplicada sin protección queda listada en shared-skills.yml con su targets correcto

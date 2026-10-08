@@ -1,0 +1,72 @@
+{
+  "id": "sc-muz4m64j-tppn",
+  "taskId": "BC-026",
+  "agent": "reviewer",
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "contractVersion": "1.6.1",
+  "criteria": [
+    {
+      "id": "acceptance",
+      "label": "Acceptance criteria met",
+      "weight": 0.3,
+      "score": 3,
+      "notes": "All FR/SC mapped to tasks",
+      "autoSuggested": true
+    },
+    {
+      "id": "minimal_diff",
+      "label": "Minimal diff (no scope creep)",
+      "weight": 0.2,
+      "score": 2,
+      "notes": "No diff detected",
+      "autoSuggested": true
+    },
+    {
+      "id": "tests",
+      "label": "Tests present and passing",
+      "weight": 0.15,
+      "score": 2,
+      "notes": "Manual: 23/23 tests, tsc clean, check:drift clean, green TDD evidence valid. Red RDD receipt stale by design (project-wide coverage)."
+    },
+    {
+      "id": "regressions",
+      "label": "No regressions introduced",
+      "weight": 0.15,
+      "score": 2
+    },
+    {
+      "id": "conventions",
+      "label": "Code follows project conventions",
+      "weight": 0.05,
+      "score": 2
+    },
+    {
+      "id": "documentation",
+      "label": "Documentation updated if required",
+      "weight": 0.05,
+      "score": 2
+    },
+    {
+      "id": "context_discipline",
+      "label": "Context discipline",
+      "weight": 0.05,
+      "score": 2
+    },
+    {
+      "id": "cc_gain",
+      "label": "Complexity diffusion (cc-gain)",
+      "weight": 0.05,
+      "score": 1,
+      "notes": "Manual override approved by user. Measured raw=-121.7 (negative) because canonical skills/<name>/ copies add ~4300 LOC; the item removes drift risk, which the metric does not capture. Scored 1, not higher."
+    }
+  ],
+  "weightedScore": 2.25,
+  "verdict": "PASS",
+  "findings": [
+    "Review: approved with warnings (0 CRITICAL; S1, S2 fixed).",
+    "cc_gain override to 1 explicitly approved by the user."
+  ],
+  "createdAt": "2026-10-08T05:59:09.198Z",
+  "backlogId": "BC-026",
+  "source": "manual"
+}

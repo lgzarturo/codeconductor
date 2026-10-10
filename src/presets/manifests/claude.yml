@@ -7,7 +7,7 @@ entries:
     template: true
   - src: claude/settings.json
     dest: .claude/settings.json
-    strategy: overwrite
+    strategy: merge-json
     globalStrategy: merge-json
   - src: shared/invoke-hook.cjs
     dest: .claude/hooks/invoke-hook.cjs

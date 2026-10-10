@@ -111,7 +111,7 @@ describe('invoke-hook fail-open and parity tests', () => {
     });
     const result = spawnSync(process.execPath, [SHARED_HOOK, 'pre-tool', '--format=agy'], {
       cwd: PROJECT_ROOT,
-      env: { ...process.env, PROJECT_ROOT },
+      env: { ...process.env, PROJECT_ROOT, CC_DEV: '1' },
       input,
       encoding: 'utf-8',
     });

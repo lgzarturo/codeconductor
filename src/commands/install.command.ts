@@ -306,6 +306,7 @@ export async function installPresetCommand(
       );
       for (const r of results) {
         allFileResults.push({ target: t, ...r });
+        postInstallWarnings.push(...(r.warnings ?? []));
       }
 
       if (!dryRun) {

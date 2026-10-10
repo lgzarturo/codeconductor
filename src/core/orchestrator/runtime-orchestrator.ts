@@ -6,7 +6,8 @@ import type {
   ProductGraphInput,
 } from '../../validation/schemas';
 import { enrichGoalWithProduct, inferEvidenceRequired } from '../planner/product-planner';
-import { loadGoal, writeGoal } from '../goal/goal-state';
+import { loadGoal, propagateBlockedTasks, writeGoal } from '../goal/goal-state';
+import { withQueueLock } from '../queue/lock';
 import { loadGraph } from '../product-graph/graph-store';
 import { appendEvent } from '../memory/episodic-store';
 import {
@@ -35,25 +36,27 @@ export async function rollbackTaskStatus(
   previousState: OperationalStateInput,
   cause: Error,
 ): Promise<Result<never, Error>> {
-  task.status = previousStatus;
-  const write = await writeGoal(projectRoot, graph);
-  const restored = write.success ? await saveOperationalState(projectRoot, previousState) : write;
+  return withQueueLock(projectRoot, async () => {
+    task.status = previousStatus;
+    const write = await writeGoal(projectRoot, graph);
+    const restored = write.success ? await saveOperationalState(projectRoot, previousState) : write;
 
-  return restored.success
-    ? err(cause)
-    : err(new Error(`${cause.message} (rollback failed: ${restored.error.message})`));
+    return restored.success
+      ? err(cause)
+      : err(new Error(`${cause.message} (rollback failed: ${restored.error.message})`));
+  });
 }
 
 export function getReadyTasks(graph: GoalGraphInput): GoalTaskInput[] {
+  propagateBlockedTasks(graph);
   const done = new Set(graph.tasks.filter((t) => t.status === 'done').map((t) => t.id));
-  const blocked = new Set(graph.tasks.filter((t) => t.status === 'blocked').map((t) => t.id));
-
+  const order = new Map(graph.tasks.map((task, index) => [task.id, index]));
   return graph.tasks.filter((task) => {
     if (task.status !== 'pending') return false;
-    if (blocked.has(task.id)) return false;
     const deps = task.depends_on ?? [];
     return deps.every((d) => done.has(d));
-  });
+  }).sort((a, b) => (a.priority ?? 'P2').localeCompare(b.priority ?? 'P2')
+    || order.get(a.id)! - order.get(b.id)! || a.id.localeCompare(b.id));
 }
 
 export function goalTaskToCanonicalCard(
@@ -125,12 +128,38 @@ export interface OrchestratorNextResult {
   readyCount: number;
 }
 
-export async function getNextTask(
+export async function getNextTask(projectRoot: string, projectName: string): Promise<Result<OrchestratorNextResult, Error>> {
+  return withQueueLock(projectRoot, () => getNextTaskUnlocked(projectRoot, projectName));
+}
+
+export async function claimNextTask(projectRoot: string, projectName: string): Promise<Result<OrchestratorNextResult, Error>> {
+  return withQueueLock(projectRoot, async () => {
+    const next = await getNextTaskUnlocked(projectRoot, projectName);
+    if (!next.success) return next;
+    const started = await startTaskUnlocked(projectRoot, next.data.task.id, next.data.task.agentType);
+    return started.success ? next : started;
+  });
+}
+
+export async function startTask(projectRoot: string, taskId: string, agent?: string): Promise<Result<void, Error>> {
+  return withQueueLock(projectRoot, () => startTaskUnlocked(projectRoot, taskId, agent));
+}
+
+export async function completeTask(projectRoot: string, taskId: string, evidenceIds?: string[]): Promise<Result<void, Error>> {
+  return withQueueLock(projectRoot, () => completeTaskUnlocked(projectRoot, taskId, evidenceIds));
+}
+
+async function getNextTaskUnlocked(
   projectRoot: string,
   projectName: string,
 ): Promise<Result<OrchestratorNextResult, Error>> {
   const goalResult = await loadGoal(projectRoot);
   if (!goalResult.success) return goalResult;
+
+  if (propagateBlockedTasks(goalResult.data)) {
+    const write = await writeGoal(projectRoot, goalResult.data);
+    if (!write.success) return write;
+  }
 
   const graphResult = await loadGraph(projectRoot);
   const productGraph = graphResult.success ? graphResult.data : undefined;
@@ -154,7 +183,7 @@ export async function getNextTask(
   });
 }
 
-export async function startTask(
+async function startTaskUnlocked(
   projectRoot: string,
   taskId: string,
   agent?: string,
@@ -167,6 +196,10 @@ export async function startTask(
   if (task.status !== 'pending') {
     return err(new Error(`Task ${taskId} is ${task.status}, expected pending`));
   }
+
+  const done = new Set(goalResult.data.tasks.filter((t) => t.status === 'done').map((t) => t.id));
+  const unmet = (task.depends_on ?? []).filter((id) => !done.has(id));
+  if (unmet.length > 0) return err(new Error(`Task ${taskId} has unmet dependencies: ${unmet.join(', ')}`));
 
   const stateBefore = await loadOperationalState(projectRoot);
   if (!stateBefore.success) return stateBefore;
@@ -208,7 +241,7 @@ export async function startTask(
   return ok(undefined);
 }
 
-export async function completeTask(
+async function completeTaskUnlocked(
   projectRoot: string,
   taskId: string,
   evidenceIds?: string[],

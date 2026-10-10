@@ -124,7 +124,7 @@ describe('Phase 4 coverage: markTaskBlocked edge cases', () => {
     // so this test does not couple to the OS-specific message.
   });
 
-  test('marking one task as blocked leaves dependent tasks unaffected', async () => {
+  test('marking one task as blocked cascades to its pending descendants', async () => {
     const graph = planGoal('Build a CRUD API for products');
     await writeGoal(TEST_DIR, graph);
 
@@ -139,10 +139,9 @@ describe('Phase 4 coverage: markTaskBlocked edge cases', () => {
 
     const statuses = load.data.tasks.map((t) => t.status);
     expect(statuses[0]).toBe('blocked');
-    // All other tasks must remain 'pending' — markTaskBlocked only mutates the
-    // target task, it does not cascade.
     for (let i = 1; i < statuses.length; i++) {
-      expect(statuses[i]).toBe('pending');
+      expect(statuses[i]).toBe('blocked');
+      expect(load.data.tasks[i]!.blocked_reason).toContain('Blocked by dependency');
     }
   });
 });

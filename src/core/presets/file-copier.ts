@@ -1,6 +1,7 @@
 import { lstat, readdir, readFile, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import {
   getLanguageInstruction,
   LOCALE_PLACEHOLDER,
@@ -56,6 +57,7 @@ export interface FileCopyResult {
   action: FileAction;
   dryRun?: boolean;
   error?: string;
+  warnings?: string[];
   /**
    * Final content decided for this destination (post-render, post-merge).
    * Present on written/appended/merged results so verify passes can reuse it
@@ -140,7 +142,11 @@ export function mergeDeep(
     const srcVal = source[key];
     const tgtVal = target[key];
     if (Array.isArray(srcVal) && Array.isArray(tgtVal)) {
-      result[key] = [...new Set([...(tgtVal as unknown[]), ...(srcVal as unknown[])])];
+      const values: unknown[] = [...tgtVal];
+      for (const value of srcVal) {
+        if (!values.some(existing => isDeepStrictEqual(existing, value))) values.push(value);
+      }
+      result[key] = values;
     } else if (
       srcVal &&
       typeof srcVal === 'object' &&
@@ -510,6 +516,7 @@ export async function applySingleFile(
   incomingContent = await injectMcpServers(incomingContent, destPath);
   let finalContent = incomingContent;
   let action: FileAction = 'written';
+  const warnings: string[] = [];
 
   if (strategy === 'append') {
     let existing = '';
@@ -526,11 +533,30 @@ export async function applySingleFile(
     let existing: Record<string, unknown> = {};
     try {
       existing = JSON.parse(await readFile(destPath, 'utf-8')) as Record<string, unknown>;
-    } catch {
-      /* no existing or invalid JSON */
+      if (!existing || typeof existing !== 'object' || Array.isArray(existing)) {
+        throw new Error('Existing JSON must be an object');
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        return { src: srcPath, dest: destPath, action: 'error', error: `Cannot merge existing JSON: ${error}` };
+      }
     }
     try {
       const incoming = JSON.parse(incomingContent) as Record<string, unknown>;
+      if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) {
+        throw new Error('Incoming JSON must be an object');
+      }
+      if (srcPath.replace(/\\/g, '/').endsWith('/claude/settings.json')) {
+        const permissions = existing.permissions as { allow?: unknown } | undefined;
+        const allow = permissions?.allow;
+        if (Array.isArray(allow)) {
+          for (const rule of allow) {
+            if (typeof rule === 'string' && /^(?:Bash\([^)]*\*[^)]*\)|WebFetch(?:\([^)]*\*[^)]*\))?)$/.test(rule)) {
+              warnings.push(`${destPath}: preserved user permission ${rule}; review this broad permission.`);
+            }
+          }
+        }
+      }
       finalContent = JSON.stringify(mergeDeep(existing, incoming), null, 2);
     } catch (e) {
       return { src: srcPath, dest: destPath, action: 'error', error: `JSON merge failed: ${e}` };
@@ -562,7 +588,7 @@ export async function applySingleFile(
   }
 
   if (dryRun) {
-    return { src: srcPath, dest: destPath, action, dryRun: true, renderedContent: finalContent };
+    return { src: srcPath, dest: destPath, action, dryRun: true, renderedContent: finalContent, ...(warnings.length ? { warnings } : {}) };
   }
 
   if (baseDir === undefined) {
@@ -581,7 +607,7 @@ export async function applySingleFile(
     await writeContainedFile(baseDir, relative(baseDir, destPath), finalContent, {
       force: true,
     });
-    return { src: srcPath, dest: destPath, action, renderedContent: finalContent };
+    return { src: srcPath, dest: destPath, action, renderedContent: finalContent, ...(warnings.length ? { warnings } : {}) };
   } catch (e) {
     return { src: srcPath, dest: destPath, action: 'error', error: String(e) };
   }

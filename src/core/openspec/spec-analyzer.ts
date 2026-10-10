@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { readMarkdownFiles } from './spec-files';
-import { assessSpecMarkdown, type SpecQualityReport } from './spec-quality';
+import { readMarkdownFiles, type MarkdownFileContent } from './spec-files';
+import { assessSpecMarkdown, mergeSpecQualityReports, type SpecQualityReport } from './spec-quality';
 
 export type AnalyzeSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 
@@ -29,6 +29,8 @@ export interface SpecAnalyzeReport {
 export interface AnalyzeArtifactsInput {
   readonly changePath: string;
   readonly specMarkdown: string;
+  readonly specPath?: string;
+  readonly specFiles?: MarkdownFileContent[];
   readonly tasksMarkdown: string;
   readonly designMarkdown?: string;
   readonly policyText?: string;
@@ -50,7 +52,9 @@ function coverage(mapped: number, total: number): number {
 }
 
 function mentionsId(haystack: string, id: string): boolean {
-  return haystack.includes(id);
+  if (!id.startsWith('req:')) return haystack.includes(id);
+  const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(?<![\\w:/#-])${escaped}(?![\\w/-])`).test(haystack);
 }
 
 function testSection(tasksMarkdown: string): string {
@@ -64,19 +68,13 @@ function testSection(tasksMarkdown: string): string {
   return kept.join('\n');
 }
 
-async function readDeltaSpecs(specDir: string): Promise<string> {
-  const files = await readMarkdownFiles(specDir);
-  return files
-    .map((f) => f.content)
-    .filter(Boolean)
-    .join('\n\n');
-}
-
 /**
  * Read-only coverage of FR/SC → tasks → tests. Does not write files.
  */
 export function analyzeSpecArtifacts(input: AnalyzeArtifactsInput): SpecAnalyzeReport {
-  const quality = assessSpecMarkdown(input.specMarkdown, `${input.changePath}/specs`);
+  const quality = input.specFiles?.length
+    ? mergeSpecQualityReports(input.specFiles.map((file) => assessSpecMarkdown(file.content, file.path)))
+    : assessSpecMarkdown(input.specMarkdown, input.specPath ?? `${input.changePath}/specs`);
   const frIds = unique(quality.requirements.map((r) => r.id));
   const scIds = unique(quality.successCriteria.map((s) => s.id));
   const tasks = input.tasksMarkdown;
@@ -164,7 +162,8 @@ export async function analyzeChangeFolder(
   },
 ): Promise<SpecAnalyzeReport> {
   const changeRoot = resolve(projectRoot, changePath);
-  const specMarkdown = await readDeltaSpecs(join(changeRoot, 'specs'));
+  const specFiles = await readMarkdownFiles(join(changeRoot, 'specs'));
+  const specMarkdown = specFiles.map((file) => file.content).join('\n\n');
   let tasksMarkdown = '';
   try {
     tasksMarkdown = await readFile(join(changeRoot, 'tasks.md'), 'utf-8');
@@ -181,6 +180,7 @@ export async function analyzeChangeFolder(
   return analyzeSpecArtifacts({
     changePath,
     specMarkdown,
+    specFiles,
     tasksMarkdown,
     designMarkdown,
     policyText: options.policyText,

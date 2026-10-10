@@ -172,6 +172,7 @@ describe('Antigravity CLI (agy) Hooks Runner', () => {
     });
     const result = runHookShell(preToolCmd, {
       cwd: PROJECT_ROOT,
+      env: { ...process.env, CC_DEV: '1' },
       input,
       encoding: 'utf-8',
     });
@@ -187,6 +188,7 @@ describe('Antigravity CLI (agy) Hooks Runner', () => {
     });
     const result = runHookShell(preToolCmd, {
       cwd: join(PROJECT_ROOT, '.agents'),
+      env: { ...process.env, CC_DEV: '1' },
       input,
       encoding: 'utf-8',
     });

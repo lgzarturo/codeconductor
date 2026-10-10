@@ -528,6 +528,7 @@ export const GoalTaskSchema = z.object({
   title: z.string(),
   type: z.enum(['feature', 'fix', 'refactor', 'test', 'docs']),
   risk: z.enum(['low', 'medium', 'high']),
+  priority: z.enum(['P0', 'P1', 'P2', 'P3']).optional(),
   status: z.enum(['pending', 'in-progress', 'done', 'blocked']),
   depends_on: z.array(z.string()).optional().default([]),
   acceptance_criteria: z.array(z.string()),
@@ -687,6 +688,7 @@ export const ProductMetaSchema = z.object({
 export const ProductEventTypeSchema = z.enum([
   'task.started',
   'task.completed',
+  'lock.recovered',
   'decision.recorded',
   'evidence.added',
   'ingest.completed',

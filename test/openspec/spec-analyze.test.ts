@@ -23,6 +23,34 @@ const TASKS = `# Tasks
 `;
 
 describe('spec-analyze', () => {
+  test('does not count a longer requirement name as coverage of another ID', () => {
+    const report = analyzeSpecArtifacts({
+      changePath: 'openspec/changes/api',
+      specPath: 'specs/api/spec.md',
+      specMarkdown: '## ADDED Requirements\n### Requirement: State\nThe system SHALL report state.\n#### Scenario: Report\n- WHEN requested\n- THEN state appears\n',
+      tasksMarkdown: '- [ ] Write test for req:api/stateful',
+      tddRequired: true,
+    });
+    expect(report.mappedFr).toEqual([]);
+    expect(report.mappedToTests).toEqual([]);
+    expect(report.stop).toBe(true);
+  });
+
+  test('maps official requirement and scenario IDs to tasks and tests', () => {
+    const report = analyzeSpecArtifacts({
+      changePath: 'openspec/changes/search',
+      specMarkdown: '## ADDED Requirements\n### Requirement: Site search\nThe system SHALL return results.\n#### Scenario: Happy path\n- **WHEN** the user searches\n- **THEN** results are returned\n',
+      tasksMarkdown: '- [ ] Write test for req:search/site-search and req:search/site-search#happy-path',
+      tddRequired: true,
+      hasTddEvidence: true,
+      specPath: 'openspec/changes/search/specs/search/spec.md',
+    });
+    expect(report.frIds).toEqual(['req:search/site-search']);
+    expect(report.scIds).toEqual(['req:search/site-search#happy-path']);
+    expect(report.testCoveragePct).toBe(100);
+    expect(report.stop).toBe(false);
+  });
+
   test('reports FR/SC coverage and matches the JSON schema', () => {
     const report = analyzeSpecArtifacts({
       changePath: 'openspec/changes/bc-001-parser',

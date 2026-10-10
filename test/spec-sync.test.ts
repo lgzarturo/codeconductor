@@ -41,6 +41,72 @@ afterEach(async () => {
 });
 
 describe('syncChangeSpecs', () => {
+  test('rejects unnamed requirements before writing any durable capability', async () => {
+    const root = await project();
+    await write(root, 'openspec/changes/login/specs/a-valid/spec.md', '## ADDED Requirements\n### Requirement: Login\nThe system SHALL sign in.\n');
+    await write(root, 'openspec/changes/login/specs/z-invalid/spec.md', '## ADDED Requirements\n### Requirement: \nThe system SHALL respond.\n');
+    expect((await syncChangeSpecs(root, 'openspec/changes/login')).success).toBe(false);
+    await expect(readFile(join(root, 'openspec/specs/a-valid/spec.md'), 'utf-8')).rejects.toThrow();
+  });
+
+  test('renames before modifying the new name and validates every capability before writing', async () => {
+    const root = await project();
+    const durable = '# Auth\n\n### Requirement: User login\nThe system SHALL authenticate users.\n';
+    await write(root, 'openspec/specs/auth/spec.md', durable);
+    const delta = '## MODIFIED Requirements\n### Requirement: Member login\nThe system SHALL use passkeys.\n#### Scenario: Passkey\n- WHEN a passkey is submitted\n- THEN a session starts\n\n## RENAMED Requirements\n- FROM: `### Requirement: User login`\n- TO: `### Requirement: Member login`\n';
+    await write(root, 'openspec/changes/login/specs/auth/spec.md', delta);
+    await write(root, 'openspec/changes/login/specs/z-invalid/spec.md', '## RENAMED Requirements\n- FROM: `### Requirement: Missing`\n- TO: `### Requirement: Missing renamed`\n');
+    expect((await syncChangeSpecs(root, 'openspec/changes/login')).success).toBe(false);
+    expect(await readFile(join(root, 'openspec/specs/auth/spec.md'), 'utf-8')).toBe(durable);
+    await rm(join(root, 'openspec/changes/login/specs/z-invalid'), { recursive: true });
+    expect((await syncChangeSpecs(root, 'openspec/changes/login')).success).toBe(true);
+    const synced = await readFile(join(root, 'openspec/specs/auth/spec.md'), 'utf-8');
+    expect(synced).toContain('### Requirement: Member login');
+    expect(synced).toContain('The system SHALL use passkeys.');
+    expect(synced).not.toContain('User login');
+  });
+
+  test('modifies and removes official requirements using stable capability IDs', async () => {
+    const root = await project();
+    await write(root, 'openspec/specs/auth/spec.md', '# Auth\n\n### Requirement: User login\nThe system SHALL authenticate users.\n\n### Requirement: Password hints\nThe system SHALL display hints.\n');
+    await write(root, 'openspec/changes/login/specs/auth/spec.md', '## MODIFIED Requirements\n### Requirement: User login\nThe system SHALL authenticate using passkeys.\n#### Scenario: Passkey\n- WHEN a passkey is submitted\n- THEN a session starts\n\n## REMOVED Requirements\n### Requirement: Password hints\n**Reason**: Replaced.\n');
+    expect((await syncChangeSpecs(root, 'openspec/changes/login')).success).toBe(true);
+    const synced = await readFile(join(root, 'openspec/specs/auth/spec.md'), 'utf-8');
+    expect(synced).toContain('authenticate using passkeys');
+    expect(synced).not.toContain('Password hints');
+    expect(synced).not.toContain('## REMOVED Requirements');
+  });
+
+  test('rejects rename conflicts and malformed pairs without changing durable specs', async () => {
+    for (const rename of [
+      '- FROM: `### Requirement: Missing`\n- TO: `### Requirement: Member login`',
+      '- FROM: `### Requirement: User login`\n- TO: `### Requirement: Sign out`',
+      '- FROM: `### Requirement: User login`',
+    ]) {
+      const root = await project();
+      const durable = '# Auth\n\n### Requirement: User login\nThe system SHALL authenticate.\n\n### Requirement: Sign out\nThe system SHALL sign out.\n';
+      await write(root, 'openspec/specs/auth/spec.md', durable);
+      await write(root, 'openspec/changes/login/specs/auth/spec.md', `## RENAMED Requirements\n${rename}\n\n## ADDED Requirements\n### Requirement: Passkey\nThe system SHALL support passkeys.\n`);
+      const result = await syncChangeSpecs(root, 'openspec/changes/login');
+      expect(result.success).toBe(false);
+      expect(await readFile(join(root, 'openspec/specs/auth/spec.md'), 'utf-8')).toBe(durable);
+    }
+  });
+
+  test('synchronizes official named requirements and FROM/TO renames preserving scenarios', async () => {
+    const root = await project();
+    await write(root, 'openspec/specs/auth/spec.md', '# Authentication\n\n### Requirement: User login\nThe system SHALL authenticate users.\n#### Scenario: Valid credentials\n- **WHEN** credentials are valid\n- **THEN** a session starts\n');
+    await write(root, 'openspec/changes/login/specs/auth/spec.md', '## RENAMED Requirements\n- FROM: `### Requirement: User login`\n- TO: `### Requirement: Member login`\n\n## ADDED Requirements\n### Requirement: Sign out\nThe system SHALL end the session.\n#### Scenario: Session ends\n- **WHEN** sign out is requested\n- **THEN** the session ends\n');
+    const result = await syncChangeSpecs(root, 'openspec/changes/login');
+    expect(result.success).toBe(true);
+    const synced = await readFile(join(root, 'openspec/specs/auth/spec.md'), 'utf-8');
+    expect(synced).toContain('### Requirement: Member login');
+    expect(synced).toContain('#### Scenario: Valid credentials');
+    expect(synced).toContain('### Requirement: Sign out');
+    expect(synced).not.toContain('### Requirement: User login');
+    expect(synced).not.toContain('## ADDED Requirements');
+  });
+
   test('applies ADDED, MODIFIED, and REMOVED deltas to their capability', async () => {
     const root = await project();
     await write(root, 'openspec/specs/auth/spec.md', existing);

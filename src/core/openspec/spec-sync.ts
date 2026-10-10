@@ -1,14 +1,14 @@
 import { mkdir, readFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { writeFileAtomic } from './openspec-state';
-import { requirementBlocks, walkMarkdownFiles } from './spec-files';
-
-type DeltaOperation = 'ADDED' | 'MODIFIED' | 'REMOVED';
+import { hasMalformedRenames, requirementBlocks, specCapability, walkMarkdownFiles, type DeltaOperation } from './spec-files';
 
 interface DeltaRequirement {
   readonly id: string;
   readonly markdown: string;
   readonly operation: DeltaOperation;
+  readonly name?: string;
+  readonly renamedFrom?: string;
 }
 
 interface PreparedWrite {
@@ -22,30 +22,26 @@ export interface SpecSyncResult {
   readonly errors: string[];
 }
 
-const SECTION_HEADING = /^## (ADDED|MODIFIED|REMOVED) Requirements\s*$/gm;
-
-function deltaRequirements(markdown: string): DeltaRequirement[] {
-  const sections = [...markdown.matchAll(SECTION_HEADING)];
-  return sections.flatMap((section, index) => {
-    const start = (section.index ?? 0) + section[0].length;
-    const end = sections[index + 1]?.index ?? markdown.length;
-    const operation = section[1] as DeltaOperation;
-    return requirementBlocks(markdown.slice(start, end))
-      .filter((requirement) => requirement.id !== null)
-      .map((requirement) => ({
-        id: requirement.id as string,
-        markdown: requirement.markdown,
-        operation,
-      }));
-  });
+function deltaRequirements(markdown: string, capability: string): DeltaRequirement[] {
+  return requirementBlocks(markdown, capability)
+    .filter((requirement) => requirement.id !== null && requirement.deltaOperation !== undefined)
+    .map((requirement) => ({
+      id: requirement.id as string,
+      markdown: requirement.markdown,
+      operation: requirement.deltaOperation as DeltaOperation,
+      name: requirement.name,
+      renamedFrom: requirement.renamedFrom,
+    }))
+    .sort((a, b) => Number(b.operation === 'RENAMED') - Number(a.operation === 'RENAMED'));
 }
 
 function upsertRequirements(
   existing: string,
   deltas: DeltaRequirement[],
   source: string,
+  capability: string,
 ): { ok: true; content: string } | { ok: false; error: string } {
-  const requirements = requirementBlocks(existing).filter(
+  const requirements = requirementBlocks(existing, capability).filter(
     (requirement) => requirement.id !== null
   );
   const byId = new Map(
@@ -56,10 +52,21 @@ function upsertRequirements(
   }
   const seen = new Set<string>();
 
+  let next = existing.trimEnd();
   for (const delta of deltas) {
-    if (seen.has(delta.id)) {
-      return { ok: false, error: `${source}: duplicate delta requirement ${delta.id}` };
+    if (delta.operation === 'RENAMED') {
+      const current = byId.get(delta.renamedFrom ?? '');
+      if (!current) return { ok: false, error: `${source}: RENAMED source ${delta.renamedFrom} does not exist` };
+      if (delta.id !== delta.renamedFrom && byId.has(delta.id)) {
+        return { ok: false, error: `${source}: RENAMED destination ${delta.id} already exists` };
+      }
+      const renamed = current.markdown.replace(/^### Requirement:.*$/m, () => `### Requirement: ${delta.name}`);
+      next = next.replace(current.markdown, () => renamed);
+      byId.delete(delta.renamedFrom ?? '');
+      byId.set(delta.id, { ...current, id: delta.id, markdown: renamed });
+      continue;
     }
+    if (seen.has(delta.id)) return { ok: false, error: `${source}: duplicate delta requirement ${delta.id}` };
     seen.add(delta.id);
     const current = byId.get(delta.id);
     if (delta.operation === 'ADDED' && current) {
@@ -68,11 +75,6 @@ function upsertRequirements(
     if ((delta.operation === 'MODIFIED' || delta.operation === 'REMOVED') && !current) {
       return { ok: false, error: `${source}: ${delta.operation} requirement ${delta.id} does not exist` };
     }
-  }
-
-  let next = existing.trimEnd();
-  for (const delta of deltas) {
-    const current = byId.get(delta.id);
     if (delta.operation === 'ADDED') {
       next = `${next}\n\n${delta.markdown}`;
       byId.set(delta.id, { id: delta.id, markdown: delta.markdown });
@@ -115,7 +117,13 @@ export async function syncChangeSpecs(
   const writes: PreparedWrite[] = [];
   for (const file of files) {
     const delta = await readFile(file, 'utf-8');
-    const requirements = deltaRequirements(delta);
+    if (hasMalformedRenames(delta)) {
+      return { success: false, syncedPaths: [], errors: [`${relative(root, file)}: RENAMED requires paired FROM/TO requirement headings`] };
+    }
+    const requirements = deltaRequirements(delta, specCapability(file));
+    if (requirements.some((requirement) => !requirement.name?.trim() || requirement.id.endsWith('/'))) {
+      return { success: false, syncedPaths: [], errors: [`${relative(root, file)}: requirement names must produce a nonempty stable ID`] };
+    }
     if (requirements.length === 0) {
       return {
         success: false,
@@ -131,7 +139,7 @@ export async function syncChangeSpecs(
     } catch {
       // An ADDED-only delta may establish a new durable capability.
     }
-    const merged = upsertRequirements(existing, requirements, relative(root, file));
+    const merged = upsertRequirements(existing, requirements, relative(root, file), specCapability(file));
     if (!merged.ok) return { success: false, syncedPaths: [], errors: [merged.error] };
     writes.push({ path: target, content: merged.content });
   }

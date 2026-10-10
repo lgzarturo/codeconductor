@@ -1,9 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
-import { requirementBlocks, walkMarkdownFiles } from './spec-files';
+import { hasMalformedRenames, requirementBlocks, specNameSlug, specCapability, walkMarkdownFiles } from './spec-files';
 
 const RFC2119 = /\b(MUST(?: NOT)?|SHALL(?: NOT)?|SHOULD(?: NOT)?|MAY)\b/;
-const FR_ID = /\bFR-\d{3}\b/g;
 const SC_ID = /\bSC-\d{3}\b/g;
 const US_AC = /\b(?:US|AC)#?\d+\b/g;
 const GWT =
@@ -43,10 +42,17 @@ export function assessSpecMarkdown(content: string, path: string): SpecQualityRe
   const issues: SpecQualityIssue[] = [];
   const clarifications = content.match(NEEDS_CLARIFICATION) ?? [];
   const needsClarificationCount = clarifications.length;
-  const frIds = uniqueIds(content.match(FR_ID));
+  const blocks = requirementBlocks(content, specCapability(path));
+  const frIds = [...new Set(blocks.map((block) => block.id).filter((id): id is string => /^FR-\d{3}$/.test(id ?? '')))];
   const scIds = uniqueIds(content.match(SC_ID));
   const usAcIds = uniqueIds(content.match(US_AC));
-  const hasTraceIds = frIds.length > 0 && (scIds.length > 0 || usAcIds.length > 0);
+  const legacy = blocks.some((block) => /^FR-\d{3}$/.test(block.id ?? '') &&
+    block.deltaOperation !== 'REMOVED' && block.deltaOperation !== 'RENAMED');
+  const hasTraceIds = !legacy || scIds.length > 0 || usAcIds.length > 0;
+
+  if (hasMalformedRenames(content)) {
+    issues.push({ code: 'MALFORMED_RENAME', message: 'RENAMED requires paired FROM/TO requirement headings', path, severity: 'error' });
+  }
 
   if (PLACEHOLDER.test(content)) {
     issues.push({
@@ -75,7 +81,6 @@ export function assessSpecMarkdown(content: string, path: string): SpecQualityRe
     });
   }
 
-  const blocks = requirementBlocks(content);
   if (blocks.length === 0) {
     issues.push({
       code: 'MISSING_REQUIREMENT',
@@ -85,8 +90,14 @@ export function assessSpecMarkdown(content: string, path: string): SpecQualityRe
     });
   }
 
+  const officialScenarios: SpecRequirement[] = [];
   for (const block of blocks) {
+    if (!block.name?.trim() || block.id?.endsWith('/')) {
+      issues.push({ code: 'INVALID_REQUIREMENT_NAME', message: 'Requirement names MUST produce a nonempty stable ID', path, severity: 'error' });
+    }
+    if (block.deltaOperation === 'REMOVED' || block.deltaOperation === 'RENAMED') continue;
     const text = block.markdown;
+    const legacyBlock = /^FR-\d{3}$/.test(block.id ?? '');
     const heading = text.split('\n', 1)[0] ?? '';
     if (!RFC2119.test(text)) {
       issues.push({
@@ -96,7 +107,17 @@ export function assessSpecMarkdown(content: string, path: string): SpecQualityRe
         severity: 'error',
       });
     }
-    if (!GWT.test(text)) {
+    const scenarios = [...text.matchAll(/^#### Scenario:\s*(.+)$/gm)];
+    if (!legacyBlock) {
+      for (const [index, scenario] of scenarios.entries()) {
+        const body = text.slice(scenario.index, scenarios[index + 1]?.index ?? text.length);
+        officialScenarios.push({ id: `${block.id}#${specNameSlug(scenario[1] ?? '')}`, text: scenario[1] ?? '' });
+        if (!/\bWHEN\b[\s\S]*?\bTHEN\b/i.test(body)) {
+          issues.push({ code: 'MISSING_GWT', message: `Scenario "${scenario[1]}" MUST include WHEN/THEN steps`, path, severity: 'error' });
+        }
+      }
+    }
+    if (legacyBlock ? !GWT.test(text) : scenarios.length === 0) {
       issues.push({
         code: 'MISSING_GWT',
         message: `Requirement "${heading}" MUST include a Given/When/Then scenario`,
@@ -115,8 +136,15 @@ export function assessSpecMarkdown(content: string, path: string): SpecQualityRe
     });
   }
 
-  const requirements = frIds.map((id) => ({ id, text: id }));
-  const successCriteria = [...scIds, ...usAcIds].map((id) => ({ id, text: id }));
+  const requirements = [
+    ...frIds.map((id) => ({ id, text: id })),
+    ...blocks.filter((block) => block.id?.startsWith('req:'))
+      .map((block) => ({ id: block.id as string, text: block.name ?? '' })),
+  ];
+  const successCriteria = [
+    ...[...scIds, ...usAcIds].map((id) => ({ id, text: id })),
+    ...officialScenarios,
+  ];
   const errors = issues.filter((i) => i.severity === 'error');
 
   return {

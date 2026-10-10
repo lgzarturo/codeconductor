@@ -130,9 +130,10 @@ describe('Phase 4: loop halts at 3rd failed iteration', () => {
     expect(blockedTask).toBeDefined();
     expect(blockedTask!.status).toBe('blocked');
 
-    // Other tasks should remain unchanged
+    // Pending descendants inherit the dependency blocker.
     for (let i = 1; i < loadResult.data.tasks.length; i++) {
-      expect(loadResult.data.tasks[i]!.status).toBe('pending');
+      expect(loadResult.data.tasks[i]!.status).toBe('blocked');
+      expect(loadResult.data.tasks[i]!.blocked_reason).toContain('Blocked by dependency');
     }
   });
 

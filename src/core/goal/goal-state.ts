@@ -1,10 +1,32 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parse, stringify } from 'yaml';
 import { GoalGraphSchema, type GoalGraphInput } from '../../validation/schemas';
 import { err, ok, type Result } from '../../utils/result';
+import { withQueueLock } from '../queue/lock';
 
 const GOAL_FILE = '.codeconductor/current-goal.yml';
+
+export function propagateBlockedTasks(graph: GoalGraphInput): boolean {
+  const blocked = new Set(graph.tasks.filter((task) => task.status === 'blocked').map((task) => task.id));
+  let changed = false;
+  let progressed: boolean;
+  do {
+    progressed = false;
+    for (const task of graph.tasks) {
+      if (task.status !== 'pending') continue;
+      const dependency = (task.depends_on ?? []).find((id) => blocked.has(id));
+      if (!dependency) continue;
+      task.status = 'blocked';
+      task.blocked_reason = `Blocked by dependency "${dependency}"`;
+      blocked.add(task.id);
+      progressed = true;
+      changed = true;
+    }
+  } while (progressed);
+  return changed;
+}
 
 /**
  * Validate that all depends_on references are valid and no cycles exist
@@ -29,15 +51,22 @@ function validateGoalGraph(graph: GoalGraphInput): Result<GoalGraphInput, Error>
   // Check for cycles using DFS
   const visited = new Set<string>();
   const inStack = new Set<string>();
+  const path: string[] = [];
+  let cycle: string[] = [];
+  const tasksById = new Map(graph.tasks.map((task) => [task.id, task]));
 
   function dfs(taskId: string): boolean {
-    if (inStack.has(taskId)) return true; // cycle found
+    if (inStack.has(taskId)) {
+      cycle = [...path.slice(path.indexOf(taskId)), taskId];
+      return true;
+    }
     if (visited.has(taskId)) return false;
 
     visited.add(taskId);
     inStack.add(taskId);
+    path.push(taskId);
 
-    const task = graph.tasks.find((t) => t.id === taskId);
+    const task = tasksById.get(taskId);
     if (task) {
       for (const dep of task.depends_on ?? []) {
         if (dfs(dep)) return true;
@@ -45,12 +74,13 @@ function validateGoalGraph(graph: GoalGraphInput): Result<GoalGraphInput, Error>
     }
 
     inStack.delete(taskId);
+    path.pop();
     return false;
   }
 
   for (const task of graph.tasks) {
     if (dfs(task.id)) {
-      return err(new Error(`Cycle detected involving task "${task.id}"`));
+      return err(new Error(`Cycle detected: ${cycle.join(' -> ')}`));
     }
   }
 
@@ -64,14 +94,30 @@ export async function writeGoal(
   projectRoot: string,
   graph: GoalGraphInput
 ): Promise<Result<void, Error>> {
+  return withQueueLock(projectRoot, () => writeGoalUnlocked(projectRoot, graph));
+}
+
+async function writeGoalUnlocked(
+  projectRoot: string,
+  graph: GoalGraphInput,
+): Promise<Result<void, Error>> {
   const validation = validateGoalGraph(graph);
   if (!validation.success) return validation;
 
   const dir = resolve(projectRoot, '.codeconductor');
-  await mkdir(dir, { recursive: true });
-  const yaml = stringify(graph);
-  await writeFile(resolve(dir, 'current-goal.yml'), yaml, 'utf-8');
-  return ok(undefined);
+  const temporary = resolve(dir, `current-goal.${process.pid}.${randomUUID()}.tmp`);
+  try {
+    await mkdir(dir, { recursive: true });
+    await writeFile(temporary, stringify(graph), { encoding: 'utf-8', flag: 'wx' });
+    await rename(temporary, resolve(dir, 'current-goal.yml'));
+    return ok(undefined);
+  } catch (e) {
+    return err(e instanceof Error ? e : new Error(String(e)));
+  } finally {
+    await unlink(temporary).catch((e: NodeJS.ErrnoException) => {
+      if (e.code !== 'ENOENT') throw e;
+    });
+  }
 }
 
 /**
@@ -100,6 +146,14 @@ export async function markTaskBlocked(
   taskId: string,
   reason: string,
 ): Promise<Result<void, Error>> {
+  return withQueueLock(projectRoot, () => markTaskBlockedUnlocked(projectRoot, taskId, reason));
+}
+
+async function markTaskBlockedUnlocked(
+  projectRoot: string,
+  taskId: string,
+  reason: string,
+): Promise<Result<void, Error>> {
   const loadResult = await loadGoal(projectRoot);
   if (!loadResult.success) return loadResult;
 
@@ -111,5 +165,6 @@ export async function markTaskBlocked(
 
   task.status = 'blocked';
   task.blocked_reason = reason;
+  propagateBlockedTasks(graph);
   return writeGoal(projectRoot, graph);
 }

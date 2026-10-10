@@ -4,7 +4,7 @@ import {
   completeTask,
   formatGoalStatus,
   getNextTask,
-  startTask,
+  claimNextTask,
 } from '../core/orchestrator/runtime-orchestrator';
 import { loadGoal } from '../core/goal/goal-state';
 import { runVerification, gateTaskCompletion } from '../core/verification/verification-runner';
@@ -88,14 +88,9 @@ async function handleNext(
   output: OutputMode,
 ): Promise<{ code: number; data?: unknown }> {
   const projectName = await getProjectName(projectRoot);
-  const next = await getNextTask(projectRoot, projectName);
+  const next = await claimNextTask(projectRoot, projectName);
   if (!next.success) {
     return { code: 1, data: { success: false, command: 'orchestrate', errors: [next.error.message] } };
-  }
-
-  const started = await startTask(projectRoot, next.data.task.id, next.data.task.agentType);
-  if (!started.success) {
-    return { code: 1, data: { success: false, command: 'orchestrate', errors: [started.error.message] } };
   }
 
   if (output === 'json') {

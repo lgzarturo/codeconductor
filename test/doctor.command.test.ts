@@ -44,5 +44,7 @@ safety:
     expect(skillsCheck?.status).toBe('pass');
     expect(skillsCheck?.message).toContain('Skills registry is valid');
     expect(skillsCheck?.message).toMatch(/\(\d+ skills\)/);
+    const hookCheck = (result.data as { checks: Array<{ name: string; status: string; message: string }> }).checks.find(c => c.name === 'hook-runner');
+    expect(hookCheck).toBeDefined();
   });
 });

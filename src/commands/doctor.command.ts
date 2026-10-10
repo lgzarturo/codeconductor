@@ -1,5 +1,7 @@
 import { join } from 'node:path';
 import { homedir } from 'node:os';
+import { spawnSync } from 'node:child_process';
+import { ROOT_PRESETS_DIR } from '../core/presets/package-paths';
 import { configExists, loadConfig } from '../core/config/config-loader';
 import { loadTargetSecurityCompatibility } from '../core/security/target-compatibility';
 import {
@@ -78,6 +80,24 @@ export async function doctorCommand(
     }
 
     // Check 3: Runner directories
+    const hookProbe = spawnSync(process.execPath, [join(ROOT_PRESETS_DIR, 'shared', 'invoke-hook.cjs'), '--check'], {
+      cwd: projectRoot,
+      input: '',
+      encoding: 'utf8',
+      timeout: 12000,
+      env: { ...process.env, PROJECT_ROOT: projectRoot },
+    });
+    let hookOperational = false;
+    try {
+      hookOperational = hookProbe.status === 0 && JSON.parse(hookProbe.stdout).operational === true;
+    } catch { /* An invalid probe is an unavailable guard. */ }
+    checks.push({
+      name: 'hook-runner',
+      status: hookOperational ? 'pass' : 'warn',
+      message: hookOperational
+        ? 'CodeConductor hook runner is operational.'
+        : 'Hook guard unavailable. Install cc-codeconductor locally; CC_DEV=1 is reserved for trusted development. CC_HOOK_FAIL_CLOSED=1 denies pre-tool when unavailable.',
+    });
     const runnerDirs = ['.opencode', '.claude', '.codex'];
     for (const dir of runnerDirs) {
       try {

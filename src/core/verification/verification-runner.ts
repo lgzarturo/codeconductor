@@ -6,7 +6,9 @@ import {
   EvidenceSchema,
   ImplementerTestsSchema,
   ReviewerOutputSchema,
+  TddValidationRecordSchema,
   type EvidenceInput,
+  type TddValidationRecordInput,
 } from '../../validation/schemas';
 import { loadConfig } from '../config/config-loader';
 import {
@@ -23,6 +25,7 @@ import {
   captureReceipt,
   collectReceiptPaths,
   isRddReceipt,
+  isRegisteredReceipt,
   verifyReceipt,
   type RddReceipt,
 } from './rdd-receipt';
@@ -517,10 +520,11 @@ export async function captureTddSuiteEvidence(
 }
 
 /**
- * Load TDD suite evidence written by `captureTddSuiteEvidence`. Hand-edited
- * files (wrong source/type/`capturedBy`) are rejected.
+ * Read TDD suite evidence written by `captureTddSuiteEvidence` without
+ * checking receipt freshness. Hand-edited files (wrong source/type/`capturedBy`)
+ * are rejected.
  */
-export async function loadTddSuiteEvidence(
+async function readRunnerTddEvidence(
   projectRoot: string,
   taskId: string,
   evidenceId: string,
@@ -568,32 +572,129 @@ export async function loadTddSuiteEvidence(
   if (receipt.taskId !== taskId) {
     return err(new Error(`Evidence "${evidenceId}" receipt belongs to another task`));
   }
-  const verified = await verifyReceipt(projectRoot, receipt);
-  if (!verified.valid) {
-    return err(new Error(`Evidence "${evidenceId}" RDD receipt is stale: ${verified.changedPaths.join(', ')}`));
-  }
-
   return ok({ capturedBy, suiteFailed, suitePassed, receipt });
 }
 
 /**
+ * Load TDD suite evidence written by `captureTddSuiteEvidence`. Hand-edited
+ * files (wrong source/type/`capturedBy`) are rejected, and so is a receipt
+ * that no longer matches the current project.
+ */
+export async function loadTddSuiteEvidence(
+  projectRoot: string,
+  taskId: string,
+  evidenceId: string,
+): Promise<Result<TddSuiteEvidence & { receipt: RddReceipt }, Error>> {
+  const read = await readRunnerTddEvidence(projectRoot, taskId, evidenceId);
+  if (!read.success) return read;
+  const verified = await verifyReceipt(projectRoot, read.data.receipt);
+  if (!verified.valid) {
+    return err(new Error(`Evidence "${evidenceId}" RDD receipt is stale: ${verified.changedPaths.join(', ')}`));
+  }
+  return read;
+}
+
+async function listRunnerTddRecords(projectRoot: string, taskId: string): Promise<EvidenceInput[]> {
+  const collected = await collectTaskEvidence(projectRoot, taskId);
+  if (!collected.success) return [];
+  return collected.data.records.filter(
+    (ev) => ev.type === 'tdd' && ev.source === TDD_EVIDENCE_SOURCE && ev.data?.capturedBy === TDD_CAPTURED_BY,
+  );
+}
+
+function tddValidationFilePath(projectRoot: string, taskId: string): Result<string, Error> {
+  return evidenceFilePath(join(resolve(projectRoot), '.codeconductor', 'tdd-validations'), taskId);
+}
+
+/** Fail closed: a missing, truncated, invalid or other-task record is `undefined`. */
+async function loadTddValidation(
+  projectRoot: string,
+  taskId: string,
+): Promise<TddValidationRecordInput | undefined> {
+  const path = tddValidationFilePath(projectRoot, taskId);
+  if (!path.success) return undefined;
+  try {
+    const record = TddValidationRecordSchema.parse(JSON.parse(await readFile(path.data, 'utf-8')));
+    return record.taskId === taskId ? record : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+const isRedSuite = (e: TddSuiteEvidence): boolean => e.suiteFailed && !e.suitePassed;
+
+/**
+ * Validate the RED evidence of a task against the current project and persist
+ * a record so later project changes do not invalidate it. With several fresh
+ * REDs the latest `receipt.capturedAt` wins (tie: greater evidence id).
+ */
+export async function recordRedValidation(
+  projectRoot: string,
+  taskId: string,
+): Promise<Result<TddValidationRecordInput, Error>> {
+  let best: { id: string; receipt: RddReceipt } | undefined;
+  for (const ev of await listRunnerTddRecords(projectRoot, taskId)) {
+    const loaded = await loadTddSuiteEvidence(projectRoot, taskId, ev.id);
+    if (!loaded.success || !isRedSuite(loaded.data) || loaded.data.receipt.outcome !== 'failed') continue;
+    const { receipt } = loaded.data;
+    if (
+      !best ||
+      receipt.capturedAt > best.receipt.capturedAt ||
+      (receipt.capturedAt === best.receipt.capturedAt && ev.id > best.id)
+    ) {
+      best = { id: ev.id, receipt };
+    }
+  }
+  if (!best || !best.receipt.nonce) {
+    return err(new Error(`Task ${taskId} has no fresh RED verification-runner TDD evidence`));
+  }
+
+  const record = TddValidationRecordSchema.parse({
+    taskId,
+    evidenceId: best.id,
+    receiptNonce: best.receipt.nonce,
+    manifestHash: best.receipt.manifestHash,
+    validatedAt: new Date().toISOString(),
+  });
+  const path = tddValidationFilePath(projectRoot, taskId);
+  if (!path.success) return path;
+  try {
+    await mkdir(dirname(path.data), { recursive: true });
+    await writeFile(path.data, JSON.stringify(record, null, 2), 'utf-8');
+  } catch (e) {
+    return err(e instanceof Error ? e : new Error(String(e)));
+  }
+  return ok(record);
+}
+
+/**
  * True when the verification runner stored TDD evidence for this task.
- * Handmade JSON (wrong source/type/capturedBy) does not count.
+ * Handmade JSON (wrong source/type/capturedBy) does not count. RED is also
+ * accepted from a matching validation record written by `recordRedValidation`.
  */
 export async function hasTddRunnerEvidence(
   projectRoot: string,
   taskId: string,
   expectedPhase?: 'red' | 'green',
 ): Promise<boolean> {
-  const collected = await collectTaskEvidence(projectRoot, taskId);
-  if (!collected.success) return false;
-  for (const ev of collected.data.records) {
-    if (ev.type !== 'tdd' || ev.source !== TDD_EVIDENCE_SOURCE || ev.data?.capturedBy !== TDD_CAPTURED_BY) {
-      continue;
+  const validation = expectedPhase === 'red' ? await loadTddValidation(projectRoot, taskId) : undefined;
+  for (const ev of await listRunnerTddRecords(projectRoot, taskId)) {
+    if (expectedPhase === 'red' && validation?.evidenceId === ev.id) {
+      const read = await readRunnerTddEvidence(projectRoot, taskId, ev.id);
+      if (
+        read.success &&
+        isRedSuite(read.data) &&
+        read.data.receipt.outcome === 'failed' &&
+        read.data.receipt.nonce === validation.receiptNonce &&
+        read.data.receipt.manifestHash === validation.manifestHash &&
+        (await isRegisteredReceipt(projectRoot, read.data.receipt))
+      ) {
+        return true;
+      }
     }
     const loaded = await loadTddSuiteEvidence(projectRoot, taskId, ev.id);
     if (!loaded.success) continue;
-    if (expectedPhase === 'red' && (!loaded.data.suiteFailed || loaded.data.suitePassed)) continue;
+    if (expectedPhase === 'red' && !isRedSuite(loaded.data)) continue;
     if (expectedPhase === 'green' && (!loaded.data.suitePassed || loaded.data.suiteFailed)) continue;
     return true;
   }

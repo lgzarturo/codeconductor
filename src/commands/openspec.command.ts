@@ -26,7 +26,7 @@ import {
 } from '../core/openspec/artifact-progress';
 import type { ArtifactProgress } from '../core/openspec/artifact-progress';
 import { SpecAnalyzeReportSchema } from '../validation/schemas';
-import { hasTddRunnerEvidence } from '../core/verification/verification-runner';
+import { hasTddRunnerEvidence, recordRedValidation } from '../core/verification/verification-runner';
 import { hasPassingScorecard } from '../core/evaluation/outcome-store';
 import {
   loadOpenspecState,
@@ -882,11 +882,12 @@ async function handleDone(
   const tddRequired = session.doc.global.tddRequired;
   if (tddRequired && (card.phase === 'test' || card.phase === 'implement')) {
     const expectedPhase = card.phase === 'test' ? 'red' : 'green';
-    const evidenced = await hasTddRunnerEvidence(projectRoot, cardId, expectedPhase);
-    if (!evidenced) {
-      return fail(command, [
-        `Card ${cardId} (${card.phase}) requires current ${expectedPhase.toUpperCase()} verification-runner TDD evidence. Run: tdd capture --task ${cardId} --phase ${expectedPhase} --command "<test command>", then openspec done.`,
-      ]);
+    const message = `Card ${cardId} (${card.phase}) requires current ${expectedPhase.toUpperCase()} verification-runner TDD evidence. Run: tdd capture --task ${cardId} --phase ${expectedPhase} --command "<test command>", then openspec done.`;
+    if (card.phase === 'test') {
+      const recorded = await recordRedValidation(projectRoot, cardId);
+      if (!recorded.success) return fail(command, [`${message} ${recorded.error.message}`]);
+    } else if (!(await hasTddRunnerEvidence(projectRoot, cardId, expectedPhase))) {
+      return fail(command, [message]);
     }
   }
 

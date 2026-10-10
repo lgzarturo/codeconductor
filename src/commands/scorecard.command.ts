@@ -174,14 +174,13 @@ async function handleCreate(
         ? state.data.taskCards.filter((c) => c.backlogId === backlogId)
         : [];
       let hasEvidence: boolean | undefined;
-      if (cards.some((c) => c.phase === 'test' || c.phase === 'implement')) {
-        hasEvidence = false;
-        for (const card of cards) {
-          if (
-            (card.phase === 'test' || card.phase === 'implement') &&
-            (await hasTddRunnerEvidence(projectRoot, card.id))
-          ) {
-            hasEvidence = true;
+      const tddCards = cards.filter((c) => c.phase === 'test' || c.phase === 'implement');
+      if (tddCards.length > 0) {
+        hasEvidence = true;
+        for (const card of tddCards) {
+          const expectedPhase = card.phase === 'test' ? 'red' : 'green';
+          if (!(await hasTddRunnerEvidence(projectRoot, card.id, expectedPhase))) {
+            hasEvidence = false;
             break;
           }
         }

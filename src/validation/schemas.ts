@@ -618,6 +618,14 @@ export const EvidenceSchema = z.object({
   data: z.record(z.string(), z.unknown()).optional(),
 });
 
+export const TddValidationRecordSchema = z.object({
+  taskId: z.string().min(1),
+  evidenceId: z.string().min(1),
+  receiptNonce: z.string().regex(/^[0-9a-f]{32}$/),
+  manifestHash: z.string().regex(/^[0-9a-f]{64}$/),
+  validatedAt: z.string().datetime(),
+}).strict();
+
 export const CanonicalTaskCardStatusSchema = z.enum([
   'draft',
   'ready',
@@ -1395,6 +1403,7 @@ export type GoalGraphInput = z.infer<typeof GoalGraphSchema>;
 export type KnowledgeEntityInput = z.infer<typeof KnowledgeEntitySchema>;
 export type DecisionInput = z.infer<typeof DecisionSchema>;
 export type EvidenceInput = z.infer<typeof EvidenceSchema>;
+export type TddValidationRecordInput = z.infer<typeof TddValidationRecordSchema>;
 export type CanonicalTaskCardInput = z.infer<typeof CanonicalTaskCardSchema>;
 export type ProductGraphInput = z.infer<typeof ProductGraphSchema>;
 export type ProductGraphNodeInput = z.infer<typeof ProductGraphNodeSchema>;

@@ -99,7 +99,7 @@ function isWellFormedNonce(nonce: unknown): nonce is string {
  * the nonce is well-formed, a registry entry exists for it, and the entry
  * binds the nonce to this exact manifest. Anything else fails closed.
  */
-async function isRegisteredReceipt(projectRoot: string, receipt: RddReceipt): Promise<boolean> {
+export async function isRegisteredReceipt(projectRoot: string, receipt: RddReceipt): Promise<boolean> {
   if (!isWellFormedNonce(receipt.nonce)) return false;
   try {
     const raw = await readFile(join(receiptRegistryDir(projectRoot), `${receipt.nonce}.json`), 'utf-8');

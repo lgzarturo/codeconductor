@@ -141,6 +141,42 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [x] help y --help son jerárquicos; install preset --help y help install preset muestran ayuda específica.
   - [x] El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell.
 
+### BC-027 | Evidencia TDD roja validada al cerrar la card y registrada
+
+- Priority: P2
+- Status: IN_PROGRESS
+- Type: tech-debt
+- Depends on: none
+- Description: El recibo RDD cubre el proyecto entero (coverage 'project') y loadTddSuiteEvidence lo re-hashea en cada consulta, así que la evidencia roja de la card test queda obsoleta en cuanto se implementa. hasTddRunnerEvidence devuelve false para cualquier ítem ya implementado (verificado con BC-025 y BC-026), analyze emite TDD_EVIDENCE_MISSING y el criterio tests del scorecard no es medible. La frescura debe exigirse al cerrar la card test, persistirse y reutilizarse después sin re-hashear.
+- Scope: src/core/verification/{verification-runner,rdd-receipt}.ts, src/commands/{openspec,tdd}.command.ts (done de la card test), src/core/openspec/spec-analyzer.ts, src/core/evaluation/scorecard-signals.ts y sus tests.
+- Out of scope: cambiar el algoritmo de hash del recibo o su cobertura 'project', el recibo RDD verde (sigue exigiendo frescura contra el candidato), y los hallazgos H10 y H11 de docs/reports/2026-10-openspec-flujo-inconsistente.md.
+- Progress: 80%
+- Reviewer: reviewer
+- Acceptance:
+  - [ ] openspec done de la card test valida el recibo rojo contra el proyecto actual y persiste un registro de validación con taskId, evidenceId y timestamp; un rojo obsoleto en ese momento sigue rechazando done.
+  - [ ] hasTddRunnerEvidence(red) acepta un rojo con registro de validación coincidente aunque el proyecto haya cambiado después, o cuyo recibo siga fresco; rechaza evidencia obsoleta y sin registro, o con registro de otro taskId, nonce o manifestHash distintos.
+  - [ ] hasTddRunnerEvidence(green) sigue exigiendo recibo vigente contra el candidato actual.
+  - [ ] openspec analyze y scorecard create dejan de emitir TDD_EVIDENCE_MISSING cuando hay rojo registrado y verde vigente, y lo siguen emitiendo si falta cualquiera de los dos.
+  - [ ] Un test reproduce el caso: capturar rojo, cerrar la card test, modificar un archivo ajeno y comprobar que el rojo sigue aceptado; sin la corrección ese test falla.
+
+### BC-028 | Scorecard sin PASS vacío cuando el trabajo ya está commiteado
+
+- Priority: P2
+- Status: PLANNED
+- Type: bug
+- Depends on: none
+- Description: scorecard create --from-diff compara contra git diff HEAD. Si el trabajo ya está commiteado el diff queda vacío, no se mide nada y tests y cc_gain quedan en 2 por defecto, lo que produjo un PASS vacío en BC-026 (2.3 sin evidencia, frente a 2.2 REVISE medido antes del commit). El scorecard debe medirse contra la base del ítem y, si no hay base, marcar los criterios como no medidos en lugar de puntuarlos.
+- Scope: src/core/evaluation/{scorecard-signals,scorecard-calculator}.ts, src/commands/{scorecard,openspec}.command.ts (guardar la base en start), estado del ítem en .codeconductor/openspec-state.json y sus tests.
+- Out of scope: cambiar PASS_THRESHOLD, los pesos de los criterios, la heurística de cc_gain, o la validación de scorecard record (H11 del informe de flujo).
+- Progress: 0%
+- Reviewer: reviewer
+- Acceptance:
+  - [ ] openspec start de la primera card de un ítem guarda el HEAD base en el estado del ítem; start posteriores no lo sobrescriben.
+  - [ ] scorecard create --from-diff compara contra esa base cuando existe, de modo que minimal_diff, tests y cc_gain dan el mismo resultado con el trabajo commiteado o sin commitear.
+  - [ ] Sin base guardada y con diff vacío, tests y cc_gain quedan marcados como no medidos con una nota explícita, no con 2.
+  - [ ] El veredicto no puede ser PASS mientras exista algún criterio no medido y sin puntuar a mano con nota; el CLI informa qué criterios faltan.
+  - [ ] Un test reproduce el caso BC-026: mismo trabajo commiteado y sin commitear produce el mismo veredicto; sin la corrección ese test falla.
+
 ## Archive
 ### BC-026 | Migrar el resto de skills de stack duplicadas a shared-skills.yml
 

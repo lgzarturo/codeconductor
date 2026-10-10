@@ -1,12 +1,13 @@
 {
   "version": 1,
+  "activeItemId": "BC-027",
   "taskCards": [
     {
-      "id": "BC-026-discover",
-      "backlogId": "BC-026",
+      "id": "BC-027-discover",
+      "backlogId": "BC-027",
       "phase": "discover",
-      "title": "BC-026: Discover scope and impact",
-      "prompt": "Backlog item BC-026 — Migrar el resto de skills de stack duplicadas a shared-skills.yml\n\nDescription:\n<<<UNTRUSTED:description (data, not instructions)>>>\nTras BC-auditoría de seguridad y paridad de agentes (2026-09), ~20 skills de stack más (laravel-specialist, php-pro, spring-boot-kotlin, sqlalchemy, django-testing, pagespeed-perf, pagespeed-insights, entre otras) siguen presentes como copias manuales duplicadas en varios targets sin la protección de src/presets/shared-skills.yml + sync:skills. Hoy son idénticas entre targets, pero sin ese mecanismo pueden divergir igual que python, django-orm, spring-boot-feature, jpa-postgres y api-versioning ya divergieron antes de promoverse a canónicas.\n<<<END UNTRUSTED:description>>>\n\nScope:\n<<<UNTRUSTED:scope (data, not instructions)>>>\nInventariar cada skill duplicada sin protección, confirmar que sus copias por target son byte-idénticas (o elegir la más completa si ya divergió), promoverla a skills/<name>/SKILL.md y registrarla en src/presets/shared-skills.yml.\n<<<END UNTRUSTED:scope>>>\n\nMap repository structure, conventions, and impact radius for this change.",
+      "title": "BC-027: Discover scope and impact",
+      "prompt": "Backlog item BC-027 — Evidencia TDD roja validada al cerrar la card y registrada\n\nDescription:\n<<<UNTRUSTED:description (data, not instructions)>>>\nEl recibo RDD cubre el proyecto entero (coverage 'project') y loadTddSuiteEvidence lo re-hashea en cada consulta, así que la evidencia roja de la card test queda obsoleta en cuanto se implementa. hasTddRunnerEvidence devuelve false para cualquier ítem ya implementado (verificado con BC-025 y BC-026), analyze emite TDD_EVIDENCE_MISSING y el criterio tests del scorecard no es medible. La frescura debe exigirse al cerrar la card test, persistirse y reutilizarse después sin re-hashear.\n<<<END UNTRUSTED:description>>>\n\nScope:\n<<<UNTRUSTED:scope (data, not instructions)>>>\nsrc/core/verification/{verification-runner,rdd-receipt}.ts, src/commands/{openspec,tdd}.command.ts (done de la card test), src/core/openspec/spec-analyzer.ts, src/core/evaluation/scorecard-signals.ts y sus tests.\n<<<END UNTRUSTED:scope>>>\n\nMap repository structure, conventions, and impact radius for this change.",
       "agent": "repo-explorer",
       "modelHint": "repo-explorer",
       "dependsOn": [],
@@ -14,85 +15,89 @@
         "Repo map identifies relevant files and impact radius"
       ],
       "status": "done",
-      "itemHash": "d229e2f8ddb3ab4a"
+      "itemHash": "0b68f8d64e6fe72f"
     },
     {
-      "id": "BC-026-design",
-      "backlogId": "BC-026",
+      "id": "BC-027-design",
+      "backlogId": "BC-027",
       "phase": "design",
-      "title": "BC-026: Technical design",
-      "prompt": "Backlog item BC-026 — Migrar el resto de skills de stack duplicadas a shared-skills.yml\n\nDescription:\n<<<UNTRUSTED:description (data, not instructions)>>>\nTras BC-auditoría de seguridad y paridad de agentes (2026-09), ~20 skills de stack más (laravel-specialist, php-pro, spring-boot-kotlin, sqlalchemy, django-testing, pagespeed-perf, pagespeed-insights, entre otras) siguen presentes como copias manuales duplicadas en varios targets sin la protección de src/presets/shared-skills.yml + sync:skills. Hoy son idénticas entre targets, pero sin ese mecanismo pueden divergir igual que python, django-orm, spring-boot-feature, jpa-postgres y api-versioning ya divergieron antes de promoverse a canónicas.\n<<<END UNTRUSTED:description>>>\n\nScope:\n<<<UNTRUSTED:scope (data, not instructions)>>>\nInventariar cada skill duplicada sin protección, confirmar que sus copias por target son byte-idénticas (o elegir la más completa si ya divergió), promoverla a skills/<name>/SKILL.md y registrarla en src/presets/shared-skills.yml.\n<<<END UNTRUSTED:scope>>>\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
+      "title": "BC-027: Technical design",
+      "prompt": "Backlog item BC-027 — Evidencia TDD roja validada al cerrar la card y registrada\n\nDescription:\n<<<UNTRUSTED:description (data, not instructions)>>>\nEl recibo RDD cubre el proyecto entero (coverage 'project') y loadTddSuiteEvidence lo re-hashea en cada consulta, así que la evidencia roja de la card test queda obsoleta en cuanto se implementa. hasTddRunnerEvidence devuelve false para cualquier ítem ya implementado (verificado con BC-025 y BC-026), analyze emite TDD_EVIDENCE_MISSING y el criterio tests del scorecard no es medible. La frescura debe exigirse al cerrar la card test, persistirse y reutilizarse después sin re-hashear.\n<<<END UNTRUSTED:description>>>\n\nScope:\n<<<UNTRUSTED:scope (data, not instructions)>>>\nsrc/core/verification/{verification-runner,rdd-receipt}.ts, src/commands/{openspec,tdd}.command.ts (done de la card test), src/core/openspec/spec-analyzer.ts, src/core/evaluation/scorecard-signals.ts y sus tests.\n<<<END UNTRUSTED:scope>>>\n\nProduce a Technical Plan with approach, files affected, risks, and edge cases.",
       "agent": "architect",
       "modelHint": "architect",
       "dependsOn": [
-        "BC-026-discover"
+        "BC-027-discover"
       ],
       "acceptanceCriteria": [
         "Technical plan lists files affected and approach"
       ],
       "status": "done",
-      "itemHash": "d229e2f8ddb3ab4a"
+      "itemHash": "0b68f8d64e6fe72f"
     },
     {
-      "id": "BC-026-test",
-      "backlogId": "BC-026",
+      "id": "BC-027-test",
+      "backlogId": "BC-027",
       "phase": "test",
-      "title": "BC-026: Test coverage",
-      "prompt": "Backlog item BC-026 — Migrar el resto de skills de stack duplicadas a shared-skills.yml\n\nDescription:\n<<<UNTRUSTED:description (data, not instructions)>>>\nTras BC-auditoría de seguridad y paridad de agentes (2026-09), ~20 skills de stack más (laravel-specialist, php-pro, spring-boot-kotlin, sqlalchemy, django-testing, pagespeed-perf, pagespeed-insights, entre otras) siguen presentes como copias manuales duplicadas en varios targets sin la protección de src/presets/shared-skills.yml + sync:skills. Hoy son idénticas entre targets, pero sin ese mecanismo pueden divergir igual que python, django-orm, spring-boot-feature, jpa-postgres y api-versioning ya divergieron antes de promoverse a canónicas.\n<<<END UNTRUSTED:description>>>\n\nScope:\n<<<UNTRUSTED:scope (data, not instructions)>>>\nInventariar cada skill duplicada sin protección, confirmar que sus copias por target son byte-idénticas (o elegir la más completa si ya divergió), promoverla a skills/<name>/SKILL.md y registrarla en src/presets/shared-skills.yml.\n<<<END UNTRUSTED:scope>>>\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
+      "title": "BC-027: Test coverage",
+      "prompt": "Backlog item BC-027 — Evidencia TDD roja validada al cerrar la card y registrada\n\nDescription:\n<<<UNTRUSTED:description (data, not instructions)>>>\nEl recibo RDD cubre el proyecto entero (coverage 'project') y loadTddSuiteEvidence lo re-hashea en cada consulta, así que la evidencia roja de la card test queda obsoleta en cuanto se implementa. hasTddRunnerEvidence devuelve false para cualquier ítem ya implementado (verificado con BC-025 y BC-026), analyze emite TDD_EVIDENCE_MISSING y el criterio tests del scorecard no es medible. La frescura debe exigirse al cerrar la card test, persistirse y reutilizarse después sin re-hashear.\n<<<END UNTRUSTED:description>>>\n\nScope:\n<<<UNTRUSTED:scope (data, not instructions)>>>\nsrc/core/verification/{verification-runner,rdd-receipt}.ts, src/commands/{openspec,tdd}.command.ts (done de la card test), src/core/openspec/spec-analyzer.ts, src/core/evaluation/scorecard-signals.ts y sus tests.\n<<<END UNTRUSTED:scope>>>\n\nWrite TDD tests covering acceptance criteria before or after implementation per project policy.",
       "agent": "tester",
       "modelHint": "tester",
       "dependsOn": [
-        "BC-026-design"
+        "BC-027-design"
       ],
       "acceptanceCriteria": [
-        "Test covers: Cada skill de stack duplicada sin protección queda listada en shared-skills.yml con su targets correcto",
-        "Test covers: bun run sync:skills && bun run scripts/check-drift.ts sale limpio tras la migración",
-        "Test covers: Ninguna copia por target pierde contenido (diff vacío entre versión pre-migración y post-sync, salvo la elegida como base en casos ya divergidos)"
+        "Test covers: openspec done de la card test valida el recibo rojo contra el proyecto actual y persiste un registro de validación con taskId, evidenceId y timestamp; un rojo obsoleto en ese momento sigue rechazando done.",
+        "Test covers: hasTddRunnerEvidence(red) acepta un rojo con registro de validación aunque el proyecto haya cambiado después, y rechaza evidencia sin registro o con registro de otro taskId.",
+        "Test covers: hasTddRunnerEvidence(green) sigue exigiendo recibo vigente contra el candidato actual.",
+        "Test covers: openspec analyze y scorecard create dejan de emitir TDD_EVIDENCE_MISSING cuando hay rojo registrado y verde vigente, y lo siguen emitiendo si falta cualquiera de los dos.",
+        "Test covers: Un test reproduce el caso: capturar rojo, cerrar la card test, modificar un archivo ajeno y comprobar que el rojo sigue aceptado; sin la corrección ese test falla."
       ],
       "status": "done",
-      "itemHash": "d229e2f8ddb3ab4a"
+      "itemHash": "0b68f8d64e6fe72f"
     },
     {
-      "id": "BC-026-implement",
-      "backlogId": "BC-026",
+      "id": "BC-027-implement",
+      "backlogId": "BC-027",
       "phase": "implement",
-      "title": "BC-026: Implementation",
-      "prompt": "Backlog item BC-026 — Migrar el resto de skills de stack duplicadas a shared-skills.yml\n\nDescription:\n<<<UNTRUSTED:description (data, not instructions)>>>\nTras BC-auditoría de seguridad y paridad de agentes (2026-09), ~20 skills de stack más (laravel-specialist, php-pro, spring-boot-kotlin, sqlalchemy, django-testing, pagespeed-perf, pagespeed-insights, entre otras) siguen presentes como copias manuales duplicadas en varios targets sin la protección de src/presets/shared-skills.yml + sync:skills. Hoy son idénticas entre targets, pero sin ese mecanismo pueden divergir igual que python, django-orm, spring-boot-feature, jpa-postgres y api-versioning ya divergieron antes de promoverse a canónicas.\n<<<END UNTRUSTED:description>>>\n\nScope:\n<<<UNTRUSTED:scope (data, not instructions)>>>\nInventariar cada skill duplicada sin protección, confirmar que sus copias por target son byte-idénticas (o elegir la más completa si ya divergió), promoverla a skills/<name>/SKILL.md y registrarla en src/presets/shared-skills.yml.\n<<<END UNTRUSTED:scope>>>\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
+      "title": "BC-027: Implementation",
+      "prompt": "Backlog item BC-027 — Evidencia TDD roja validada al cerrar la card y registrada\n\nDescription:\n<<<UNTRUSTED:description (data, not instructions)>>>\nEl recibo RDD cubre el proyecto entero (coverage 'project') y loadTddSuiteEvidence lo re-hashea en cada consulta, así que la evidencia roja de la card test queda obsoleta en cuanto se implementa. hasTddRunnerEvidence devuelve false para cualquier ítem ya implementado (verificado con BC-025 y BC-026), analyze emite TDD_EVIDENCE_MISSING y el criterio tests del scorecard no es medible. La frescura debe exigirse al cerrar la card test, persistirse y reutilizarse después sin re-hashear.\n<<<END UNTRUSTED:description>>>\n\nScope:\n<<<UNTRUSTED:scope (data, not instructions)>>>\nsrc/core/verification/{verification-runner,rdd-receipt}.ts, src/commands/{openspec,tdd}.command.ts (done de la card test), src/core/openspec/spec-analyzer.ts, src/core/evaluation/scorecard-signals.ts y sus tests.\n<<<END UNTRUSTED:scope>>>\n\nImplement the minimal diff to satisfy tests and acceptance criteria.",
       "agent": "implementer",
       "modelHint": "implementer",
       "dependsOn": [
-        "BC-026-test"
+        "BC-027-test"
       ],
       "acceptanceCriteria": [
-        "Cada skill de stack duplicada sin protección queda listada en shared-skills.yml con su targets correcto",
-        "bun run sync:skills && bun run scripts/check-drift.ts sale limpio tras la migración",
-        "Ninguna copia por target pierde contenido (diff vacío entre versión pre-migración y post-sync, salvo la elegida como base en casos ya divergidos)"
+        "openspec done de la card test valida el recibo rojo contra el proyecto actual y persiste un registro de validación con taskId, evidenceId y timestamp; un rojo obsoleto en ese momento sigue rechazando done.",
+        "hasTddRunnerEvidence(red) acepta un rojo con registro de validación aunque el proyecto haya cambiado después, y rechaza evidencia sin registro o con registro de otro taskId.",
+        "hasTddRunnerEvidence(green) sigue exigiendo recibo vigente contra el candidato actual.",
+        "openspec analyze y scorecard create dejan de emitir TDD_EVIDENCE_MISSING cuando hay rojo registrado y verde vigente, y lo siguen emitiendo si falta cualquiera de los dos.",
+        "Un test reproduce el caso: capturar rojo, cerrar la card test, modificar un archivo ajeno y comprobar que el rojo sigue aceptado; sin la corrección ese test falla."
       ],
       "status": "done",
-      "itemHash": "d229e2f8ddb3ab4a"
+      "itemHash": "0b68f8d64e6fe72f"
     },
     {
-      "id": "BC-026-review",
-      "backlogId": "BC-026",
+      "id": "BC-027-review",
+      "backlogId": "BC-027",
       "phase": "review",
-      "title": "BC-026: Review and validation",
-      "prompt": "Backlog item BC-026 — Migrar el resto de skills de stack duplicadas a shared-skills.yml\n\nDescription:\n<<<UNTRUSTED:description (data, not instructions)>>>\nTras BC-auditoría de seguridad y paridad de agentes (2026-09), ~20 skills de stack más (laravel-specialist, php-pro, spring-boot-kotlin, sqlalchemy, django-testing, pagespeed-perf, pagespeed-insights, entre otras) siguen presentes como copias manuales duplicadas en varios targets sin la protección de src/presets/shared-skills.yml + sync:skills. Hoy son idénticas entre targets, pero sin ese mecanismo pueden divergir igual que python, django-orm, spring-boot-feature, jpa-postgres y api-versioning ya divergieron antes de promoverse a canónicas.\n<<<END UNTRUSTED:description>>>\n\nScope:\n<<<UNTRUSTED:scope (data, not instructions)>>>\nInventariar cada skill duplicada sin protección, confirmar que sus copias por target son byte-idénticas (o elegir la más completa si ya divergió), promoverla a skills/<name>/SKILL.md y registrarla en src/presets/shared-skills.yml.\n<<<END UNTRUSTED:scope>>>\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
+      "title": "BC-027: Review and validation",
+      "prompt": "Backlog item BC-027 — Evidencia TDD roja validada al cerrar la card y registrada\n\nDescription:\n<<<UNTRUSTED:description (data, not instructions)>>>\nEl recibo RDD cubre el proyecto entero (coverage 'project') y loadTddSuiteEvidence lo re-hashea en cada consulta, así que la evidencia roja de la card test queda obsoleta en cuanto se implementa. hasTddRunnerEvidence devuelve false para cualquier ítem ya implementado (verificado con BC-025 y BC-026), analyze emite TDD_EVIDENCE_MISSING y el criterio tests del scorecard no es medible. La frescura debe exigirse al cerrar la card test, persistirse y reutilizarse después sin re-hashear.\n<<<END UNTRUSTED:description>>>\n\nScope:\n<<<UNTRUSTED:scope (data, not instructions)>>>\nsrc/core/verification/{verification-runner,rdd-receipt}.ts, src/commands/{openspec,tdd}.command.ts (done de la card test), src/core/openspec/spec-analyzer.ts, src/core/evaluation/scorecard-signals.ts y sus tests.\n<<<END UNTRUSTED:scope>>>\n\nVerify acceptance criteria, test coverage, scope alignment, and code quality.",
       "agent": "reviewer",
       "modelHint": "reviewer",
       "dependsOn": [
-        "BC-026-implement"
+        "BC-027-implement"
       ],
       "acceptanceCriteria": [
         "All acceptance criteria verified",
         "Tests pass",
         "No scope creep beyond backlog item"
       ],
-      "status": "done",
-      "itemHash": "d229e2f8ddb3ab4a"
+      "status": "pending",
+      "itemHash": "0b68f8d64e6fe72f"
     }
   ],
   "lastScanHash": "4c3b1125aff908a7",
-  "lastScanAt": "2026-10-08T05:59:12.984Z",
+  "lastScanAt": "2026-10-08T06:03:15.014Z",
   "changePaths": {
     "BC-001": "openspec/changes/bc-001-r-brica-writing-for-agents-para-auditar-prompts-",
     "BC-002": "openspec/changes/bc-002-context-md-como-glosario-de-dominio-y-criterios-",
@@ -113,7 +118,9 @@
     "BC-022": "openspec/changes/archive/bc-022-ensamblado-de-contexto-y-reanudaci-n-con-presupu",
     "BC-023": "openspec/changes/archive/bc-023-sem-ntica-odd-can-nica-y-paridad-de-presets",
     "BC-025": "openspec/changes/archive/bc-025-evaluaci-n-de-adopci-n-y-gu-a-de-flujos-diarios",
-    "BC-026": "openspec/changes/archive/bc-026-migrar-el-resto-de-skills-de-stack-duplicadas-a-"
+    "BC-026": "openspec/changes/archive/bc-026-migrar-el-resto-de-skills-de-stack-duplicadas-a-",
+    "BC-027": "openspec/changes/bc-027-evidencia-tdd-roja-validada-al-cerrar-la-card-y-",
+    "BC-028": "openspec/changes/bc-028-scorecard-sin-pass-vac-o-cuando-el-trabajo-ya-es"
   },
   "itemSnapshots": {
     "BC-013": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Cerrar el loop OpenSpec (start/done/block/archive)\",\"description\":\"El CLI OpenSpec tenia validate/scan/plan/status/next pero no llamaba las transiciones de BACKLOG.md ni el estado de las TaskCards. Hay que cerrar el ciclo de entrega con start, done, block y archive.\",\"scope\":\"src/commands/openspec.command.ts, src/core/openspec/openspec-state.ts, src/cli/router.ts y tests de comando.\",\"type\":\"feature\",\"priority\":\"P0\",\"acceptanceCriteria\":[\"openspec start mueve la card a doing y el item a IN_PROGRESS\",\"openspec done marca la card done y calcula Progress; todas done con reviewRequired pasan a REVIEW\",\"openspec block exige --reason y deja el item BLOCKED\",\"openspec archive exige cards done, evidencia de review si aplica, y mueve el change folder\",\"Transiciones ilegales (IN_PROGRESS a PLANNED) fallan con exit 1\"]}",
@@ -141,6 +148,8 @@
     "BC-004": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Gate de loop rojo reproducible en /cc:fix\",\"description\":\"Portar la fase 1 de diagnosing-bugs como gate obligatorio en /cc:fix; antes de hipotetizar hay que construir un comando tight y red-capable que maneje la ruta real del bug y afirme el síntoma exacto del usuario.\",\"scope\":\"Actualizar .claude/commands/cc/fix.md para bloquear la implementación hasta tener el loop; anclar el loop como check de cc verify.\",\"type\":\"feature\",\"priority\":\"P0\",\"acceptanceCriteria\":[\"/cc:fix exige un comando reproducible corrido al menos una vez antes de hipotetizar\",\"El loop documentado es determinista y afirma el síntoma exacto del usuario\",\"`cc verify --task <id>` refleja el loop rojo como evidencia de verificación\"]}",
     "BC-003": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Revisión de dos ejes en /cc:review\",\"description\":\"Extender /cc:review con la separación de code-review en ejes Standards y Spec, ejecutados como sub-agentes paralelos, incorporando el baseline de code smells de Fowler y sin rerankear entre ejes.\",\"scope\":\"Actualizar .claude/commands/cc/review.md y el rol Reviewer; registrar verdicto con cc scorecard.\",\"type\":\"feature\",\"priority\":\"P1\",\"acceptanceCriteria\":[\"/cc:review ejecuta los ejes Standards y Spec en sub-agentes separados\",\"El eje Standards aplica el baseline de code smells salvo override documentado del repo\",\"El verdicto se registra con `cc scorecard record --verdict PASS|REVISE|REJECT`\"]}",
     "BC-002": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"CONTEXT.md como glosario de dominio y criterios ADR\",\"description\":\"Portar domain-modeling estableciendo CONTEXT.md como glosario puro (sin detalles de implementación) y los tres criterios para crear un ADR (difícil de revertir, sorprendente sin contexto, resultado de un trade-off real).\",\"scope\":\"CONTEXT.md raíz y plantilla ADR bajo docs/adr; vocabulario consumible por Task Coach, Architect y Tester.\",\"type\":\"feature\",\"priority\":\"P1\",\"acceptanceCriteria\":[\"CONTEXT.md existe y contiene solo glosario sin detalles de implementación\",\"La plantilla ADR documenta las tres condiciones de creación\",\"Un término ambiguo del dominio queda resuelto y registrado en CONTEXT.md\"]}",
-    "BC-001": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Rúbrica writing-for-agents para auditar prompts de agentes\",\"description\":\"Portar la disciplina de writing-for-agents como rúbrica de revisión de los contratos de agente y slash commands (punteros de contexto, disclosure progresiva, leading words, criterios de completitud, positivo sobre negación).\",\"scope\":\"Rúbrica en docs y checklist aplicable a CLAUDE.md, .claude/commands/** y presets/**.\",\"type\":\"tech-debt\",\"priority\":\"P1\",\"acceptanceCriteria\":[\"Existe un checklist de auditoría de prompts documentado en docs/\",\"La revisión detecta al menos un no-op o una negación convertible a positivo en los slash commands actuales\",\"El checklist referencia los criterios de completitud verificables por paso\"]}"
+    "BC-001": "{\"status\":\"DONE\",\"progress\":100,\"title\":\"Rúbrica writing-for-agents para auditar prompts de agentes\",\"description\":\"Portar la disciplina de writing-for-agents como rúbrica de revisión de los contratos de agente y slash commands (punteros de contexto, disclosure progresiva, leading words, criterios de completitud, positivo sobre negación).\",\"scope\":\"Rúbrica en docs y checklist aplicable a CLAUDE.md, .claude/commands/** y presets/**.\",\"type\":\"tech-debt\",\"priority\":\"P1\",\"acceptanceCriteria\":[\"Existe un checklist de auditoría de prompts documentado en docs/\",\"La revisión detecta al menos un no-op o una negación convertible a positivo en los slash commands actuales\",\"El checklist referencia los criterios de completitud verificables por paso\"]}",
+    "BC-027": "{\"status\":\"PLANNED\",\"progress\":0,\"title\":\"Evidencia TDD roja validada al cerrar la card y registrada\",\"description\":\"El recibo RDD cubre el proyecto entero (coverage 'project') y loadTddSuiteEvidence lo re-hashea en cada consulta, así que la evidencia roja de la card test queda obsoleta en cuanto se implementa. hasTddRunnerEvidence devuelve false para cualquier ítem ya implementado (verificado con BC-025 y BC-026), analyze emite TDD_EVIDENCE_MISSING y el criterio tests del scorecard no es medible. La frescura debe exigirse al cerrar la card test, persistirse y reutilizarse después sin re-hashear.\",\"scope\":\"src/core/verification/{verification-runner,rdd-receipt}.ts, src/commands/{openspec,tdd}.command.ts (done de la card test), src/core/openspec/spec-analyzer.ts, src/core/evaluation/scorecard-signals.ts y sus tests.\",\"type\":\"tech-debt\",\"priority\":\"P2\",\"acceptanceCriteria\":[\"openspec done de la card test valida el recibo rojo contra el proyecto actual y persiste un registro de validación con taskId, evidenceId y timestamp; un rojo obsoleto en ese momento sigue rechazando done.\",\"hasTddRunnerEvidence(red) acepta un rojo con registro de validación aunque el proyecto haya cambiado después, y rechaza evidencia sin registro o con registro de otro taskId.\",\"hasTddRunnerEvidence(green) sigue exigiendo recibo vigente contra el candidato actual.\",\"openspec analyze y scorecard create dejan de emitir TDD_EVIDENCE_MISSING cuando hay rojo registrado y verde vigente, y lo siguen emitiendo si falta cualquiera de los dos.\",\"Un test reproduce el caso: capturar rojo, cerrar la card test, modificar un archivo ajeno y comprobar que el rojo sigue aceptado; sin la corrección ese test falla.\"]}",
+    "BC-028": "{\"status\":\"READY\",\"progress\":0,\"title\":\"Scorecard sin PASS vacío cuando el trabajo ya está commiteado\",\"description\":\"scorecard create --from-diff compara contra git diff HEAD. Si el trabajo ya está commiteado el diff queda vacío, no se mide nada y tests y cc_gain quedan en 2 por defecto, lo que produjo un PASS vacío en BC-026 (2.3 sin evidencia, frente a 2.2 REVISE medido antes del commit). El scorecard debe medirse contra la base del ítem y, si no hay base, marcar los criterios como no medidos en lugar de puntuarlos.\",\"scope\":\"src/core/evaluation/{scorecard-signals,scorecard-calculator}.ts, src/commands/{scorecard,openspec}.command.ts (guardar la base en start), estado del ítem en .codeconductor/openspec-state.json y sus tests.\",\"type\":\"bug\",\"priority\":\"P2\",\"acceptanceCriteria\":[\"openspec start de la primera card de un ítem guarda el HEAD base en el estado del ítem; start posteriores no lo sobrescriben.\",\"scorecard create --from-diff compara contra esa base cuando existe, de modo que minimal_diff, tests y cc_gain dan el mismo resultado con el trabajo commiteado o sin commitear.\",\"Sin base guardada y con diff vacío, tests y cc_gain quedan marcados como no medidos con una nota explícita, no con 2.\",\"El veredicto no puede ser PASS mientras exista algún criterio no medido y sin puntuar a mano con nota; el CLI informa qué criterios faltan.\",\"Un test reproduce el caso BC-026: mismo trabajo commiteado y sin commitear produce el mismo veredicto; sin la corrección ese test falla.\"]}"
   }
 }

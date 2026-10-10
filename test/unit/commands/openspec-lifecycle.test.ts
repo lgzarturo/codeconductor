@@ -246,3 +246,41 @@ describe('openspec start/done/block/archive', () => {
     expect(durableSpecs).toContain('FR-001');
   });
 });
+
+test('BC-028 first start stores HEAD; retry and later card preserve it', async () => {
+  const { execFileSync } = await import('node:child_process');
+  const root = await tempProject();
+  const git = (...args: string[]) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
+  try {
+    git('init', '-q');
+    git('add', '.');
+    git('-c', 'user.name=Test', '-c', 'user.email=test@example.com', 'commit', '-qm', 'base');
+    const base = git('rev-parse', 'HEAD');
+    expect((await run(root, 'plan', 'BC-001')).code).toBe(0);
+    expect((await run(root, 'start', 'BC-001-discover')).code).toBe(0);
+    const statePath = join(root, '.codeconductor/openspec-state.json');
+    expect(JSON.parse(await readFile(statePath, 'utf8')).itemBaseCommits?.['BC-001']).toBe(base);
+    git('add', '.');
+    git('-c', 'user.name=Test', '-c', 'user.email=test@example.com', 'commit', '-qm', 'later');
+    expect((await run(root, 'start', 'BC-001-discover')).code).toBe(0);
+    expect((await run(root, 'done', 'BC-001-discover')).code).toBe(0);
+    expect((await run(root, 'start', 'BC-001-design')).code).toBe(0);
+    expect(JSON.parse(await readFile(statePath, 'utf8')).itemBaseCommits?.['BC-001']).toBe(base);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('BC-028 start without a Git HEAD remains usable and reports missing base', async () => {
+  const root = await tempProject();
+  try {
+    expect((await run(root, 'plan', 'BC-001')).code).toBe(0);
+    const result = await run(root, 'start', 'BC-001-discover');
+    expect(result.code).toBe(0);
+    expect((result.data as { warnings: string[] }).warnings.join(' ')).toContain('base unavailable');
+    const state = JSON.parse(await readFile(join(root, '.codeconductor/openspec-state.json'), 'utf8'));
+    expect(state.itemBaseCommits?.['BC-001']).toBeUndefined();
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

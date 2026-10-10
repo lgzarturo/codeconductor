@@ -7,7 +7,7 @@ import type { ScorecardCriterionInput } from '../../validation/schemas';
 
 export interface ScorecardSignalHints {
   criteriaOverrides: Partial<
-    Record<CriterionId, { score: number; notes?: string; autoSuggested?: boolean }>
+    Record<CriterionId, Pick<ScorecardCriterionInput, 'score' | 'notes' | 'autoSuggested' | 'unmeasured'>>
   >;
   findings: string[];
   scopeViolationCount?: number;
@@ -32,10 +32,18 @@ function isGeneratedBuildCache(path: string): boolean {
 export function collectScorecardSignals(
   projectRoot: string,
   scopeFiles?: string[],
-  extra?: { scopeViolationCount?: number; hashMismatch?: boolean }
+  extra?: { scopeViolationCount?: number; hashMismatch?: boolean; baseCommit?: string }
 ): ScorecardSignalHints {
   const findings: string[] = [];
   const overrides: ScorecardSignalHints['criteriaOverrides'] = {};
+  overrides.tests = {
+    score: null, unmeasured: true, autoSuggested: true,
+    notes: 'Unmeasured: no verification-runner evidence supplied',
+  };
+  overrides.cc_gain = {
+    score: null, unmeasured: true, autoSuggested: true,
+    notes: 'Unmeasured: no diff available for complexity audit',
+  };
 
   const scopeViolationCount = extra?.scopeViolationCount;
   if (scopeViolationCount && scopeViolationCount > 0) {
@@ -59,13 +67,19 @@ export function collectScorecardSignals(
 
   let diff = '';
   try {
-    diff = execFileSync('git', ['diff', 'HEAD'], {
+    diff = execFileSync('git', ['diff', extra?.baseCommit ?? 'HEAD', '--'], {
       cwd: projectRoot,
       encoding: 'utf-8',
       stdio: ['ignore', 'pipe', 'ignore'],
     });
   } catch {
     findings.push('Could not read git diff; scope audit skipped.');
+    if (!overrides.minimal_diff) {
+      overrides.minimal_diff = {
+        score: null, unmeasured: true, autoSuggested: true,
+        notes: 'Unmeasured: git diff unavailable',
+      };
+    }
     return { criteriaOverrides: overrides, findings, scopeViolationCount, hashMismatch };
   }
 
@@ -162,9 +176,15 @@ export function applyAnalyzeSignals(
       autoSuggested: true,
     };
     findings.push('Tests auto-suggested 0: missing verification-runner evidence.');
+  } else if (analyze.hasTddEvidence === true && !hints.hashMismatch) {
+    criteriaOverrides.tests = {
+      score: 2,
+      notes: 'Verification-runner RED/GREEN evidence verified',
+      autoSuggested: true,
+    };
   }
 
-  return { criteriaOverrides, findings };
+  return { ...hints, criteriaOverrides, findings };
 }
 
 /**

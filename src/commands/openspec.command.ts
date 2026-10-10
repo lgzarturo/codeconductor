@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import {
   loadBacklogSession,
@@ -823,7 +824,18 @@ async function handleStart(
   if (!itemLoaded.ok) return itemLoaded.response;
 
   let state = session.state;
-  if (card.status === 'pending') {
+  let baseWarning: string | undefined;
+  if (!state.itemBaseCommits?.[card.backlogId]) {
+    try {
+      const base = execFileSync('git', ['rev-parse', '--verify', 'HEAD'], {
+        cwd: projectRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim();
+      state = { ...state, itemBaseCommits: { ...state.itemBaseCommits, [card.backlogId]: base } };
+    } catch {
+      baseWarning = 'Item base unavailable: could not resolve git HEAD.';
+    }
+  }
+  if (card.status === 'pending' || state !== session.state) {
     state = setTaskCardStatus(state, cardId, 'doing');
     const written = await persistState(projectRoot, state);
     if (!written.ok) return fail(command, [written.error]);
@@ -847,6 +859,7 @@ async function handleStart(
       cardStatus: 'doing',
       itemId: itemLoaded.item.id,
       itemStatus: 'IN_PROGRESS',
+      ...(baseWarning ? { warnings: [baseWarning] } : {}),
     },
   };
 }

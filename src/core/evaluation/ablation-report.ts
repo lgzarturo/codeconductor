@@ -87,6 +87,7 @@ async function averageCriteria(
     const loaded = await loadScorecard(projectRoot, o.scorecardId);
     if (!loaded.success) continue;
     for (const c of loaded.data.criteria as ScorecardCriterionInput[]) {
+      if (c.score === null) continue;
       if (!buckets[c.id]) buckets[c.id] = [];
       buckets[c.id].push(c.score);
     }
@@ -155,7 +156,11 @@ export async function buildAblationReport(
       ...Object.keys(treatment.criteria ?? {}),
     ]);
     for (const cid of criterionIds) {
-      deltaCriteria[cid] = (treatment.criteria?.[cid] ?? 0) - (baseline.criteria?.[cid] ?? 0);
+      const baselineScore = baseline.criteria?.[cid];
+      const treatmentScore = treatment.criteria?.[cid];
+      if (baselineScore !== undefined && treatmentScore !== undefined) {
+        deltaCriteria[cid] = treatmentScore - baselineScore;
+      }
     }
 
     rows.push({

@@ -7,7 +7,7 @@ export const PASS_THRESHOLD = 2.0;
  * Create default criteria with score 2 (met by design) for manual completion.
  */
 export function createDefaultCriteria(
-  overrides: Partial<Record<CriterionId, { score: number; notes?: string; autoSuggested?: boolean }>> = {}
+  overrides: Partial<Record<CriterionId, Pick<ScorecardCriterionInput, 'score' | 'notes' | 'autoSuggested' | 'unmeasured'>>> = {}
 ): ScorecardCriterionInput[] {
   return SCORECARD_CRITERIA_DEF.map((def) => {
     const o = overrides[def.id];
@@ -15,9 +15,10 @@ export function createDefaultCriteria(
       id: def.id,
       label: def.label,
       weight: def.weight,
-      score: o?.score ?? 2,
+      score: o ? o.score : 2,
       notes: o?.notes,
       autoSuggested: o?.autoSuggested,
+      unmeasured: o?.unmeasured,
     };
   });
 }
@@ -28,7 +29,7 @@ export function createDefaultCriteria(
 export function computeWeightedScore(criteria: ScorecardCriterionInput[]): number {
   let total = 0;
   for (const c of criteria) {
-    total += c.score * c.weight;
+    total += (c.score ?? 0) * c.weight;
   }
   return Math.round(total * 1000) / 1000;
 }
@@ -42,9 +43,9 @@ export function computeVerdict(
 ): ScorecardVerdictInput {
   const byId = new Map(criteria.map((c) => [c.id, c.score]));
 
-  const acceptance = byId.get('acceptance') ?? 0;
-  const minimalDiff = byId.get('minimal_diff') ?? 0;
-  const regressions = byId.get('regressions') ?? 0;
+  const acceptance = byId.has('acceptance') ? byId.get('acceptance') : 0;
+  const minimalDiff = byId.has('minimal_diff') ? byId.get('minimal_diff') : 0;
+  const regressions = byId.has('regressions') ? byId.get('regressions') : 0;
 
   if (acceptance === 0 || minimalDiff === 0 || regressions === 0) {
     return 'REJECT';
@@ -52,10 +53,18 @@ export function computeVerdict(
   if (weightedScore < 1.5) {
     return 'REJECT';
   }
+  if (pendingCriteria(criteria).length > 0) return 'REVISE';
   if (weightedScore >= PASS_THRESHOLD && !criteria.some((c) => c.score === 0)) {
     return 'PASS';
   }
   return 'REVISE';
+}
+
+/** Criteria whose measurement has not been supplied or resolved by a reviewer. */
+export function pendingCriteria(criteria: ScorecardCriterionInput[]): CriterionId[] {
+  return criteria.filter((c) => c.score === null ||
+    (c.unmeasured && (c.autoSuggested !== false || !c.notes?.trim())))
+    .map((c) => c.id);
 }
 
 /**

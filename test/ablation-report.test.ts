@@ -81,3 +81,31 @@ describe('ablation-report', () => {
     expect(report.rows[0]?.verdict).toBe('no_change');
   });
 });
+
+test('BC-028 unavailable criterion scores are omitted from ablation averages', async () => {
+  const { mkdtemp, rm } = await import('node:fs/promises');
+  const { join } = await import('node:path');
+  const { tmpdir } = await import('node:os');
+  const { saveScorecard } = await import('../src/core/evaluation/outcome-store');
+  const { buildScorecardRecord, createDefaultCriteria } = await import('../src/core/evaluation/scorecard-calculator');
+  const root = await mkdtemp(join(tmpdir(), 'cc-bc028-ablation-'));
+  try {
+    for (const [id, score] of [['missing', null], ['measured', 3]] as const) {
+      const saved = await saveScorecard(root, buildScorecardRecord({
+        id, taskId: 'task', agent: 'reviewer', contractVersion: '1',
+        criteria: createDefaultCriteria({ tests: { score } }),
+      }));
+      expect(saved.success).toBe(true);
+    }
+    const report = await buildAblationReport(root, [
+      outcome({ id: 'b1', variantId: 'baseline', scorecardId: 'missing' }),
+      outcome({ id: 'b2', variantId: 'baseline', scorecardId: 'measured' }),
+      outcome({ id: 't1', variantId: 'minus:review', scorecardId: 'missing' }),
+    ]);
+    expect(report.rows[0]?.baseline.criteria?.tests).toBe(3);
+    expect(report.rows[0]?.treatment.criteria?.tests).toBeUndefined();
+    expect(report.rows[0]?.deltaCriteria?.tests).toBeUndefined();
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

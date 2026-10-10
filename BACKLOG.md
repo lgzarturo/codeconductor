@@ -1,8 +1,12 @@
 # BACKLOG
 
-Backlog de integración de las skills de `mattpocock/skills` en CodeConductor.
-Formato validable por `cc openspec validate`. Análisis completo en
-[`NEW_SKILLS.md`](./NEW_SKILLS.md).
+Backlog de CodeConductor: integración de skills, mantenimiento del harness y
+validación de entrega. Formato validable con `bun run dev openspec validate`
+en este repositorio. Auditoría desde v1.6.1 en
+[docs/reports/2026-10-backlog-audit.md](docs/reports/2026-10-backlog-audit.md).
+
+Los ítems de Archive conservan el historial de cierre. Las descripciones de
+problemas son el contexto original, no una afirmación de que sigan vigentes.
 
 ## Global
 
@@ -13,6 +17,68 @@ Formato validable por `cc openspec validate`. Análisis completo en
 - TDD required: yes
 
 ## Items
+
+## Archive
+### BC-028 | Scorecard sin PASS vacío cuando el trabajo ya está commiteado
+
+- Priority: P2
+- Status: DONE
+- Type: bug
+- Depends on: none
+- Description: scorecard create --from-diff compara contra git diff HEAD. Si el trabajo ya está commiteado el diff queda vacío, no se mide nada y tests y cc_gain quedan en 2 por defecto, lo que produjo un PASS vacío en BC-026 (2.3 sin evidencia, frente a 2.2 REVISE medido antes del commit). El scorecard debe medirse contra la base del ítem y, si no hay base, marcar los criterios como no medidos en lugar de puntuarlos.
+- Scope: src/core/evaluation/{scorecard-signals,scorecard-calculator}.ts, src/commands/{scorecard,openspec}.command.ts (guardar la base en start), estado del ítem en .codeconductor/openspec-state.json y sus tests.
+- Out of scope: cambiar PASS_THRESHOLD, los pesos de los criterios, la heurística de cc_gain, o la validación de scorecard record (H11 del informe de flujo).
+- Progress: 100%
+- Reviewer: reviewer
+- Validation: Cinco criterios verificados con RED registrado, 33 tests afectados y 3767 tests de suite pasando; typecheck y lint correctos. Scorecard PASS 2.65, recibo RDD vigente y cierre aprobado expresamente por el usuario.
+- Acceptance:
+  - [x] openspec start de la primera card de un ítem guarda el HEAD base en el estado del ítem; start posteriores no lo sobrescriben.
+  - [x] scorecard create --from-diff compara contra esa base cuando existe, de modo que minimal_diff, tests y cc_gain dan el mismo resultado con el trabajo commiteado o sin commitear.
+  - [x] Sin base guardada y con diff vacío, tests y cc_gain quedan marcados como no medidos con una nota explícita, no con 2.
+  - [x] El veredicto no puede ser PASS mientras exista algún criterio no medido y sin puntuar a mano con nota; el CLI informa qué criterios faltan.
+  - [x] Un test reproduce el caso BC-026: mismo trabajo commiteado y sin commitear produce el mismo veredicto; sin la corrección ese test falla.
+
+### BC-027 | Evidencia TDD roja validada al cerrar la card y registrada
+
+- Priority: P2
+- Status: DONE
+- Type: tech-debt
+- Depends on: none
+- Description: El recibo RDD cubre el proyecto entero (coverage 'project') y loadTddSuiteEvidence lo re-hashea en cada consulta, así que la evidencia roja de la card test queda obsoleta en cuanto se implementa. hasTddRunnerEvidence devuelve false para cualquier ítem ya implementado (verificado con BC-025 y BC-026), analyze emite TDD_EVIDENCE_MISSING y el criterio tests del scorecard no es medible. La frescura debe exigirse al cerrar la card test, persistirse y reutilizarse después sin re-hashear.
+- Scope: src/core/verification/{verification-runner,rdd-receipt}.ts, src/commands/{openspec,tdd}.command.ts (done de la card test), src/core/openspec/spec-analyzer.ts, src/core/evaluation/scorecard-signals.ts y sus tests.
+- Out of scope: cambiar el algoritmo de hash del recibo o su cobertura 'project', el recibo RDD verde (sigue exigiendo frescura contra el candidato), y los hallazgos H10 y H11 de docs/reports/2026-10-openspec-flujo-inconsistente.md.
+- Progress: 100%
+- Reviewer: reviewer
+- Validation: Cinco criterios verificados en 29b0465; revisión funcional completada y cierre aceptado expresamente por el usuario. La decisión humana no sustituye la evidencia RED histórica. Ver auditoría.
+- Acceptance:
+  - [x] openspec done de la card test valida el recibo rojo contra el proyecto actual y persiste un registro de validación con taskId, evidenceId y timestamp; un rojo obsoleto en ese momento sigue rechazando done.
+  - [x] hasTddRunnerEvidence(red) acepta un rojo con registro de validación coincidente aunque el proyecto haya cambiado después, o cuyo recibo siga fresco; rechaza evidencia obsoleta y sin registro, o con registro de otro taskId, nonce o manifestHash distintos.
+  - [x] hasTddRunnerEvidence(green) sigue exigiendo recibo vigente contra el candidato actual.
+  - [x] openspec analyze y scorecard create dejan de emitir TDD_EVIDENCE_MISSING cuando hay rojo registrado y verde vigente, y lo siguen emitiendo si falta cualquiera de los dos.
+  - [x] Un test reproduce el caso: capturar rojo, cerrar la card test, modificar un archivo ajeno y comprobar que el rojo sigue aceptado; sin la corrección ese test falla.
+
+### BC-019 | Gestor de harness seguro y CLI de mantenimiento
+
+- Priority: P0
+- Status: DONE
+- Type: feature
+- Depends on: none
+- Description: Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.
+- Scope: BACKLOG.md, package.json, scripts/build.ts, scripts/generate-cli-docs.ts, docs/{generated,getting-started,cli,concepts,development}/, src/cli/{execute,router,command-registry}.ts, src/commands/{init,install,update,setup,status,version,onboarding}.command.ts, src/core/{install,presets/update-checker}.ts y tests de CLI/estado.
+- Out of scope: autoactualizar npm, aplicar una fusión YAML semántica automática ante conflictos, o publicar man pages en el sistema.
+- Progress: 100%
+- Reviewer: reviewer
+- Validation: Ocho criterios verificados; cards recuperadas del commit 84b4fc5 y cierre aceptado expresamente por el usuario. Se conservan las mediciones históricas y sus límites. Ver auditoría.
+- Acceptance:
+  - [x] init e install registran hashes SHA-256 y versiones para cada archivo gestionado.
+  - [x] update no sobrescribe council.yml ni policy.yml modificados localmente sin --force y devuelve un conflicto explícito.
+  - [x] update planifica, hace backup y revierte las escrituras aplicadas si una actualización falla.
+  - [x] version informa CLI, estado del harness, targets y skills tanto en humano como JSON; --version conserva la salida corta.
+  - [x] status informa instalación, targets, configuración, actualizaciones y archivos gestionados modificados sin ejecutar doctor.
+  - [x] setup admite --target, --locale, --yes y --dry-run; el dry-run no escribe y la ruta normal inicializa, instala y ejecuta diagnóstico.
+  - [x] help y --help son jerárquicos; install preset --help y help install preset muestran ayuda específica.
+  - [x] El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell.
+
 
 ### BC-013 | Cerrar el loop OpenSpec (start/done/block/archive)
 
@@ -120,64 +186,6 @@ Formato validable por `cc openspec validate`. Análisis completo en
   - [x] bun run lint corre scripts/lint.ts y el hook pre-commit incluye lint
   - [x] compileCheck omitido reporta skipped con motivo, no un compile limpio silencioso
 
-### BC-019 | Gestor de harness seguro y CLI de mantenimiento
-
-- Priority: P0
-- Status: REVIEW
-- Type: feature
-- Depends on: none
-- Description: Convertir la instalación de CodeConductor en un gestor de harness auditable: preservar configuraciones gestionadas que el usuario modificó, registrar hashes de instalación, exponer setup/version/status y jerarquizar la ayuda.
-- Scope: BACKLOG.md, package.json, scripts/build.ts, scripts/generate-cli-docs.ts, docs/{generated,getting-started,cli,concepts,development}/, src/cli/{execute,router,command-registry}.ts, src/commands/{init,install,update,setup,status,version,onboarding}.command.ts, src/core/{install,presets/update-checker}.ts y tests de CLI/estado.
-- Out of scope: autoactualizar npm, aplicar una fusión YAML semántica automática ante conflictos, o publicar man pages en el sistema.
-- Progress: 100%
-- Reviewer: reviewer
-- Acceptance:
-  - [x] init e install registran hashes SHA-256 y versiones para cada archivo gestionado.
-  - [x] update no sobrescribe council.yml ni policy.yml modificados localmente sin --force y devuelve un conflicto explícito.
-  - [x] update planifica, hace backup y revierte las escrituras aplicadas si una actualización falla.
-  - [x] version informa CLI, estado del harness, targets y skills tanto en humano como JSON; --version conserva la salida corta.
-  - [x] status informa instalación, targets, configuración, actualizaciones y archivos gestionados modificados sin ejecutar doctor.
-  - [x] setup admite --target, --locale, --yes y --dry-run; el dry-run no escribe y la ruta normal inicializa, instala y ejecuta diagnóstico.
-  - [x] help y --help son jerárquicos; install preset --help y help install preset muestran ayuda específica.
-  - [x] El inventario declarativo genera la ayuda, docs compactos incluidos en npm y completions bash/zsh/fish/powershell.
-
-### BC-027 | Evidencia TDD roja validada al cerrar la card y registrada
-
-- Priority: P2
-- Status: IN_PROGRESS
-- Type: tech-debt
-- Depends on: none
-- Description: El recibo RDD cubre el proyecto entero (coverage 'project') y loadTddSuiteEvidence lo re-hashea en cada consulta, así que la evidencia roja de la card test queda obsoleta en cuanto se implementa. hasTddRunnerEvidence devuelve false para cualquier ítem ya implementado (verificado con BC-025 y BC-026), analyze emite TDD_EVIDENCE_MISSING y el criterio tests del scorecard no es medible. La frescura debe exigirse al cerrar la card test, persistirse y reutilizarse después sin re-hashear.
-- Scope: src/core/verification/{verification-runner,rdd-receipt}.ts, src/commands/{openspec,tdd}.command.ts (done de la card test), src/core/openspec/spec-analyzer.ts, src/core/evaluation/scorecard-signals.ts y sus tests.
-- Out of scope: cambiar el algoritmo de hash del recibo o su cobertura 'project', el recibo RDD verde (sigue exigiendo frescura contra el candidato), y los hallazgos H10 y H11 de docs/reports/2026-10-openspec-flujo-inconsistente.md.
-- Progress: 80%
-- Reviewer: reviewer
-- Acceptance:
-  - [ ] openspec done de la card test valida el recibo rojo contra el proyecto actual y persiste un registro de validación con taskId, evidenceId y timestamp; un rojo obsoleto en ese momento sigue rechazando done.
-  - [ ] hasTddRunnerEvidence(red) acepta un rojo con registro de validación coincidente aunque el proyecto haya cambiado después, o cuyo recibo siga fresco; rechaza evidencia obsoleta y sin registro, o con registro de otro taskId, nonce o manifestHash distintos.
-  - [ ] hasTddRunnerEvidence(green) sigue exigiendo recibo vigente contra el candidato actual.
-  - [ ] openspec analyze y scorecard create dejan de emitir TDD_EVIDENCE_MISSING cuando hay rojo registrado y verde vigente, y lo siguen emitiendo si falta cualquiera de los dos.
-  - [ ] Un test reproduce el caso: capturar rojo, cerrar la card test, modificar un archivo ajeno y comprobar que el rojo sigue aceptado; sin la corrección ese test falla.
-
-### BC-028 | Scorecard sin PASS vacío cuando el trabajo ya está commiteado
-
-- Priority: P2
-- Status: PLANNED
-- Type: bug
-- Depends on: none
-- Description: scorecard create --from-diff compara contra git diff HEAD. Si el trabajo ya está commiteado el diff queda vacío, no se mide nada y tests y cc_gain quedan en 2 por defecto, lo que produjo un PASS vacío en BC-026 (2.3 sin evidencia, frente a 2.2 REVISE medido antes del commit). El scorecard debe medirse contra la base del ítem y, si no hay base, marcar los criterios como no medidos en lugar de puntuarlos.
-- Scope: src/core/evaluation/{scorecard-signals,scorecard-calculator}.ts, src/commands/{scorecard,openspec}.command.ts (guardar la base en start), estado del ítem en .codeconductor/openspec-state.json y sus tests.
-- Out of scope: cambiar PASS_THRESHOLD, los pesos de los criterios, la heurística de cc_gain, o la validación de scorecard record (H11 del informe de flujo).
-- Progress: 0%
-- Reviewer: reviewer
-- Acceptance:
-  - [ ] openspec start de la primera card de un ítem guarda el HEAD base en el estado del ítem; start posteriores no lo sobrescriben.
-  - [ ] scorecard create --from-diff compara contra esa base cuando existe, de modo que minimal_diff, tests y cc_gain dan el mismo resultado con el trabajo commiteado o sin commitear.
-  - [ ] Sin base guardada y con diff vacío, tests y cc_gain quedan marcados como no medidos con una nota explícita, no con 2.
-  - [ ] El veredicto no puede ser PASS mientras exista algún criterio no medido y sin puntuar a mano con nota; el CLI informa qué criterios faltan.
-  - [ ] Un test reproduce el caso BC-026: mismo trabajo commiteado y sin commitear produce el mismo veredicto; sin la corrección ese test falla.
-
-## Archive
 ### BC-026 | Migrar el resto de skills de stack duplicadas a shared-skills.yml
 
 - Priority: P3
@@ -465,6 +473,7 @@ Formato validable por `cc openspec validate`. Análisis completo en
 - Out of scope: Migrar toda la terminología histórica del repo de una vez.
 - Progress: 100
 - Reviewer: reviewer
+- Validation: Se conserva como histórico por decisión del usuario; CONTEXT.md, docs/adr/template.md y su test están vacíos. No se reabre ni se afirma nueva evidencia de cumplimiento.
 - Acceptance:
   - [x] CONTEXT.md existe y contiene solo glosario sin detalles de implementación
   - [x] La plantilla ADR documenta las tres condiciones de creación
@@ -481,6 +490,7 @@ Formato validable por `cc openspec validate`. Análisis completo en
 - Out of scope: Reescritura masiva de todos los prompts en un solo item.
 - Progress: 100
 - Reviewer: reviewer
+- Validation: Se conserva como histórico por decisión del usuario; la auditoría no localizó la rúbrica prometida. No se reabre ni se afirma nueva evidencia de cumplimiento.
 - Acceptance:
   - [x] Existe un checklist de auditoría de prompts documentado en docs/
   - [x] La revisión detecta al menos un no-op o una negación convertible a positivo en los slash commands actuales

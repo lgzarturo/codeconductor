@@ -1,0 +1,82 @@
+{
+  "id": "sc-mv1w1x9t-8x7b",
+  "taskId": "BC-028",
+  "agent": "reviewer",
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "contractVersion": "1.6.1",
+  "evaluator": "reviewer",
+  "criteria": [
+    {
+      "id": "acceptance",
+      "label": "Acceptance criteria met",
+      "weight": 0.3,
+      "score": 3,
+      "notes": "Reviewer: FR-001–005 covered by real Git, calculator and persistence regressions.",
+      "autoSuggested": false
+    },
+    {
+      "id": "minimal_diff",
+      "label": "Minimal diff (no scope creep)",
+      "weight": 0.2,
+      "score": 3,
+      "notes": "Reviewer: all changed source/test files match approved design including schema and ablation compatibility. Automatic scope finding includes pre-existing dirty workflow files and brace paths unsupported by existing parser.",
+      "autoSuggested": false
+    },
+    {
+      "id": "tests",
+      "label": "Tests present and passing",
+      "weight": 0.15,
+      "score": 3,
+      "notes": "Reviewer: runner RED registered; fresh GREEN covers 33 tests including exact verified-evidence score, Git parity, missing measurements and ablation.",
+      "autoSuggested": false
+    },
+    {
+      "id": "regressions",
+      "label": "No regressions introduced",
+      "weight": 0.15,
+      "score": 2,
+      "notes": "Reviewer: full suite 3767 pass, zero failures; final typecheck and lint pass.",
+      "autoSuggested": false
+    },
+    {
+      "id": "conventions",
+      "label": "Code follows project conventions",
+      "weight": 0.05,
+      "score": 2,
+      "notes": "Reviewer: existing Zod schemas, state persistence and stdlib Git execution retained.",
+      "autoSuggested": false
+    },
+    {
+      "id": "documentation",
+      "label": "Documentation updated if required",
+      "weight": 0.05,
+      "score": 2,
+      "notes": "Reviewer: approved design and delta specs document nullable JSON scores, compatibility and limitations.",
+      "autoSuggested": false
+    },
+    {
+      "id": "context_discipline",
+      "label": "Context discipline",
+      "weight": 0.05,
+      "score": 2,
+      "notes": "Reviewer: scoped candidate excludes unrelated pre-existing workspace changes.",
+      "autoSuggested": false
+    },
+    {
+      "id": "cc_gain",
+      "label": "Complexity diffusion (cc-gain)",
+      "weight": 0.05,
+      "score": 2,
+      "notes": "Reviewer manual assessment: no dependencies or speculative abstractions; necessary bug-fix compatibility only. This score does not assert positive automated complexity gain.",
+      "autoSuggested": false
+    }
+  ],
+  "weightedScore": 2.65,
+  "verdict": "PASS",
+  "findings": [
+    "Manual scoped review of sc-mv1w1x6o-fffy; see OpenSpec review.md. All pending criteria resolved with explicit reviewer scores and notes."
+  ],
+  "createdAt": "2026-10-10T04:22:46.193Z",
+  "backlogId": "BC-028",
+  "source": "review"
+}

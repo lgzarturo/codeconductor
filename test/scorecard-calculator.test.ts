@@ -101,3 +101,28 @@ describe('scorecard-calculator', () => {
     expect(record.criteria.length).toBe(8);
   });
 });
+
+describe('BC-028 unavailable measurements', () => {
+  test('null is preserved and blocks PASS despite a high weighted score', () => {
+    const criteria = createDefaultCriteria({
+      acceptance: { score: 3 },
+      tests: { score: null, unmeasured: true, notes: 'No measurement', autoSuggested: true },
+    });
+    expect(criteria.find((c) => c.id === 'tests')?.score).toBeNull();
+    expect(computeWeightedScore(criteria)).toBe(2);
+    expect(computeVerdict(criteria, 3)).toBe('REVISE');
+  });
+
+  test('manual scores resolve unmeasured criteria only with an explicit note', () => {
+    for (const notes of [undefined, '', '   ', 'Verified by reviewer']) {
+      const criteria = createDefaultCriteria({
+        tests: { score: 3, unmeasured: true, autoSuggested: false, notes },
+      });
+      expect(computeVerdict(criteria, 3)).toBe(notes?.trim() ? 'PASS' : 'REVISE');
+    }
+    const criteria = createDefaultCriteria({
+      tests: { score: 3, unmeasured: true, autoSuggested: true, notes: 'Automatic default' },
+    });
+    expect(computeVerdict(criteria, 3)).toBe('REVISE');
+  });
+});

@@ -5,6 +5,7 @@ import { loadConfig } from '../core/config/config-loader';
 import {
   buildScorecardRecord,
   createDefaultCriteria,
+  pendingCriteria,
 } from '../core/evaluation/scorecard-calculator';
 import {
   appendOutcome,
@@ -163,9 +164,11 @@ async function handleCreate(
         scopeFiles = parseScopeFiles(item.scope);
       }
     }
-    let hints = collectScorecardSignals(projectRoot, scopeFiles);
     const state = await loadOpenspecState(projectRoot);
     const backlogId = options.taskId?.startsWith('BC-') ? options.taskId : undefined;
+    const baseCommit = backlogId && state.success
+      ? state.data.itemBaseCommits?.[backlogId] : undefined;
+    let hints = collectScorecardSignals(projectRoot, scopeFiles, { baseCommit });
     const changePath =
       backlogId && state.success ? state.data.changePaths[backlogId] : undefined;
     if (changePath && !changePath.includes('/archive/')) {
@@ -198,6 +201,10 @@ async function handleCreate(
     }
     criteria = criteriaFromSignals(hints);
     findings = hints.findings;
+  }
+  const pending = pendingCriteria(criteria);
+  if (pending.length > 0) {
+    findings.push(`Unmeasured criteria requiring manual scores with notes: ${pending.join(', ')}`);
   }
 
   const id = generateEvalId('sc');

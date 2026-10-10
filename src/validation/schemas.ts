@@ -862,6 +862,7 @@ export const OpenspecStateSchema = z.object({
   lastScanAt: z.string().optional(),
   changePaths: z.record(z.string(), z.string()).optional().default({}),
   itemSnapshots: z.record(z.string(), z.string()).optional().default({}),
+  itemBaseCommits: z.record(z.string(), z.string()).optional(),
 });
 
 export const SpecAnalyzeFindingSchema = z.object({
@@ -1135,7 +1136,8 @@ export const ScorecardCriterionSchema = z.object({
   id: ScorecardCriterionIdSchema,
   label: z.string(),
   weight: z.number().min(0).max(1),
-  score: z.number().int().min(0).max(3),
+  score: z.number().int().min(0).max(3).nullable(),
+  unmeasured: z.boolean().optional(),
   notes: z.string().optional(),
   autoSuggested: z.boolean().optional(),
 });

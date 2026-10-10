@@ -4,9 +4,9 @@ Estado: plan aprobado por el usuario; implementación de los cinco bloques 1.7.
 
 ## Fuentes y precedencia
 
-- `research/codeconductor-mejoras-2026-10-09.md`: diagnóstico, detección e instalación.
-- `research/codeconductor-maquina-estados-2026-10-09.md`: diseño vigente de orquestación; reemplaza explícitamente el spike Kotlin.
-- `research/codeconductor-spike-orquestador-2026-10-09.md`: contexto histórico, no una instrucción de añadir un runtime Kotlin.
+- `research/codeconductor-improvements-2026-10-09.md`: diagnóstico, detección e instalación.
+- `research/codeconductor-state-machine-2026-10-09.md`: diseño vigente de orquestación; reemplaza explícitamente el spike Kotlin.
+- `research/codeconductor-orchestrator-spike-2026-10-09.md`: contexto histórico, no una instrucción de añadir un runtime Kotlin.
 
 Los documentos describen entregas distintas para 1.7, 1.8 y 2.0. Se propone
 empezar por los cinco PR de cimientos 1.7 del documento de máquina de estados.

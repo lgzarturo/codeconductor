@@ -20,6 +20,13 @@ contracts, task cards, and risk-based routing.
 > [docs/current-status.md](docs/current-status.md). This repository:
 > `bun run dev …` (not `npx`) while iterating.
 >
+> Changes after v1.6.1 are implemented, unreleased: runner-captured TDD,
+> persistent RED validation, OpenSpec completion fixes, shared skills,
+> safer hooks and Claude installation, atomic Goal DAG claims, native delta
+> specs, and scorecards that preserve unmeasured signals. See the
+> [post-v1.6.1 guide](docs/post-v1.6.1.md) for the exact commit range and
+> upgrade steps.
+>
 > Shipped in the 1.6.x stable line:
 >
 > - `npx cc-codeconductor setup --target <target> --yes` — onboarding flow
@@ -187,6 +194,13 @@ validate → scan → plan → status → next → start → done | block → ar
 Agent phases: validate-backlog → discover → design → **test** → implement →
 review. Test-before-implement is required whenever both phases apply.
 `/cc-tdd-cycle` enforces Red → Green → Refactor (`tester` then `implementer`).
+
+In the unreleased checkout, `tdd capture` runs and records RED/GREEN suites.
+When `BACKLOG.md` Global requires TDD, closing a test card validates and persists
+RED before implementation changes the candidate; GREEN must still match the
+current candidate. `done` preserves
+agent edits in `tasks.md`, and `archive` gates unchecked boxes. See
+[the delivery and evidence guide](docs/post-v1.6.1.md#entrega-openspec-y-evidencia-tdd).
 
 ### Receipt-Driven Development
 
@@ -692,7 +706,8 @@ npx cc-codeconductor odd handoff --id delivery-001 --output json
 ```
 
 Subcommands: `validate` / `scan` / `plan` / `analyze` / `status` / `next` /
-`start` / `done` / `block` / `archive`. `analyze` is read-only coverage
+`start` / `done` / `block` / `unblock` / `archive`, plus implemented, unreleased
+`sync` / `verify` gates. `analyze` is read-only coverage
 (FR/SC → tasks → tests). Planned changes use capability-scoped delta specs;
 archive synchronizes validated deltas into durable specs before filing the
 change. Illegal status transitions fail closed. See

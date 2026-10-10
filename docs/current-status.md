@@ -28,6 +28,24 @@ entry does not by itself mean that version was published.
 | Kotlin LSP binary download                                                                                 | disabled pending pinned URL + SHA-256 | no                        |
 | Policy compiler / uniform target enforcement                                                               | planned                               | no                        |
 
+## Changes after v1.6.1
+
+The [post-v1.6.1 guide](post-v1.6.1.md) covers `v1.6.1..3e5a553`.
+These additions and behavior changes are implemented, unreleased; existing
+commands in the stable matrix do not imply their newer behavior was published.
+
+| Capability or adjustment | Repository status | Available in published 1.6.1 |
+| --- | --- | --- |
+| Node-compatible compile/TDD execution; read-only `openspec next` | implemented, unreleased | no |
+| `tdd capture`; persisted RED validation; separate RED/GREEN gates | implemented, unreleased | no |
+| Preserve `tasks.md` edits, mark acceptance by card, gate unchecked archive boxes | implemented, unreleased | no |
+| 14 additional canonical shared skills (BC-026) | implemented, unreleased | no |
+| Claude settings merge and reduced preset permissions | implemented, unreleased | no |
+| Installed hook runner resolution, opt-in fail-closed behavior, doctor probe | implemented, unreleased | no |
+| Atomic Goal DAG claims, process locks, priorities and dependency blocking | implemented, unreleased | no |
+| Named requirements and RENAMED delta specs | implemented, unreleased | no |
+| Item base commits and unmeasured scorecard criteria | implemented, unreleased | no |
+
 ## Harness standard
 
 Skill and command frontmatter, cross-target invocation syntax, and how to add a
@@ -50,7 +68,8 @@ removes an older version's directory).
 
 ## Release documentation
 
-The package and operational documentation are synchronized at **v1.6.1**.
+The package version remains **v1.6.1**. Operational documentation also describes
+the newer checkout behavior, explicitly marked as unreleased.
 Historical release notes remain available alongside the
 [CHANGELOG.md](../CHANGELOG.md) release history.
 

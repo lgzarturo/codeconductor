@@ -31,7 +31,19 @@ until the policy compiler and target renderers exist.
 ## Agent Orchestration
 
 CCEP and slash-command profiles define operational routing and confirmation
-gates. Product OS goal orchestration is implemented-unreleased.
+gates. Product OS goal orchestration is shipped; the process locks, atomic
+claims, priorities, and dependency-block propagation added after v1.6.1 are
+implemented, unreleased. They coordinate task state; the target runner still
+executes agent work. A reducer, transactional queue/event log, and additional
+parallel scheduling remain outside the delivered foundations.
+
+## Evidence portability
+
+The unreleased TDD flow preserves RED after test-card completion, while GREEN
+requires a current receipt. A clean clone must retain `tdd-validations/`,
+`evidence/`, and `rdd-receipts/` under `.codeconductor/`. Previously closed
+test cards do not gain validated RED records retroactively. See the
+[upgrade guide](post-v1.6.1.md#actualización-de-entregas-existentes).
 
 ## Evaluation
 

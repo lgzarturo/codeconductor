@@ -1,0 +1,68 @@
+{
+  "id": "ev-rdd-DOCS-post-v161-1791609115718",
+  "source": "cc rdd",
+  "type": "rdd",
+  "timestamp": "2026-10-10T05:11:55.718Z",
+  "relatedTask": "DOCS-post-v161",
+  "confidence": 0.9,
+  "summary": "RDD review receipt captured",
+  "data": {
+    "rddReceipt": {
+      "version": 1,
+      "taskId": "DOCS-post-v161",
+      "phase": "review",
+      "paths": [
+        {
+          "path": "CHANGELOG.md",
+          "hash": "5568accb9caa91bcd4dbca3e4ddf26f1cfc4bec3236a096064b2b9274d189cc0"
+        },
+        {
+          "path": "docs/agent-scorecard.md",
+          "hash": "890e9f6957ebda53461519381402484845ebed573a6d70d69a470897f34f7dbe"
+        },
+        {
+          "path": "docs/concepts/harness.md",
+          "hash": "8d2a6bbc875c1d922e7239a64681b2ed90c723a30ab8965960882c5e3840ed48"
+        },
+        {
+          "path": "docs/current-limitations.md",
+          "hash": "8abe01dfb64e8e57b86eb7cfcb18f3b1fcf4b071172558726700f0b849d7aa56"
+        },
+        {
+          "path": "docs/current-status.md",
+          "hash": "bace07a34b74ff9673a3005460f6c9bc80edb24a471c5f567b72858e55c3e3ca"
+        },
+        {
+          "path": "docs/harness-spec.md",
+          "hash": "2528df3738bd23f0da1eefd461391cf6d12d8a75e6d8792c6669cd1b4603b80e"
+        },
+        {
+          "path": "docs/hooks.md",
+          "hash": "b18541015c0a1b381a5b86a48326267196ff90e12ce51a6c1f039a0f2915d1c6"
+        },
+        {
+          "path": "docs/post-v1.6.1.md",
+          "hash": "9e917d4459d60b58096c087944ea87a2c76ac66fbaa4a2d0887ec47ab6e5947e"
+        },
+        {
+          "path": "docs/SDD.md",
+          "hash": "2153ac4437e77646c746557bd66dd2b7c14e4dce119aadbb40451fb2a2665714"
+        },
+        {
+          "path": "docs/usage-cli.md",
+          "hash": "cff74da2579a26282213e87a04d0bba4bd7d6cbdb467fe4407b2f3506638eeb5"
+        },
+        {
+          "path": "README.md",
+          "hash": "d4e1f5f2ed1373b4a846ecd76e9e7eade3c8e78c5666f6b2c117e00b8c8677de"
+        }
+      ],
+      "coverage": "paths",
+      "manifestHash": "495059ed3c42e957d6215a79fa6a7af9f2ead3905730e96fb250e436cf8c0155",
+      "command": "Documentation review; typecheck passed; 3767 tests passed; local Markdown links verified",
+      "outcome": "passed",
+      "capturedAt": "2026-10-10T05:11:55.717Z",
+      "nonce": "eaa0f7e0c59f4a001199b97df3ea5b51"
+    }
+  }
+}

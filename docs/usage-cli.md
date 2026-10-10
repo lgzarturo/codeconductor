@@ -302,6 +302,21 @@ evidence. With `Review required: yes`, `archive` needs a PASS scorecard.
 
 See [`cc-commands.md`](cc-commands.md) for the full subcommand table.
 
+### Post-v1.6.1 checkout behavior (unreleased)
+
+Use `bun run dev` to exercise these changes locally. `tdd capture --task
+<cardId> --phase red|green --command "<test command>"` executes the suite and
+stores evidence for `done`. When `BACKLOG.md` Global requires TDD, closing the
+test card persists validated RED and implementation needs current GREEN.
+`openspec next` is a read-only query,
+`done` preserves agent edits in `tasks.md`, and archive blocks unchecked boxes
+unless `--allow-unchecked` is explicitly used.
+
+Named requirements and RENAMED delta specs extend the FR/SC format.
+First `start` records an item base commit for scorecard diffs; unmeasured
+criteria remain pending. See [the post-v1.6.1 guide](post-v1.6.1.md) for the
+complete commands, commit inventory, and upgrade steps.
+
 ---
 
 ## Global Options

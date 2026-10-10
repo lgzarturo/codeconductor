@@ -10,6 +10,19 @@ This document describes what is enforced today and validated by tests. Where a
 section describes something not yet implemented, it says so explicitly —
 CCHS v1 is a live spec, not a changelog of a single migration.
 
+## Post-v1.6.1 maintenance
+
+BC-026 consolidates 14 additional stack/workflow skills under `skills/` and
+`src/presets/shared-skills.yml`. Edit the canonical source and run
+`bun run sync:skills`; keep target-specific copies outside that manifest
+independently maintained. This is source consolidation, not the addition of
+14 new workflows. The [post-v1.6.1 guide](post-v1.6.1.md) lists the skills and
+documents the unreleased installation, hook, and evidence changes.
+
+Consumer skill/command/hook guidance uses `npx cc-codeconductor`. Development
+of this repository uses `bun run dev`. Generated skills must preserve that
+distinction; `test/unit/presets/consumer-cli-invocation.test.ts` checks it.
+
 ## 1. Skill frontmatter
 
 Enforced by `SkillFrontmatterSchema` (`src/validation/schemas.ts`) and

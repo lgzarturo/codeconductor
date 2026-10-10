@@ -103,7 +103,9 @@ The pipeline enforces test-first mechanically:
 
 This 8-phase pipeline is **library-only**. Shipped delivery is CCEP slash
 commands plus `openspec validate` / `analyze` / `plan` / `done` / `archive`.
-Specs use `FR-###` / `SC-###` and Given/When/Then. Policy lives in
+Specs use `FR-###` / `SC-###` and Given/When/Then. The unreleased checkout also
+accepts named requirements without FR IDs and scenarios with WHEN/THEN.
+Policy lives in
 `BACKLOG.md` `## Global` and `AGENTS.md` — not a second constitution file.
 
 ### Native OpenSpec change contract
@@ -112,10 +114,21 @@ CodeConductor owns this contract; it does not install or require the external
 `@fission-ai/openspec` package. `openspec plan` creates a change-local
 `change.yaml` manifest and delta specs under
 `openspec/changes/<change>/specs/<capability>/spec.md`. A delta may contain
-`ADDED`, `MODIFIED`, and `REMOVED` requirements. On `openspec archive`, the CLI
+`ADDED`, `MODIFIED`, and `REMOVED` requirements; the unreleased checkout also
+supports `RENAMED` with FROM/TO. Named requirements receive stable
+`req:<capability>/<slug>` identifiers; existing FR/SC IDs remain valid.
+REMOVED/RENAMED do not need artificial scenarios. A rename with a missing
+source or conflicting destination is rejected. On `openspec archive`, the CLI
 validates and synchronizes every delta to `openspec/specs/` before moving the
 change to the archive; invalid or conflicting requirements leave durable specs
 unchanged.
+
+After v1.6.1, `tdd capture` provides CLI access to runner-captured evidence.
+When `BACKLOG.md` Global requires TDD, `done` on a test card persists validated
+RED before implementation; implement cards need current GREEN. Completion
+preserves manual `tasks.md` edits and
+archive checks remaining boxes. The [post-v1.6.1 guide](post-v1.6.1.md)
+documents commands, portability, and migration of older change folders.
 
 CCEP compiles OpenSpec prompts with a phase-specific context package. It passes
 the relevant artifact paths and only the knowledge needed by `discover`,

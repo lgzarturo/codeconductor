@@ -1,3 +1,16 @@
+---
+description: "Product council agent. Focus: requirements, ux, business-value. Context: prompt-only. Model hint: balanced."
+mode: subagent
+permission:
+  read: deny
+  edit: deny
+  bash: deny
+  glob: deny
+  grep: deny
+  webfetch: deny
+  websearch: deny
+---
+
 # Product Agent
 
 ## Role

@@ -2,14 +2,14 @@
 
 This file is the canonical shipped/planned matrix for the repository.
 
-**Published package version:** `1.6.1` — current stable line: `1.6.x` (from
+**Published package version:** `1.7.0` — current stable line: `1.7.x` (from
 `package.json`)
 
 Code present in the repository but assigned to a later release is
 **implemented, unreleased**. A release-note filename or historical roadmap
 entry does not by itself mean that version was published.
 
-| Capability                                                                                                 | Repository status                     | Available in stable 1.6.x |
+| Capability                                                                                                 | Repository status                     | Available in stable 1.7.x |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------- |
 | Core CLI (`setup`, `init`, `detect`, `install`, `version`, `status`, `doctor`, `update`, `migrate`)          | shipped                               | yes                       |
 | Preset and council installation (8 targets: agy, claude, codex, cursor, gemini, muse, opencode, pi)        | shipped                               | partial (muse preset unreleased; council N/A on muse) |

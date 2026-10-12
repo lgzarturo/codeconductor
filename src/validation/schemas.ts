@@ -1,7 +1,7 @@
 import { isAbsolute } from 'node:path';
 import { z } from 'zod';
 import { INDIVIDUAL_TARGETS, RUNNER_TARGETS } from '../core/runner/runner-target';
-import { ProjectScopeProfileSchema } from './scoped-context-schemas';
+import { ProjectScopeProfileSchema, ScopedContextSchema } from './scoped-context-schemas';
 
 /**
  * Council agent spec schema
@@ -1018,6 +1018,7 @@ export const ExecutionContextSchema = z.object({
   }),
   currentPhase: z.string().optional(),
   outputSchema: z.string(),
+  scopedContext: ScopedContextSchema.optional(),
 });
 
 export const PlannerOutputSchema = z.object({

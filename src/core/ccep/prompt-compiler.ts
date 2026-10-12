@@ -8,6 +8,7 @@ export interface PromptLayer {
     | 'system'
     | 'agent'
     | 'policies'
+    | 'rules'
     | 'knowledge'
     | 'ast'
     | 'task'
@@ -201,6 +202,12 @@ export function compilePrompt(options: {
     ? buildOpenspecPhaseContext(context, phase).knowledge
     : scopeKnowledgeForRole(context.knowledge, role);
 
+  const scoped = context.scopedContext;
+  const blocking = scoped?.manifest.diagnostics.filter((d) => d.severity === 'blocking') ?? [];
+  if (blocking.length > 0) {
+    throw new Error(`Scoped context is blocked: ${[...new Set(blocking.map((d) => d.code))].join(', ')}`);
+  }
+
   const layers: PromptLayer[] = [
     { name: 'system', content: buildSystemLayer() },
     { name: 'agent', content: buildAgentLayer(role, phase, schemaName) },
@@ -208,6 +215,18 @@ export function compilePrompt(options: {
       name: 'policies',
       content: JSON.stringify({ ...context.policies, promptVersion }, null, 2),
     },
+    ...(scoped
+      ? [
+          {
+            name: 'rules' as const,
+            content: JSON.stringify({
+              manifest: scoped.manifest.hash,
+              view: scoped.view.hash,
+              rules: scoped.view.rules,
+            }),
+          },
+        ]
+      : []),
     { name: 'knowledge', content: JSON.stringify(knowledge, null, 2) },
     { name: 'ast', content: JSON.stringify(context.ast, null, 2) },
     { name: 'task', content: buildTaskLayer(context, phase) },

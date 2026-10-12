@@ -14,6 +14,7 @@ import { productGraphPath } from '../product-graph/paths';
 import { queryNodes } from '../product-graph/graph-store';
 import { isProductGraphDisabled } from '../evaluation/harness-catalog';
 import { loadOpenspecState } from '../openspec/openspec-state';
+import { resolveScopedContext } from './scoped-rules';
 
 const DEFAULT_POLICIES: ExecutionContextInput['policies'] = {
   architecture: 'modular',
@@ -88,6 +89,7 @@ export async function resolveContext(
   envelope: CommandEnvelopeInput,
   profile: WorkflowProfileInput,
   projectRoot: string,
+  scope?: { readonly files: readonly string[]; readonly role: string },
 ): Promise<ExecutionContextInput> {
   const ast = await resolveAstSource(projectRoot);
   const knowledge = await loadProductKnowledge(projectRoot);
@@ -112,6 +114,18 @@ export async function resolveContext(
     }
   }
 
+  let scopedContext: ExecutionContextInput['scopedContext'];
+  if (scope && scope.files.length > 0) {
+    const detected = await detectProject(projectRoot);
+    const languagesOf = (file: string): readonly string[] => {
+      const owned = (detected.scopes ?? []).filter(
+        (s) => s.root === '.' || file === s.root || file.startsWith(`${s.root}/`),
+      );
+      return owned.length > 0 ? [...new Set(owned.map((s) => s.language))] : detected.languages;
+    };
+    scopedContext = (await resolveScopedContext(projectRoot, { ...scope, languagesOf })).scopedContext;
+  }
+
   const context: ExecutionContextInput = {
     envelope,
     profile,
@@ -129,6 +143,7 @@ export async function resolveContext(
     ast,
     policies: DEFAULT_POLICIES,
     outputSchema: firstPhase?.outputSchema ?? profile.intakeSchema ?? 'agent-output',
+    ...(scopedContext ? { scopedContext } : {}),
   };
 
   return validateExecutionContext(context);

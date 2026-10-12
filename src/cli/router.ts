@@ -608,6 +608,7 @@ export async function routeCommand(
         executionId: options['execution-id'] as string | undefined,
         taskId: options['task-id'] as string | undefined,
         contextStrategy: options['context-strategy'] as string | undefined,
+        files: options.files as string | undefined,
         config: options.config as string | undefined,
         rest: validateRest,
         panel: options.panel === true || options.panel === 'true',

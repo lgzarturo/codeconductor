@@ -135,6 +135,7 @@ describe('ContextManifestSchema', () => {
         depth: 2,
         sourcePath: '.codeconductor/rules/service.yml',
         contentHash: 'a'.repeat(64),
+        appliesTo: ['crates/service/src/lib.rs'],
       },
     ],
     overrides: [],
@@ -152,6 +153,14 @@ describe('ContextManifestSchema', () => {
   test('rechaza regla efectiva sin hash de contenido sha256', () => {
     const m = manifest();
     (m.rules[0] as Record<string, unknown>).contentHash = 'nothex';
+    expect(ContextManifestSchema.safeParse(m).success).toBe(false);
+  });
+
+  test('cada regla efectiva declara al menos un archivo al que aplica', () => {
+    const m = manifest();
+    (m.rules[0] as Record<string, unknown>).appliesTo = [];
+    expect(ContextManifestSchema.safeParse(m).success).toBe(false);
+    delete (m.rules[0] as Record<string, unknown>).appliesTo;
     expect(ContextManifestSchema.safeParse(m).success).toBe(false);
   });
 

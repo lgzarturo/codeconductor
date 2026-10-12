@@ -117,6 +117,7 @@ export const ContextManifestSchema = z
           depth: z.number().int().min(0),
           sourcePath: NonEmpty,
           contentHash: Sha256,
+          appliesTo: z.array(ContainedRelPath).min(1),
         })
         .strict(),
     ),
@@ -135,6 +136,27 @@ export const ContextManifestSchema = z
       .object({ maxBytes: z.number().int().min(0), usedBytes: z.number().int().min(0) })
       .strict(),
     hash: Sha256,
+  })
+  .strict();
+
+/** Compact, role-filtered rules as they reach the prompt; `hash` covers exactly this view. */
+export const RuleViewSchema = z
+  .object({
+    id: NonEmpty,
+    kind: RuleKindSchema,
+    trigger: NonEmpty,
+    action: NonEmpty,
+    exceptions: NonEmpty,
+    verify: z.array(NonEmpty),
+    appliesTo: z.array(ContainedRelPath).min(1),
+    source: NonEmpty,
+  })
+  .strict();
+
+export const ScopedContextSchema = z
+  .object({
+    manifest: ContextManifestSchema,
+    view: z.object({ hash: Sha256, rules: z.array(RuleViewSchema) }).strict(),
   })
   .strict();
 
@@ -176,4 +198,5 @@ export type ScopedRule = z.infer<typeof ScopedRuleSchema>;
 export type VerificationRecipe = z.infer<typeof VerificationRecipeSchema>;
 export type RecipeStatus = z.infer<typeof RecipeStatusSchema>;
 export type ContextManifest = z.infer<typeof ContextManifestSchema>;
+export type ScopedContext = z.infer<typeof ScopedContextSchema>;
 export type ProjectScopeProfile = z.infer<typeof ProjectScopeProfileSchema>;

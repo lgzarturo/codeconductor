@@ -1,6 +1,7 @@
 import { isAbsolute } from 'node:path';
 import { z } from 'zod';
 import { INDIVIDUAL_TARGETS, RUNNER_TARGETS } from '../core/runner/runner-target';
+import { ProjectScopeProfileSchema } from './scoped-context-schemas';
 
 /**
  * Council agent spec schema
@@ -49,6 +50,7 @@ export const ProjectProfileSchema = z.object({
   frameworks: z.array(z.string()),
   signals: z.array(z.string()),
   confidence: z.enum(['low', 'medium', 'high']),
+  scopes: z.array(ProjectScopeProfileSchema).optional(),
 });
 
 /**

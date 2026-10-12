@@ -28,8 +28,9 @@ export async function detectMonorepo(rootDir: string): Promise<string[]> {
 
   if (await fileExists(rootDir, 'Cargo.toml')) {
     try {
-      const content = await readFile(join(rootDir, 'Cargo.toml'), 'utf-8');
-      if (content.includes('[workspace]')) {
+      const { parse } = await import('smol-toml');
+      const doc = parse(await readFile(join(rootDir, 'Cargo.toml'), 'utf-8'));
+      if (typeof doc.workspace === 'object' && doc.workspace !== null) {
         signals.push('Cargo.toml-workspace');
       }
     } catch {}

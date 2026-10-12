@@ -41,6 +41,7 @@ export async function detectCommand(
           frameworks: profile.frameworks,
           signals: profile.signals,
           confidence: profile.confidence,
+          ...(profile.scopes ? { scopes: profile.scopes } : {}),
         },
         recommendedPresets: getRecommendedPresets(profile),
       },

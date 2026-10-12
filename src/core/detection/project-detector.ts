@@ -12,6 +12,8 @@ import {
   detectGenericFrontend,
   detectAndroid,
 } from './detectors';
+import { detectRust } from './detectors/rust';
+import type { ProjectScopeProfile } from '../../validation/scoped-context-schemas';
 
 /**
  * Project profile interface
@@ -26,6 +28,8 @@ export interface ProjectProfile {
   readonly frameworks: readonly string[];
   readonly signals: readonly string[];
   readonly confidence: DetectionConfidence;
+  /** Per-package profiles with evidence; additive, absent when nothing scoped was detected. */
+  readonly scopes?: readonly ProjectScopeProfile[];
 }
 
 /**
@@ -153,6 +157,22 @@ export async function detectProject(rootDir: string): Promise<ProjectProfile> {
     }
   }
 
+  // Rust: per-package scopes from parsed Cargo manifests. Only a root-level
+  // scope makes the whole project Rust; a nested example does not.
+  const rust = await detectRust(rootDir);
+  const scopes = rust.scopes.filter((scope) => scope.status !== 'indicative' || scope.root === '.');
+  for (const scope of scopes) {
+    for (const pkg of scope.packages) signals.push(pkg.manifest);
+  }
+  const rootLevel = scopes.filter(
+    (scope) => scope.root === '.' || scope.packages.some((pkg) => pkg.workspaceRoot === '.'),
+  );
+  if (rootLevel.length > 0) {
+    languages.push('rust');
+    runtimes.push('rust');
+    if (rootLevel.some((scope) => scope.status === 'confirmed')) packageManagers.push('cargo');
+  }
+
   // Check for Generic Frontend
   const genericFrontendSignals = await detectGenericFrontend(rootDir);
   if (
@@ -180,6 +200,7 @@ export async function detectProject(rootDir: string): Promise<ProjectProfile> {
       runtimes: [...new Set(runtimes)],
       frameworks: [...new Set(frameworks)],
     }),
+    ...(scopes.length > 0 ? { scopes } : {}),
   };
 }
 

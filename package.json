@@ -68,7 +68,8 @@
   },
   "dependencies": {
     "zod": "^3.23.8",
-    "yaml": "^2.4.5"
+    "yaml": "^2.4.5",
+    "smol-toml": "^1.9.1"
   },
   "devDependencies": {
     "@types/bun": "^1.1.8",

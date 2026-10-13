@@ -223,6 +223,7 @@ export function compilePrompt(options: {
               manifest: scoped.manifest.hash,
               view: scoped.view.hash,
               rules: scoped.view.rules,
+              ...(scoped.manifest.skills.length > 0 ? { skills: scoped.manifest.skills.map((s) => s.id) } : {}),
             }),
           },
         ]

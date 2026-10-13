@@ -317,7 +317,7 @@ export const DEFAULT_RULES_BUDGET_BYTES = 16384;
 
 /**
  * Loads, resolves and budgets the rules for a set of files. Returns no context
- * only when the project has no rules at all; every other problem is a blocking diagnostic.
+ * only when the project has no rules and no selected skills; every other problem is a blocking diagnostic.
  */
 export async function resolveScopedContext(
   projectRoot: string,
@@ -326,10 +326,15 @@ export async function resolveScopedContext(
     readonly role: string;
     readonly languagesOf?: (file: string) => readonly string[];
     readonly maxBytes?: number;
+    readonly skills?: readonly { readonly id: string; readonly version: string }[];
+    readonly skillDiagnostics?: readonly RuleDiagnostic[];
   },
 ): Promise<{ scopedContext?: ScopedContext; blocked: boolean; diagnostics: RuleDiagnostic[] }> {
   const loaded = await loadRuleSources(projectRoot);
-  if (loaded.sources.length === 0 && loaded.diagnostics.length === 0) return { blocked: false, diagnostics: [] };
+  const skills = input.skills ?? [];
+  if (loaded.sources.length === 0 && loaded.diagnostics.length === 0 && skills.length === 0 && !input.skillDiagnostics?.length) {
+    return { blocked: false, diagnostics: [] };
+  }
 
   const resolved = resolveScopedRules({ ...input, sources: loaded.sources });
   const rules = resolved.effective.map((e) => ({
@@ -350,6 +355,7 @@ export async function resolveScopedContext(
   const diagnostics: RuleDiagnostic[] = [
     ...loaded.diagnostics,
     ...resolved.diagnostics,
+    ...(input.skillDiagnostics ?? []),
     ...assembly.blocking.map((b) => ({
       code: b.code,
       severity: 'blocking' as const,
@@ -365,6 +371,7 @@ export async function resolveScopedContext(
     resolution,
     files: input.files,
     role: input.role,
+    skills,
     omittedReferences: await checkReferences(projectRoot, resolved.effective),
     budget: { maxBytes, usedBytes: assembly.contextBytes },
   });

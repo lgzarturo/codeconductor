@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -147,5 +148,38 @@ describe('ccep compile --files (e2e)', () => {
     expect(json.errors.join(' ')).toContain('rule_conflict');
     expect(json.errors.join(' ')).toContain('.codeconductor/rules/a.yml, .codeconductor/rules/b.yml');
     expect(json).not.toHaveProperty('prompt');
+  });
+});
+
+describe('skills seleccionadas en ccep compile --files', () => {
+  const rustProject = async () => {
+    await put('Cargo.toml', '[workspace]\nmembers = ["crates/*"]\n');
+    await put('crates/svc/Cargo.toml', '[package]\nname = "svc"\nversion = "0.1.0"\nedition = "2021"\n[dependencies]\ntokio = "1"\n');
+    await put('crates/svc/src/lib.rs', '');
+  };
+  const run = (extra: string[]) =>
+    invokeCli(['ccep', 'compile', '--command', 'feature', '--phase', 'intake', '--role', 'task-coach', ...extra, 'Add loyalty', '--output=json'], root);
+
+  test('proyecto Rust con tokio: manifest.skills con versión = sha256 del SKILL.md publicado y skills en la capa', async () => {
+    await rustProject();
+    const envelope = parseCommand('feature', 'x', root);
+    const context = await resolveContext(envelope, loadWorkflowProfile('feature'), root, {
+      files: ['crates/svc/src/lib.rs'],
+      role: 'implementer',
+    });
+    const skills = context.scopedContext!.manifest.skills;
+    expect(skills.map((s) => s.id)).toEqual(['rust-async', 'rust-engineering']);
+    for (const s of skills) {
+      const published = readFileSync(join(import.meta.dir, '../../../../presets/claude/skills', s.id, 'SKILL.md'));
+      expect(s.version).toBe(createHash('sha256').update(published).digest('hex'));
+    }
+    const json = JSON.parse((await run(['--files', 'crates/svc/src/lib.rs'])).stdout);
+    const layer = JSON.parse(json.layers.find((l: { name: string }) => l.name === 'rules').content);
+    expect(layer.skills).toEqual(['rust-async', 'rust-engineering']);
+  });
+
+  test('proyecto sin Rust y sin reglas: no hay capa rules', async () => {
+    const json = JSON.parse((await run(['--files', 'src/a.ts'])).stdout);
+    expect(json.layers.map((l: { name: string }) => l.name)).not.toContain('rules');
   });
 });

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { spawnSync } from 'node:child_process';
@@ -11,6 +12,7 @@ import {
   validateSkillFrontmatterFiles,
   detectComplementaryTools,
 } from '../core/presets/update-checker';
+import { inspectClaudeHookCommandPaths } from '../core/presets/hook-command-paths';
 import { loadManifest, loadModelConfig, loadTargetCapabilities } from '../core/presets/manifest-loader';
 import { INDIVIDUAL_TARGETS } from '../core/runner/runner-target';
 import type { OutputMode } from '../utils/logger';
@@ -18,6 +20,8 @@ import type { OutputMode } from '../utils/logger';
 export interface DoctorOptions {
   readonly output: OutputMode;
   readonly projectRoot: string;
+  /** Override home directory when inspecting global Claude settings (tests). */
+  readonly homeDir?: string;
 }
 
 /**
@@ -27,6 +31,7 @@ export async function doctorCommand(
   options: DoctorOptions
 ): Promise<{ code: number; data?: unknown }> {
   const { projectRoot, output } = options;
+  const home = options.homeDir ?? homedir();
 
   const checks: { name: string; status: 'pass' | 'fail' | 'warn' | 'info'; message: string }[] = [];
 
@@ -98,6 +103,54 @@ export async function doctorCommand(
         ? 'CodeConductor hook runner is operational.'
         : 'Hook guard unavailable. Install cc-codeconductor locally; CC_DEV=1 is reserved for trusted development. CC_HOOK_FAIL_CLOSED=1 denies pre-tool when unavailable.',
     });
+
+    // Global Claude hooks must use absolute script paths. Relative
+    // `node .claude/hooks/...` commands resolve against the process cwd and
+    // throw MODULE_NOT_FOUND outside the home directory — the guard never runs.
+    // Doctor is detect-only (no --fix); repair with `migrate --global` or
+    // `install preset --target claude --global --force`.
+    const globalClaudeSettingsPath = join(home, '.claude', 'settings.json');
+    try {
+      const globalSettingsRaw = readFileSync(globalClaudeSettingsPath, 'utf-8');
+      const globalSettings = JSON.parse(globalSettingsRaw) as Record<string, unknown>;
+      const hookPathIssues = inspectClaudeHookCommandPaths(globalSettings, { requireAbsolute: true });
+      if (hookPathIssues.length === 0) {
+        checks.push({
+          name: 'global-hook-paths',
+          status: 'pass',
+          message: 'Global Claude hook commands use absolute, existing script paths.',
+        });
+      } else {
+        const relativeCount = hookPathIssues.filter((i) => i.reason === 'relative').length;
+        const missingCount = hookPathIssues.filter((i) => i.reason === 'missing').length;
+        const details: string[] = [];
+        if (relativeCount > 0) details.push(`${relativeCount} relative`);
+        if (missingCount > 0) details.push(`${missingCount} missing`);
+        checks.push({
+          name: 'global-hook-paths',
+          status: 'warn',
+          message:
+            `Global Claude hooks have ${details.join(' and ')} command path(s) in ${globalClaudeSettingsPath}. ` +
+            'Repair with `npx cc-codeconductor migrate --global` or reinstall with ' +
+            '`npx cc-codeconductor install preset --target claude --global --force`.',
+        });
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        checks.push({
+          name: 'global-hook-paths',
+          status: 'info',
+          message: 'No global Claude settings.json found (optional).',
+        });
+      } else {
+        checks.push({
+          name: 'global-hook-paths',
+          status: 'warn',
+          message: `Could not inspect global Claude hook paths: ${String(error)}`,
+        });
+      }
+    }
+
     const runnerDirs = ['.opencode', '.claude', '.codex'];
     for (const dir of runnerDirs) {
       try {

@@ -1,8 +1,12 @@
 import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import type { OutputMode } from '../utils/logger';
 import { CURRENT_PRESET_VERSION } from '../core/presets/preset-resolver';
+import {
+  rewriteClaudeHookCommandsForGlobal,
+  type HookCommandChange,
+} from '../core/presets/hook-command-paths';
 import { getTargetInstallationPath, isTargetInstalled } from '../core/presets/update-checker';
 import { INDIVIDUAL_TARGETS, type IndividualRunnerTarget } from '../core/runner/runner-target';
 
@@ -137,8 +141,7 @@ export async function findOrphanedPromptVersions(
 }
 
 /**
- * `cc migrate` — repairs two classes of leftover artifact a plain reinstall
- * can't fix on its own:
+ * `cc migrate` — repairs leftover artifacts a plain reinstall can't fix alone:
  *
  * 1. A Claude Code settings.json left over from before A6/the `Write()` ->
  *    `Edit()` fix (install-time merges can't remove a bad rule already on
@@ -147,9 +150,13 @@ export async function findOrphanedPromptVersions(
  *    project's manifest pointed at the current prompts version
  *    (`copyFromManifest` only adds/overwrites the current version's files,
  *    it never removes an older version's directory).
+ * 3. With `--global`, relative Claude hook commands
+ *    (`node .claude/hooks/invoke-hook.cjs …`) rewritten to absolute paths under
+ *    the install home so the guard runs from any cwd.
  *
  * A missing settings.json is not an error — many projects (Gemini/Cursor-only
  * ones, for instance) never had one. Only invalid JSON in an existing file is.
+ * Doctor detects broken global hook paths but has no `--fix` mode; use migrate.
  */
 export async function migrateCommand(
   options: MigrateOptions
@@ -175,6 +182,7 @@ export async function migrateCommand(
 
   let rewritten: readonly RuleChange[] = [];
   let duplicatesRemoved: readonly string[] = [];
+  let hookPathRewrites: readonly HookCommandChange[] = [];
   let settingsChanged = false;
 
   if (raw !== null) {
@@ -195,10 +203,29 @@ export async function migrateCommand(
     const migration = migratePermissionRules(settings);
     rewritten = migration.changes;
     duplicatesRemoved = migration.duplicatesRemoved;
-    settingsChanged = migration.changes.length > 0 || migration.duplicatesRemoved.length > 0;
+    let nextSettings = migration.settings;
+
+    // Global settings left over from before absolute hook-path installs still
+    // carry `node .claude/hooks/...`. Rewrite them in place; doctor detects
+    // the same issue but has no --fix mode.
+    if (options.global) {
+      // settings.json lives at <base>/.claude/settings.json — base is home, or
+      // the parent of `.claude` when `--file` points at a non-default path.
+      const hookBaseDir = options.file
+        ? resolve(dirname(settingsPath), '..')
+        : homedir();
+      const hookRewrite = rewriteClaudeHookCommandsForGlobal(nextSettings, hookBaseDir);
+      hookPathRewrites = hookRewrite.changes;
+      nextSettings = hookRewrite.settings;
+    }
+
+    settingsChanged =
+      migration.changes.length > 0
+      || migration.duplicatesRemoved.length > 0
+      || hookPathRewrites.length > 0;
 
     if (settingsChanged && !options.dryRun) {
-      await writeFile(settingsPath, `${JSON.stringify(migration.settings, null, 2)}\n`, 'utf-8');
+      await writeFile(settingsPath, `${JSON.stringify(nextSettings, null, 2)}\n`, 'utf-8');
     }
   }
 
@@ -219,7 +246,7 @@ export async function migrateCommand(
     message =
       raw === null
         ? 'No settings.json found and no orphaned prompt version directories found — nothing to migrate.'
-        : 'No Write(path) permission rules and no orphaned prompt version directories found — nothing to migrate.';
+        : 'No Write(path) permission rules, no relative global hook paths, and no orphaned prompt version directories found — nothing to migrate.';
   }
 
   return {
@@ -233,6 +260,7 @@ export async function migrateCommand(
       dryRun: options.dryRun,
       rewritten: rewritten.map((c) => ({ list: c.list, from: c.from, to: c.to })),
       duplicatesRemoved,
+      hookPathRewrites: hookPathRewrites.map((c) => ({ from: c.from, to: c.to })),
       orphanedPromptVersions: orphanedPromptVersions.map((d) => ({
         target: d.target,
         path: d.path,

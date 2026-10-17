@@ -5,8 +5,12 @@ import { join, resolve } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { parse } from 'yaml';
 import { evaluateCommand, evaluateRoleAccess, formatHookOutput, parseAgyPayload } from '../src/core/hooks/hook-runner';
-import { loadModelConfig } from '../src/core/presets/manifest-loader';
-import { renderTemplate } from '../src/core/presets/file-copier';
+import { loadManifest, loadModelConfig } from '../src/core/presets/manifest-loader';
+import { copyFromManifest, renderTemplate } from '../src/core/presets/file-copier';
+import {
+  isRelativeClaudeHookCommand,
+  parseClaudeHookCommand,
+} from '../src/core/presets/hook-command-paths';
 
 const ROOT = resolve(import.meta.dir, '..');
 const HOOK = join(ROOT, 'presets/shared/invoke-hook.cjs');
@@ -114,6 +118,107 @@ describe('hook host contracts and portability', () => {
       } finally { rmSync(root, { recursive: true, force: true }); }
     });
   }
+});
+
+describe('global Claude hook path portability', () => {
+  test('relative hook commands fail with MODULE_NOT_FOUND from another cwd (pre-fix reproduction)', () => {
+    const otherCwd = mkdtempSync(join(tmpdir(), 'cc-hook-rel-cwd-'));
+    try {
+      const result = spawnSync(process.execPath, ['.claude/hooks/invoke-hook.cjs', '--check'], {
+        cwd: otherCwd,
+        encoding: 'utf8',
+        env: process.env,
+      });
+      expect(result.status).not.toBe(0);
+      expect(`${result.stderr}${result.stdout}`).toMatch(/MODULE_NOT_FOUND|Cannot find module|Module not found/i);
+    } finally {
+      rmSync(otherCwd, { recursive: true, force: true });
+    }
+  });
+
+  test('global install writes absolute hook commands that run from another cwd; local stays relative', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'cc-hook-global-home-'));
+    const project = mkdtempSync(join(tmpdir(), 'cc-hook-local-proj-'));
+    const otherCwd = mkdtempSync(join(tmpdir(), 'cc-hook-other-cwd-'));
+    try {
+      const manifest = await loadManifest('claude');
+      const settingsOnly = {
+        ...manifest,
+        entries: manifest.entries.filter(
+          (entry) => entry.src === 'claude/settings.json' || entry.src === 'shared/invoke-hook.cjs'
+        ),
+      };
+
+      await copyFromManifest(settingsOnly, join(ROOT, 'presets'), home, true, false, true);
+      await copyFromManifest(settingsOnly, join(ROOT, 'presets'), project, false, false, true);
+
+      const globalSettings = JSON.parse(readFileSync(join(home, '.claude/settings.json'), 'utf8'));
+      const localSettings = JSON.parse(readFileSync(join(project, '.claude/settings.json'), 'utf8'));
+
+      const globalCommands: string[] = [];
+      const localCommands: string[] = [];
+      const collect = (node: unknown, out: string[]) => {
+        if (Array.isArray(node)) {
+          for (const item of node) collect(item, out);
+          return;
+        }
+        if (node && typeof node === 'object') {
+          for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+            if (key === 'command' && typeof value === 'string') out.push(value);
+            else collect(value, out);
+          }
+        }
+      };
+      collect(globalSettings.hooks, globalCommands);
+      collect(localSettings.hooks, localCommands);
+
+      expect(globalCommands.length).toBeGreaterThan(0);
+      const expectedScript = resolve(home, '.claude/hooks/invoke-hook.cjs');
+      for (const command of globalCommands) {
+        expect(isRelativeClaudeHookCommand(command)).toBe(false);
+        const parsed = parseClaudeHookCommand(command);
+        expect(parsed).not.toBeNull();
+        expect(resolve(parsed!.script)).toBe(expectedScript);
+      }
+      for (const command of localCommands) {
+        expect(isRelativeClaudeHookCommand(command)).toBe(true);
+      }
+
+      // Absolute script from the global install must load from a foreign cwd
+      // (guard may report operational:false without a local package — that is OK).
+      const sample = parseClaudeHookCommand(globalCommands[0]!)!;
+      const check = spawnSync(process.execPath, [sample.script, '--check'], {
+        cwd: otherCwd,
+        encoding: 'utf8',
+        env: { ...process.env, PROJECT_ROOT: home },
+      });
+      expect(`${check.stderr}${check.stdout}`).not.toMatch(/MODULE_NOT_FOUND|Cannot find module|Module not found/i);
+      expect(JSON.parse(check.stdout).operational).toBeDefined();
+
+      // Same relative command still fails from that foreign cwd (guard would not run).
+      const relativeFail = spawnSync(process.execPath, ['.claude/hooks/invoke-hook.cjs', '--check'], {
+        cwd: otherCwd,
+        encoding: 'utf8',
+      });
+      expect(relativeFail.status).not.toBe(0);
+      expect(`${relativeFail.stderr}${relativeFail.stdout}`).toMatch(/MODULE_NOT_FOUND|Cannot find module|Module not found/i);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+      rmSync(project, { recursive: true, force: true });
+      rmSync(otherCwd, { recursive: true, force: true });
+    }
+  });
+
+  test('preset source keeps relative hook commands for project installs', () => {
+    const settings = JSON.parse(readFileSync(join(ROOT, 'presets/claude/settings.json'), 'utf8'));
+    const commands: string[] = [];
+    JSON.stringify(settings.hooks, (_key, value) => {
+      if (_key === 'command' && typeof value === 'string') commands.push(value);
+      return value;
+    });
+    expect(commands.length).toBeGreaterThan(0);
+    expect(commands.every((c) => isRelativeClaudeHookCommand(c))).toBe(true);
+  });
 });
 
 describe('preset configuration validation', () => {

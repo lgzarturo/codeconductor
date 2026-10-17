@@ -172,6 +172,48 @@ describe('migrateCommand', () => {
     const onDisk = JSON.parse(await readFile(customPath, 'utf-8'));
     expect(onDisk.permissions.allow).toEqual(['Edit(./x/**)']);
   });
+
+  test('--global rewrites relative Claude hook commands to absolute paths', async () => {
+    const home = join(base, 'global-hooks-home');
+    const settingsPath = join(home, '.claude', 'settings.json');
+    await mkdir(join(home, '.claude'), { recursive: true });
+    await writeFile(
+      settingsPath,
+      JSON.stringify({
+        hooks: {
+          PreToolUse: [
+            {
+              hooks: [{ type: 'command', command: 'node .claude/hooks/invoke-hook.cjs pre-tool' }],
+            },
+          ],
+        },
+      })
+    );
+
+    const result = await migrateCommand({
+      projectRoot: home,
+      global: true,
+      dryRun: false,
+      output: 'json',
+      file: settingsPath,
+    });
+
+    expect(result.code).toBe(0);
+    const data = result.data as {
+      changed: boolean;
+      hookPathRewrites: Array<{ from: string; to: string }>;
+    };
+    expect(data.changed).toBe(true);
+    expect(data.hookPathRewrites).toHaveLength(1);
+    expect(data.hookPathRewrites[0]?.from).toContain('.claude/hooks/invoke-hook.cjs');
+    expect(data.hookPathRewrites[0]?.to).toContain(join(home, '.claude', 'hooks', 'invoke-hook.cjs'));
+
+    const onDisk = JSON.parse(await readFile(settingsPath, 'utf-8'));
+    const command = onDisk.hooks.PreToolUse[0].hooks[0].command as string;
+    expect(command.startsWith('node ')).toBe(true);
+    expect(command.includes(join(home, '.claude', 'hooks', 'invoke-hook.cjs'))).toBe(true);
+    expect(command.includes('node .claude/hooks/')).toBe(false);
+  });
 });
 
 describe('findOrphanedPromptVersions / migrateCommand orphan cleanup', () => {

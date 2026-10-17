@@ -21,11 +21,11 @@ contracts, task cards, and risk-based routing.
 > [docs/current-status.md](docs/current-status.md). This repository:
 > `bun run dev …` (not `npx`) while iterating.
 >
-> Changes after v1.6.1 are implemented, unreleased: runner-captured TDD,
-> persistent RED validation, OpenSpec completion fixes, shared skills,
-> safer hooks and Claude installation, atomic Goal DAG claims, native delta
-> specs, and scorecards that preserve unmeasured signals. See the
-> [post-v1.6.1 guide](docs/post-v1.6.1.md) for the exact commit range and
+> Included in **1.7.0**: runner-captured TDD, persistent RED validation,
+> OpenSpec completion fixes, shared skills, safer hooks and Claude
+> installation, atomic Goal DAG claims, native delta specs, and scorecards
+> that preserve unmeasured signals. See the
+> [post-v1.6.1 guide](docs/post-v1.6.1.md) for the earlier commit range and
 > upgrade steps.
 >
 > Shipped in the 1.7.x stable line:

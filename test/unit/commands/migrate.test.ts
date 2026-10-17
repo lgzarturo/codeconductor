@@ -172,6 +172,108 @@ describe('migrateCommand', () => {
     const onDisk = JSON.parse(await readFile(customPath, 'utf-8'));
     expect(onDisk.permissions.allow).toEqual(['Edit(./x/**)']);
   });
+
+  test('--global rewrites relative Claude hook commands to absolute paths', async () => {
+    const home = join(base, 'global-hooks-home');
+    const settingsPath = join(home, '.claude', 'settings.json');
+    await mkdir(join(home, '.claude'), { recursive: true });
+    await writeFile(
+      settingsPath,
+      JSON.stringify({
+        hooks: {
+          PreToolUse: [
+            {
+              hooks: [{ type: 'command', command: 'node .claude/hooks/invoke-hook.cjs pre-tool' }],
+            },
+          ],
+        },
+      })
+    );
+
+    const result = await migrateCommand({
+      projectRoot: home,
+      global: true,
+      dryRun: false,
+      output: 'json',
+      file: settingsPath,
+    });
+
+    expect(result.code).toBe(0);
+    const data = result.data as {
+      changed: boolean;
+      hookPathRewrites: Array<{ from: string; to: string }>;
+    };
+    expect(data.changed).toBe(true);
+    expect(data.hookPathRewrites).toHaveLength(1);
+    expect(data.hookPathRewrites[0]?.from).toContain('.claude/hooks/invoke-hook.cjs');
+    const expectedScript = join(home, '.claude', 'hooks', 'invoke-hook.cjs').replace(/\\/g, '/');
+    expect(data.hookPathRewrites[0]?.to.replace(/\\/g, '/')).toContain(expectedScript);
+
+    const onDisk = JSON.parse(await readFile(settingsPath, 'utf-8'));
+    const command = onDisk.hooks.PreToolUse[0].hooks[0].command as string;
+    expect(command.startsWith('node ')).toBe(true);
+    expect(command.replace(/\\/g, '/')).toContain(expectedScript);
+    expect(command.includes('node .claude/hooks/')).toBe(false);
+  });
+
+  test('--global is idempotent and leaves non-CodeConductor hooks untouched', async () => {
+    const home = join(base, 'global-hooks-mixed');
+    const settingsPath = join(home, '.claude', 'settings.json');
+    await mkdir(join(home, '.claude'), { recursive: true });
+    const foreign = 'python3 /opt/custom/pretool.py';
+    await writeFile(
+      settingsPath,
+      JSON.stringify({
+        hooks: {
+          PreToolUse: [
+            {
+              hooks: [
+                { type: 'command', command: 'node .claude/hooks/invoke-hook.cjs pre-tool' },
+                { type: 'command', command: foreign },
+              ],
+            },
+          ],
+        },
+      })
+    );
+
+    const first = await migrateCommand({
+      projectRoot: home,
+      global: true,
+      dryRun: false,
+      output: 'json',
+      file: settingsPath,
+    });
+    expect(first.code).toBe(0);
+    const firstData = first.data as { changed: boolean; hookPathRewrites: unknown[] };
+    expect(firstData.changed).toBe(true);
+    expect(firstData.hookPathRewrites).toHaveLength(1);
+
+    const afterFirst = JSON.parse(await readFile(settingsPath, 'utf-8'));
+    expect(afterFirst.hooks.PreToolUse[0].hooks[1].command).toBe(foreign);
+    const rewritten = afterFirst.hooks.PreToolUse[0].hooks[0].command as string;
+    expect(rewritten.includes('node .claude/hooks/')).toBe(false);
+
+    const second = await migrateCommand({
+      projectRoot: home,
+      global: true,
+      dryRun: false,
+      output: 'json',
+      file: settingsPath,
+    });
+    expect(second.code).toBe(0);
+    const secondData = second.data as {
+      changed: boolean;
+      hookPathRewrites: unknown[];
+      message?: string;
+    };
+    expect(secondData.hookPathRewrites).toEqual([]);
+    expect(secondData.changed).toBe(false);
+
+    const afterSecond = JSON.parse(await readFile(settingsPath, 'utf-8'));
+    expect(afterSecond.hooks.PreToolUse[0].hooks[0].command).toBe(rewritten);
+    expect(afterSecond.hooks.PreToolUse[0].hooks[1].command).toBe(foreign);
+  });
 });
 
 describe('findOrphanedPromptVersions / migrateCommand orphan cleanup', () => {

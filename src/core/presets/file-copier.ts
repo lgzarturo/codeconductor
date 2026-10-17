@@ -22,6 +22,7 @@ import {
 } from '../filesystem/safe-merger';
 import { writeContainedFile } from '../filesystem/path-containment';
 import { detectComplementaryTools } from './complementary-detector';
+import { rewriteClaudeHookCommandsForGlobal } from './hook-command-paths';
 
 export type FileAction = 'written' | 'appended' | 'merged' | 'skipped' | 'error';
 
@@ -455,6 +456,39 @@ async function injectMcpServers(jsonString: string, filePath: string): Promise<s
   }
 }
 
+function isClaudeSettingsDest(destPath: string): boolean {
+  return destPath.replace(/\\/g, '/').endsWith('/.claude/settings.json')
+    || destPath.replace(/\\/g, '/').endsWith('.claude/settings.json');
+}
+
+/**
+ * Global Claude installs must not keep project-relative hook commands
+ * (`node .claude/hooks/...`): they resolve against the process cwd and throw
+ * MODULE_NOT_FOUND from other directories. Rewrite to an absolute path under
+ * `baseDir` (the install home) after merge/render.
+ */
+function maybeRewriteGlobalClaudeHookCommands(
+  content: string,
+  destPath: string,
+  baseDir: string | undefined,
+  isGlobal: boolean
+): string {
+  if (!isGlobal || baseDir === undefined || !isClaudeSettingsDest(destPath)) {
+    return content;
+  }
+  try {
+    const parsed = JSON.parse(content) as Record<string, unknown>;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return content;
+    }
+    const { settings, changes } = rewriteClaudeHookCommandsForGlobal(parsed, baseDir);
+    if (changes.length === 0) return content;
+    return JSON.stringify(settings, null, 2);
+  } catch {
+    return content;
+  }
+}
+
 export async function applySingleFile(
   srcPath: string,
   destPath: string,
@@ -471,7 +505,9 @@ export async function applySingleFile(
    * present the source read and template render are skipped; MCP injection,
    * strategy merge and the write still run.
    */
-  preRendered?: string
+  preRendered?: string,
+  /** When true, rewrite Claude hook commands to absolute paths under baseDir. */
+  isGlobal = false
 ): Promise<FileCopyResult> {
   if (strategy === 'skip') {
     return { src: srcPath, dest: destPath, action: 'skipped', dryRun };
@@ -542,7 +578,7 @@ export async function applySingleFile(
       }
     }
     try {
-      const incoming = JSON.parse(incomingContent) as Record<string, unknown>;
+      let incoming = JSON.parse(incomingContent) as Record<string, unknown>;
       if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) {
         throw new Error('Incoming JSON must be an object');
       }
@@ -556,6 +592,12 @@ export async function applySingleFile(
             }
           }
         }
+      }
+      // Normalize both sides before array-union merge so a relative preset
+      // command does not duplicate an already-absolute global hook entry.
+      if (isGlobal && baseDir !== undefined && isClaudeSettingsDest(destPath)) {
+        existing = rewriteClaudeHookCommandsForGlobal(existing, baseDir).settings;
+        incoming = rewriteClaudeHookCommandsForGlobal(incoming, baseDir).settings;
       }
       finalContent = JSON.stringify(mergeDeep(existing, incoming), null, 2);
     } catch (e) {
@@ -586,6 +628,8 @@ export async function applySingleFile(
       return { src: srcPath, dest: destPath, action: 'error', error: `Managed merge failed: ${e}` };
     }
   }
+
+  finalContent = maybeRewriteGlobalClaudeHookCommands(finalContent, destPath, baseDir, isGlobal);
 
   if (dryRun) {
     return { src: srcPath, dest: destPath, action, dryRun: true, renderedContent: finalContent, ...(warnings.length ? { warnings } : {}) };
@@ -657,7 +701,8 @@ export async function copyFromManifest(
           modelConfig,
           locale,
           resolvedBaseDir,
-          preRendered?.[dest]
+          preRendered?.[dest],
+          isGlobal
         )
       );
     }

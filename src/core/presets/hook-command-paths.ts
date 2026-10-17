@@ -1,0 +1,205 @@
+import { existsSync } from 'node:fs';
+import { isAbsolute, resolve } from 'node:path';
+
+/** Relative hook script path written into project-local Claude settings. */
+export const CLAUDE_HOOK_SCRIPT_RELATIVE = '.claude/hooks/invoke-hook.cjs';
+
+const RELATIVE_CLAUDE_HOOK_RE =
+  /^(?<runner>node|bun)\s+(?<quote>["']?)(?:\.\/)?\.claude\/hooks\/invoke-hook\.cjs\k<quote>(?<rest>.*)$/i;
+
+/**
+ * Matches `node|bun` + optional quotes + a script ending in `hooks/invoke-hook.cjs`
+ * (relative `.claude/...` or absolute). The script body may contain escaped
+ * characters when the emitter quoted the path for the shell.
+ */
+const CLAUDE_HOOK_SCRIPT_RE =
+  /^(?<runner>node|bun)\s+(?:(?<dq>")(?<dscript>(?:\\.|[^"\\])*)"|'(?<sscript>(?:\\'|[^'])*)'|(?<uscript>\S+))(?<rest>.*)$/i;
+
+/** Characters that require double-quoting inside a Claude hook command string. */
+const SHELL_META_IN_PATH = /[\s"$`\\;&|<>(){}[\]!*?~]/;
+
+export interface HookCommandChange {
+  readonly from: string;
+  readonly to: string;
+}
+
+export interface HookPathIssue {
+  readonly command: string;
+  readonly reason: 'relative' | 'missing';
+}
+
+/**
+ * Normalize an absolute hook script path for embedding in a Claude `command`
+ * string. Forward slashes work with Node on Windows and avoid doubling `\`
+ * inside shell-style quoting.
+ */
+export function normalizeHookScriptPath(absoluteScriptPath: string): string {
+  return absoluteScriptPath.replace(/\\/g, '/');
+}
+
+/**
+ * Escape a path for inclusion inside POSIX-style double quotes.
+ * Neutralizes `$`, backticks, `"`, and `\` so a malicious or odd HOME path
+ * cannot inject `$(…)` / `` `…` `` when Claude runs the hook via a shell.
+ */
+export function escapeHookPathForDoubleQuotes(path: string): string {
+  return path.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`');
+}
+
+/**
+ * Reverse {@link escapeHookPathForDoubleQuotes} after parsing a quoted command.
+ */
+export function unescapeHookPathFromDoubleQuotes(path: string): string {
+  return path.replace(/\\([\\"$`])/g, '$1');
+}
+
+/**
+ * Quote a path for use inside a Claude hook `command` string.
+ * - Separators are normalized to `/` (win32-safe for Node).
+ * - Paths with whitespace or shell metacharacters are double-quoted with
+ *   escaped `$`, backticks, `"`, and `\`.
+ * - Safe absolute paths stay unquoted so simple installs stay readable.
+ */
+export function quoteHookPath(path: string): string {
+  const normalized = normalizeHookScriptPath(path);
+  if (!SHELL_META_IN_PATH.test(normalized)) {
+    return normalized;
+  }
+  return `"${escapeHookPathForDoubleQuotes(normalized)}"`;
+}
+
+/** Build `node <absolute-script> <args…>` for a global Claude hook entry. */
+export function buildAbsoluteClaudeHookCommand(absoluteScriptPath: string, rest = ''): string {
+  const suffix = rest.trim().length > 0 ? ` ${rest.trim()}` : '';
+  return `node ${quoteHookPath(absoluteScriptPath)}${suffix}`;
+}
+
+export function isRelativeClaudeHookCommand(command: string): boolean {
+  return RELATIVE_CLAUDE_HOOK_RE.test(command.trim());
+}
+
+/** True when the command targets CodeConductor's Claude invoke-hook script. */
+export function isCodeConductorClaudeHookCommand(command: string): boolean {
+  return parseClaudeHookCommand(command) !== null;
+}
+
+export function parseClaudeHookCommand(
+  command: string
+): { runner: string; script: string; rest: string } | null {
+  const match = command.trim().match(CLAUDE_HOOK_SCRIPT_RE);
+  if (!match?.groups) return null;
+
+  let script: string;
+  if (match.groups.dscript !== undefined) {
+    script = unescapeHookPathFromDoubleQuotes(match.groups.dscript);
+  } else if (match.groups.sscript !== undefined) {
+    script = match.groups.sscript.replace(/\\'/g, "'");
+  } else {
+    script = match.groups.uscript ?? '';
+  }
+
+  const normalizedScript = normalizeHookScriptPath(script);
+  // Only CodeConductor's Claude wrapper — reject unrelated `node …` commands.
+  if (!/(?:^|\/)\.claude\/hooks\/invoke-hook\.cjs$/i.test(normalizedScript)) {
+    return null;
+  }
+
+  return {
+    runner: match.groups.runner,
+    script: normalizedScript,
+    rest: (match.groups.rest ?? '').trim(),
+  };
+}
+
+function mapHookCommands(
+  value: unknown,
+  rewrite: (command: string) => string | null
+): { value: unknown; changes: HookCommandChange[] } {
+  const changes: HookCommandChange[] = [];
+
+  const visit = (node: unknown): unknown => {
+    if (Array.isArray(node)) {
+      return node.map(visit);
+    }
+    if (node && typeof node === 'object') {
+      const obj = node as Record<string, unknown>;
+      const next: Record<string, unknown> = {};
+      for (const [key, child] of Object.entries(obj)) {
+        if (key === 'command' && typeof child === 'string') {
+          const rewritten = rewrite(child);
+          if (rewritten !== null && rewritten !== child) {
+            changes.push({ from: child, to: rewritten });
+            next[key] = rewritten;
+            continue;
+          }
+        }
+        next[key] = visit(child);
+      }
+      return next;
+    }
+    return node;
+  };
+
+  return { value: visit(value), changes };
+}
+
+/**
+ * Rewrite relative Claude CodeConductor hook commands to an absolute script
+ * path under `globalBaseDir` (typically the user home for `--global` installs).
+ * Leaves non-matching commands untouched. Safe to run repeatedly.
+ */
+export function rewriteClaudeHookCommandsForGlobal(
+  settings: Record<string, unknown>,
+  globalBaseDir: string
+): { settings: Record<string, unknown>; changes: readonly HookCommandChange[] } {
+  const absoluteScript = resolve(globalBaseDir, CLAUDE_HOOK_SCRIPT_RELATIVE);
+  const hooks = settings.hooks;
+  if (hooks === undefined) {
+    return { settings, changes: [] };
+  }
+
+  const { value, changes } = mapHookCommands(hooks, (command) => {
+    const trimmed = command.trim();
+    const relativeMatch = trimmed.match(RELATIVE_CLAUDE_HOOK_RE);
+    if (relativeMatch?.groups) {
+      return buildAbsoluteClaudeHookCommand(absoluteScript, relativeMatch.groups.rest ?? '');
+    }
+    return null;
+  });
+
+  return {
+    settings: { ...settings, hooks: value },
+    changes,
+  };
+}
+
+/**
+ * Inspect Claude settings for CodeConductor hook commands that are still
+ * project-relative or point at a missing script file.
+ */
+export function inspectClaudeHookCommandPaths(
+  settings: Record<string, unknown>,
+  options: { requireAbsolute?: boolean } = {}
+): HookPathIssue[] {
+  const issues: HookPathIssue[] = [];
+  const hooks = settings.hooks;
+  if (hooks === undefined) return issues;
+
+  mapHookCommands(hooks, (command) => {
+    const parsed = parseClaudeHookCommand(command);
+    if (!parsed) return null;
+
+    if (options.requireAbsolute !== false && isRelativeClaudeHookCommand(command)) {
+      issues.push({ command, reason: 'relative' });
+      return null;
+    }
+
+    const scriptPath = parsed.script;
+    if (isAbsolute(scriptPath) && !existsSync(scriptPath)) {
+      issues.push({ command, reason: 'missing' });
+    }
+    return null;
+  });
+
+  return issues;
+}

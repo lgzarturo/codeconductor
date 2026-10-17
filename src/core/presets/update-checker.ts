@@ -3,6 +3,7 @@ import { resolve, join, basename, dirname } from 'node:path';
 import { homedir } from 'node:os';
 import { loadManifest, loadModelConfig, PRESETS_DIR } from './manifest-loader';
 import { renderTemplate, resolveEntryFiles, mergeDeep } from './file-copier';
+import { rewriteClaudeHookCommandsForGlobal } from './hook-command-paths';
 import { parseSkillFrontmatter, skillIdentifier } from './skill-frontmatter';
 import { loadConfig } from '../config/config-loader';
 import { mergeManagedBlock, MANAGED_BEGIN_MARKER, MANAGED_END_MARKER } from '../filesystem/safe-merger';
@@ -449,10 +450,20 @@ export async function checkUpdates(
           }
         } else if (strategy === 'merge-json') {
           try {
-            const destJson = JSON.parse(destContent);
-            const expectedJson = JSON.parse(expectedContent);
+            const originalDestJson = JSON.parse(destContent) as Record<string, unknown>;
+            let destJson = originalDestJson;
+            let expectedJson = JSON.parse(expectedContent) as Record<string, unknown>;
+            const isClaudeSettings = dest.replace(/\\/g, '/').endsWith('/.claude/settings.json')
+              || dest.replace(/\\/g, '/').endsWith('.claude/settings.json');
+            if (isGlobal && isClaudeSettings) {
+              // Compare against on-disk content so relative global hooks still
+              // count as an update even after both sides normalize to absolute.
+              destJson = rewriteClaudeHookCommandsForGlobal(destJson, targetBaseDir).settings;
+              expectedJson = rewriteClaudeHookCommandsForGlobal(expectedJson, targetBaseDir).settings;
+              rendered[dest] = JSON.stringify(expectedJson, null, 2);
+            }
             const merged = mergeDeep(destJson, expectedJson);
-            if (JSON.stringify(merged) !== JSON.stringify(destJson)) {
+            if (JSON.stringify(merged) !== JSON.stringify(originalDestJson)) {
               fileHasUpdate = true;
             }
           } catch {

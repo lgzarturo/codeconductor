@@ -7,8 +7,16 @@ export const CLAUDE_HOOK_SCRIPT_RELATIVE = '.claude/hooks/invoke-hook.cjs';
 const RELATIVE_CLAUDE_HOOK_RE =
   /^(?<runner>node|bun)\s+(?<quote>["']?)(?:\.\/)?\.claude\/hooks\/invoke-hook\.cjs\k<quote>(?<rest>.*)$/i;
 
+/**
+ * Matches `node|bun` + optional quotes + a script ending in `hooks/invoke-hook.cjs`
+ * (relative `.claude/...` or absolute). The script body may contain escaped
+ * characters when the emitter quoted the path for the shell.
+ */
 const CLAUDE_HOOK_SCRIPT_RE =
-  /^(?<runner>node|bun)\s+(?<quote>["']?)(?<script>.+?[/\\]hooks[/\\]invoke-hook\.cjs|\.claude[/\\]hooks[/\\]invoke-hook\.cjs)\k<quote>(?<rest>.*)$/i;
+  /^(?<runner>node|bun)\s+(?:(?<dq>")(?<dscript>(?:\\.|[^"\\])*)"|'(?<sscript>(?:\\'|[^'])*)'|(?<uscript>\S+))(?<rest>.*)$/i;
+
+/** Characters that require double-quoting inside a Claude hook command string. */
+const SHELL_META_IN_PATH = /[\s"$`\\;&|<>(){}[\]!*?~]/;
 
 export interface HookCommandChange {
   readonly from: string;
@@ -22,24 +30,42 @@ export interface HookPathIssue {
 
 /**
  * Normalize an absolute hook script path for embedding in a Claude `command`
- * string. Forward slashes work with Node on Windows and avoid the quote/escape
- * mess of backslashes inside shell-style command lines.
+ * string. Forward slashes work with Node on Windows and avoid doubling `\`
+ * inside shell-style quoting.
  */
 export function normalizeHookScriptPath(absoluteScriptPath: string): string {
   return absoluteScriptPath.replace(/\\/g, '/');
 }
 
 /**
+ * Escape a path for inclusion inside POSIX-style double quotes.
+ * Neutralizes `$`, backticks, `"`, and `\` so a malicious or odd HOME path
+ * cannot inject `$(…)` / `` `…` `` when Claude runs the hook via a shell.
+ */
+export function escapeHookPathForDoubleQuotes(path: string): string {
+  return path.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`');
+}
+
+/**
+ * Reverse {@link escapeHookPathForDoubleQuotes} after parsing a quoted command.
+ */
+export function unescapeHookPathFromDoubleQuotes(path: string): string {
+  return path.replace(/\\([\\"$`])/g, '$1');
+}
+
+/**
  * Quote a path for use inside a Claude hook `command` string.
- * Quotes only when whitespace or shell-sensitive characters remain after
- * normalizing separators to `/`.
+ * - Separators are normalized to `/` (win32-safe for Node).
+ * - Paths with whitespace or shell metacharacters are double-quoted with
+ *   escaped `$`, backticks, `"`, and `\`.
+ * - Safe absolute paths stay unquoted so simple installs stay readable.
  */
 export function quoteHookPath(path: string): string {
   const normalized = normalizeHookScriptPath(path);
-  if (/[\s"$`]/.test(normalized)) {
-    return `"${normalized.replace(/"/g, '\\"')}"`;
+  if (!SHELL_META_IN_PATH.test(normalized)) {
+    return normalized;
   }
-  return normalized;
+  return `"${escapeHookPathForDoubleQuotes(normalized)}"`;
 }
 
 /** Build `node <absolute-script> <args…>` for a global Claude hook entry. */
@@ -52,14 +78,35 @@ export function isRelativeClaudeHookCommand(command: string): boolean {
   return RELATIVE_CLAUDE_HOOK_RE.test(command.trim());
 }
 
+/** True when the command targets CodeConductor's Claude invoke-hook script. */
+export function isCodeConductorClaudeHookCommand(command: string): boolean {
+  return parseClaudeHookCommand(command) !== null;
+}
+
 export function parseClaudeHookCommand(
   command: string
 ): { runner: string; script: string; rest: string } | null {
   const match = command.trim().match(CLAUDE_HOOK_SCRIPT_RE);
   if (!match?.groups) return null;
+
+  let script: string;
+  if (match.groups.dscript !== undefined) {
+    script = unescapeHookPathFromDoubleQuotes(match.groups.dscript);
+  } else if (match.groups.sscript !== undefined) {
+    script = match.groups.sscript.replace(/\\'/g, "'");
+  } else {
+    script = match.groups.uscript ?? '';
+  }
+
+  const normalizedScript = normalizeHookScriptPath(script);
+  // Only CodeConductor's Claude wrapper — reject unrelated `node …` commands.
+  if (!/(?:^|\/)\.claude\/hooks\/invoke-hook\.cjs$/i.test(normalizedScript)) {
+    return null;
+  }
+
   return {
     runner: match.groups.runner,
-    script: match.groups.script,
+    script: normalizedScript,
     rest: (match.groups.rest ?? '').trim(),
   };
 }

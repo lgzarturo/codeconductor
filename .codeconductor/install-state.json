@@ -3508,7 +3508,7 @@
       "sourceVersion": "1.6.0"
     },
     ".agents/skills/council/SKILL.md": {
-      "installedHash": "sha256:619d2e60d5b1ce3a815b3de42e7ec4141ada7f3e12ca016460bc04431efffc1b",
+      "installedHash": "sha256:340cd05bae3ab9becbf022f0073180d47ecd5108393d74bd5df582e5bf19b8aa",
       "sourceVersion": "1.7.0"
     },
     ".muse/hooks.json": {

@@ -12,9 +12,9 @@ entry does not by itself mean that version was published.
 | Capability                                                                                                 | Repository status                     | Available in stable 1.7.x |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------- |
 | Core CLI (`setup`, `init`, `detect`, `install`, `version`, `status`, `doctor`, `update`, `migrate`)          | shipped                               | yes                       |
-| Preset and council installation (8 targets: agy, claude, codex, cursor, gemini, muse, opencode, pi)        | shipped                               | partial (muse preset unreleased; council N/A on muse) |
+| Preset and council installation (8 targets: agy, claude, codex, cursor, gemini, muse, opencode, pi)        | shipped                               | partial (muse preset in 1.7.0; council N/A on muse) |
 | ODD loop (`odd create/read/reconcile` + `odd handoff` envelope)                                          | shipped                               | yes                       |
-| OpenSpec `sync` / `verify` gates                                                                        | implemented, unreleased               | no                        |
+| OpenSpec `sync` / `verify` gates                                                                        | shipped                               | yes                       |
 | SEO audit / `llms.txt` commands                                                                            | shipped                               | yes                       |
 | Scorecard and outcome evaluation                                                                           | shipped                               | yes                       |
 | Harness ablation (leave-one-out catalog + experiment + report)                                             | shipped                               | yes                       |
@@ -31,20 +31,19 @@ entry does not by itself mean that version was published.
 ## Changes after v1.6.1
 
 The [post-v1.6.1 guide](post-v1.6.1.md) covers `v1.6.1..3e5a553`.
-These additions and behavior changes are implemented, unreleased; existing
-commands in the stable matrix do not imply their newer behavior was published.
+Those additions shipped in **1.7.0** (npm `cc-codeconductor@1.7.0`).
 
-| Capability or adjustment | Repository status | Available in published 1.6.1 |
+| Capability or adjustment | Repository status | Available in published 1.7.0 |
 | --- | --- | --- |
-| Node-compatible compile/TDD execution; read-only `openspec next` | implemented, unreleased | no |
-| `tdd capture`; persisted RED validation; separate RED/GREEN gates | implemented, unreleased | no |
-| Preserve `tasks.md` edits, mark acceptance by card, gate unchecked archive boxes | implemented, unreleased | no |
-| 14 additional canonical shared skills (BC-026) | implemented, unreleased | no |
-| Claude settings merge and reduced preset permissions | implemented, unreleased | no |
-| Installed hook runner resolution, opt-in fail-closed behavior, doctor probe | implemented, unreleased | no |
-| Atomic Goal DAG claims, process locks, priorities and dependency blocking | implemented, unreleased | no |
-| Named requirements and RENAMED delta specs | implemented, unreleased | no |
-| Item base commits and unmeasured scorecard criteria | implemented, unreleased | no |
+| Node-compatible compile/TDD execution; read-only `openspec next` | shipped | yes |
+| `tdd capture`; persisted RED validation; separate RED/GREEN gates | shipped | yes |
+| Preserve `tasks.md` edits, mark acceptance by card, gate unchecked archive boxes | shipped | yes |
+| 14 additional canonical shared skills (BC-026) | shipped | yes |
+| Claude settings merge and reduced preset permissions | shipped | yes |
+| Installed hook runner resolution, opt-in fail-closed behavior, doctor probe | shipped | yes |
+| Atomic Goal DAG claims, process locks, priorities and dependency blocking | shipped | yes |
+| Named requirements and RENAMED delta specs | shipped | yes |
+| Item base commits and unmeasured scorecard criteria | shipped | yes |
 
 ## Harness standard
 
@@ -68,8 +67,7 @@ removes an older version's directory).
 
 ## Release documentation
 
-The package version remains **v1.6.1**. Operational documentation also describes
-the newer checkout behavior, explicitly marked as unreleased.
+The package and operational documentation are synchronized at **v1.7.0**.
 Historical release notes remain available alongside the
 [CHANGELOG.md](../CHANGELOG.md) release history.
 

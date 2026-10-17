@@ -179,6 +179,9 @@ describe('global Claude hook path portability', () => {
         const parsed = parseClaudeHookCommand(command);
         expect(parsed).not.toBeNull();
         expect(resolve(parsed!.script)).toBe(expectedScript);
+        // Forward slashes keep the command parseable on Windows without
+        // doubling backslashes inside quoted paths.
+        expect(parsed!.script.includes('\\')).toBe(false);
       }
       for (const command of localCommands) {
         expect(isRelativeClaudeHookCommand(command)).toBe(true);

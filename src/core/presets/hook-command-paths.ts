@@ -21,15 +21,25 @@ export interface HookPathIssue {
 }
 
 /**
+ * Normalize an absolute hook script path for embedding in a Claude `command`
+ * string. Forward slashes work with Node on Windows and avoid the quote/escape
+ * mess of backslashes inside shell-style command lines.
+ */
+export function normalizeHookScriptPath(absoluteScriptPath: string): string {
+  return absoluteScriptPath.replace(/\\/g, '/');
+}
+
+/**
  * Quote a path for use inside a Claude hook `command` string.
- * Always quotes paths with whitespace or shell-sensitive characters so the
- * same absolute install works on Linux, macOS, and Windows.
+ * Quotes only when whitespace or shell-sensitive characters remain after
+ * normalizing separators to `/`.
  */
 export function quoteHookPath(path: string): string {
-  if (/[\s"$`\\]/.test(path)) {
-    return `"${path.replace(/(["\\])/g, '\\$1')}"`;
+  const normalized = normalizeHookScriptPath(path);
+  if (/[\s"$`]/.test(normalized)) {
+    return `"${normalized.replace(/"/g, '\\"')}"`;
   }
-  return path;
+  return normalized;
 }
 
 /** Build `node <absolute-script> <args…>` for a global Claude hook entry. */

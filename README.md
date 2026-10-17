@@ -3,6 +3,7 @@
 **Stop prompting. Start orchestrating.**
 
 [![Socket Badge](https://badge.socket.dev/npm/package/cc-codeconductor/1.7.0)](https://badge.socket.dev/npm/package/cc-codeconductor/1.7.0)
+[![Website](https://img.shields.io/badge/website-codeconductor.appsutiles.dev-0A66C2)](https://codeconductor.appsutiles.dev/)
 
 CodeConductor is an open-source framework for building structured, reproducible
 AI-assisted software engineering workflows.

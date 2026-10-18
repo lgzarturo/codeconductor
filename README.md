@@ -2,7 +2,7 @@
 
 **Stop prompting. Start orchestrating.**
 
-[![Socket Badge](https://badge.socket.dev/npm/package/cc-codeconductor/1.7.2)](https://badge.socket.dev/npm/package/cc-codeconductor/1.7.2)
+[![Socket Badge](https://badge.socket.dev/npm/package/cc-codeconductor/1.7.1)](https://badge.socket.dev/npm/package/cc-codeconductor/1.7.1)
 [![Website](https://img.shields.io/badge/website-codeconductor.appsutiles.dev-0A66C2)](https://codeconductor.appsutiles.dev/)
 
 CodeConductor is an open-source framework for building structured, reproducible
@@ -16,7 +16,7 @@ contracts, task cards, and risk-based routing.
 >
 > ## Current Scope
 >
-> Published package is **1.7.2** (current stable line: **1.7.x**). Limitations
+> Published package is **1.7.1** (current stable line: **1.7.x**). Limitations
 > matrix:
 > [docs/current-status.md](docs/current-status.md). This repository:
 > `bun run dev …` (not `npx`) while iterating.
@@ -340,14 +340,14 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 
 ## Supply chain
 
-Published **1.7.2** declares two production dependencies (`package.json`
+Published **1.7.1** declares two production dependencies (`package.json`
 `dependencies`; same on
 [npm](https://www.npmjs.com/package/cc-codeconductor)). Neither has further
 npm transitive dependencies.
 
 ```mermaid
 graph LR
-  cc["cc-codeconductor@1.7.2"]
+  cc["cc-codeconductor@1.7.1"]
   zod["zod@^3.23.8"]
   yaml["yaml@^2.4.5"]
   cc --> zod
@@ -876,7 +876,7 @@ codeconductor/
 
 ## Roadmap
 
-Published package: **1.7.x (current stable: 1.7.2)**. Remaining gaps (sandbox, policy compiler, full
+Published package: **1.7.x (current stable: 1.7.1)**. Remaining gaps (sandbox, policy compiler, full
 stack-specific asset pruning): [docs/current-status.md](docs/current-status.md).
 Release history: [CHANGELOG.md](CHANGELOG.md).
 

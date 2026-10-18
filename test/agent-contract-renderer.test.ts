@@ -508,7 +508,9 @@ describe('AgyAgentContractRenderer', () => {
     const skillFile = result.files.find((f) => f.path.includes('/skills/'));
     expect(skillFile).toBeDefined();
     expect(skillFile!.content).toContain('council');
-    expect(skillFile!.content).toContain(SPEC.version);
+    // D2: the agy council skill is a pure redirect — no embedded roster/version.
+    expect(skillFile!.content).toMatch(/council\.yml|ROLE_PROFILES/);
+    expect(skillFile!.content).not.toContain(SPEC.version);
   });
 
   test('generates agent files for each council agent', () => {

@@ -13,17 +13,20 @@
  * D2 must not break.
  */
 import { describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parse as parseYaml } from 'yaml';
+import { generateAgyFiles } from '../../src/adapters/agy/agy-council-generator';
+import { generatePiFiles } from '../../src/adapters/pi/pi-council-generator';
 import { ccepCommand } from '../../src/commands/ccep.command';
 import { parseCommand } from '../../src/core/ccep/command-parser';
 import { resolveContext } from '../../src/core/ccep/context-resolver';
 import { compilePrompt } from '../../src/core/ccep/prompt-compiler';
 import { loadWorkflowProfile } from '../../src/core/ccep/workflow-profile-loader';
 import { DEFAULT_COUNCIL_AGENTS } from '../../src/domain/council/council-spec';
-import type { PlannerOutputInput } from '../../src/validation/schemas';
+import { CouncilSpecSchema, type PlannerOutputInput } from '../../src/validation/schemas';
 import { invokeCli } from '../helpers/invoke-cli';
 
 const ROOT = resolve(import.meta.dir, '../..');
@@ -179,6 +182,26 @@ describe('D2 council-unificado', () => {
     expect(content).toMatch(/council\.yml|ROLE_PROFILES|generated/i);
     expect(content).not.toContain('## Agents');
     expect(content).not.toContain('- Architect (architect)');
+  });
+
+  test('A6 RED: council generators emit a redirect stub, not an embedded roster', async () => {
+    const spec = CouncilSpecSchema.parse(
+      parseYaml(readFileSync(join(ROOT, 'src/presets/council/council.yml'), 'utf-8')),
+    );
+    const artifact = await readFile(join(ROOT, '.agents/skills/council/SKILL.md'), 'utf-8');
+    for (const [name, files] of [
+      ['agy', generateAgyFiles(spec)],
+      ['pi', generatePiFiles(spec)],
+    ] as const) {
+      const skill = files.find((f) => f.path === '.agents/skills/council/SKILL.md');
+      expect(skill, `${name}: missing council skill`).toBeDefined();
+      expect(skill!.content, `${name}: not a redirect`).toMatch(/council\.yml|ROLE_PROFILES|generated/i);
+      expect(skill!.content, `${name}: embedded roster`).not.toContain('## Agents');
+      expect(skill!.content, `${name}: embedded roster line`).not.toContain('- Architect (architect)');
+      // Byte-identical to the checked-in artifact — drift between generator and
+      // artifact (a preset sync regenerating the roster) is exactly what broke A6.
+      expect(skill!.content, `${name}: artifact drift`).toBe(artifact);
+    }
   });
 
   test('A7 RED: docs/council-steering.md has no stale 6-vs-7 divergence note', async () => {

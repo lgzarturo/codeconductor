@@ -39,6 +39,9 @@ export function generateAgyFiles(spec: CouncilSpec): GeneratedFile[] {
 }
 
 function generateCouncilSkill(spec: CouncilSpec): string {
+  // Pure redirect — D2 requires the skill stub to carry no embedded roster.
+  // The roster lives in the canonical sources named below; embedding it here
+  // made preset sync regenerate the file and silently clobber the redirect.
   return `---
 name: council
 description: ${yamlString(spec.description)}
@@ -46,20 +49,10 @@ description: ${yamlString(spec.description)}
 
 # Council Skill
 
-## Version
-${spec.version}
-
-## Agents
-${spec.agents.map((a) => `- ${a.role} (${a.id}): ${a.focus.join(', ')}`).join('\n')}
-
-## Usage
-Use the council agents to get multi-perspective analysis on code changes, architecture decisions, and security reviews.
-
-## Instructions
-Coordinate with the council agents and synthesize their perspectives into the configured output contract.
-
-## Context
-${spec.outputContract}
+> Redirect — this stub carries no roster. Canonical sources:
+> roster \`src/presets/council/council.yml\`, role content \`ROLE_PROFILES\`
+> in \`src/domain/council/council-agent.ts\`, workflow
+> \`src/core/ccep/workflows/council.yml\`.
 `;
 }
 

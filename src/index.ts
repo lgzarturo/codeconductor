@@ -57,6 +57,7 @@ export type {
 } from './core/verification/verification-runner';
 
 export * from './validation/schemas';
+export * from './validation/scoped-context-schemas';
 
 export {
   createInitialState,

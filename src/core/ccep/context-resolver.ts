@@ -14,6 +14,10 @@ import { productGraphPath } from '../product-graph/paths';
 import { queryNodes } from '../product-graph/graph-store';
 import { isProductGraphDisabled } from '../evaluation/harness-catalog';
 import { loadOpenspecState } from '../openspec/openspec-state';
+import { createHash } from 'node:crypto';
+import { ROOT_PRESETS_DIR } from '../presets/package-paths';
+import { resolveScopedContext, type RuleDiagnostic } from './scoped-rules';
+import { selectSkills } from './skill-selector';
 
 const DEFAULT_POLICIES: ExecutionContextInput['policies'] = {
   architecture: 'modular',
@@ -84,10 +88,28 @@ async function resolveAstSource(
   return { source: 'manual', confidence: 'low' };
 }
 
+/** Version = sha256 of the published SKILL.md; an unreadable file is reported, never given an invented version. */
+async function publishedSkills(
+  ids: readonly string[],
+): Promise<{ skills: { id: string; version: string }[]; diagnostics: RuleDiagnostic[] }> {
+  const skills: { id: string; version: string }[] = [];
+  const diagnostics: RuleDiagnostic[] = [];
+  for (const id of ids) {
+    try {
+      const content = await readFile(join(ROOT_PRESETS_DIR, 'claude', 'skills', id, 'SKILL.md'));
+      skills.push({ id, version: createHash('sha256').update(content).digest('hex') });
+    } catch {
+      diagnostics.push({ code: 'skill_unreadable', severity: 'warning', message: `Published SKILL.md for "${id}" is not readable` });
+    }
+  }
+  return { skills, diagnostics };
+}
+
 export async function resolveContext(
   envelope: CommandEnvelopeInput,
   profile: WorkflowProfileInput,
   projectRoot: string,
+  scope?: { readonly files: readonly string[]; readonly role: string },
 ): Promise<ExecutionContextInput> {
   const ast = await resolveAstSource(projectRoot);
   const knowledge = await loadProductKnowledge(projectRoot);
@@ -112,6 +134,27 @@ export async function resolveContext(
     }
   }
 
+  let scopedContext: ExecutionContextInput['scopedContext'];
+  if (scope && scope.files.length > 0) {
+    const detected = await detectProject(projectRoot);
+    const languagesOf = (file: string): readonly string[] => {
+      const owned = (detected.scopes ?? []).filter(
+        (s) => s.root === '.' || file === s.root || file.startsWith(`${s.root}/`),
+      );
+      return owned.length > 0 ? [...new Set(owned.map((s) => s.language))] : detected.languages;
+    };
+    const selection = selectSkills({ ...scope, scopes: detected.scopes ?? [] });
+    const published = await publishedSkills(selection.selected.map((s) => s.id));
+    scopedContext = (
+      await resolveScopedContext(projectRoot, {
+        ...scope,
+        languagesOf,
+        skills: published.skills,
+        skillDiagnostics: [...selection.diagnostics, ...published.diagnostics],
+      })
+    ).scopedContext;
+  }
+
   const context: ExecutionContextInput = {
     envelope,
     profile,
@@ -129,6 +172,7 @@ export async function resolveContext(
     ast,
     policies: DEFAULT_POLICIES,
     outputSchema: firstPhase?.outputSchema ?? profile.intakeSchema ?? 'agent-output',
+    ...(scopedContext ? { scopedContext } : {}),
   };
 
   return validateExecutionContext(context);

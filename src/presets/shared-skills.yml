@@ -132,3 +132,11 @@ skills:
     targets: [claude, codex, opencode]
   - name: security
     targets: [claude, opencode]
+  - name: rust-engineering
+    targets: [claude, codex, cursor, opencode, agy]
+  - name: rust-async
+    targets: [claude, codex, cursor, opencode, agy]
+  - name: rust-sqlx
+    targets: [claude, codex, cursor, opencode, agy]
+  - name: database-migrations
+    targets: [claude, codex, cursor, opencode, agy]

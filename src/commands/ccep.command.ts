@@ -48,6 +48,8 @@ export interface CcepOptions {
   readonly executionId?: string;
   readonly taskId?: string;
   readonly contextStrategy?: string;
+  /** Comma-separated affected files; enables scoped rule resolution. */
+  readonly files?: string;
   readonly config?: string;
   readonly rest?: string[];
   readonly panel?: boolean;
@@ -227,6 +229,7 @@ export async function ccepCommand(
     executionId,
     taskId,
     contextStrategy,
+    files,
     config,
     rest,
     panel,
@@ -360,11 +363,24 @@ export async function ccepCommand(
         context = validateExecutionContext(parseJsonInput(content));
       } else {
         const envelope = parseCommand(parsed.command, userRequest ?? '', projectRoot);
-        context = await resolveContext(envelope, profile, projectRoot);
+        const scopeFiles = files?.split(',').map((f) => f.trim()).filter(Boolean) ?? [];
+        context = await resolveContext(envelope, profile, projectRoot, { files: scopeFiles, role: agentRole });
         context = {
           ...context,
           currentPhase: phaseId,
           outputSchema: resolvedPhase.outputSchema,
+        };
+      }
+
+      const blockedRules = context.scopedContext?.manifest.diagnostics.filter((d) => d.severity === 'blocking') ?? [];
+      if (blockedRules.length > 0) {
+        return {
+          code: 1,
+          data: {
+            success: false,
+            command: 'ccep compile',
+            errors: blockedRules.map((d) => `${d.code}: ${d.message}`),
+          },
         };
       }
 

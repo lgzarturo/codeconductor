@@ -1,33 +1,33 @@
 {
   "schemaVersion": 1,
-  "harnessVersion": "1.7.0",
-  "cliVersion": "1.7.0",
+  "harnessVersion": "1.7.1",
+  "cliVersion": "1.7.1",
   "installedAt": "2026-09-16T04:28:59.412Z",
-  "updatedAt": "2026-10-10T05:29:38.298Z",
+  "updatedAt": "2026-10-18T03:11:38.529Z",
   "targets": {
     "opencode": {
-      "version": "1.6.0"
+      "version": "1.7.1"
     },
     "claude": {
-      "version": "1.6.0"
+      "version": "1.7.1"
     },
     "codex": {
-      "version": "1.6.0"
+      "version": "1.7.1"
     },
     "gemini": {
-      "version": "1.6.0"
+      "version": "1.7.1"
     },
     "cursor": {
-      "version": "1.6.0"
+      "version": "1.7.1"
     },
     "agy": {
-      "version": "1.6.0"
+      "version": "1.7.1"
     },
     "pi": {
-      "version": "1.6.0"
+      "version": "1.7.1"
     },
     "muse": {
-      "version": "1.6.0"
+      "version": "1.7.1"
     }
   },
   "managedFiles": {
@@ -117,7 +117,7 @@
     },
     ".opencode/commands/cc-council.md": {
       "installedHash": "sha256:45216857c1bcc34a56b85260d6d6706794486e63942eca6d3825bcd37d89f207",
-      "sourceVersion": "1.7.0"
+      "sourceVersion": "1.7.1"
     },
     ".opencode/commands/cc-db-migration.md": {
       "installedHash": "sha256:15728ab9fcffec56f64dbadedbf48fe114decc244345951b3c2fe8c9fb1f817f",
@@ -561,11 +561,11 @@
     },
     ".claude/CLAUDE.md": {
       "installedHash": "sha256:e559a8a196c4da6e53b645409054d9820d33342fd6ae0109bd68311155493036",
-      "sourceVersion": "1.7.0"
+      "sourceVersion": "1.7.1"
     },
     ".claude/settings.json": {
-      "installedHash": "sha256:dd5612e9da41a1d575587aa933eccedaec345ea9ec60dd6a54d2bcff4599385e",
-      "sourceVersion": "1.7.0"
+      "installedHash": "sha256:de5ecc17a23e9ce5b48dd6d5d778304d8f03dbe6bea0cd721886e467621d15cf",
+      "sourceVersion": "1.7.1"
     },
     ".claude/hooks/invoke-hook.cjs": {
       "installedHash": "sha256:bfddcc68fa94b1b8edc2b8d586a4494e7e2d40c71908614ccc85ae72a05a79b4",
@@ -573,7 +573,7 @@
     },
     ".claude.json": {
       "installedHash": "sha256:5788997b2f5746fca0563105eca9ecc24b83d4f364c5707e3fa85ea260238c9f",
-      "sourceVersion": "1.7.0"
+      "sourceVersion": "1.7.1"
     },
     ".claude/commands/cc/api-contract.md": {
       "installedHash": "sha256:a739ba709a1a2b13a6dbfe0ddfa33610725ae4280c4cd61cd80090bc2cc6a9eb",
@@ -1041,7 +1041,7 @@
     },
     ".codex/AGENTS.md": {
       "installedHash": "sha256:72e0f5d97337d5aaf55d234bb791695bcd055592eef10836efd35a832327ff27",
-      "sourceVersion": "1.7.0"
+      "sourceVersion": "1.7.1"
     },
     ".codex/skills/android-ui-design/SKILL.md": {
       "installedHash": "sha256:da2efe1df634e6aaa7456e7c254ab315d5d9dee9e71596c5c739d6e2c4283c3b",
@@ -1369,7 +1369,7 @@
     },
     "GEMINI.md": {
       "installedHash": "sha256:fd4203c1894877487ad88ef44d5e8ef40e312d65f6915b05d1000e40a6cf0760",
-      "sourceVersion": "1.7.0"
+      "sourceVersion": "1.7.1"
     },
     ".gemini/settings.json": {
       "installedHash": "sha256:d8e397af03b5b032f21d0aa967086f0c78b33c87b76f2e9898ae0a144df7de02",
@@ -1509,7 +1509,7 @@
     },
     ".gemini/commands/cc/council.toml": {
       "installedHash": "sha256:7e711ff1654bf6301ef828212a7224e9ae5e4690c7c91998caf78d5f4994dbda",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".gemini/commands/cc/db-migration.toml": {
       "installedHash": "sha256:7edf5a7caacb320b8563ee1eb8ffb7c3ad995535864e3e86835a066897a0e880",
@@ -1892,32 +1892,32 @@
       "sourceVersion": "1.6.0"
     },
     ".agents/agents/council-architect.md": {
-      "installedHash": "sha256:d807649aa65ceae74b467fa9e1f0c34e80eeb1b6c3ba3530668e40ec1993c26f",
-      "sourceVersion": "1.7.0"
+      "installedHash": "sha256:776aba30d0dce692ee6c63ea63576d5426e800ae8552088e2e72c26b8d7e7e1b",
+      "sourceVersion": "1.7.1"
     },
     ".agents/agents/council-product.md": {
-      "installedHash": "sha256:efdf8868fbbbfe8dab2ad0ebe7fcad0daf8ef4c8468c770e450318ee94729fed",
-      "sourceVersion": "1.7.0"
+      "installedHash": "sha256:668bff277eb8420419464da07e41e898229e95bba17485551f1c276c1cb103fc",
+      "sourceVersion": "1.7.1"
     },
     ".agents/agents/council-delivery.md": {
-      "installedHash": "sha256:278c0ecb67a1a81b096f26652ff9e9a27b263b295161d9cb7e2756722be05386",
-      "sourceVersion": "1.7.0"
+      "installedHash": "sha256:dbaee270cc34ab527ea954b6a01cb10cf8384423c632e7cb80b5eaf95a284fe7",
+      "sourceVersion": "1.7.1"
     },
     ".agents/agents/council-data-ops.md": {
-      "installedHash": "sha256:7f22c600657fe8c9c654b538ca5f463f2f06dd5eed1ca643daac5fa6df5279fc",
-      "sourceVersion": "1.7.0"
+      "installedHash": "sha256:2e4bd12d256eee801e2e4581117c1e2d7b3fdbebf2e99c75d1c4a0eda26f08af",
+      "sourceVersion": "1.7.1"
     },
     ".agents/agents/council-security-reviewer.md": {
-      "installedHash": "sha256:664ee68be69d5bcc46f903deadb34fa2fd7c4d9f9e184afef6e69d719da94403",
-      "sourceVersion": "1.7.0"
+      "installedHash": "sha256:10cdf3f56e3cbf22e5ef0f1ada2062f7b17f9f9632c739c061a1e8378952a6a2",
+      "sourceVersion": "1.7.1"
     },
     ".agents/agents/council-devil.md": {
-      "installedHash": "sha256:c333d8db4012ff325d81effd1e7e78dfc0b53f585f5f8041e045b9be0415480d",
-      "sourceVersion": "1.7.0"
+      "installedHash": "sha256:3f51119df46eaff62a8191cbad750f4201fd311cccf014fcf26441ea2a027ded",
+      "sourceVersion": "1.7.1"
     },
     "AGENTS.md": {
-      "installedHash": "sha256:f01e46f24c70ef5259f22099f442803ee99add515c5a09ec74df42256e73fd6b",
-      "sourceVersion": "1.7.0"
+      "installedHash": "sha256:baa9d6210a9f255848afb2e2be2170d658934f616a834f5018ccadb93d4f4bf5",
+      "sourceVersion": "1.7.1"
     },
     ".cursorignore": {
       "installedHash": "sha256:0f5011b07ba5f6f2b27397b52740f0b0b26c5b8fa424dd072d7ee90a05b25fff",
@@ -1957,7 +1957,7 @@
     },
     ".cursor/commands/cc/council.md": {
       "installedHash": "sha256:3ac0a712db5cc9d1289b1589920f1dbbbbf59a98477b4b8e3222a02c36b91b94",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".cursor/commands/cc/db-migration.md": {
       "installedHash": "sha256:4cbad690726ec2b036b310571398226aba04257ea8512aa0473363d03114fb7d",
@@ -2461,7 +2461,7 @@
     },
     ".agents/AGENTS.md": {
       "installedHash": "sha256:5cb1e286e1c577fae0852d7e6ea9366269ac6240e3210874fe864cfe5bdbb40b",
-      "sourceVersion": "1.7.0"
+      "sourceVersion": "1.7.1"
     },
     ".agents/rules/commit-style.md": {
       "installedHash": "sha256:25e6df93478c0cb233ce8a8e8fb4d2e4c90f0e2b60ef84f61ada194ac11c8c10",
@@ -2489,7 +2489,7 @@
     },
     ".agents/workflows/cc-council.md": {
       "installedHash": "sha256:a8252fabf4e15b4de7eb49dff7f8bdd987a9d58e069cfb861751b185684fc008",
-      "sourceVersion": "1.7.0"
+      "sourceVersion": "1.7.1"
     },
     ".agents/workflows/cc-db-migration.md": {
       "installedHash": "sha256:3d63ef812c446e287b22fa18aadedf2982b0ec50c33cfb2ef7d29a2136078f51",
@@ -3073,7 +3073,7 @@
     },
     ".pi/prompts/cc-council.md": {
       "installedHash": "sha256:3ac0a712db5cc9d1289b1589920f1dbbbbf59a98477b4b8e3222a02c36b91b94",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".pi/prompts/cc-db-migration.md": {
       "installedHash": "sha256:15728ab9fcffec56f64dbadedbf48fe114decc244345951b3c2fe8c9fb1f817f",
@@ -3361,155 +3361,155 @@
     },
     ".opencode/agents/council-lead.md": {
       "installedHash": "sha256:d04028506c839d508fa03440eacf66b8b18143d8b4d8960e29cb43b2c24a1f35",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".opencode/agents/council-architect.md": {
       "installedHash": "sha256:d807649aa65ceae74b467fa9e1f0c34e80eeb1b6c3ba3530668e40ec1993c26f",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".opencode/agents/council-product.md": {
       "installedHash": "sha256:efdf8868fbbbfe8dab2ad0ebe7fcad0daf8ef4c8468c770e450318ee94729fed",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".opencode/agents/council-delivery.md": {
       "installedHash": "sha256:278c0ecb67a1a81b096f26652ff9e9a27b263b295161d9cb7e2756722be05386",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".opencode/agents/council-data-ops.md": {
       "installedHash": "sha256:7f22c600657fe8c9c654b538ca5f463f2f06dd5eed1ca643daac5fa6df5279fc",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".opencode/agents/council-security-reviewer.md": {
       "installedHash": "sha256:664ee68be69d5bcc46f903deadb34fa2fd7c4d9f9e184afef6e69d719da94403",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".opencode/agents/council-devil.md": {
       "installedHash": "sha256:c333d8db4012ff325d81effd1e7e78dfc0b53f585f5f8041e045b9be0415480d",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".claude/skills/council/SKILL.md": {
       "installedHash": "sha256:c7958cfd8bf51a7e256383389f13fb4e4f269ef14d5d38d34f35ee2d6ab990a7",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".claude/agents/council-architect.md": {
       "installedHash": "sha256:776aba30d0dce692ee6c63ea63576d5426e800ae8552088e2e72c26b8d7e7e1b",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".claude/agents/council-product.md": {
       "installedHash": "sha256:668bff277eb8420419464da07e41e898229e95bba17485551f1c276c1cb103fc",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".claude/agents/council-delivery.md": {
       "installedHash": "sha256:dbaee270cc34ab527ea954b6a01cb10cf8384423c632e7cb80b5eaf95a284fe7",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".claude/agents/council-data-ops.md": {
       "installedHash": "sha256:2e4bd12d256eee801e2e4581117c1e2d7b3fdbebf2e99c75d1c4a0eda26f08af",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".claude/agents/council-security-reviewer.md": {
       "installedHash": "sha256:10cdf3f56e3cbf22e5ef0f1ada2062f7b17f9f9632c739c061a1e8378952a6a2",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".claude/agents/council-devil.md": {
       "installedHash": "sha256:3f51119df46eaff62a8191cbad750f4201fd311cccf014fcf26441ea2a027ded",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".claude/commands/cc-council.md": {
       "installedHash": "sha256:7eca89debdce4e8e39e6704d29795150f43ce54e46f07a009015b56442811706",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".codex/config.toml": {
       "installedHash": "sha256:80099278efc75d698c6a19ddf7e01818d0efa52b9f369514eb681d62d5e71fc9",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".codex/agents/council_architect.toml": {
       "installedHash": "sha256:596f2bef2e5a562136cdb2dcb8f1fd0de36be2970e7590834cb198b83b576466",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".codex/agents/council_product.toml": {
       "installedHash": "sha256:c09fdd4a96ce4c6af000ad7f3e4cebcf20299a85ceaafaff5d9926e13700596a",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".codex/agents/council_delivery.toml": {
       "installedHash": "sha256:91301424c22c3050516d5f78b29779fdab4587060deee61b59641d5ec38f83e9",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".codex/agents/council_data-ops.toml": {
       "installedHash": "sha256:65c8363884383c03b5f3a3e99d76a623dc493fe6fd29170dd956fd3db522cc8f",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".codex/agents/council_security-reviewer.toml": {
       "installedHash": "sha256:9ec3b41688ecd8a44fcee4517df4fba92e7b5c521dd96c73bb742004fa35d104",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".codex/agents/council_devil.toml": {
       "installedHash": "sha256:f0f686b089be6d5405559b734e9ed3d7e959ff9bbdd390584638c6a11bbdf393",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".codex/skills/council/SKILL.md": {
       "installedHash": "sha256:75f30e2cfeedb05b2a04116d863c7405eac2347bcd87dbc1f76a011e8e4e058b",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".gemini/skills/council/SKILL.md": {
       "installedHash": "sha256:619d2e60d5b1ce3a815b3de42e7ec4141ada7f3e12ca016460bc04431efffc1b",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".gemini/agents/council-architect.md": {
       "installedHash": "sha256:776aba30d0dce692ee6c63ea63576d5426e800ae8552088e2e72c26b8d7e7e1b",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".gemini/agents/council-product.md": {
       "installedHash": "sha256:668bff277eb8420419464da07e41e898229e95bba17485551f1c276c1cb103fc",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".gemini/agents/council-delivery.md": {
       "installedHash": "sha256:dbaee270cc34ab527ea954b6a01cb10cf8384423c632e7cb80b5eaf95a284fe7",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".gemini/agents/council-data-ops.md": {
       "installedHash": "sha256:2e4bd12d256eee801e2e4581117c1e2d7b3fdbebf2e99c75d1c4a0eda26f08af",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".gemini/agents/council-security-reviewer.md": {
       "installedHash": "sha256:10cdf3f56e3cbf22e5ef0f1ada2062f7b17f9f9632c739c061a1e8378952a6a2",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".gemini/agents/council-devil.md": {
       "installedHash": "sha256:3f51119df46eaff62a8191cbad750f4201fd311cccf014fcf26441ea2a027ded",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".cursor/skills/council/SKILL.md": {
       "installedHash": "sha256:c1a79ff3bddecdb95cb55a6f4033a282e1e042948c7ba7554da558390aece5eb",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".cursor/agents/council-architect.md": {
       "installedHash": "sha256:776aba30d0dce692ee6c63ea63576d5426e800ae8552088e2e72c26b8d7e7e1b",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".cursor/agents/council-product.md": {
       "installedHash": "sha256:668bff277eb8420419464da07e41e898229e95bba17485551f1c276c1cb103fc",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".cursor/agents/council-delivery.md": {
       "installedHash": "sha256:dbaee270cc34ab527ea954b6a01cb10cf8384423c632e7cb80b5eaf95a284fe7",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".cursor/agents/council-data-ops.md": {
       "installedHash": "sha256:2e4bd12d256eee801e2e4581117c1e2d7b3fdbebf2e99c75d1c4a0eda26f08af",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".cursor/agents/council-security-reviewer.md": {
       "installedHash": "sha256:10cdf3f56e3cbf22e5ef0f1ada2062f7b17f9f9632c739c061a1e8378952a6a2",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".cursor/agents/council-devil.md": {
       "installedHash": "sha256:3f51119df46eaff62a8191cbad750f4201fd311cccf014fcf26441ea2a027ded",
-      "sourceVersion": "1.6.0"
+      "sourceVersion": "1.7.1"
     },
     ".agents/skills/council/SKILL.md": {
-      "installedHash": "sha256:340cd05bae3ab9becbf022f0073180d47ecd5108393d74bd5df582e5bf19b8aa",
-      "sourceVersion": "1.7.0"
+      "installedHash": "sha256:619d2e60d5b1ce3a815b3de42e7ec4141ada7f3e12ca016460bc04431efffc1b",
+      "sourceVersion": "1.7.1"
     },
     ".muse/hooks.json": {
       "installedHash": "sha256:ed1cfd73c8a1e579f7d238d770aec2b9b60c818de05c510d26d7f3effebcba15",

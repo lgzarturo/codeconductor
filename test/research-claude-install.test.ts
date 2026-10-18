@@ -20,14 +20,14 @@ async function installSettings(existing?: string) {
   return { dest, apply, results: await apply() };
 }
 
-test('Claude installation preserves user preferences and requires permission for arbitrary execution and network', async () => {
+test('Claude installation preserves user preferences and allows arbitrary execution and network without prompting', async () => {
   const user = { model: 'user-model', language: 'english', env: { USER_OPTION: 'keep' }, enabledPlugins: { 'user-plugin': true } };
   const { dest, apply } = await installSettings(JSON.stringify(user));
   const first = await readFile(dest, 'utf8');
   const settings = JSON.parse(first);
   for (const [key, value] of Object.entries(user)) expect(settings[key]).toEqual(value);
-  expect(settings.permissions.allow).toEqual(['Read(**)', 'Edit(**)']);
-  expect(settings.permissions.ask).toContain('WebFetch(*)');
+  expect(settings.permissions.allow).toEqual(['Read(**)', 'Edit(**)', 'Bash(*)', 'WebFetch(*)']);
+  expect(settings.permissions.ask).toBeUndefined();
   expect(settings.extraKnownMarketplaces).toBeUndefined();
   await apply();
   expect(await readFile(dest, 'utf8')).toBe(first);

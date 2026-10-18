@@ -555,7 +555,7 @@ describe('Manifest template flag', () => {
     expect(claudeSettings.env).toBeUndefined();
     expect(claudeSettings.permissions.deny).toContain('PowerShell(Remove-Item *)');
     expect(claudeSettings.permissions.deny).toContain('Read(!.env.example)');
-    expect(claudeSettings.permissions.ask).not.toContain('Bash(git push --force*)');
+    expect(claudeSettings.permissions.allow).not.toContain('Bash(git push --force*)');
     expect(claudeSettings.effortLevel).toBeUndefined();
     expect(codexConfig).toContain('model = "gpt-6.1-sol"');
     expect(codexConfig).toContain('model_reasoning_effort = "medium"');

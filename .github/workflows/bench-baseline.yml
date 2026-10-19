@@ -1,20 +1,22 @@
-# M5 cheap baseline — manual / dedicated branch only.
-# Never runs on pull_request. Key from secrets.OPENROUTER_API_KEY only.
+# M5 cheap baseline — manual dispatch only (no push / pull_request triggers).
+# Key from secrets.OPENROUTER_API_KEY only. Hard caps per run:
+# BENCH_MAX_TOKENS / BENCH_MAX_REQUESTS (Claude is killed when either is hit).
 name: bench-baseline-m5
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - bench/baseline-m5-run
 
 permissions:
   contents: read
 
+concurrency:
+  group: bench-baseline-m5
+  cancel-in-progress: true
+
 jobs:
   cheap-baseline:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,20 +48,8 @@ jobs:
           mkdir -p "$HOME/.claude"
           printf '%s\n' '{"hasTrustDialogAccepted":true,"hasCompletedProjectOnboarding":true}' > "$HOME/.claude/settings.json"
 
-      - name: Smoke claude -p (2 attempts max)
-        id: smoke
-        env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          ANTHROPIC_BASE_URL: https://openrouter.ai/api
-          ANTHROPIC_AUTH_TOKEN: ${{ secrets.OPENROUTER_API_KEY }}
-          ANTHROPIC_API_KEY: ""
-          BENCH_MODEL_ID: nvidia/nemotron-3-super-120b-a12b:free
-          BENCH_OUT_DIR: bench-out
-          BENCH_SMOKE_ONLY: "1"
-        run: bun run scripts/bench-baseline-cheap.ts
-
+      # Smoke (2 attempts max) runs inside the script before any cell.
       - name: Run cheap baseline (N=3)
-        if: success()
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           ANTHROPIC_BASE_URL: https://openrouter.ai/api
@@ -70,6 +60,8 @@ jobs:
           BENCH_SEED: "42"
           BENCH_OUT_DIR: bench-out
           BENCH_PROJECT_ROOT: .
+          BENCH_MAX_TOKENS: "2000000"
+          BENCH_MAX_REQUESTS: "150"
         run: bun run scripts/bench-baseline-cheap.ts
 
       - name: Post-candado usage snapshot (always)

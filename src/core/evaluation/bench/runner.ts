@@ -25,7 +25,9 @@ import {
   type BenchRunCell,
 } from './report';
 import {
+  budgetExhausted,
   runClaudeHostCell,
+  type BenchBudget,
   type ClaudeHostDiagnostics,
 } from './host-claude';
 import { PACKAGE_ROOT } from '../../presets/package-paths';
@@ -84,6 +86,8 @@ export interface BenchRunOptions {
   writeReport?: boolean;
   /** Cap live cells (tests / partial baseline). */
   maxLiveCells?: number;
+  /** Hard token/request budget for live runs (required with `live`). */
+  budget?: BenchBudget;
 }
 
 export interface BenchRunResult {
@@ -263,6 +267,11 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
         abortReason = 'live bench requires suite fixtureDir';
         runValid = false;
         cells = [];
+      } else if (!options.budget) {
+        aborted = true;
+        abortReason = 'live bench requires a token/request budget';
+        runValid = false;
+        cells = [];
       } else if (aborted) {
         cells = [];
       } else {
@@ -331,10 +340,17 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
               {
                 fixtureDir,
                 modelId,
+                budget: options.budget,
                 hostVersion: process.env.CLAUDE_CODE_VERSION ?? null,
                 maxAttempts: 2,
               },
             );
+            const spent = budgetExhausted(options.budget);
+            if (spent) {
+              aborted = true;
+              abortReason = spent;
+              runValid = false;
+            }
             invocations.push({
               taskId: slot.taskId,
               variant: slot.variant,
@@ -352,7 +368,7 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
                 diagnostics: hostResult.diagnostics,
               });
               // After 2 failed host slots with zero valid cells, stop (Arturo).
-              if (cells.length === 0 && consecutiveHostFailures >= 2) {
+              if (!aborted && cells.length === 0 && consecutiveHostFailures >= 2) {
                 aborted = true;
                 abortReason =
                   `no valid cells after ${consecutiveHostFailures} host attempts — ` +

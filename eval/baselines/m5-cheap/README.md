@@ -1,5 +1,10 @@
 # M5 cheap baseline (OpenRouter :free)
 
+> **Invalid — do not use as a reference.** This run executed the same prompt on
+> a bare fixture for both variants (treatment did not load the harness), with
+> no request/token cap. Treatment now installs the Claude preset and runs are
+> capped at 2M tokens / 150 requests. Regenerate via `workflow_dispatch`.
+
 - **Mode:** `cheap: true`, N=3, seed=42
 - **Model:** `nvidia/nemotron-3-super-120b-a12b:free` (list price 0 verified)
 - **Date:** 2026-10-19T05:35:35.055Z (UTC)

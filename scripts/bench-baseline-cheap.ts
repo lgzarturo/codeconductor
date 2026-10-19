@@ -16,6 +16,7 @@ import { resolve } from 'node:path';
 import { runBench } from '../src/core/evaluation/bench/runner';
 import { assertOpenRouterModelFreeZeroPrice } from '../src/core/evaluation/bench/openrouter-free-model';
 import {
+  createBenchBudget,
   ensureClaudeCiConfig,
   runClaudeSmoke,
 } from '../src/core/evaluation/bench/host-claude';
@@ -29,6 +30,9 @@ const PROJECT_ROOT = resolve(process.env.BENCH_PROJECT_ROOT?.trim() || '.');
 const N = Number(process.env.BENCH_N ?? '3');
 const SEED = Number(process.env.BENCH_SEED ?? '42');
 const SMOKE_ONLY = process.env.BENCH_SMOKE_ONLY === '1';
+// Hard per-run caps (smoke + all cells). Claude is killed when either is hit.
+const MAX_TOKENS = Number(process.env.BENCH_MAX_TOKENS ?? '2000000');
+const MAX_REQUESTS = Number(process.env.BENCH_MAX_REQUESTS ?? '150');
 
 function logEvent(payload: Record<string, unknown>): void {
   // Never include env values / secrets.
@@ -77,6 +81,7 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = '';
 
   await ensureClaudeCiConfig();
+  const budget = createBenchBudget(MAX_TOKENS, MAX_REQUESTS);
 
   try {
     const keyBefore = await fetchOpenRouterKeySnapshot();
@@ -110,6 +115,7 @@ async function main(): Promise<void> {
 
     const smoke = await runClaudeSmoke({
       modelId: MODEL_ID,
+      budget,
       timeoutMs: 120_000,
       maxAttempts: 2,
     });
@@ -207,6 +213,7 @@ async function main(): Promise<void> {
       writeReport: true,
       reportDir: OUT_DIR,
       fetchKey: () => fetchOpenRouterKeySnapshot(),
+      budget,
     });
 
     usageAfter = result.usageAfter;
@@ -231,6 +238,7 @@ async function main(): Promise<void> {
       usageBefore: result.usageBefore ?? usageBefore,
       usageAfter,
       runValid: result.runValid,
+      budget,
       aborted: result.aborted,
       abortReason: result.abortReason,
       contentHash: result.report.contentHash,
@@ -300,6 +308,7 @@ async function main(): Promise<void> {
       usageBefore: aggregate.usageBefore,
       usageAfter: aggregate.usageAfter,
       completed: aggregate.completedCells.length,
+      budget,
       pending: aggregate.pendingCells.length,
       verdict: aggregate.verdict,
       runValid: aggregate.runValid,
@@ -340,6 +349,7 @@ async function main(): Promise<void> {
     logEvent({
       event: 'bench-baseline-failed',
       abortReason,
+      budget,
       usageBefore,
       usageAfter,
     });

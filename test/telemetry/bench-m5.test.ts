@@ -3,7 +3,7 @@
  * Live host baseline remains pending (Arturo launches after review).
  */
 import { afterEach, describe, expect, test } from 'bun:test';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
@@ -22,7 +22,13 @@ import {
   synthesizeDryCells,
 } from '../../src/core/evaluation/bench/runner';
 import { assertOpenRouterModelFreeZeroPrice } from '../../src/core/evaluation/bench/openrouter-free-model';
-import { sanitizeStderr } from '../../src/core/evaluation/bench/host-claude';
+import {
+  budgetExhausted,
+  createBenchBudget,
+  meterStreamLine,
+  runClaudeHostCell,
+  sanitizeStderr,
+} from '../../src/core/evaluation/bench/host-claude';
 import type { OpenRouterKeySnapshot } from '../../src/core/telemetry/openrouter-spend-lock';
 import { loadHarnessSuite } from '../../src/core/evaluation/harness-experiment';
 import { scorecardCommand } from '../../src/commands/scorecard.command';
@@ -510,5 +516,151 @@ describe('M5 scorecard bench CLI', () => {
     expect(data.report?.n).toBe(3);
     expect(data.contentHash).toMatch(/^[a-f0-9]{64}$/);
     expect(['ACEPTA', 'RECHAZA', 'NO CONCLUYENTE']).toContain(data.verdict);
+  });
+});
+
+describe('M5 live host budget (fake claude binary)', () => {
+  const FIXTURE_DIR = resolve(REPO_ROOT, 'eval/suites/harness-v1/fixture');
+  const MODEL = 'nvidia/nemotron-3-super-120b-a12b:free';
+  let binDir: string | null = null;
+
+  afterEach(async () => {
+    if (binDir) await rm(binDir, { recursive: true, force: true });
+    binDir = null;
+  });
+
+  async function fakeClaude(body: string): Promise<string> {
+    binDir = await mkdtemp(join(tmpdir(), 'cc-fake-claude-'));
+    const bin = join(binDir, 'claude');
+    await writeFile(bin, `#!/usr/bin/env node\n${body}\n`, 'utf-8');
+    await chmod(bin, 0o755);
+    return bin;
+  }
+
+  const assistantLine = (id: string, tokens: number) =>
+    JSON.stringify({
+      type: 'assistant',
+      message: { id, usage: { input_tokens: tokens, output_tokens: 0 } },
+    });
+
+  test('meterStreamLine counts one request per message id and max usage', () => {
+    const budget = createBenchBudget(1_000, 10);
+    const seen = new Map<string, number>();
+    meterStreamLine(assistantLine('m1', 100), seen, budget);
+    meterStreamLine(assistantLine('m1', 150), seen, budget);
+    meterStreamLine(assistantLine('m2', 50), seen, budget);
+    meterStreamLine('not json', seen, budget);
+    expect(budget.requests).toBe(2);
+    expect(budget.tokens).toBe(200);
+    const result = meterStreamLine('{"type":"result","subtype":"success"}', seen, budget);
+    expect(result).toEqual({ type: 'result', subtype: 'success' });
+  });
+
+  test('budgetExhausted trips on requests or tokens', () => {
+    expect(budgetExhausted(createBenchBudget(10, 10))).toBeNull();
+    expect(budgetExhausted({ maxTokens: 10, maxRequests: 2, tokens: 0, requests: 2 })).toMatch(
+      /request budget exhausted: 2\/2/,
+    );
+    expect(budgetExhausted({ maxTokens: 10, maxRequests: 2, tokens: 11, requests: 0 })).toMatch(
+      /token budget exhausted/,
+    );
+  });
+
+  test('kills a runaway claude when the request cap is reached', async () => {
+    const bin = await fakeClaude(
+      `let i = 0; setInterval(() => console.log(JSON.stringify({ type: 'assistant', message: { id: 'm' + i++, usage: { input_tokens: 10 } } })), 5);`,
+    );
+    const budget = createBenchBudget(1_000_000, 5);
+    const res = await runClaudeHostCell(
+      { taskId: 't', variant: 'baseline', repetition: 1, prompt: 'p' },
+      { fixtureDir: FIXTURE_DIR, modelId: MODEL, budget, claudeBin: bin, minIntervalMs: 0, timeoutMs: 30_000 },
+    );
+    expect(res.pending).toBe(true);
+    expect(res.pendingReason).toMatch(/request budget exhausted/);
+    expect(res.diagnostics.timedOut).toBe(false);
+    expect(budget.requests).toBeLessThanOrEqual(6);
+  });
+
+  test('kills a runaway claude when the token cap is reached', async () => {
+    const bin = await fakeClaude(
+      `let i = 0; setInterval(() => console.log(JSON.stringify({ type: 'assistant', message: { id: 'm' + i++, usage: { input_tokens: 20000 } } })), 5);`,
+    );
+    const budget = createBenchBudget(100_000, 150);
+    const res = await runClaudeHostCell(
+      { taskId: 't', variant: 'baseline', repetition: 1, prompt: 'p' },
+      { fixtureDir: FIXTURE_DIR, modelId: MODEL, budget, claudeBin: bin, minIntervalMs: 0, timeoutMs: 30_000 },
+    );
+    expect(res.pendingReason).toMatch(/token budget exhausted/);
+    expect(budget.tokens).toBeLessThanOrEqual(120_000);
+  });
+
+  test('does not spawn claude when the budget is already spent', async () => {
+    const bin = await fakeClaude('process.exit(0);');
+    const budget = { maxTokens: 10, maxRequests: 1, tokens: 0, requests: 1 };
+    const res = await runClaudeHostCell(
+      { taskId: 't', variant: 'baseline', repetition: 1, prompt: 'p' },
+      { fixtureDir: FIXTURE_DIR, modelId: MODEL, budget, claudeBin: bin, minIntervalMs: 0 },
+    );
+    expect(res.pendingReason).toMatch(/request budget exhausted/);
+    expect(budget.requests).toBe(1);
+  });
+
+  // Fake claude records what it saw (harness present, model routing, turn cap).
+  const RECORDER = `
+const fs = require('node:fs');
+const args = process.argv.slice(2);
+fs.writeFileSync('seen.json', JSON.stringify({
+  harness: fs.existsSync('.claude/CLAUDE.md'),
+  sonnet: process.env.ANTHROPIC_DEFAULT_SONNET_MODEL,
+  subagent: process.env.CLAUDE_CODE_SUBAGENT_MODEL,
+  maxTurns: args[args.indexOf('--max-turns') + 1],
+}));
+console.log(JSON.stringify({ type: 'assistant', message: { id: 'm1', usage: { input_tokens: 10, output_tokens: 5 } } }));
+console.log(JSON.stringify({ type: 'result', subtype: 'success', is_error: false, num_turns: 1, usage: { input_tokens: 10, output_tokens: 5 } }));
+`;
+
+  async function recordSlot(variant: 'baseline' | 'treatment'): Promise<Record<string, unknown>> {
+    const bin = await fakeClaude(RECORDER);
+    const budget = createBenchBudget(2_000_000, 150);
+    const res = await runClaudeHostCell(
+      {
+        taskId: 't',
+        variant,
+        repetition: 1,
+        prompt: 'p',
+        testCommand: `cp seen.json ${JSON.stringify(join(binDir!, 'seen.json'))}`,
+      },
+      { fixtureDir: FIXTURE_DIR, modelId: MODEL, budget, claudeBin: bin, minIntervalMs: 0 },
+    );
+    expect(res.cell?.calls).toBe(1);
+    expect(budget.requests).toBe(1);
+    return JSON.parse(await readFile(join(binDir!, 'seen.json'), 'utf-8')) as Record<string, unknown>;
+  }
+
+  test('treatment installs the CodeConductor harness; baseline does not', async () => {
+    expect((await recordSlot('treatment')).harness).toBe(true);
+    expect((await recordSlot('baseline')).harness).toBe(false);
+  }, 60_000);
+
+  test('every model alias routes to the :free model and turns are capped', async () => {
+    const seen = await recordSlot('baseline');
+    expect(seen.sonnet).toBe(MODEL);
+    expect(seen.subagent).toBe(MODEL);
+    expect(seen.maxTurns).toBe('5');
+  });
+
+  test('live runBench without a budget aborts before any call', async () => {
+    const result = await runBench({
+      projectRoot: REPO_ROOT,
+      suitePath: SUITE_PATH,
+      cheap: true,
+      live: true,
+      keyBefore: FREE_KEY,
+      keyAfter: FREE_KEY,
+      writeReport: false,
+    });
+    expect(result.aborted).toBe(true);
+    expect(result.abortReason).toMatch(/budget/);
+    expect(result.invocations).toHaveLength(0);
   });
 });

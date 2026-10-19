@@ -51,7 +51,7 @@ const OutputModeSchema = z.enum(['json', 'human']);
 const SeoFormatSchema = z.enum(['cli', 'json', 'markdown']);
 const SeoFailOnSchema = z.enum(['error', 'warning', 'never']);
 const NonNegativeIntegerSchema = z.coerce.number().int().nonnegative();
-const BOOLEAN_OPTIONS = new Set(['record-telemetry', 'with-tool-details', 'all']);
+const BOOLEAN_OPTIONS = new Set(['record-telemetry', 'with-tool-details', 'all', 'compiled']);
 
 /**
  * Parse command from args
@@ -736,6 +736,7 @@ export async function routeCommand(
         'aggregate',
         'models',
         'prompt-diff',
+        'prompt-metrics',
         'regression',
         'matrix',
         'compare-models',
@@ -771,6 +772,10 @@ export async function routeCommand(
         agent: options.agent as string,
         model: options.model as string,
         fromDiff: options['from-diff'] === true || options.fromDiff === true,
+        compiled:
+          options.compiled === true ||
+          options.compiled === 'true' ||
+          options['compiled'] === true,
         fromVersion:
           scorecardSub === 'prompt-diff'
             ? args.rest?.[0] ?? (options.from as string)

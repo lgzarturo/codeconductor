@@ -27,7 +27,14 @@ import { analyzeChangeFolder } from '../core/openspec/spec-analyzer';
 import { hasTddRunnerEvidence } from '../core/verification/verification-runner';
 import { runHarnessSuiteTasks } from '../core/evaluation/suite-run';
 import { resolvePhaseModels } from '../core/evaluation/execution-profile';
-import { diffPromptVersions, formatPromptDiffMarkdown } from '../core/evaluation/prompt-diff';
+import {
+  diffCompiledPromptVersions,
+  diffPromptVersions,
+  formatCompiledPromptDiffMarkdown,
+  formatPromptDiffMarkdown,
+  measureCompiledPromptAtRef,
+} from '../core/evaluation/prompt-diff';
+import { formatPromptMetricsMarkdown } from '../core/ccep/prompt-metrics';
 import { runRegressionChecklist } from '../core/evaluation/regression-checklist';
 import { generateModelComparisonMarkdown } from '../core/evaluation/model-comparison';
 import {
@@ -65,6 +72,8 @@ export interface ScorecardOptions {
   readonly agent?: string;
   readonly model?: string;
   readonly fromDiff?: boolean;
+  /** When true with prompt-diff: compare compiled harness-v1 prompts via git worktrees. */
+  readonly compiled?: boolean;
   readonly fromVersion?: string;
   readonly toVersion?: string;
   readonly profile?: string;
@@ -116,6 +125,8 @@ export async function scorecardCommand(
       return handleModels(projectRoot, options.profile);
     case 'prompt-diff':
       return handlePromptDiff(projectRoot, options);
+    case 'prompt-metrics':
+      return measureCurrentPromptMetrics(projectRoot);
     case 'regression':
       return handleRegression(projectRoot);
     case 'matrix':
@@ -139,7 +150,7 @@ export async function scorecardCommand(
           success: false,
           command: 'scorecard',
           errors: [
-            `Unknown subcommand: ${subcommand}. Use: create, show, record, list, aggregate, models, prompt-diff, regression, matrix, compare-models, catalog, fingerprint, experiment, ablation, suite-run`,
+            `Unknown subcommand: ${subcommand}. Use: create, show, record, list, aggregate, models, prompt-diff, prompt-metrics, regression, matrix, compare-models, catalog, fingerprint, experiment, ablation, suite-run`,
           ],
         },
       };
@@ -397,10 +408,31 @@ async function handlePromptDiff(
       code: 1,
       data: {
         success: false,
-        errors: ['Usage: scorecard prompt-diff <fromVersion> <toVersion>'],
+        errors: [
+          'Usage: scorecard prompt-diff <fromVersion> <toVersion> [--compiled]',
+        ],
       },
     };
   }
+
+  if (options.compiled) {
+    const diff = await diffCompiledPromptVersions(
+      options.fromVersion,
+      options.toVersion,
+      { gitRoot: projectRoot, projectRoot },
+    );
+    const markdown = formatCompiledPromptDiffMarkdown(diff);
+    return {
+      code: 0,
+      data: {
+        success: true,
+        command: 'scorecard prompt-diff --compiled',
+        diff,
+        markdown,
+      },
+    };
+  }
+
   const configResult = await loadConfig(projectRoot);
   const target = configResult.success ? configResult.data.defaults.target : 'opencode';
   const diff = await diffPromptVersions(options.fromVersion, options.toVersion, {
@@ -412,6 +444,30 @@ async function handlePromptDiff(
   return {
     code: 0,
     data: { success: true, command: 'scorecard prompt-diff', diff, markdown },
+  };
+}
+
+/**
+ * Deterministic prompt metrics for the fixed harness-v1 compile context (CI / local).
+ */
+export async function measureCurrentPromptMetrics(projectRoot: string): Promise<{
+  code: number;
+  data: unknown;
+}> {
+  const measured = await measureCompiledPromptAtRef('current', {
+    gitRoot: projectRoot,
+    projectRoot,
+    useCurrentCompiler: true,
+  });
+  const markdown = formatPromptMetricsMarkdown(measured.metrics);
+  return {
+    code: 0,
+    data: {
+      success: true,
+      command: 'scorecard prompt-metrics',
+      metrics: measured.metrics,
+      markdown,
+    },
   };
 }
 

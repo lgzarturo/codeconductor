@@ -1,0 +1,11 @@
+import { describe, expect, test } from 'bun:test';
+import { clamp } from './review-target';
+
+describe('clamp', () => {
+  test('returns max when n equals max', () => {
+    expect(clamp(10, 0, 10)).toBe(10);
+  });
+  test('returns min when below', () => {
+    expect(clamp(-1, 0, 10)).toBe(0);
+  });
+});

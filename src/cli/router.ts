@@ -51,7 +51,14 @@ const OutputModeSchema = z.enum(['json', 'human']);
 const SeoFormatSchema = z.enum(['cli', 'json', 'markdown']);
 const SeoFailOnSchema = z.enum(['error', 'warning', 'never']);
 const NonNegativeIntegerSchema = z.coerce.number().int().nonnegative();
-const BOOLEAN_OPTIONS = new Set(['record-telemetry', 'with-tool-details', 'all', 'compiled']);
+const BOOLEAN_OPTIONS = new Set([
+  'record-telemetry',
+  'with-tool-details',
+  'all',
+  'compiled',
+  'cheap',
+  'dry-synthetic',
+]);
 
 /**
  * Parse command from args
@@ -745,6 +752,7 @@ export async function routeCommand(
         'experiment',
         'ablation',
         'suite-run',
+        'bench',
       ];
       if (subcommand && !validSubs.includes(subcommand)) {
         return unknownSubcommand(command, subcommand, validSubs);
@@ -776,6 +784,25 @@ export async function routeCommand(
           options.compiled === true ||
           options.compiled === 'true' ||
           options['compiled'] === true,
+        cheap: options.cheap === true || options.cheap === 'true',
+        drySynthetic:
+          options['dry-synthetic'] === true || options['dry-synthetic'] === 'true',
+        benchAction:
+          scorecardSub === 'bench'
+            ? (args.rest?.[0] as string | undefined)
+            : undefined,
+        cellsPath:
+          typeof options.cells === 'string'
+            ? options.cells
+            : typeof options['cells'] === 'string'
+              ? options['cells']
+              : undefined,
+        repetitions: options.n
+          ? parseInt(String(options.n), 10)
+          : options.repetitions
+            ? parseInt(String(options.repetitions), 10)
+            : undefined,
+        seed: options.seed ? parseInt(String(options.seed), 10) : undefined,
         fromVersion:
           scorecardSub === 'prompt-diff'
             ? args.rest?.[0] ?? (options.from as string)

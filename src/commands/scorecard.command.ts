@@ -61,6 +61,8 @@ import {
   persistAblationReport,
 } from '../core/evaluation/ablation-report';
 import { loadBacklog } from '../core/openspec/backlog-parser';
+import { runBench } from '../core/evaluation/bench/runner';
+import type { BenchClaim } from '../core/evaluation/bench/report';
 import type { OutputMode } from '../utils/logger';
 
 export interface ScorecardOptions {
@@ -74,6 +76,12 @@ export interface ScorecardOptions {
   readonly fromDiff?: boolean;
   /** When true with prompt-diff: compare compiled harness-v1 prompts via git worktrees. */
   readonly compiled?: boolean;
+  readonly cheap?: boolean;
+  readonly drySynthetic?: boolean;
+  readonly benchAction?: string;
+  readonly cellsPath?: string;
+  readonly repetitions?: number;
+  readonly seed?: number;
   readonly fromVersion?: string;
   readonly toVersion?: string;
   readonly profile?: string;
@@ -143,6 +151,8 @@ export async function scorecardCommand(
       return handleAblation(projectRoot, options);
     case 'suite-run':
       return handleSuiteRun(projectRoot, options);
+    case 'bench':
+      return handleBench(projectRoot, options);
     default:
       return {
         code: 1,
@@ -150,11 +160,75 @@ export async function scorecardCommand(
           success: false,
           command: 'scorecard',
           errors: [
-            `Unknown subcommand: ${subcommand}. Use: create, show, record, list, aggregate, models, prompt-diff, prompt-metrics, regression, matrix, compare-models, catalog, fingerprint, experiment, ablation, suite-run`,
+            `Unknown subcommand: ${subcommand}. Use: create, show, record, list, aggregate, models, prompt-diff, prompt-metrics, regression, matrix, compare-models, catalog, fingerprint, experiment, ablation, suite-run, bench`,
           ],
         },
       };
   }
+}
+
+async function handleBench(
+  projectRoot: string,
+  options: ScorecardOptions,
+): Promise<{ code: number; data?: unknown }> {
+  const action = options.benchAction ?? 'run';
+  if (action !== 'run' && action !== 'report') {
+    return {
+      code: 1,
+      data: {
+        success: false,
+        errors: ['Usage: scorecard bench run|report [--dry-synthetic] [--cheap] [--n 5] [--cells <path>]'],
+      },
+    };
+  }
+
+  const claim = (options.profile as BenchClaim | undefined) ?? 'success-only';
+  const cheap = options.cheap === true;
+  const result = await runBench({
+    projectRoot,
+    suiteId: options.suiteId ?? 'harness-v1',
+    suitePath: options.suitePath,
+    // §3.1: N=5 default; cheap → N=3 unless --n/--repetitions set.
+    n: options.repetitions ?? (cheap ? 3 : 5),
+    cheap,
+    drySynthetic: options.drySynthetic === true || (!options.cellsPath && action === 'run'),
+    cellsPath: options.cellsPath,
+    seed: options.seed ?? 42,
+    modelId: options.model,
+    claim: ['efficiency', 'quality', 'success-only'].includes(claim)
+      ? claim
+      : 'success-only',
+    writeReport: true,
+  });
+
+  if (result.aborted) {
+    return {
+      code: 1,
+      data: {
+        success: false,
+        command: `scorecard bench ${action}`,
+        aborted: true,
+        runValid: false,
+        errors: [result.abortReason ?? 'bench aborted'],
+        report: result.report,
+        markdown: result.markdown,
+      },
+    };
+  }
+
+  return {
+    code: result.report.verdict === 'RECHAZA' ? 1 : 0,
+    data: {
+      success: true,
+      command: `scorecard bench ${action}`,
+      runValid: result.runValid,
+      reportPath: result.reportPath,
+      contentHash: result.report.contentHash,
+      verdict: result.report.verdict,
+      report: result.report,
+      markdown: result.markdown,
+    },
+  };
 }
 
 async function handleCreate(

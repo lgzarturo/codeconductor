@@ -1,0 +1,6 @@
+import { expect, test } from 'bun:test';
+import { multiply } from './math';
+
+test('multiply returns the product', () => {
+  expect(multiply(3, 4)).toBe(12);
+});

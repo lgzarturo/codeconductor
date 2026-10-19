@@ -1,0 +1,130 @@
+{
+  "version": "pricing/v1",
+  "fetchedAt": "2026-10-19T04:10:25Z",
+  "notes": [
+    "Anthropic figures copied from https://platform.claude.com/docs/en/about-claude/pricing on 2026-10-19 (UTC).",
+    "Model IDs from https://platform.claude.com/docs/en/about-claude/models/overview (Claude API alias column).",
+    "OpenAI figures copied from https://developers.openai.com/api/docs/pricing.md Standard short-context column on 2026-10-19 (UTC).",
+    "OpenRouter per-model list prices and :free data/retention policy: pending — not copied in this PR.",
+    "Haiku 5.5 has tiered long-context pricing; the ≤100k row is the default entry. See note on the >100k entry."
+  ],
+  "entries": [
+    {
+      "provider": "anthropic",
+      "modelId": "claude-fable-5-1",
+      "unit": "per_mtok",
+      "input": 10,
+      "output": 50,
+      "cacheRead": 0.25,
+      "cacheWrite5m": 12.5,
+      "cacheWrite1h": 20,
+      "sourceUrl": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "fetchedAt": "2026-10-19T04:10:25Z",
+      "note": null
+    },
+    {
+      "provider": "anthropic",
+      "modelId": "claude-opus-5-5",
+      "unit": "per_mtok",
+      "input": 4,
+      "output": 20,
+      "cacheRead": 0.2,
+      "cacheWrite5m": 5,
+      "cacheWrite1h": 8,
+      "sourceUrl": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "fetchedAt": "2026-10-19T04:10:25Z",
+      "note": null
+    },
+    {
+      "provider": "anthropic",
+      "modelId": "claude-sonnet-5-5",
+      "unit": "per_mtok",
+      "input": 2,
+      "output": 10,
+      "cacheRead": 0.1,
+      "cacheWrite5m": 2.5,
+      "cacheWrite1h": 4,
+      "sourceUrl": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "fetchedAt": "2026-10-19T04:10:25Z",
+      "note": null
+    },
+    {
+      "provider": "anthropic",
+      "modelId": "claude-haiku-5-5",
+      "unit": "per_mtok",
+      "input": 0.1,
+      "output": 0.5,
+      "cacheRead": 0.01,
+      "cacheWrite5m": 0.125,
+      "cacheWrite1h": 0.2,
+      "sourceUrl": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "fetchedAt": "2026-10-19T04:10:25Z",
+      "note": "Prompts ≤ 100,000 tokens (default entry)."
+    },
+    {
+      "provider": "anthropic",
+      "modelId": "claude-haiku-5-5>100k",
+      "unit": "per_mtok",
+      "input": 0.5,
+      "output": 2.5,
+      "cacheRead": 0.05,
+      "cacheWrite5m": 0.625,
+      "cacheWrite1h": 1,
+      "sourceUrl": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "fetchedAt": "2026-10-19T04:10:25Z",
+      "note": "Prompts over 100,000 tokens. Lookup key is synthetic; callers must select by prompt length."
+    },
+    {
+      "provider": "anthropic",
+      "modelId": "claude-haiku-4-5-20251001",
+      "unit": "per_mtok",
+      "input": 1,
+      "output": 5,
+      "cacheRead": 0.1,
+      "cacheWrite5m": 1.25,
+      "cacheWrite1h": 2,
+      "sourceUrl": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "fetchedAt": "2026-10-19T04:10:25Z",
+      "note": "Listed as Claude Haiku 4.5 on the pricing table."
+    },
+    {
+      "provider": "openai",
+      "modelId": "gpt-5",
+      "unit": "per_mtok",
+      "input": 1.25,
+      "output": 10,
+      "cacheRead": 0.125,
+      "cacheWrite5m": null,
+      "cacheWrite1h": null,
+      "sourceUrl": "https://developers.openai.com/api/docs/pricing",
+      "fetchedAt": "2026-10-19T04:10:25Z",
+      "note": "Standard short-context. cacheWrite* not listed on this row → null."
+    },
+    {
+      "provider": "openai",
+      "modelId": "o4-mini",
+      "unit": "per_mtok",
+      "input": 1.1,
+      "output": 4.4,
+      "cacheRead": 0.275,
+      "cacheWrite5m": null,
+      "cacheWrite1h": null,
+      "sourceUrl": "https://developers.openai.com/api/docs/pricing",
+      "fetchedAt": "2026-10-19T04:10:25Z",
+      "note": "Standard short-context. cacheWrite* not listed on this row → null."
+    },
+    {
+      "provider": "openai",
+      "modelId": "o3",
+      "unit": "per_mtok",
+      "input": 2,
+      "output": 8,
+      "cacheRead": 0.5,
+      "cacheWrite5m": null,
+      "cacheWrite1h": null,
+      "sourceUrl": "https://developers.openai.com/api/docs/pricing",
+      "fetchedAt": "2026-10-19T04:10:25Z",
+      "note": "Standard short-context. cacheWrite* not listed on this row → null."
+    }
+  ]
+}

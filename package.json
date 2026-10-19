@@ -21,6 +21,8 @@
     "docs/generated/",
     "policy.yml",
     "presets/",
+    "pricing/",
+    "schemas/",
     "src/presets/"
   ],
   "repository": {

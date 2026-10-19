@@ -1,0 +1,16 @@
+{
+  "_fixture": "synthetic",
+  "_note": "SYNTHETIC — partial modelUsage: missing outputTokens and costUSD on one model must surface as null, not 0.",
+  "type": "result",
+  "subtype": "success",
+  "session_id": "synthetic-session-partial",
+  "total_cost_usd": 0.05,
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 2000,
+      "cacheReadInputTokens": 1000,
+      "cacheCreationInputTokens": 100,
+      "costBasis": "list"
+    }
+  }
+}

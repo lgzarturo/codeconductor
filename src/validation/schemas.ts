@@ -1290,6 +1290,25 @@ export const TaskOutcomeSchema = z.object({
   harnessFingerprint: z.string().optional(),
   disabledComponents: z.array(z.string()).optional(),
   delivery: DeliveryTelemetrySchema.optional(),
+  /** Optional telemetry fields fed by harness-telemetry/v1 task.end (M1). */
+  cacheRead: z.number().nullable().optional(),
+  cacheWrite: z.number().nullable().optional(),
+  calls: z.number().nullable().optional(),
+  iterations: z.number().nullable().optional(),
+  retries: z.number().nullable().optional(),
+  usageSource: z
+    .enum([
+      'cc-json',
+      'cc-otel',
+      'cc-transcript',
+      'openrouter-usage',
+      'codex-json',
+      'harness',
+      'none',
+    ])
+    .nullable()
+    .optional(),
+  pricingVersion: z.string().nullable().optional(),
 });
 
 export const HarnessComponentIdSchema = z.enum([

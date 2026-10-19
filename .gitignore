@@ -35,6 +35,8 @@ id_ed25519
 .codeconductor/evaluation/ablation-last.md
 .codeconductor/evaluation/active-overlay.yml
 .codeconductor/evaluation/overlay-backup/
+.codeconductor/telemetry/
+.codeconductor/reports/
 
 # OS
 .DS_Store

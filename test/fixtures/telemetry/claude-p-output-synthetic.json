@@ -1,0 +1,33 @@
+{
+  "_fixture": "synthetic",
+  "_note": "SYNTHETIC — not captured from a real `claude -p --output-format json` run. Shape mirrors Agent SDK / headless result fields documented at https://code.claude.com/docs/en/agent-sdk/cost-tracking (modelUsage, total_cost_usd). Pending: replace with a real fixture when a live headless run is available.",
+  "type": "result",
+  "subtype": "success",
+  "session_id": "synthetic-session-0001",
+  "total_cost_usd": 0.0842,
+  "duration_ms": 12345,
+  "usage": {
+    "input_tokens": 1200,
+    "output_tokens": 400,
+    "cache_read_input_tokens": 800,
+    "cache_creation_input_tokens": 200
+  },
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 1000,
+      "outputTokens": 350,
+      "cacheReadInputTokens": 800,
+      "cacheCreationInputTokens": 200,
+      "costUSD": 0.071,
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 500,
+      "outputTokens": 100,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "costUSD": 0.0132,
+      "costBasis": "list"
+    }
+  }
+}

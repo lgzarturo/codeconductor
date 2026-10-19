@@ -1,0 +1,52 @@
+{
+  "_fixture": "real",
+  "_note": "REAL capture: `claude -p \"di hola\" --output-format json` (Claude Code 2.1.197) via OpenRouter with nvidia/nemotron-3-super-120b-a12b:free. OpenRouter /api/v1/key usage was $0 before and after. session_id and uuid REDACTED. total_cost_usd/costUSD are Claude Code Anthropic-table estimates — NOT OpenRouter billed spend; collector must set cost.basis=unknown.",
+  "type": "result",
+  "subtype": "success",
+  "is_error": false,
+  "api_error_status": null,
+  "duration_ms": 3445,
+  "duration_api_ms": 3404,
+  "ttft_ms": 3355,
+  "ttft_stream_ms": 1713,
+  "time_to_request_ms": 43,
+  "num_turns": 1,
+  "result": "Hola! 👋 ¿En qué puedo ayudarte hoy?",
+  "stop_reason": "end_turn",
+  "session_id": "REDACTED",
+  "total_cost_usd": 0.10014999999999999,
+  "usage": {
+    "input_tokens": 19670,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 72,
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "",
+    "iterations": [],
+    "speed": "standard"
+  },
+  "modelUsage": {
+    "nvidia/nemotron-3-super-120b-a12b:free": {
+      "inputTokens": 19670,
+      "outputTokens": 72,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.10014999999999999,
+      "contextWindow": 200000,
+      "maxOutputTokens": 32000
+    }
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "uuid": "REDACTED"
+}

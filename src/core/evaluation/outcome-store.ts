@@ -11,7 +11,11 @@ import {
 import { err, ok, type Result } from '../../utils/result';
 
 const EVAL_DIR = '.codeconductor/evaluation';
-const OUTCOMES_FILE = 'outcomes.jsonl';
+/** Legacy path — still read for compatibility; no longer the default write target. */
+const OUTCOMES_FILE_LEGACY = 'outcomes.jsonl';
+/** New write path (gitignored via .codeconductor/telemetry/). */
+const OUTCOMES_WRITE_DIR = '.codeconductor/telemetry';
+const OUTCOMES_WRITE_FILE = 'outcomes.jsonl';
 const SCORECARDS_DIR = 'scorecards';
 const INDEX_FILE = 'index.json';
 
@@ -38,18 +42,27 @@ export async function ensureEvaluationDir(projectRoot: string): Promise<string> 
 }
 
 /**
- * Append a task outcome to outcomes.jsonl.
+ * Append a task outcome to the gitignored telemetry outcomes file.
+ * The versioned `.codeconductor/evaluation/outcomes.jsonl` is no longer written
+ * (still read by listOutcomes for compatibility). Moving/deleting that file is
+ * a repo decision for Arturo — this code leaves it untouched.
  */
 export async function appendOutcome(
   projectRoot: string,
   outcome: TaskOutcomeInput
 ): Promise<Result<void, Error>> {
   try {
-    const dir = await ensureEvaluationDir(projectRoot);
+    const evalDir = await ensureEvaluationDir(projectRoot);
+    const writeDir = resolve(projectRoot, OUTCOMES_WRITE_DIR);
+    await mkdir(writeDir, { recursive: true });
     const validated = TaskOutcomeSchema.parse(outcome);
-    await appendFile(resolve(dir, OUTCOMES_FILE), JSON.stringify(validated) + '\n', 'utf-8');
+    await appendFile(
+      resolve(writeDir, OUTCOMES_WRITE_FILE),
+      JSON.stringify(validated) + '\n',
+      'utf-8',
+    );
 
-    const indexPath = resolve(dir, INDEX_FILE);
+    const indexPath = resolve(evalDir, INDEX_FILE);
     let index: EvaluationIndexInput = { version: 1, lastOutcomeId: validated.id };
     try {
       const raw = await readFile(indexPath, 'utf-8');
@@ -67,18 +80,37 @@ export async function appendOutcome(
 
 /**
  * List outcomes with optional filters.
+ * Reads the new write path first, then the legacy evaluation/outcomes.jsonl
+ * for compatibility. Dedupes by outcome id (new path wins).
  */
 export async function listOutcomes(
   projectRoot: string,
   filter: OutcomeFilter = {}
 ): Promise<Result<TaskOutcomeInput[], Error>> {
   try {
-    const path = resolve(projectRoot, EVAL_DIR, OUTCOMES_FILE);
-    const content = await readFile(path, 'utf-8');
-    const lines = content.split('\n').filter((l) => l.trim().length > 0);
+    const paths = [
+      resolve(projectRoot, OUTCOMES_WRITE_DIR, OUTCOMES_WRITE_FILE),
+      resolve(projectRoot, EVAL_DIR, OUTCOMES_FILE_LEGACY),
+    ];
+    const byId = new Map<string, TaskOutcomeInput>();
+    // Legacy first, then new path overwrites — new writes take precedence.
+    for (const path of [...paths].reverse()) {
+      let content: string;
+      try {
+        content = await readFile(path, 'utf-8');
+      } catch (e) {
+        if ((e as NodeJS.ErrnoException).code === 'ENOENT') continue;
+        throw e;
+      }
+      for (const line of content.split('\n')) {
+        if (!line.trim()) continue;
+        const parsed = TaskOutcomeSchema.parse(JSON.parse(line));
+        byId.set(parsed.id, parsed);
+      }
+    }
+
     const outcomes: TaskOutcomeInput[] = [];
-    for (const line of lines) {
-      const parsed = TaskOutcomeSchema.parse(JSON.parse(line));
+    for (const parsed of byId.values()) {
       if (filter.agent && parsed.agent !== filter.agent) continue;
       if (filter.model && parsed.model !== filter.model) continue;
       if (filter.taskId && parsed.taskId !== filter.taskId) continue;
@@ -92,9 +124,6 @@ export async function listOutcomes(
     }
     return ok(outcomes);
   } catch (e) {
-    if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
-      return ok([]);
-    }
     return err(e instanceof Error ? e : new Error(String(e)));
   }
 }

@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "harness-telemetry/v1",
+  "title": "HarnessTelemetryEvent",
+  "description": "One JSONL line per harness telemetry event. Common to CodeConductor and microsdd.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "ts", "harness", "runId", "event"],
+  "properties": {
+    "schema": {
+      "const": "harness-telemetry/v1"
+    },
+    "ts": {
+      "type": "string",
+      "description": "ISO-8601 timestamp with offset (not Z-only preferred)."
+    },
+    "harness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "enum": ["codeconductor", "microsdd"]
+        },
+        "version": {
+          "type": ["string", "null"]
+        },
+        "commit": {
+          "type": ["string", "null"]
+        },
+        "promptCompilerVersion": {
+          "type": ["string", "null"]
+        },
+        "promptFingerprint": {
+          "type": ["string", "null"],
+          "description": "sha256 of concatenated per-layer hashes"
+        }
+      }
+    },
+    "runId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "taskId": {
+      "type": ["string", "null"]
+    },
+    "agent": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "type": ["string", "null"]
+        },
+        "agentId": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "event": {
+      "type": "string",
+      "enum": [
+        "run.start",
+        "run.end",
+        "task.start",
+        "task.end",
+        "agent.end",
+        "model.call",
+        "verification",
+        "retry",
+        "iteration"
+      ]
+    },
+    "host": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": ["string", "null"],
+          "enum": ["claude-code", "codex", "opencode", "openrouter-direct", "other", null]
+        },
+        "version": {
+          "type": ["string", "null"]
+        },
+        "mode": {
+          "type": ["string", "null"],
+          "enum": ["headless", "interactive", null]
+        }
+      }
+    },
+    "model": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": ["string", "null"]
+        },
+        "provider": {
+          "type": ["string", "null"],
+          "enum": ["anthropic", "openrouter", "openai", "other", null]
+        },
+        "effort": {
+          "type": ["string", "null"],
+          "enum": ["low", "medium", "high", "xhigh", "max", null]
+        }
+      }
+    },
+    "usage": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "output": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "cacheRead": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "cacheWrite": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "reasoning": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "calls": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "apiRetries": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        }
+      }
+    },
+    "cost": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "usd": {
+          "type": ["number", "null"]
+        },
+        "basis": {
+          "type": ["string", "null"],
+          "enum": ["provider-billed", "host-estimate", "pricing-table", "unknown", "none", null]
+        },
+        "pricingVersion": {
+          "type": ["string", "null"]
+        },
+        "isRealSpend": {
+          "type": ["boolean", "null"]
+        }
+      }
+    },
+    "loop": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "iteration": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "retryReason": {
+          "type": ["string", "null"]
+        },
+        "maxIterations": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        }
+      }
+    },
+    "verification": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "gate": {
+          "type": ["string", "null"]
+        },
+        "passed": {
+          "type": ["boolean", "null"]
+        },
+        "durationMs": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        }
+      }
+    },
+    "durationMs": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "outcome": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": ["string", "null"],
+          "enum": ["done", "failed", "escalated", "aborted", null]
+        },
+        "firstTry": {
+          "type": ["boolean", "null"]
+        }
+      }
+    },
+    "source": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "usage": {
+          "type": ["string", "null"],
+          "enum": [
+            "cc-json",
+            "cc-otel",
+            "cc-transcript",
+            "openrouter-usage",
+            "codex-json",
+            "harness",
+            "none",
+            null
+          ]
+        },
+        "reliability": {
+          "type": ["string", "null"],
+          "enum": ["high", "medium", "low", null]
+        }
+      }
+    },
+    "privacy": {
+      "type": ["string", "null"],
+      "enum": ["standard", "strict", null]
+    }
+  }
+}

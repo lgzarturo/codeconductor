@@ -2,14 +2,18 @@
  * Zero-spend lock for OpenRouter cheap/free mode (Arturo).
  * Reusable by M5 bench: abort before the first call when the run could spend.
  *
- * Rules (fail-closed):
+ * Rules (fail-closed) — Arturo 2026-10-19:
  * 1. modelId must end with the exact lowercase suffix `:free` (not `:FREE` / `:Free`).
- * 2. When a key snapshot is checked, every required /api/v1/key field must be
- *    present and parseable; incomplete or mistyped bodies abort.
- * 3. Abort if limit, limitRemaining, paid usage, or credit balance indicate
- *    spend capacity > 0 (including limitRemaining > 0 with limit: null).
+ * 2. Key `limit` must be a finite number ≤ configurable cap (default **$5**).
+ *    `limit: null` / unlimited, or `limit` above the cap → abort.
+ * 3. Capture `usage` before the run (or task); re-read after. If usage rises
+ *    (Δ > 0) → abort and mark the run invalid. Expected spend: **$0**.
+ * 4. Missing, mistyped, or unparseable /api/v1/key fields abort; HTTP errors
+ *    and invalid JSON abort.
  * API keys are read only from the environment — never from files.
  */
+
+export const DEFAULT_OPENROUTER_LIMIT_CAP_USD = 5;
 
 export interface OpenRouterKeySnapshot {
   /** Credit/usage limit on the key (USD). null = unlimited / unset (explicit). */
@@ -22,10 +26,7 @@ export interface OpenRouterKeySnapshot {
   isFreeTier: boolean;
   /** Raw label for diagnostics (never a secret). */
   label: string | null;
-  /**
-   * Optional credit/balance fields when the API exposes them.
-   * > 0 ⇒ paid spend capacity.
-   */
+  /** Optional credit/balance fields when the API exposes them. */
   balance?: number | null;
   credits?: number | null;
 }
@@ -38,6 +39,11 @@ export interface OpenRouterSpendLockInput {
   fetchKey?: () => Promise<OpenRouterKeySnapshot | null>;
   /** Skip network; only enforce the `:free` suffix. */
   skipKeyCheck?: boolean;
+  /**
+   * Max allowed key `limit` in USD (Arturo: real key has $5/mo).
+   * Default {@link DEFAULT_OPENROUTER_LIMIT_CAP_USD}.
+   */
+  maxLimitUsd?: number;
 }
 
 export interface OpenRouterSpendLockResult {
@@ -46,6 +52,26 @@ export interface OpenRouterSpendLockResult {
   checkedModel: boolean;
   checkedKey: boolean;
   key: OpenRouterKeySnapshot | null;
+  /** Baseline usage captured when the pre-run check succeeds. */
+  usageBefore: number | null;
+}
+
+export interface OpenRouterUsageDeltaInput {
+  usageBefore: number;
+  /** Post-run snapshot. When omitted, fetched via fetchKey / env. */
+  keyAfter?: OpenRouterKeySnapshot | null;
+  fetchKey?: () => Promise<OpenRouterKeySnapshot | null>;
+}
+
+export interface OpenRouterUsageDeltaResult {
+  ok: boolean;
+  reason: string | null;
+  usageBefore: number;
+  usageAfter: number | null;
+  deltaUsd: number | null;
+  /** False when Δ usage > 0 — callers must treat the run as invalid. */
+  runValid: boolean;
+  keyAfter: OpenRouterKeySnapshot | null;
 }
 
 const OPENROUTER_KEY_URL = 'https://openrouter.ai/api/v1/key';
@@ -84,19 +110,27 @@ export function keySnapshotIsComplete(key: OpenRouterKeySnapshot): boolean {
 }
 
 /**
- * Evaluate whether a paid spend path is open on the key.
- * Any positive limit, remaining balance, paid-tier flag, or credit balance ⇒ not zero-spend.
+ * True when `limit` is a finite number ≤ maxLimitUsd (default $5).
+ * null / unlimited / non-finite / above cap ⇒ false.
  */
-export function keyAllowsPaidSpend(key: OpenRouterKeySnapshot): boolean {
-  if (key.isFreeTier === false) return true;
-  if (isFiniteNumber(key.limit) && key.limit > 0) return true;
-  // Remaining paid balance aborts even when limit is null/unset.
-  if (isFiniteNumber(key.limitRemaining) && key.limitRemaining > 0) return true;
-  if (isFiniteNumber(key.balance) && key.balance > 0) return true;
-  if (isFiniteNumber(key.credits) && key.credits > 0) return true;
-  // Paid usage with a non-free tier is already covered by isFreeTier === false.
-  // Positive usage alone on an explicit free tier does not imply remaining capacity.
-  return false;
+export function keyLimitWithinCap(
+  key: OpenRouterKeySnapshot,
+  maxLimitUsd: number = DEFAULT_OPENROUTER_LIMIT_CAP_USD,
+): boolean {
+  if (!isFiniteNumber(maxLimitUsd) || maxLimitUsd < 0) return false;
+  if (!isFiniteNumber(key.limit)) return false;
+  return key.limit <= maxLimitUsd;
+}
+
+/**
+ * @deprecated Prefer {@link keyLimitWithinCap}. Kept as a named alias for
+ * “policy rejects this key for zero-spend” (inverted: true ⇒ abort).
+ */
+export function keyAllowsPaidSpend(
+  key: OpenRouterKeySnapshot,
+  maxLimitUsd: number = DEFAULT_OPENROUTER_LIMIT_CAP_USD,
+): boolean {
+  return !keyLimitWithinCap(key, maxLimitUsd);
 }
 
 export function readOpenRouterApiKeyFromEnv(
@@ -210,34 +244,9 @@ export async function fetchOpenRouterKeySnapshot(
   return parseOpenRouterKeyBody(body);
 }
 
-/**
- * Abort-before-call gate for OpenRouter zero-spend mode.
- * Returns `{ ok: false, reason }` instead of throwing so callers can format errors.
- * Incomplete key snapshots and paid-capacity signals always abort (fail-closed).
- */
-export async function assertOpenRouterZeroSpend(
-  input: OpenRouterSpendLockInput,
-): Promise<OpenRouterSpendLockResult> {
-  if (!isOpenRouterFreeModel(input.modelId)) {
-    return {
-      ok: false,
-      reason: `OpenRouter zero-spend lock: model "${input.modelId}" does not end with :free`,
-      checkedModel: true,
-      checkedKey: false,
-      key: null,
-    };
-  }
-
-  if (input.skipKeyCheck) {
-    return {
-      ok: true,
-      reason: null,
-      checkedModel: true,
-      checkedKey: false,
-      key: null,
-    };
-  }
-
+async function resolveKeySnapshot(
+  input: Pick<OpenRouterSpendLockInput, 'key' | 'fetchKey'>,
+): Promise<OpenRouterKeySnapshot | null> {
   let key = input.key ?? null;
   if (key === undefined || key === null) {
     if (input.fetchKey) {
@@ -248,6 +257,41 @@ export async function assertOpenRouterZeroSpend(
       key = null;
     }
   }
+  return key;
+}
+
+/**
+ * Pre-run gate: `:free` model + key `limit` ≤ cap (default $5) + finite usage baseline.
+ * Returns `{ ok: false, reason }` instead of throwing so callers can format errors.
+ */
+export async function assertOpenRouterZeroSpend(
+  input: OpenRouterSpendLockInput,
+): Promise<OpenRouterSpendLockResult> {
+  const maxLimitUsd = input.maxLimitUsd ?? DEFAULT_OPENROUTER_LIMIT_CAP_USD;
+
+  if (!isOpenRouterFreeModel(input.modelId)) {
+    return {
+      ok: false,
+      reason: `OpenRouter zero-spend lock: model "${input.modelId}" does not end with :free`,
+      checkedModel: true,
+      checkedKey: false,
+      key: null,
+      usageBefore: null,
+    };
+  }
+
+  if (input.skipKeyCheck) {
+    return {
+      ok: true,
+      reason: null,
+      checkedModel: true,
+      checkedKey: false,
+      key: null,
+      usageBefore: null,
+    };
+  }
+
+  const key = await resolveKeySnapshot(input);
 
   if (!key) {
     // Model is :free and no key to verify — allow with unchecked key.
@@ -257,6 +301,7 @@ export async function assertOpenRouterZeroSpend(
       checkedModel: true,
       checkedKey: false,
       key: null,
+      usageBefore: null,
     };
   }
 
@@ -268,17 +313,42 @@ export async function assertOpenRouterZeroSpend(
       checkedModel: true,
       checkedKey: true,
       key,
+      usageBefore: null,
     };
   }
 
-  if (keyAllowsPaidSpend(key)) {
+  if (!isFiniteNumber(key.limit)) {
     return {
       ok: false,
       reason:
-        'OpenRouter zero-spend lock: /api/v1/key reports a paid limit, remaining balance, or non-free tier (spend capacity > 0)',
+        'OpenRouter zero-spend lock: key limit is null or unlimited (fail-closed; expected finite limit ≤ cap)',
       checkedModel: true,
       checkedKey: true,
       key,
+      usageBefore: null,
+    };
+  }
+
+  if (!keyLimitWithinCap(key, maxLimitUsd)) {
+    return {
+      ok: false,
+      reason: `OpenRouter zero-spend lock: key limit ${key.limit} exceeds cap ${maxLimitUsd} USD`,
+      checkedModel: true,
+      checkedKey: true,
+      key,
+      usageBefore: null,
+    };
+  }
+
+  if (!isFiniteNumber(key.usage)) {
+    return {
+      ok: false,
+      reason:
+        'OpenRouter zero-spend lock: key usage is missing or not a finite number (cannot establish $0 baseline)',
+      checkedModel: true,
+      checkedKey: true,
+      key,
+      usageBefore: null,
     };
   }
 
@@ -288,16 +358,101 @@ export async function assertOpenRouterZeroSpend(
     checkedModel: true,
     checkedKey: true,
     key,
+    usageBefore: key.usage,
   };
 }
 
-/** Throw if the lock fails — convenient for bench runners (M5). */
+/** Throw if the pre-run lock fails — convenient for bench runners (M5). */
 export async function enforceOpenRouterZeroSpend(
   input: OpenRouterSpendLockInput,
 ): Promise<OpenRouterSpendLockResult> {
   const result = await assertOpenRouterZeroSpend(input);
   if (!result.ok) {
     throw new Error(result.reason ?? 'OpenRouter zero-spend lock aborted');
+  }
+  return result;
+}
+
+/**
+ * Post-run (or per-task) check: usage must not rise (expected Δ = $0).
+ * When Δ > 0, `runValid` is false — callers must mark the run invalid.
+ */
+export async function assertOpenRouterUsageUnchanged(
+  input: OpenRouterUsageDeltaInput,
+): Promise<OpenRouterUsageDeltaResult> {
+  if (!isFiniteNumber(input.usageBefore)) {
+    return {
+      ok: false,
+      reason: 'OpenRouter zero-spend lock: usageBefore is not a finite number',
+      usageBefore: input.usageBefore,
+      usageAfter: null,
+      deltaUsd: null,
+      runValid: false,
+      keyAfter: null,
+    };
+  }
+
+  const keyAfter = await resolveKeySnapshot({
+    key: input.keyAfter,
+    fetchKey: input.fetchKey,
+  });
+
+  if (!keyAfter) {
+    return {
+      ok: false,
+      reason: 'OpenRouter zero-spend lock: could not re-read /api/v1/key after run (fail-closed)',
+      usageBefore: input.usageBefore,
+      usageAfter: null,
+      deltaUsd: null,
+      runValid: false,
+      keyAfter: null,
+    };
+  }
+
+  if (!keySnapshotIsComplete(keyAfter) || !isFiniteNumber(keyAfter.usage)) {
+    return {
+      ok: false,
+      reason:
+        'OpenRouter zero-spend lock: post-run /api/v1/key usage is incomplete or unparseable (fail-closed)',
+      usageBefore: input.usageBefore,
+      usageAfter: null,
+      deltaUsd: null,
+      runValid: false,
+      keyAfter,
+    };
+  }
+
+  const deltaUsd = keyAfter.usage - input.usageBefore;
+  if (deltaUsd > 0) {
+    return {
+      ok: false,
+      reason: `OpenRouter zero-spend lock: usage rose by ${deltaUsd} USD (expected $0); run is invalid`,
+      usageBefore: input.usageBefore,
+      usageAfter: keyAfter.usage,
+      deltaUsd,
+      runValid: false,
+      keyAfter,
+    };
+  }
+
+  return {
+    ok: true,
+    reason: null,
+    usageBefore: input.usageBefore,
+    usageAfter: keyAfter.usage,
+    deltaUsd,
+    runValid: true,
+    keyAfter,
+  };
+}
+
+/** Throw if post-run usage rose — marks spend; callers treat the run as invalid. */
+export async function enforceOpenRouterUsageUnchanged(
+  input: OpenRouterUsageDeltaInput,
+): Promise<OpenRouterUsageDeltaResult> {
+  const result = await assertOpenRouterUsageUnchanged(input);
+  if (!result.ok) {
+    throw new Error(result.reason ?? 'OpenRouter zero-spend lock: usage delta aborted');
   }
   return result;
 }

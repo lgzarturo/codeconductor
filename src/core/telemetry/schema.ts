@@ -29,7 +29,12 @@ export type HostName = 'claude-code' | 'codex' | 'opencode' | 'openrouter-direct
 export type HostMode = 'headless' | 'interactive';
 export type ModelProvider = 'anthropic' | 'openrouter' | 'openai' | 'other';
 export type EffortLevel = 'low' | 'medium' | 'high' | 'xhigh' | 'max';
-export type CostBasis = 'provider-billed' | 'host-estimate' | 'pricing-table' | 'none';
+export type CostBasis =
+  | 'provider-billed'
+  | 'host-estimate'
+  | 'pricing-table'
+  | 'unknown'
+  | 'none';
 export type UsageSource =
   | 'cc-json'
   | 'cc-otel'

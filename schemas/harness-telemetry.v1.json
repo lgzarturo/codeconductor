@@ -148,7 +148,7 @@
         },
         "basis": {
           "type": ["string", "null"],
-          "enum": ["provider-billed", "host-estimate", "pricing-table", "none", null]
+          "enum": ["provider-billed", "host-estimate", "pricing-table", "unknown", "none", null]
         },
         "pricingVersion": {
           "type": ["string", "null"]

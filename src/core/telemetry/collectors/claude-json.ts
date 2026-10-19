@@ -3,7 +3,13 @@
  * Source of truth in headless: modelUsage + total_cost_usd.
  * Fields the host does not expose stay null (never 0).
  */
-import { createBaseEvent, emptyUsage, nullableNumber, type HarnessTelemetryEvent } from '../schema';
+import {
+  createBaseEvent,
+  emptyUsage,
+  nullableNumber,
+  type CostBasis,
+  type HarnessTelemetryEvent,
+} from '../schema';
 
 export interface ClaudeModelUsageEntry {
   inputTokens?: number;
@@ -241,9 +247,10 @@ export function collectClaudeJson(
       calls: null,
       apiRetries: null,
     };
+    const basis = resolveClaudeJsonCostBasis(modelId, u);
     call.cost = {
       usd: nullableNumber(u.costUSD),
-      basis: 'host-estimate',
+      basis,
       pricingVersion: null,
       isRealSpend: false,
     };
@@ -263,9 +270,15 @@ export function collectClaudeJson(
     apiRetries: null,
     reasoning: null,
   };
+  const runBasis: CostBasis =
+    totals.costUsd === null
+      ? 'none'
+      : entries.some(([id, u]) => resolveClaudeJsonCostBasis(id, u) === 'unknown')
+        ? 'unknown'
+        : 'host-estimate';
   base.cost = {
     usd: totals.costUsd,
-    basis: totals.costUsd === null ? 'none' : 'host-estimate',
+    basis: runBasis,
     pricingVersion: null,
     isRealSpend: false,
   };
@@ -284,6 +297,22 @@ function inferProvider(
     return 'openai';
   }
   return 'other';
+}
+
+/**
+ * Claude Code's `costUSD` / `total_cost_usd` use Anthropic list prices.
+ * For OpenRouter / non-Anthropic / `:free` routes that figure is not provider-billed
+ * and not a faithful host-estimate of what was charged → `unknown`.
+ */
+export function resolveClaudeJsonCostBasis(
+  modelId: string,
+  entry?: ClaudeModelUsageEntry | null,
+): CostBasis {
+  if (entry?.costBasis === 'unknown') return 'unknown';
+  const provider = inferProvider(modelId);
+  if (provider === 'openrouter' || modelId.trim().endsWith(':free')) return 'unknown';
+  if (provider !== 'anthropic') return 'unknown';
+  return 'host-estimate';
 }
 
 /** Replay helper: totals from a fixture must equal modelUsage sums. */

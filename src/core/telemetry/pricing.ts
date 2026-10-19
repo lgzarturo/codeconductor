@@ -160,11 +160,19 @@ export async function estimateCostFromTable(
 }
 
 /**
- * Cost priority: provider-billed > host-estimate > pricing-table > none.
+ * Cost priority: provider-billed > host-estimate > pricing-table > unknown > none.
  * isRealSpend is true only for provider-billed (or explicit billing: api).
+ * `unknown` = host reported a figure that is not trusted as real spend
+ * (e.g. Claude Code Anthropic-table estimate for an OpenRouter `:free` model).
  */
 export function pickCost(candidates: Array<TelemetryCost | null | undefined>): TelemetryCost {
-  const order: CostBasis[] = ['provider-billed', 'host-estimate', 'pricing-table', 'none'];
+  const order: CostBasis[] = [
+    'provider-billed',
+    'host-estimate',
+    'pricing-table',
+    'unknown',
+    'none',
+  ];
   for (const basis of order) {
     const hit = candidates.find((c) => c && c.basis === basis && (basis === 'none' || c.usd !== null));
     if (hit) {

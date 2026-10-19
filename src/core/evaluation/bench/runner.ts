@@ -24,7 +24,10 @@ import {
   type BenchReport,
   type BenchRunCell,
 } from './report';
-import { runClaudeHostCell } from './host-claude';
+import {
+  runClaudeHostCell,
+  type ClaudeHostDiagnostics,
+} from './host-claude';
 import { PACKAGE_ROOT } from '../../presets/package-paths';
 
 export interface PendingBenchCell {
@@ -32,6 +35,15 @@ export interface PendingBenchCell {
   variant: 'baseline' | 'treatment';
   repetition: number;
   reason: string;
+  diagnostics?: ClaudeHostDiagnostics;
+}
+
+export interface BenchInvocationRecord {
+  taskId: string;
+  variant: 'baseline' | 'treatment';
+  repetition: number;
+  ok: boolean;
+  diagnostics: ClaudeHostDiagnostics;
 }
 
 export interface BenchRunOptions {
@@ -83,6 +95,7 @@ export interface BenchRunResult {
   abortReason: string | null;
   runValid: boolean;
   pendingCells: PendingBenchCell[];
+  invocations: BenchInvocationRecord[];
   usageBefore: number | null;
   usageAfter: number | null;
 }
@@ -182,6 +195,7 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
   const seed = options.seed ?? 42;
   const workDirs: string[] = [];
   const pendingCells: PendingBenchCell[] = [];
+  const invocations: BenchInvocationRecord[] = [];
   let usageAfter: number | null = null;
 
   const suite = await loadHarnessSuite(projectRoot, suiteId, options.suitePath);
@@ -255,92 +269,128 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
         const maxLive = options.maxLiveCells ?? schedule.length;
         cells = [];
         let lastTaskId: string | null = null;
-        for (let i = 0; i < schedule.length; i++) {
-          const slot = schedule[i]!;
-          if (i >= maxLive) {
-            pendingCells.push({
-              taskId: slot.taskId,
-              variant: slot.variant,
-              repetition: slot.repetition,
-              reason: 'not reached (maxLiveCells / quota)',
-            });
-            continue;
-          }
-          if (aborted) {
-            pendingCells.push({
-              taskId: slot.taskId,
-              variant: slot.variant,
-              repetition: slot.repetition,
-              reason: abortReason ?? 'aborted',
-            });
-            continue;
-          }
-
-          // Between-task usage check when the task id changes.
-          if (
-            lastTaskId !== null &&
-            slot.taskId !== lastTaskId &&
-            usageBefore !== null
-          ) {
-            const mid = await assertOpenRouterUsageUnchanged({
-              usageBefore,
-              keyAfter: options.keyAfter,
-              fetchKey: options.fetchKey,
-            });
-            if (!mid.ok) {
-              aborted = true;
-              abortReason = `after task ${lastTaskId}: ${mid.reason}`;
-              runValid = false;
+        let consecutiveHostFailures = 0;
+        try {
+          for (let i = 0; i < schedule.length; i++) {
+            const slot = schedule[i]!;
+            if (i >= maxLive) {
               pendingCells.push({
                 taskId: slot.taskId,
                 variant: slot.variant,
                 repetition: slot.repetition,
-                reason: abortReason,
+                reason: 'not reached (maxLiveCells / quota)',
               });
               continue;
             }
-          }
-          lastTaskId = slot.taskId;
+            if (aborted) {
+              pendingCells.push({
+                taskId: slot.taskId,
+                variant: slot.variant,
+                repetition: slot.repetition,
+                reason: abortReason ?? 'aborted',
+              });
+              continue;
+            }
 
-          const task = taskById.get(slot.taskId);
-          const hostResult = await runClaudeHostCell(
-            {
+            // Between-task usage check when the task id changes.
+            if (
+              lastTaskId !== null &&
+              slot.taskId !== lastTaskId &&
+              usageBefore !== null
+            ) {
+              const mid = await assertOpenRouterUsageUnchanged({
+                usageBefore,
+                keyAfter: options.keyAfter,
+                fetchKey: options.fetchKey,
+              });
+              if (!mid.ok) {
+                aborted = true;
+                abortReason = `after task ${lastTaskId}: ${mid.reason}`;
+                runValid = false;
+                pendingCells.push({
+                  taskId: slot.taskId,
+                  variant: slot.variant,
+                  repetition: slot.repetition,
+                  reason: abortReason,
+                });
+                continue;
+              }
+            }
+            lastTaskId = slot.taskId;
+
+            const task = taskById.get(slot.taskId);
+            const hostResult = await runClaudeHostCell(
+              {
+                taskId: slot.taskId,
+                variant: slot.variant,
+                repetition: slot.repetition,
+                prompt: task?.prompt ?? slot.taskId,
+                testCommand: task?.testCommand,
+              },
+              {
+                fixtureDir,
+                modelId,
+                hostVersion: process.env.CLAUDE_CODE_VERSION ?? null,
+                maxAttempts: 2,
+              },
+            );
+            invocations.push({
               taskId: slot.taskId,
               variant: slot.variant,
               repetition: slot.repetition,
-              prompt: task?.prompt ?? slot.taskId,
-              testCommand: task?.testCommand,
-            },
-            {
-              fixtureDir,
-              modelId,
-              hostVersion: process.env.CLAUDE_CODE_VERSION ?? null,
-            },
-          );
-          if (hostResult.pending || !hostResult.cell) {
-            pendingCells.push({
-              taskId: slot.taskId,
-              variant: slot.variant,
-              repetition: slot.repetition,
-              reason: hostResult.pendingReason ?? 'host pending',
+              ok: !hostResult.pending && hostResult.cell !== null,
+              diagnostics: hostResult.diagnostics,
             });
-            continue;
+            if (hostResult.pending || !hostResult.cell) {
+              consecutiveHostFailures += 1;
+              pendingCells.push({
+                taskId: slot.taskId,
+                variant: slot.variant,
+                repetition: slot.repetition,
+                reason: hostResult.pendingReason ?? 'host pending',
+                diagnostics: hostResult.diagnostics,
+              });
+              // After 2 failed host slots with zero valid cells, stop (Arturo).
+              if (cells.length === 0 && consecutiveHostFailures >= 2) {
+                aborted = true;
+                abortReason =
+                  `no valid cells after ${consecutiveHostFailures} host attempts — ` +
+                  `exit=${hostResult.diagnostics.exitCode} ` +
+                  `timedOut=${hostResult.diagnostics.timedOut} ` +
+                  `429=${hostResult.diagnostics.http429} ` +
+                  `subtype=${hostResult.diagnostics.subtype} ` +
+                  `is_error=${hostResult.diagnostics.isError} ` +
+                  `stderr=${hostResult.diagnostics.stderrTruncated ?? ''}`;
+                runValid = false;
+              }
+              continue;
+            }
+            consecutiveHostFailures = 0;
+            cells.push(hostResult.cell);
           }
-          cells.push(hostResult.cell);
-        }
-
-        // Final usage check after the last task.
-        if (!aborted && usageBefore !== null) {
-          const after = await assertOpenRouterUsageUnchanged({
-            usageBefore,
-            keyAfter: options.keyAfter,
-            fetchKey: options.fetchKey,
-          });
-          usageAfter = after.usageAfter;
-          if (!after.ok) {
-            aborted = true;
-            abortReason = after.reason;
-            runValid = false;
+        } finally {
+          // Post-candado always runs when we had a usage baseline (even on abort).
+          if (usageBefore !== null) {
+            try {
+              const after = await assertOpenRouterUsageUnchanged({
+                usageBefore,
+                keyAfter: options.keyAfter,
+                fetchKey: options.fetchKey,
+              });
+              usageAfter = after.usageAfter;
+              if (!after.ok) {
+                aborted = true;
+                abortReason = after.reason ?? abortReason;
+                runValid = false;
+              }
+            } catch (err) {
+              aborted = true;
+              abortReason =
+                err instanceof Error
+                  ? err.message
+                  : 'post-run usage check failed';
+              runValid = false;
+            }
           }
         }
       }
@@ -392,8 +442,8 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
 
   const markdown = formatBenchReportMarkdown(report);
   let reportPath: string | null = null;
-  // Always write when not aborted so partial live baselines land as artifacts.
-  if (options.writeReport !== false && !(aborted && cells.length === 0)) {
+  // Always write aggregates (including empty / aborted) for Actions artifacts.
+  if (options.writeReport !== false) {
     const dir = options.reportDir ?? defaultReportDir(projectRoot);
     await mkdir(dir, { recursive: true });
     reportPath = join(dir, 'bench-report.json');
@@ -415,6 +465,7 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
     abortReason,
     runValid: runValid && !aborted,
     pendingCells,
+    invocations,
     usageBefore,
     usageAfter,
   };

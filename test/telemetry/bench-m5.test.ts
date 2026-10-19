@@ -14,6 +14,7 @@ import {
 } from '../../src/core/evaluation/bench/stats';
 import {
   buildBenchReport,
+  minRepetitionsForMode,
   type BenchRunCell,
 } from '../../src/core/evaluation/bench/report';
 import {
@@ -21,10 +22,10 @@ import {
   synthesizeDryCells,
 } from '../../src/core/evaluation/bench/runner';
 import { assertOpenRouterModelFreeZeroPrice } from '../../src/core/evaluation/bench/openrouter-free-model';
+import { sanitizeStderr } from '../../src/core/evaluation/bench/host-claude';
 import type { OpenRouterKeySnapshot } from '../../src/core/telemetry/openrouter-spend-lock';
 import { loadHarnessSuite } from '../../src/core/evaluation/harness-experiment';
 import { scorecardCommand } from '../../src/commands/scorecard.command';
-import { minRepetitionsForMode } from '../../src/core/evaluation/bench/report';
 
 const REPO_ROOT = resolve(import.meta.dir, '../..');
 const SUITE_PATH = resolve(REPO_ROOT, 'eval/suites/harness-v1/suite.yml');
@@ -175,6 +176,23 @@ describe('M5 report verdicts (§3.3)', () => {
     expect(report.n).toBe(1);
     expect(report.verdict).toBe('NO CONCLUYENTE');
     expect(report.verdictReasons.some((r) => /below minimum/i.test(r))).toBe(
+      true,
+    );
+  });
+
+  test('empty cells (0/0) is NO CONCLUYENTE not RECHAZA', () => {
+    const report = buildBenchReport({
+      suiteId: 'harness-v1',
+      cells: [],
+      claim: 'success-only',
+      cheap: true,
+      seed: 1,
+      bootstrapSamples: 50,
+      generatedAt: '2026-10-19T00:00:00.000Z',
+    });
+    expect(report.verdict).toBe('NO CONCLUYENTE');
+    expect(report.verdict).not.toBe('RECHAZA');
+    expect(report.verdictReasons.some((r) => /no completed cells/i.test(r))).toBe(
       true,
     );
   });
@@ -425,6 +443,16 @@ describe('M5 free-model pricing gate', () => {
   test('minRepetitionsForMode is 3 cheap / 5 normal', () => {
     expect(minRepetitionsForMode(true)).toBe(3);
     expect(minRepetitionsForMode(false)).toBe(5);
+  });
+
+  test('sanitizeStderr redacts keys and truncates', () => {
+    const raw =
+      'Bearer sk-or-v1-abcdefghijklmnopqrstuvwxyz012345 OPENROUTER_API_KEY=sk-or-v1-abc ' +
+      'x'.repeat(600);
+    const s = sanitizeStderr(raw, 200);
+    expect(s).not.toContain('sk-or-v1-abc');
+    expect(s).toContain('[REDACTED');
+    expect(s.length).toBeLessThanOrEqual(201);
   });
 
   test('rejects non-:free and non-zero pricing', async () => {

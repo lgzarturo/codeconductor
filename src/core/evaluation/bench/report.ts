@@ -168,8 +168,22 @@ function decideVerdict(
   qualityTokenCeiling: number,
   n: number,
   minN: number,
+  cellCount: number,
 ): { verdict: BenchVerdict; reasons: string[] } {
   const reasons: string[] = [];
+
+  // Empty / insufficient data must never look like RECHAZA (0/0 is not a reject).
+  if (cellCount === 0) {
+    reasons.push('no completed cells — insufficient data (NO CONCLUYENTE)');
+    return { verdict: 'NO CONCLUYENTE', reasons };
+  }
+  if (!Number.isFinite(n) || n < minN) {
+    reasons.push(
+      `N=${n} below minimum ${minN} for this mode — IC unreliable (NO CONCLUYENTE)`,
+    );
+    return { verdict: 'NO CONCLUYENTE', reasons };
+  }
+
   const successOk =
     overall.treatmentSuccess.p >= overall.baselineSuccess.p &&
     tasks.every((t) => t.nonInferiorityOk);
@@ -179,14 +193,6 @@ function decideVerdict(
     return { verdict: 'RECHAZA', reasons };
   }
   reasons.push('success criterion met');
-
-  // Low N degenerates the bootstrap IC (ciLow≈ciHigh) and can falsely ACEPTA.
-  if (!Number.isFinite(n) || n < minN) {
-    reasons.push(
-      `N=${n} below minimum ${minN} for this mode — IC unreliable (NO CONCLUYENTE)`,
-    );
-    return { verdict: 'NO CONCLUYENTE', reasons };
-  }
 
   if (claim === 'success-only') {
     return { verdict: 'ACEPTA', reasons };
@@ -312,6 +318,7 @@ export function buildBenchReport(input: BuildBenchReportInput): BenchReport {
     qualityTokenCeiling,
     nRounded,
     minN,
+    input.cells.length,
   );
 
   const generatedAt = input.generatedAt ?? new Date().toISOString();

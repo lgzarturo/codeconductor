@@ -162,6 +162,7 @@ export function synthesizeDryCells(
       tokensCacheRead: 0,
       tokensCacheWrite: 0,
       costUsd: 0,
+      costBasis: 'none',
       durationMs: 100 + Math.floor(rng() * 50),
       cacheHitRate: 0,
       firstTry: true,

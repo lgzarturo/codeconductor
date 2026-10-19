@@ -1,7 +1,12 @@
+/**
+ * NOT the review-seeded-bug oracle (that is review-report.test.ts).
+ * Kept as a reference for a future "fix clamp" task. Do not promote
+ * this file for review-seeded-bug — that task must report, not patch.
+ */
 import { describe, expect, test } from 'bun:test';
 import { clamp } from './review-target';
 
-describe('clamp', () => {
+describe('clamp (fixed)', () => {
   test('returns max when n equals max', () => {
     expect(clamp(10, 0, 10)).toBe(10);
   });

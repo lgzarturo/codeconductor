@@ -16,6 +16,13 @@ import {
 export type BenchVerdict = 'ACEPTA' | 'RECHAZA' | 'NO CONCLUYENTE';
 export type BenchClaim = 'efficiency' | 'quality' | 'success-only';
 
+export type BenchCostBasis =
+  | 'provider-billed'
+  | 'host-estimate'
+  | 'unknown'
+  | 'none'
+  | null;
+
 export interface BenchRunCell {
   taskId: string;
   variant: 'baseline' | 'treatment';
@@ -30,6 +37,8 @@ export interface BenchRunCell {
   tokensCacheRead: number | null;
   tokensCacheWrite: number | null;
   costUsd: number | null;
+  /** In-band cost basis (§1 / M1): unknown for OpenRouter :free Anthropic-table estimates. */
+  costBasis: BenchCostBasis;
   durationMs: number | null;
   cacheHitRate: number | null;
   firstTry: boolean | null;

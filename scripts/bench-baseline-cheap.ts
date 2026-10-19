@@ -268,9 +268,24 @@ async function main(): Promise<void> {
         tokensInput: c.tokensInput,
         tokensOutput: c.tokensOutput,
         costUsd: c.costUsd,
+        costBasis: c.costBasis,
         durationMs: c.durationMs,
         modelId: c.modelId,
       })),
+      /** In-band: OpenRouter :free Anthropic-table estimates are `unknown`, not provider-billed. */
+      costBasisSummary: {
+        default: 'unknown',
+        note: 'Claude Code total_cost_usd/costUSD on :free OpenRouter routes is an Anthropic list-price estimate, not OpenRouter billed spend',
+        byCell: Object.fromEntries(
+          [...new Set(result.report.cells.map((c) => c.costBasis ?? 'none'))].map(
+            (b) => [
+              b,
+              result.report.cells.filter((c) => (c.costBasis ?? 'none') === b)
+                .length,
+            ],
+          ),
+        ),
+      },
       pendingCells: result.pendingCells,
       invocations: result.invocations,
     };

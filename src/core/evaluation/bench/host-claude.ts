@@ -9,8 +9,11 @@ import { spawn } from 'node:child_process';
 import { cp, mkdtemp, rm, writeFile, readFile, access, mkdir } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { collectClaudeJson } from '../../telemetry/collectors/claude-json';
-import type { BenchRunCell } from './report';
+import {
+  collectClaudeJson,
+  resolveClaudeJsonCostBasis,
+} from '../../telemetry/collectors/claude-json';
+import type { BenchCostBasis, BenchRunCell } from './report';
 
 export interface ClaudeHostSlot {
   taskId: string;
@@ -418,15 +421,22 @@ export async function runClaudeHostCell(
 
       let success = false;
       if (slot.testCommand?.trim()) {
-        for (const name of ['math', 'greet', 'review-target']) {
-          const example = join(cwd, 'src', `${name}.test.ts.example`);
-          const dest = join(cwd, 'src', `${name}.test.ts`);
+        // Promote only *.test.ts.example files named by the task's testCommand
+        // (avoids forcing add/clamp patch oracles on feature/review tasks).
+        const promoteMatch = slot.testCommand.match(
+          /(?:^|\s)((?:src\/)?[\w./-]+\.test\.ts)\b/,
+        );
+        if (promoteMatch) {
+          const destRel = promoteMatch[1]!.replace(/^\.\//, '');
+          const base = destRel.replace(/\.test\.ts$/, '');
+          const example = join(cwd, `${base}.test.ts.example`);
+          const dest = join(cwd, destRel);
           try {
             await access(example);
             const body = await readFile(example, 'utf-8');
             await writeFile(dest, body, 'utf-8');
           } catch {
-            // ignore
+            // Review oracles may ship the .test.ts already (no .example).
           }
         }
         const test = await runShell(slot.testCommand, cwd, 60_000, buildClaudeEnv());
@@ -442,6 +452,14 @@ export async function runClaudeHostCell(
       const tokensTotal =
         (input ?? 0) + (output ?? 0) + (cacheRead ?? 0) + (cacheWrite ?? 0);
 
+      // Prefer collector event basis; fall back to model-id rules for :free.
+      const runEnd = collected.events.find((e) => e.event === 'run.end');
+      const costBasis: BenchCostBasis =
+        (runEnd?.cost?.basis as BenchCostBasis | undefined) ??
+        (collected.totals.costUsd === null
+          ? 'none'
+          : resolveClaudeJsonCostBasis(options.modelId));
+
       const cell: BenchRunCell = {
         taskId: slot.taskId,
         variant: slot.variant,
@@ -456,6 +474,7 @@ export async function runClaudeHostCell(
         tokensCacheRead: cacheRead,
         tokensCacheWrite: cacheWrite,
         costUsd: collected.totals.costUsd,
+        costBasis,
         durationMs: Date.now() - started,
         cacheHitRate:
           input && cacheRead && input > 0 ? cacheRead / (input + cacheRead) : null,

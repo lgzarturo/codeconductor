@@ -16,13 +16,15 @@ tasks:
     title: Add multiply helper
     type: feature
     risk: low
-    prompt: Add multiply(a, b) that returns the product of two numbers.
-    scope: src/math.ts, src/math.test.ts
+    prompt: >
+      Add multiply(a, b) that returns the product of two numbers. Export it from src/math.ts.
+      Do not change add(). Promote src/multiply.test.ts.example to src/multiply.test.ts.
+    scope: src/math.ts, src/multiply.test.ts
     acceptanceCriteria:
       - multiply is exported from src/math.ts
       - multiply(3, 4) returns 12
-      - A test covers the new function
-    testCommand: bun test src/math.test.ts
+      - src/multiply.test.ts passes (add may remain broken)
+    testCommand: bun test src/multiply.test.ts
   - id: refactor-greet
     title: Extract greet name formatting
     type: refactor
@@ -40,12 +42,13 @@ tasks:
     risk: medium
     prompt: >
       Review src/review-target.ts. There is a seeded defect in clamp(): when n equals max
-      it returns max-1. Report the defect; do not refactor unrelated files.
-    scope: src/review-target.ts, src/review-target.test.ts
+      it returns max-1. Write a short report to src/review-report.md that identifies the defect
+      (upper bound / off-by-one). Do NOT modify src/review-target.ts or apply a code patch.
+    scope: src/review-report.md
     acceptanceCriteria:
-      - Defect at clamp upper bound is identified
-      - Promote src/review-target.test.ts.example and make clamp(10,0,10)===10 pass
-    testCommand: bun test src/review-target.test.ts
+      - src/review-report.md identifies the clamp upper-bound off-by-one
+      - src/review-target.ts is unchanged (clamp still buggy)
+    testCommand: bun test src/review-report.test.ts
   - id: out-of-scope-guard
     title: Do not touch out-of-scope sentinel
     type: refactor

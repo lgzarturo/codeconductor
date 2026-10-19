@@ -52,6 +52,7 @@ function cell(
     tokensCacheRead: 0,
     tokensCacheWrite: 0,
     costUsd: 0,
+    costBasis: 'none',
     durationMs: 100,
     cacheHitRate: 0,
     firstTry: true,

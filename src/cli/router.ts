@@ -51,7 +51,7 @@ const OutputModeSchema = z.enum(['json', 'human']);
 const SeoFormatSchema = z.enum(['cli', 'json', 'markdown']);
 const SeoFailOnSchema = z.enum(['error', 'warning', 'never']);
 const NonNegativeIntegerSchema = z.coerce.number().int().nonnegative();
-const BOOLEAN_OPTIONS = new Set(['record-telemetry']);
+const BOOLEAN_OPTIONS = new Set(['record-telemetry', 'with-tool-details', 'all']);
 
 /**
  * Parse command from args
@@ -700,6 +700,29 @@ export async function routeCommand(
         command: typeof options.command === 'string' ? options.command : undefined,
         filePath: typeof options.file === 'string' ? options.file : undefined,
         stdinText,
+      });
+    }
+
+    case 'telemetry': {
+      const validSubs = ['otel-env', 'show', 'purge'] as const;
+      if (!subcommand || !validSubs.includes(subcommand as (typeof validSubs)[number])) {
+        return unknownSubcommand(command, subcommand ?? '', [...validSubs]);
+      }
+      const { telemetryCommand } = await import('../commands/telemetry.command');
+      const portRaw = options.port;
+      const port =
+        typeof portRaw === 'string' || typeof portRaw === 'number'
+          ? Number(portRaw)
+          : undefined;
+      return telemetryCommand({
+        projectRoot,
+        output: flags.output,
+        subcommand: subcommand as (typeof validSubs)[number],
+        port: Number.isFinite(port) ? port : undefined,
+        withToolDetails:
+          options['with-tool-details'] === true || options['with-tool-details'] === 'true',
+        purgeScope: options.all === true || options.all === 'true' ? 'all' : 'project',
+        runId: typeof options.run === 'string' ? options.run : undefined,
       });
     }
 

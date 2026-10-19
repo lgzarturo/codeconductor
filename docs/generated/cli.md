@@ -104,6 +104,16 @@ Run installed agent hooks.
 cc-codeconductor hook <pre-tool|post-tool|session-start|session-end|subagent-stop|stop>
 ```
 
+## telemetry
+
+Harness telemetry helpers (OTLP env, show, purge).
+
+```text
+cc-codeconductor telemetry otel-env [--port <n>] [--with-tool-details]
+cc-codeconductor telemetry show [--run <id>]
+cc-codeconductor telemetry purge [--all]
+```
+
 ## cc-help
 
 Show a target preset inventory.

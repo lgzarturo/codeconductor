@@ -88,6 +88,8 @@ export interface BuildBenchReportInput {
   fingerprints?: Partial<BenchFingerprints>;
   claim?: BenchClaim;
   cheap?: boolean;
+  /** Override minimum N (default: 3 cheap / 5 normal). */
+  minN?: number;
   efficiencyThreshold?: number;
   qualityTokenCeiling?: number;
   bootstrapSamples?: number;
@@ -153,12 +155,19 @@ function buildTaskRow(
   };
 }
 
+/** Minimum repetitions per cell: 3 in cheap mode, 5 otherwise (§3.1 / review). */
+export function minRepetitionsForMode(cheap: boolean): number {
+  return cheap ? 3 : 5;
+}
+
 function decideVerdict(
   claim: BenchClaim,
   overall: BenchReport['overall'],
   tasks: BenchTaskRow[],
   efficiencyThreshold: number,
   qualityTokenCeiling: number,
+  n: number,
+  minN: number,
 ): { verdict: BenchVerdict; reasons: string[] } {
   const reasons: string[] = [];
   const successOk =
@@ -170,6 +179,14 @@ function decideVerdict(
     return { verdict: 'RECHAZA', reasons };
   }
   reasons.push('success criterion met');
+
+  // Low N degenerates the bootstrap IC (ciLow≈ciHigh) and can falsely ACEPTA.
+  if (!Number.isFinite(n) || n < minN) {
+    reasons.push(
+      `N=${n} below minimum ${minN} for this mode — IC unreliable (NO CONCLUYENTE)`,
+    );
+    return { verdict: 'NO CONCLUYENTE', reasons };
+  }
 
   if (claim === 'success-only') {
     return { verdict: 'ACEPTA', reasons };
@@ -271,14 +288,6 @@ export function buildBenchReport(input: BuildBenchReportInput): BenchReport {
     tokens: overallTokens,
   };
 
-  const { verdict, reasons } = decideVerdict(
-    claim,
-    overall,
-    tasks,
-    efficiencyThreshold,
-    qualityTokenCeiling,
-  );
-
   const costs = input.cells
     .map((c) => c.costUsd)
     .filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
@@ -291,11 +300,24 @@ export function buildBenchReport(input: BuildBenchReportInput): BenchReport {
       ...input.cells.map((c) => c.repetition),
     ) || input.cells.filter((c) => c.variant === 'baseline').length /
       Math.max(1, taskIds.length);
+  const nRounded = Math.round(n);
+  const cheap = input.cheap === true;
+  const minN = input.minN ?? minRepetitionsForMode(cheap);
+
+  const { verdict, reasons } = decideVerdict(
+    claim,
+    overall,
+    tasks,
+    efficiencyThreshold,
+    qualityTokenCeiling,
+    nRounded,
+    minN,
+  );
 
   const generatedAt = input.generatedAt ?? new Date().toISOString();
   const contentHash = canonicalBenchHash({
     suiteId: input.suiteId,
-    n: Math.round(n),
+    n: nRounded,
     cells: input.cells,
     fingerprints,
   });
@@ -305,8 +327,8 @@ export function buildBenchReport(input: BuildBenchReportInput): BenchReport {
     generatedAt,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
     suiteId: input.suiteId,
-    n: Math.round(n),
-    cheap: input.cheap === true,
+    n: nRounded,
+    cheap,
     claim,
     efficiencyThreshold,
     qualityTokenCeiling,

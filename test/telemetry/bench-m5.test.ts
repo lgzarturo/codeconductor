@@ -20,9 +20,11 @@ import {
   runBench,
   synthesizeDryCells,
 } from '../../src/core/evaluation/bench/runner';
+import { assertOpenRouterModelFreeZeroPrice } from '../../src/core/evaluation/bench/openrouter-free-model';
 import type { OpenRouterKeySnapshot } from '../../src/core/telemetry/openrouter-spend-lock';
 import { loadHarnessSuite } from '../../src/core/evaluation/harness-experiment';
 import { scorecardCommand } from '../../src/commands/scorecard.command';
+import { minRepetitionsForMode } from '../../src/core/evaluation/bench/report';
 
 const REPO_ROOT = resolve(import.meta.dir, '../..');
 const SUITE_PATH = resolve(REPO_ROOT, 'eval/suites/harness-v1/suite.yml');
@@ -145,6 +147,67 @@ describe('M5 report verdicts (§3.3)', () => {
     });
     expect(report.verdict).toBe('ACEPTA');
     expect(report.schema).toBe('bench-report/v1');
+  });
+
+  test('N=1 with clear delta is NO CONCLUYENTE (IC degenerates)', () => {
+    const cells: BenchRunCell[] = [
+      cell({
+        taskId: 't1',
+        variant: 'baseline',
+        repetition: 1,
+        tokensTotal: 1000,
+      }),
+      cell({
+        taskId: 't1',
+        variant: 'treatment',
+        repetition: 1,
+        tokensTotal: 500,
+      }),
+    ];
+    const report = buildBenchReport({
+      suiteId: 'harness-v1',
+      cells,
+      claim: 'efficiency',
+      seed: 1,
+      bootstrapSamples: 200,
+      generatedAt: '2026-10-19T00:00:00.000Z',
+    });
+    expect(report.n).toBe(1);
+    expect(report.verdict).toBe('NO CONCLUYENTE');
+    expect(report.verdictReasons.some((r) => /below minimum/i.test(r))).toBe(
+      true,
+    );
+  });
+
+  test('cheap mode requires N≥3; N=2 → NO CONCLUYENTE', () => {
+    const cells: BenchRunCell[] = [];
+    for (let rep = 1; rep <= 2; rep++) {
+      cells.push(
+        cell({
+          taskId: 't1',
+          variant: 'baseline',
+          repetition: rep,
+          tokensTotal: 1000,
+        }),
+        cell({
+          taskId: 't1',
+          variant: 'treatment',
+          repetition: rep,
+          tokensTotal: 500,
+        }),
+      );
+    }
+    const report = buildBenchReport({
+      suiteId: 'harness-v1',
+      cells,
+      claim: 'success-only',
+      cheap: true,
+      seed: 1,
+      bootstrapSamples: 50,
+      generatedAt: '2026-10-19T00:00:00.000Z',
+    });
+    expect(report.n).toBe(2);
+    expect(report.verdict).toBe('NO CONCLUYENTE');
   });
 
   test('RECHAZA when success drops', () => {
@@ -355,6 +418,43 @@ describe('M5 runner (dry / fake provider)', () => {
     expect(result.aborted).toBe(false);
     expect(result.report.cells).toHaveLength(cells.length);
     expect(result.report.contentHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+});
+
+describe('M5 free-model pricing gate', () => {
+  test('minRepetitionsForMode is 3 cheap / 5 normal', () => {
+    expect(minRepetitionsForMode(true)).toBe(3);
+    expect(minRepetitionsForMode(false)).toBe(5);
+  });
+
+  test('rejects non-:free and non-zero pricing', async () => {
+    const paid = await assertOpenRouterModelFreeZeroPrice('anthropic/claude-sonnet-4', {
+      apiKey: 'test',
+      fetchImpl: async () =>
+        new Response(JSON.stringify({ data: [] }), { status: 200 }),
+    });
+    expect(paid.ok).toBe(false);
+
+    const free = await assertOpenRouterModelFreeZeroPrice(
+      'nvidia/nemotron-3-super-120b-a12b:free',
+      {
+        apiKey: 'test',
+        fetchImpl: async () =>
+          new Response(
+            JSON.stringify({
+              data: [
+                {
+                  id: 'nvidia/nemotron-3-super-120b-a12b:free',
+                  pricing: { prompt: '0', completion: '0' },
+                },
+              ],
+            }),
+            { status: 200 },
+          ),
+      },
+    );
+    expect(free.ok).toBe(true);
+    expect(free.pricing).toEqual({ prompt: 0, completion: 0 });
   });
 });
 

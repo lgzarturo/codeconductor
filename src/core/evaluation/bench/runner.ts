@@ -1,8 +1,9 @@
 /**
  * Bench runner (§3.1 / §3.6).
  *
- * Live model calls are opt-in. Default and CI paths use recorded cells or a
- * deterministic dry schedule. Cheap mode enforces OpenRouter zero-spend lock.
+ * Live model calls are opt-in (`live: true`). Default and CI paths use recorded
+ * cells or a deterministic dry schedule. Cheap mode enforces OpenRouter
+ * zero-spend lock before the run and between tasks.
  */
 import { cp, mkdtemp, readFile, rm, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -23,7 +24,15 @@ import {
   type BenchReport,
   type BenchRunCell,
 } from './report';
+import { runClaudeHostCell } from './host-claude';
 import { PACKAGE_ROOT } from '../../presets/package-paths';
+
+export interface PendingBenchCell {
+  taskId: string;
+  variant: 'baseline' | 'treatment';
+  repetition: number;
+  reason: string;
+}
 
 export interface BenchRunOptions {
   projectRoot: string;
@@ -46,6 +55,11 @@ export interface BenchRunOptions {
    * structural baseline hash without calling models.
    */
   drySynthetic?: boolean;
+  /**
+   * Opt-in live Claude Code host (OpenRouter :free). Requires cheap + key.
+   * Incomplete cells are listed in `pendingCells`.
+   */
+  live?: boolean;
   maxLimitUsd?: number;
   /** Pre/post key snapshots for cheap-mode usage Δ (tests inject these). */
   keyBefore?: OpenRouterKeySnapshot | null;
@@ -56,6 +70,8 @@ export interface BenchRunOptions {
   /** Directory outside the repo for bench-report.json (default XDG state). */
   reportDir?: string;
   writeReport?: boolean;
+  /** Cap live cells (tests / partial baseline). */
+  maxLiveCells?: number;
 }
 
 export interface BenchRunResult {
@@ -66,6 +82,9 @@ export interface BenchRunResult {
   aborted: boolean;
   abortReason: string | null;
   runValid: boolean;
+  pendingCells: PendingBenchCell[];
+  usageBefore: number | null;
+  usageAfter: number | null;
 }
 
 function defaultReportDir(projectRoot: string): string {
@@ -150,9 +169,9 @@ async function loadCells(options: BenchRunOptions): Promise<BenchRunCell[] | nul
 }
 
 /**
- * Run (or replay) a bench. Live host execution is not implemented in M5 MVP —
- * use `drySynthetic` or `cells`/`cellsPath`. Cheap mode still enforces the
- * OpenRouter ≤$5 / Δ usage $0 lock before accepting a run as valid.
+ * Run (or replay) a bench. Pass `drySynthetic`, `cells`/`cellsPath`, or
+ * `live: true` (cheap OpenRouter :free via Claude Code). Cheap mode enforces
+ * the OpenRouter ≤$5 / Δ usage $0 lock before the run and between tasks.
  */
 export async function runBench(options: BenchRunOptions): Promise<BenchRunResult> {
   const projectRoot = options.projectRoot;
@@ -162,12 +181,15 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
   const n = options.n ?? (cheap ? 3 : 5);
   const seed = options.seed ?? 42;
   const workDirs: string[] = [];
+  const pendingCells: PendingBenchCell[] = [];
+  let usageAfter: number | null = null;
 
   const suite = await loadHarnessSuite(projectRoot, suiteId, options.suitePath);
   if (!suite.success) {
     throw suite.error;
   }
   const taskIds = suite.data.tasks.map((t) => t.id);
+  const taskById = new Map(suite.data.tasks.map((t) => [t.id, t]));
 
   // Copy fixture to /tmp (clean workdir per §3.1) — even for dry runs, to
   // exercise the isolation path.
@@ -189,16 +211,20 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
   let runValid = true;
   let aborted = false;
   let abortReason: string | null = null;
+  const modelId =
+    options.modelId ?? 'nvidia/nemotron-3-super-120b-a12b:free';
 
   if (cheap) {
-    const modelId =
-      options.modelId ?? 'nvidia/nemotron-3-super-120b-a12b:free';
     const lock = await assertOpenRouterZeroSpend({
       modelId,
       key: options.keyBefore,
       fetchKey: options.fetchKey,
       maxLimitUsd: options.maxLimitUsd ?? DEFAULT_OPENROUTER_LIMIT_CAP_USD,
-      skipKeyCheck: options.keyBefore === undefined && !options.fetchKey && !process.env.OPENROUTER_API_KEY,
+      skipKeyCheck:
+        options.keyBefore === undefined &&
+        !options.fetchKey &&
+        !process.env.OPENROUTER_API_KEY &&
+        options.live !== true,
     });
     if (!lock.ok) {
       aborted = true;
@@ -211,12 +237,119 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
 
   let cells = await loadCells(options);
   if (!cells) {
-    if (options.drySynthetic || !cheap) {
+    if (options.live === true) {
+      if (!cheap) {
+        aborted = true;
+        abortReason = 'live bench requires --cheap (OpenRouter :free lock)';
+        runValid = false;
+        cells = [];
+      } else if (!fixtureDir) {
+        aborted = true;
+        abortReason = 'live bench requires suite fixtureDir';
+        runValid = false;
+        cells = [];
+      } else if (aborted) {
+        cells = [];
+      } else {
+        const schedule = interleaveSchedule(taskIds, n, seed);
+        const maxLive = options.maxLiveCells ?? schedule.length;
+        cells = [];
+        let lastTaskId: string | null = null;
+        for (let i = 0; i < schedule.length; i++) {
+          const slot = schedule[i]!;
+          if (i >= maxLive) {
+            pendingCells.push({
+              taskId: slot.taskId,
+              variant: slot.variant,
+              repetition: slot.repetition,
+              reason: 'not reached (maxLiveCells / quota)',
+            });
+            continue;
+          }
+          if (aborted) {
+            pendingCells.push({
+              taskId: slot.taskId,
+              variant: slot.variant,
+              repetition: slot.repetition,
+              reason: abortReason ?? 'aborted',
+            });
+            continue;
+          }
+
+          // Between-task usage check when the task id changes.
+          if (
+            lastTaskId !== null &&
+            slot.taskId !== lastTaskId &&
+            usageBefore !== null
+          ) {
+            const mid = await assertOpenRouterUsageUnchanged({
+              usageBefore,
+              keyAfter: options.keyAfter,
+              fetchKey: options.fetchKey,
+            });
+            if (!mid.ok) {
+              aborted = true;
+              abortReason = `after task ${lastTaskId}: ${mid.reason}`;
+              runValid = false;
+              pendingCells.push({
+                taskId: slot.taskId,
+                variant: slot.variant,
+                repetition: slot.repetition,
+                reason: abortReason,
+              });
+              continue;
+            }
+          }
+          lastTaskId = slot.taskId;
+
+          const task = taskById.get(slot.taskId);
+          const hostResult = await runClaudeHostCell(
+            {
+              taskId: slot.taskId,
+              variant: slot.variant,
+              repetition: slot.repetition,
+              prompt: task?.prompt ?? slot.taskId,
+              testCommand: task?.testCommand,
+            },
+            {
+              fixtureDir,
+              modelId,
+              hostVersion: process.env.CLAUDE_CODE_VERSION ?? null,
+            },
+          );
+          if (hostResult.pending || !hostResult.cell) {
+            pendingCells.push({
+              taskId: slot.taskId,
+              variant: slot.variant,
+              repetition: slot.repetition,
+              reason: hostResult.pendingReason ?? 'host pending',
+            });
+            continue;
+          }
+          cells.push(hostResult.cell);
+        }
+
+        // Final usage check after the last task.
+        if (!aborted && usageBefore !== null) {
+          const after = await assertOpenRouterUsageUnchanged({
+            usageBefore,
+            keyAfter: options.keyAfter,
+            fetchKey: options.fetchKey,
+          });
+          usageAfter = after.usageAfter;
+          if (!after.ok) {
+            aborted = true;
+            abortReason = after.reason;
+            runValid = false;
+          }
+        }
+      }
+    } else if (options.drySynthetic || !cheap) {
       cells = synthesizeDryCells(taskIds, n, seed);
     } else if (!aborted) {
       aborted = true;
       abortReason =
-        'Live bench host execution is not wired in M5 MVP; pass --dry-synthetic or --cells';
+        'Live bench requires --live (or pass --dry-synthetic / --cells)';
       runValid = false;
       cells = [];
     } else {
@@ -224,14 +357,15 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
     }
   }
 
-  // Re-check usage between tasks (and once at end) so a mid-run Δ aborts.
-  if (cheap && !aborted && usageBefore !== null) {
+  // Dry / cells path: re-check usage between tasks so a mid-run Δ aborts.
+  if (!options.live && cheap && !aborted && usageBefore !== null) {
     for (const taskId of taskIds) {
       const after = await assertOpenRouterUsageUnchanged({
         usageBefore,
         keyAfter: options.keyAfter,
         fetchKey: options.fetchKey,
       });
+      usageAfter = after.usageAfter;
       if (!after.ok) {
         aborted = true;
         abortReason = `after task ${taskId}: ${after.reason}`;
@@ -258,7 +392,8 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
 
   const markdown = formatBenchReportMarkdown(report);
   let reportPath: string | null = null;
-  if (options.writeReport !== false && !aborted) {
+  // Always write when not aborted so partial live baselines land as artifacts.
+  if (options.writeReport !== false && !(aborted && cells.length === 0)) {
     const dir = options.reportDir ?? defaultReportDir(projectRoot);
     await mkdir(dir, { recursive: true });
     reportPath = join(dir, 'bench-report.json');
@@ -279,5 +414,8 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
     aborted,
     abortReason,
     runValid: runValid && !aborted,
+    pendingCells,
+    usageBefore,
+    usageAfter,
   };
 }

@@ -1,0 +1,67 @@
+# M5 cheap baseline — manual / dedicated branch only.
+# Never runs on pull_request. Key from secrets.OPENROUTER_API_KEY only.
+name: bench-baseline-m5
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - bench/baseline-m5-run
+
+permissions:
+  contents: read
+
+jobs:
+  cheap-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Require OpenRouter secret
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          if [ -z "${OPENROUTER_API_KEY}" ]; then
+            echo "OPENROUTER_API_KEY secret is not available — aborting (no alternate key source)"
+            exit 1
+          fi
+          echo "OPENROUTER_API_KEY is present (value not printed)"
+
+      - name: Install Claude Code CLI
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude --version || true
+          echo "CLAUDE_CODE_VERSION=$(claude --version 2>/dev/null | head -1 || echo unknown)" >> "$GITHUB_ENV"
+
+      - name: Run cheap baseline (N=3)
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          ANTHROPIC_BASE_URL: https://openrouter.ai/api
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.OPENROUTER_API_KEY }}
+          ANTHROPIC_API_KEY: ""
+          BENCH_MODEL_ID: nvidia/nemotron-3-super-120b-a12b:free
+          BENCH_N: "3"
+          BENCH_SEED: "42"
+          BENCH_OUT_DIR: bench-out
+          BENCH_PROJECT_ROOT: .
+        run: bun run scripts/bench-baseline-cheap.ts
+
+      - name: Upload sanitized aggregates
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-baseline-cheap
+          path: |
+            bench-out/bench-baseline-cheap.json
+            bench-out/bench-report.md
+          if-no-files-found: warn

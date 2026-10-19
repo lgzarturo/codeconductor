@@ -1,0 +1,11 @@
+{
+  "_fixture": "synthetic",
+  "_note": "SYNTHETIC SubagentStop payload for a second subagent (reviewer).",
+  "session_id": "synth-session-m2-001",
+  "hook_event_name": "SubagentStop",
+  "cwd": "/tmp/synth-project",
+  "agent_id": "agent-rev-002",
+  "agent_type": "reviewer",
+  "agent_transcript_path": "/tmp/synth-project/.claude/agent-rev-002.jsonl",
+  "last_assistant_message": "NEVER_STORE_THIS — privacy §7"
+}

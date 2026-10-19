@@ -1,0 +1,11 @@
+{
+  "_fixture": "synthetic",
+  "_note": "SYNTHETIC SubagentStop payload shaped like Claude Code hooks docs (agent_id, agent_type, agent_transcript_path). Not captured from a live session.",
+  "session_id": "synth-session-m2-001",
+  "hook_event_name": "SubagentStop",
+  "cwd": "/tmp/synth-project",
+  "agent_id": "agent-impl-001",
+  "agent_type": "implementer",
+  "agent_transcript_path": "/tmp/synth-project/.claude/agent-impl-001.jsonl",
+  "last_assistant_message": "NEVER_STORE_THIS — privacy §7"
+}

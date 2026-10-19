@@ -14,6 +14,13 @@ import {
   type HookFormat,
   type PreToolInput,
 } from '../core/hooks/hook-runner';
+import {
+  emitAgentEndFromSubagentStop,
+  emitPostToolTelemetry,
+  emitRunEndFromSessionEnd,
+  handleStopHook,
+  parseClaudeHookEnvelope,
+} from '../core/telemetry/hook-telemetry';
 import type { OutputMode } from '../utils/logger';
 
 export interface HookOptions {
@@ -98,9 +105,40 @@ export async function hookCommand(
     return { code: 0, data: { success: true, command: 'hook session-start' } };
   }
 
+  if (event === 'session-end') {
+    const envelope = parseClaudeHookEnvelope(stdinText);
+    await emitRunEndFromSessionEnd(options.projectRoot, envelope);
+    if (format === 'agy') process.stdout.write('{}\n');
+    return { code: 0, data: { success: true, command: 'hook session-end' } };
+  }
+
+  if (event === 'subagent-stop') {
+    const envelope = parseClaudeHookEnvelope(stdinText);
+    const emitted = await emitAgentEndFromSubagentStop(options.projectRoot, envelope);
+    if (format === 'agy') process.stdout.write('{}\n');
+    return {
+      code: 0,
+      data: {
+        success: true,
+        command: 'hook subagent-stop',
+        agentRole: emitted.agent?.role ?? null,
+        agentId: emitted.agent?.agentId ?? null,
+      },
+    };
+  }
+
+  if (event === 'stop') {
+    const envelope = parseClaudeHookEnvelope(stdinText);
+    await handleStopHook(options.projectRoot, envelope);
+    if (format === 'agy') process.stdout.write('{}\n');
+    return { code: 0, data: { success: true, command: 'hook stop' } };
+  }
+
   if (event === 'post-tool') {
     const filePath = resolvePreToolInput(options, stdinText, format).filePath;
     formatWrittenFile(filePath, options.projectRoot);
+    const envelope = parseClaudeHookEnvelope(stdinText);
+    await emitPostToolTelemetry(options.projectRoot, envelope);
     if (format === 'agy') {
       process.stdout.write('{}\n');
     }

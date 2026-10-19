@@ -675,7 +675,14 @@ export async function routeCommand(
     }
 
     case 'hook': {
-      const validHookEvents = ['pre-tool', 'post-tool', 'session-start'] as const;
+      const validHookEvents = [
+        'pre-tool',
+        'post-tool',
+        'session-start',
+        'session-end',
+        'subagent-stop',
+        'stop',
+      ] as const;
       if (subcommand && !validHookEvents.includes(subcommand as (typeof validHookEvents)[number])) {
         return unknownSubcommand(command, subcommand, [...validHookEvents]);
       }

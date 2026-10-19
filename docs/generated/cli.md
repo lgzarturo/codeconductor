@@ -101,7 +101,7 @@ cc-codeconductor completion <bash|zsh|fish|powershell>
 Run installed agent hooks.
 
 ```text
-cc-codeconductor hook <pre-tool|post-tool|session-start>
+cc-codeconductor hook <pre-tool|post-tool|session-start|session-end|subagent-stop|stop>
 ```
 
 ## cc-help

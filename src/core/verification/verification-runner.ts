@@ -29,6 +29,7 @@ import {
   verifyReceipt,
   type RddReceipt,
 } from './rdd-receipt';
+import { emitVerificationGate } from '../telemetry/hook-telemetry';
 
 export interface VerificationCheck {
   name: string;
@@ -333,6 +334,18 @@ export async function runVerification(
     payload: { taskId, passed, evidenceId: evidence.id },
   });
   if (!event.success) return event;
+
+  // One harness-telemetry verification event per gate (§1.3).
+  const runId = `r-verify-${taskId}`;
+  for (const check of checks) {
+    await emitVerificationGate(projectRoot, {
+      runId,
+      taskId,
+      gate: check.name,
+      passed: check.passed,
+      durationMs: null,
+    });
+  }
 
   return ok({ passed, checks, evidenceIds });
 }

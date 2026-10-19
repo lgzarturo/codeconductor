@@ -1,0 +1,107 @@
+# M5 cheap baseline — manual dispatch only (no push / pull_request triggers).
+# Key from secrets.OPENROUTER_API_KEY only. Hard caps per run:
+# BENCH_MAX_TOKENS / BENCH_MAX_REQUESTS (Claude is killed when either is hit).
+name: bench-baseline-m5
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bench-baseline-m5
+  cancel-in-progress: true
+
+jobs:
+  cheap-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Require OpenRouter secret
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          if [ -z "${OPENROUTER_API_KEY}" ]; then
+            echo "OPENROUTER_API_KEY secret is not available — aborting (no alternate key source)"
+            exit 1
+          fi
+          echo "OPENROUTER_API_KEY is present (value not printed)"
+
+      - name: Install Claude Code CLI
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude --version || true
+          echo "CLAUDE_CODE_VERSION=$(claude --version 2>/dev/null | head -1 || echo unknown)" >> "$GITHUB_ENV"
+          # Minimal non-interactive config (no onboarding / login prompts).
+          mkdir -p "$HOME/.claude"
+          printf '%s\n' '{"hasTrustDialogAccepted":true,"hasCompletedProjectOnboarding":true}' > "$HOME/.claude/settings.json"
+
+      # Smoke (2 attempts max) runs inside the script before any cell.
+      - name: Run cheap baseline (N=3)
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          ANTHROPIC_BASE_URL: https://openrouter.ai/api
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.OPENROUTER_API_KEY }}
+          ANTHROPIC_API_KEY: ""
+          BENCH_MODEL_ID: nvidia/nemotron-3-super-120b-a12b:free
+          BENCH_N: "3"
+          BENCH_SEED: "42"
+          BENCH_OUT_DIR: bench-out
+          BENCH_PROJECT_ROOT: .
+          BENCH_MAX_TOKENS: "2000000"
+          BENCH_MAX_REQUESTS: "150"
+        run: bun run scripts/bench-baseline-cheap.ts
+
+      - name: Post-candado usage snapshot (always)
+        if: always()
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          mkdir -p bench-out
+          bun -e '
+            const key = process.env.OPENROUTER_API_KEY;
+            if (!key) {
+              console.log(JSON.stringify({ event: "post-lock", ok: false, reason: "no key" }));
+              process.exit(0);
+            }
+            const res = await fetch("https://openrouter.ai/api/v1/key", {
+              headers: { Authorization: "Bearer " + key, Accept: "application/json" },
+            });
+            if (!res.ok) {
+              console.log(JSON.stringify({ event: "post-lock", ok: false, http: res.status }));
+              process.exit(0);
+            }
+            const body = await res.json();
+            const usage = body?.data?.usage ?? body?.usage ?? null;
+            const limit = body?.data?.limit ?? body?.limit ?? null;
+            const fs = await import("node:fs/promises");
+            await fs.writeFile(
+              "bench-out/usage-after.json",
+              JSON.stringify({ schema: "bench-usage-after/v1", usage, limit, capturedAt: new Date().toISOString() }, null, 2),
+            );
+            console.log(JSON.stringify({ event: "post-lock", ok: true, usage, limit }));
+          '
+
+      - name: Upload sanitized aggregates (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-baseline-cheap
+          path: |
+            bench-out/bench-baseline-cheap.json
+            bench-out/bench-report.md
+            bench-out/bench-report.json
+            bench-out/usage-after.json
+          if-no-files-found: warn

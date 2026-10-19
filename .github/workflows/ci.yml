@@ -47,3 +47,25 @@ jobs:
       - run: bun run src/cli/main.ts doctor
       - run: bun run src/cli/main.ts ingest
       - run: bun run src/cli/main.ts product graph
+
+  # Deterministic harness metrics only — never calls models. Informative (non-blocking).
+  prompt-metrics:
+    name: prompt-metrics (informative)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Prompt metrics (harness-v1 compile)
+        run: bun run src/cli/main.ts scorecard prompt-metrics --output json
+      - name: Compiled prompt-diff against main
+        run: |
+          BASE_REF="${{ github.event.pull_request.base.ref || 'main' }}"
+          bun run src/cli/main.ts scorecard prompt-diff "origin/${BASE_REF}" HEAD --compiled --output json
+      - name: Schema + telemetry fixture replay (no live models)
+        run: bun test test/telemetry/

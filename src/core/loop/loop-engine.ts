@@ -16,6 +16,7 @@ import { readGitChangeStats, type GitStatsReader } from './git-stats';
 import {
   loadTddSuiteEvidence,
 } from '../verification/verification-runner';
+import { emitLoopIteration, emitLoopRetry } from '../telemetry/hook-telemetry';
 import { err, ok, type Result } from '../../utils/result';
 
 export interface LoopConfig {
@@ -157,12 +158,20 @@ export async function runLoop(
   let feedbackText: string | undefined;
   let compileCheck: LoopResult['compileCheck'];
   let compileCheckSkipReason: string | undefined;
+  const projectRoot = config.cwd ?? process.cwd();
+  const loopRunId = `r-loop-${Date.now().toString(36)}`;
 
   logTransition(state.phase, 'INIT', state.iteration);
 
   const startResult = loopStateMachine(state, { type: 'START' });
   state = startResult.state;
   logTransition(state.phase, 'START', state.iteration);
+  await emitLoopIteration(projectRoot, {
+    runId: loopRunId,
+    taskId: taskTitle,
+    iteration: state.iteration,
+    maxIterations,
+  });
 
   while (true) {
     const hit = await engine.evaluate();
@@ -221,10 +230,23 @@ export async function runLoop(
       case 'FEEDBACK': {
         logTransition(state.phase, 'FORMAT_FEEDBACK', state.iteration);
         feedbackText = formatFeedback(state.errors);
+        await emitLoopRetry(projectRoot, {
+          runId: loopRunId,
+          taskId: taskTitle,
+          iteration: state.iteration,
+          maxIterations,
+          feedback: feedbackText,
+        });
 
         const fbResult = loopStateMachine(state, { type: 'FEEDBACK_FORMATTED' });
         state = fbResult.state;
         logTransition(state.phase, 'FEEDBACK_FORMATTED', state.iteration);
+        await emitLoopIteration(projectRoot, {
+          runId: loopRunId,
+          taskId: taskTitle,
+          iteration: state.iteration,
+          maxIterations,
+        });
         break;
       }
 

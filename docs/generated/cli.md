@@ -101,7 +101,17 @@ cc-codeconductor completion <bash|zsh|fish|powershell>
 Run installed agent hooks.
 
 ```text
-cc-codeconductor hook <pre-tool|post-tool|session-start>
+cc-codeconductor hook <pre-tool|post-tool|session-start|session-end|subagent-stop|stop>
+```
+
+## telemetry
+
+Harness telemetry helpers (OTLP env, show, purge).
+
+```text
+cc-codeconductor telemetry otel-env [--port <n>] [--with-tool-details]
+cc-codeconductor telemetry show [--run <id>]
+cc-codeconductor telemetry purge [--all]
 ```
 
 ## cc-help

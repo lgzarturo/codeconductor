@@ -1,0 +1,41 @@
+{
+  "_fixture": "synthetic",
+  "_note": "SYNTHETIC OTLP http/json ExportLogsServiceRequest with two claude_code.api_request records. Not from a live Claude Code session.",
+  "resourceLogs": [
+    {
+      "scopeLogs": [
+        {
+          "logRecords": [
+            {
+              "attributes": [
+                { "key": "event.name", "value": { "stringValue": "claude_code.api_request" } },
+                { "key": "model", "value": { "stringValue": "claude-sonnet-5-5" } },
+                { "key": "agent.name", "value": { "stringValue": "implementer" } },
+                { "key": "input_tokens", "value": { "intValue": 500 } },
+                { "key": "output_tokens", "value": { "intValue": 80 } },
+                { "key": "cache_read_tokens", "value": { "intValue": 200 } },
+                { "key": "cache_creation_tokens", "value": { "intValue": 50 } },
+                { "key": "cost_usd", "value": { "doubleValue": 0.01 } },
+                { "key": "duration_ms", "value": { "intValue": 1200 } },
+                { "key": "attempt", "value": { "intValue": 1 } }
+              ]
+            },
+            {
+              "attributes": [
+                { "key": "event.name", "value": { "stringValue": "claude_code.api_request" } },
+                { "key": "model", "value": { "stringValue": "claude-haiku-5-5" } },
+                { "key": "agent.name", "value": { "stringValue": "custom" } },
+                { "key": "input_tokens", "value": { "intValue": 100 } },
+                { "key": "output_tokens", "value": { "intValue": 20 } },
+                { "key": "cache_read_tokens", "value": { "intValue": 0 } },
+                { "key": "cache_creation_tokens", "value": { "intValue": 0 } },
+                { "key": "cost_usd", "value": { "doubleValue": 0.001 } },
+                { "key": "attempt", "value": { "intValue": 2 } }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

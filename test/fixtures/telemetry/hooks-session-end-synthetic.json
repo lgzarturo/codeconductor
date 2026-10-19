@@ -1,0 +1,8 @@
+{
+  "_fixture": "synthetic",
+  "_note": "SYNTHETIC SessionEnd payload. Transcript read is deferred (M3).",
+  "session_id": "synth-session-m2-001",
+  "hook_event_name": "SessionEnd",
+  "cwd": "/tmp/synth-project",
+  "transcript_path": "/tmp/synth-project/.claude/transcript.jsonl"
+}

@@ -1379,7 +1379,7 @@ export const HarnessExperimentSchema = z.object({
 export const HarnessSuiteTaskSchema = z.object({
   id: z.string(),
   title: z.string(),
-  type: z.enum(['feature', 'fix', 'refactor']),
+  type: z.enum(['feature', 'fix', 'refactor', 'review']),
   risk: z.enum(['low', 'medium', 'high']).default('low'),
   prompt: z.string(),
   scope: z.string(),

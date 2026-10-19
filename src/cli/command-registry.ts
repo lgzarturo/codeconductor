@@ -30,7 +30,12 @@ export const COMMANDS: readonly CommandDefinition[] = [
   { name: 'migrate', group: 'maintenance', summary: 'Apply compatibility migrations.', usage: ['cc-codeconductor migrate [--dry-run]'] },
   { name: 'docs', group: 'maintenance', summary: 'Read bundled command documentation.', usage: ['cc-codeconductor docs [command]'] },
   { name: 'completion', group: 'maintenance', summary: 'Generate shell completion.', usage: ['cc-codeconductor completion <bash|zsh|fish|powershell>'] },
-  { name: 'hook', group: 'maintenance', summary: 'Run installed agent hooks.', usage: ['cc-codeconductor hook <pre-tool|post-tool|session-start>'] },
+  { name: 'hook', group: 'maintenance', summary: 'Run installed agent hooks.', usage: ['cc-codeconductor hook <pre-tool|post-tool|session-start|session-end|subagent-stop|stop>'] },
+  { name: 'telemetry', group: 'maintenance', summary: 'Harness telemetry helpers (OTLP env, show, purge).', usage: [
+    'cc-codeconductor telemetry otel-env [--port <n>] [--with-tool-details]',
+    'cc-codeconductor telemetry show [--run <id>]',
+    'cc-codeconductor telemetry purge [--all]',
+  ] },
   { name: 'cc-help', group: 'maintenance', summary: 'Show a target preset inventory.', usage: ['cc-codeconductor cc-help --target <target>'] },
   { name: 'ask', group: 'workflow', summary: 'Recommend a slash-command workflow.', usage: ['cc-codeconductor ask "problem"'] },
   { name: 'goal', aliases: ['cc-goal'], group: 'workflow', summary: 'Plan a goal into dependent tasks.', usage: ['cc-codeconductor goal "objective"'] },

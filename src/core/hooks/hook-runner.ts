@@ -57,9 +57,25 @@ export function evaluateRoleAccess(
   }
 }
 
-export type HookEvent = 'pre-tool' | 'post-tool' | 'session-start';
+export type HookEvent =
+  | 'pre-tool'
+  | 'post-tool'
+  | 'session-start'
+  | 'session-end'
+  | 'subagent-stop'
+  | 'stop';
 export type HookFormat = 'claude' | 'agy' | 'muse';
 export type HookAction = 'allow' | 'ask' | 'deny';
+
+/** All events accepted by `cc-codeconductor hook <event>` and invoke-hook.cjs. */
+export const HOOK_EVENTS: readonly HookEvent[] = [
+  'pre-tool',
+  'post-tool',
+  'session-start',
+  'session-end',
+  'subagent-stop',
+  'stop',
+] as const;
 
 export interface HookVerdict {
   readonly action: HookAction;

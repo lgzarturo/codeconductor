@@ -51,7 +51,14 @@ const OutputModeSchema = z.enum(['json', 'human']);
 const SeoFormatSchema = z.enum(['cli', 'json', 'markdown']);
 const SeoFailOnSchema = z.enum(['error', 'warning', 'never']);
 const NonNegativeIntegerSchema = z.coerce.number().int().nonnegative();
-const BOOLEAN_OPTIONS = new Set(['record-telemetry']);
+const BOOLEAN_OPTIONS = new Set([
+  'record-telemetry',
+  'with-tool-details',
+  'all',
+  'compiled',
+  'cheap',
+  'dry-synthetic',
+]);
 
 /**
  * Parse command from args
@@ -675,7 +682,14 @@ export async function routeCommand(
     }
 
     case 'hook': {
-      const validHookEvents = ['pre-tool', 'post-tool', 'session-start'] as const;
+      const validHookEvents = [
+        'pre-tool',
+        'post-tool',
+        'session-start',
+        'session-end',
+        'subagent-stop',
+        'stop',
+      ] as const;
       if (subcommand && !validHookEvents.includes(subcommand as (typeof validHookEvents)[number])) {
         return unknownSubcommand(command, subcommand, [...validHookEvents]);
       }
@@ -696,6 +710,29 @@ export async function routeCommand(
       });
     }
 
+    case 'telemetry': {
+      const validSubs = ['otel-env', 'show', 'purge'] as const;
+      if (!subcommand || !validSubs.includes(subcommand as (typeof validSubs)[number])) {
+        return unknownSubcommand(command, subcommand ?? '', [...validSubs]);
+      }
+      const { telemetryCommand } = await import('../commands/telemetry.command');
+      const portRaw = options.port;
+      const port =
+        typeof portRaw === 'string' || typeof portRaw === 'number'
+          ? Number(portRaw)
+          : undefined;
+      return telemetryCommand({
+        projectRoot,
+        output: flags.output,
+        subcommand: subcommand as (typeof validSubs)[number],
+        port: Number.isFinite(port) ? port : undefined,
+        withToolDetails:
+          options['with-tool-details'] === true || options['with-tool-details'] === 'true',
+        purgeScope: options.all === true || options.all === 'true' ? 'all' : 'project',
+        runId: typeof options.run === 'string' ? options.run : undefined,
+      });
+    }
+
     case 'scorecard':
     case 'cc-scorecard': {
       const validSubs = [
@@ -706,6 +743,7 @@ export async function routeCommand(
         'aggregate',
         'models',
         'prompt-diff',
+        'prompt-metrics',
         'regression',
         'matrix',
         'compare-models',
@@ -714,6 +752,7 @@ export async function routeCommand(
         'experiment',
         'ablation',
         'suite-run',
+        'bench',
       ];
       if (subcommand && !validSubs.includes(subcommand)) {
         return unknownSubcommand(command, subcommand, validSubs);
@@ -741,6 +780,29 @@ export async function routeCommand(
         agent: options.agent as string,
         model: options.model as string,
         fromDiff: options['from-diff'] === true || options.fromDiff === true,
+        compiled:
+          options.compiled === true ||
+          options.compiled === 'true' ||
+          options['compiled'] === true,
+        cheap: options.cheap === true || options.cheap === 'true',
+        drySynthetic:
+          options['dry-synthetic'] === true || options['dry-synthetic'] === 'true',
+        benchAction:
+          scorecardSub === 'bench'
+            ? (args.rest?.[0] as string | undefined)
+            : undefined,
+        cellsPath:
+          typeof options.cells === 'string'
+            ? options.cells
+            : typeof options['cells'] === 'string'
+              ? options['cells']
+              : undefined,
+        repetitions: options.n
+          ? parseInt(String(options.n), 10)
+          : options.repetitions
+            ? parseInt(String(options.repetitions), 10)
+            : undefined,
+        seed: options.seed ? parseInt(String(options.seed), 10) : undefined,
         fromVersion:
           scorecardSub === 'prompt-diff'
             ? args.rest?.[0] ?? (options.from as string)

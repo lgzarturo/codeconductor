@@ -19,8 +19,11 @@ import {
 import { buildOtelEnv, FORBIDDEN_OTEL_LOG_VARS } from '../../src/core/telemetry/otel-env';
 import {
   assertOpenRouterZeroSpend,
+  enforceOpenRouterZeroSpend,
   isOpenRouterFreeModel,
   keyAllowsPaidSpend,
+  keySnapshotIsComplete,
+  parseOpenRouterKeyBody,
 } from '../../src/core/telemetry/openrouter-spend-lock';
 import { telemetryCommand } from '../../src/commands/telemetry.command';
 import { appendTelemetryEvent } from '../../src/core/telemetry/store';
@@ -151,12 +154,25 @@ describe('M3 OpenRouter zero-spend lock', () => {
   test('rejects non-:free models', async () => {
     expect(isOpenRouterFreeModel('anthropic/claude-sonnet-5-5')).toBe(false);
     expect(isOpenRouterFreeModel('anthropic/claude-sonnet-5-5:free')).toBe(true);
+    expect(isOpenRouterFreeModel('meta/llama-free')).toBe(false);
     const locked = await assertOpenRouterZeroSpend({
       modelId: 'openai/gpt-5',
       skipKeyCheck: true,
     });
     expect(locked.ok).toBe(false);
     expect(locked.reason).toContain(':free');
+  });
+
+  test('requires exact lowercase :free suffix (rejects :FREE / :Free)', async () => {
+    expect(isOpenRouterFreeModel('anthropic/claude-sonnet-5-5:FREE')).toBe(false);
+    expect(isOpenRouterFreeModel('anthropic/claude-sonnet-5-5:Free')).toBe(false);
+    expect(isOpenRouterFreeModel('anthropic/claude-sonnet-5-5:FrEe')).toBe(false);
+    const upper = await assertOpenRouterZeroSpend({
+      modelId: 'meta/llama:FREE',
+      skipKeyCheck: true,
+    });
+    expect(upper.ok).toBe(false);
+    expect(upper.reason).toContain(':free');
   });
 
   test('rejects keys with paid limit > 0', async () => {
@@ -181,6 +197,128 @@ describe('M3 OpenRouter zero-spend lock', () => {
     });
     expect(locked.ok).toBe(false);
     expect(locked.checkedKey).toBe(true);
+  });
+
+  test('aborts when limitRemaining > 0 even if limit is null', async () => {
+    expect(
+      keyAllowsPaidSpend({
+        limit: null,
+        limitRemaining: 3.5,
+        usage: 0,
+        isFreeTier: true,
+        label: 'remaining-without-limit',
+      }),
+    ).toBe(true);
+    const locked = await assertOpenRouterZeroSpend({
+      modelId: 'meta/llama:free',
+      key: {
+        limit: null,
+        limitRemaining: 1,
+        usage: 0,
+        isFreeTier: true,
+        label: 'remaining',
+      },
+    });
+    expect(locked.ok).toBe(false);
+    expect(locked.checkedKey).toBe(true);
+    expect(locked.reason).toMatch(/spend capacity|balance|limit/i);
+  });
+
+  test('aborts when credit balance / credits > 0', async () => {
+    expect(
+      keyAllowsPaidSpend({
+        limit: null,
+        limitRemaining: null,
+        usage: 0,
+        isFreeTier: true,
+        label: 'bal',
+        balance: 2,
+      }),
+    ).toBe(true);
+    expect(
+      keyAllowsPaidSpend({
+        limit: null,
+        limitRemaining: null,
+        usage: 0,
+        isFreeTier: true,
+        label: 'cred',
+        credits: 0.5,
+      }),
+    ).toBe(true);
+  });
+
+  test('fail-closed on incomplete /api/v1/key body (data: {})', () => {
+    expect(() => parseOpenRouterKeyBody({ data: {} })).toThrow(/incomplete|missing/i);
+    expect(() => parseOpenRouterKeyBody({})).toThrow(/incomplete|missing/i);
+    expect(() => parseOpenRouterKeyBody(null)).toThrow(/incomplete/i);
+  });
+
+  test('fail-closed on mistyped /api/v1/key fields', () => {
+    expect(() =>
+      parseOpenRouterKeyBody({
+        data: {
+          limit: '10',
+          limit_remaining: null,
+          usage: 0,
+          is_free_tier: true,
+        },
+      }),
+    ).toThrow(/unexpected type|incomplete/i);
+    expect(() =>
+      parseOpenRouterKeyBody({
+        data: {
+          limit: null,
+          limit_remaining: null,
+          usage: 0,
+          is_free_tier: 'yes',
+        },
+      }),
+    ).toThrow(/unexpected type|incomplete/i);
+  });
+
+  test('assert fails closed when key snapshot is incomplete', async () => {
+    const incomplete = {
+      limit: null,
+      limitRemaining: null,
+      usage: null,
+      isFreeTier: null as unknown as boolean,
+      label: null,
+    };
+    expect(keySnapshotIsComplete(incomplete)).toBe(false);
+    const locked = await assertOpenRouterZeroSpend({
+      modelId: 'meta/llama:free',
+      key: incomplete,
+    });
+    expect(locked.ok).toBe(false);
+    expect(locked.checkedKey).toBe(true);
+    expect(locked.reason).toMatch(/incomplete|unparseable|fail-closed/i);
+  });
+
+  test('enforce throws on incomplete key from fetchKey', async () => {
+    await expect(
+      enforceOpenRouterZeroSpend({
+        modelId: 'meta/llama:free',
+        fetchKey: async () => {
+          // Simulate parse failure path: throw like fetchOpenRouterKeySnapshot.
+          throw new Error('OpenRouter /api/v1/key incomplete: missing field "limit"');
+        },
+      }),
+    ).rejects.toThrow(/incomplete|missing field/i);
+  });
+
+  test('parse accepts complete free-tier body', () => {
+    const snap = parseOpenRouterKeyBody({
+      data: {
+        limit: null,
+        limit_remaining: null,
+        usage: 0,
+        is_free_tier: true,
+        label: 'free',
+      },
+    });
+    expect(snap.isFreeTier).toBe(true);
+    expect(keySnapshotIsComplete(snap)).toBe(true);
+    expect(keyAllowsPaidSpend(snap)).toBe(false);
   });
 
   test('allows :free + free-tier key with null limit', async () => {

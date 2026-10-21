@@ -22,7 +22,7 @@ import {
 } from '../verification/verification-runner';
 import { err, ok, type Result } from '../../utils/result';
 import type { CommandEnvelopeInput } from '../../validation/schemas';
-import { evaluateDispatchMode, type DispatchMode } from '../hooks/hook-runner';
+import { DISPATCH_MODES, evaluateDispatchMode, isDispatchMode, type DispatchMode } from '../hooks/hook-runner';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -151,6 +151,17 @@ export function taskTypeToDispatchMode(type: GoalTaskInput['type']): DispatchMod
   }
 }
 
+function resolveEffectiveMode(
+  type: GoalTaskInput['type'],
+  override?: DispatchMode,
+): Result<DispatchMode, Error> {
+  if (override === undefined) return ok(taskTypeToDispatchMode(type));
+  if (!isDispatchMode(override)) {
+    return err(new Error(`Unknown dispatch mode: ${override}. Use: ${DISPATCH_MODES.join(', ')}`));
+  }
+  return ok(override);
+}
+
 function checkDispatchClearance(
   projectRoot: string,
   mode: DispatchMode,
@@ -167,21 +178,21 @@ function checkDispatchClearance(
   return ok(undefined);
 }
 
-export async function getNextTask(projectRoot: string, projectName: string): Promise<Result<OrchestratorNextResult, Error>> {
-  return withQueueLock(projectRoot, () => getNextTaskUnlocked(projectRoot, projectName));
+export async function getNextTask(projectRoot: string, projectName: string, dispatchMode?: DispatchMode): Promise<Result<OrchestratorNextResult, Error>> {
+  return withQueueLock(projectRoot, () => getNextTaskUnlocked(projectRoot, projectName, dispatchMode));
 }
 
-export async function claimNextTask(projectRoot: string, projectName: string): Promise<Result<OrchestratorNextResult, Error>> {
+export async function claimNextTask(projectRoot: string, projectName: string, dispatchMode?: DispatchMode): Promise<Result<OrchestratorNextResult, Error>> {
   return withQueueLock(projectRoot, async () => {
-    const next = await getNextTaskUnlocked(projectRoot, projectName);
+    const next = await getNextTaskUnlocked(projectRoot, projectName, dispatchMode);
     if (!next.success) return next;
-    const started = await startTaskUnlocked(projectRoot, next.data.task.id, next.data.task.agentType);
+    const started = await startTaskUnlocked(projectRoot, next.data.task.id, next.data.task.agentType, dispatchMode);
     return started.success ? next : started;
   });
 }
 
-export async function startTask(projectRoot: string, taskId: string, agent?: string): Promise<Result<void, Error>> {
-  return withQueueLock(projectRoot, () => startTaskUnlocked(projectRoot, taskId, agent));
+export async function startTask(projectRoot: string, taskId: string, agent?: string, dispatchMode?: DispatchMode): Promise<Result<void, Error>> {
+  return withQueueLock(projectRoot, () => startTaskUnlocked(projectRoot, taskId, agent, dispatchMode));
 }
 
 export async function completeTask(projectRoot: string, taskId: string, evidenceIds?: string[]): Promise<Result<void, Error>> {
@@ -191,6 +202,7 @@ export async function completeTask(projectRoot: string, taskId: string, evidence
 async function getNextTaskUnlocked(
   projectRoot: string,
   projectName: string,
+  dispatchOverride?: DispatchMode,
 ): Promise<Result<OrchestratorNextResult, Error>> {
   const goalResult = await loadGoal(projectRoot);
   if (!goalResult.success) return goalResult;
@@ -212,7 +224,9 @@ async function getNextTaskUnlocked(
 
   const task = ready[0]!;
   const enrichedTask = enriched.enrichedTasks.find((t) => t.id === task.id)!;
-  const dispatchMode = taskTypeToDispatchMode(enrichedTask.type);
+  const effective = resolveEffectiveMode(enrichedTask.type, dispatchOverride);
+  if (!effective.success) return effective;
+  const dispatchMode = effective.data;
   const clearance = checkDispatchClearance(projectRoot, dispatchMode, enrichedTask.targetFiles);
   if (!clearance.success) return clearance;
   const card = goalTaskToCanonicalCard(enrichedTask, enriched.objective);
@@ -230,6 +244,7 @@ async function startTaskUnlocked(
   projectRoot: string,
   taskId: string,
   agent?: string,
+  dispatchOverride?: DispatchMode,
 ): Promise<Result<void, Error>> {
   const goalResult = await loadGoal(projectRoot);
   if (!goalResult.success) return goalResult;
@@ -247,9 +262,11 @@ async function startTaskUnlocked(
   const graphResult = await loadGraph(projectRoot);
   const enriched = enrichGoalWithProduct(goalResult.data, graphResult.success ? graphResult.data : undefined);
   const enrichedTask = enriched.enrichedTasks.find((t) => t.id === taskId);
+  const effective = resolveEffectiveMode(task.type, dispatchOverride);
+  if (!effective.success) return effective;
   const clearance = checkDispatchClearance(
     projectRoot,
-    taskTypeToDispatchMode(task.type),
+    effective.data,
     enrichedTask?.targetFiles ?? [],
   );
   if (!clearance.success) return clearance;

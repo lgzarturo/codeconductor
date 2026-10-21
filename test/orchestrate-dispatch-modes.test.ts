@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { parseArgs, routeCommand } from '../src/cli/router';
 import {
   claimNextTask,
   startTask,
@@ -174,5 +175,64 @@ describe('startTask dispatch-mode clearance', () => {
     expect((await writeGoal(projectRoot, makeGraph([makeTask()]))).success).toBe(true);
     const started = await startTask(projectRoot, 'task-1', 'implementer');
     expect(started.success).toBe(true);
+  });
+});
+
+describe('dispatch-mode override', () => {
+  let projectRoot: string;
+
+  beforeEach(async () => {
+    projectRoot = await mkdtemp(join(tmpdir(), 'cc-dispatch-override-'));
+  });
+
+  afterEach(async () => {
+    await rm(projectRoot, { recursive: true, force: true });
+  });
+
+  async function seedViolation() {
+    expect((await writeGoal(projectRoot, makeGraph([makeTask({ title: 'Widget tests' })]))).success).toBe(true);
+    expect(
+      (
+        await saveGraph(projectRoot, {
+          version: 1,
+          productId: 'p',
+          productName: 'p',
+          nodes: [{ id: 'n1', type: 'component', name: 'Widget', data: { path: 'src/widget.ts' } }],
+          edges: [],
+          updatedAt: new Date().toISOString(),
+        })
+      ).success,
+    ).toBe(true);
+    await mkdir(join(projectRoot, 'src'), { recursive: true });
+    await writeFile(join(projectRoot, 'src/widget.ts'), 'export {};\n');
+  }
+
+  test('RED: claim with an override clears what the derived mode denies', async () => {
+    await seedViolation();
+    const next = await claimNextTask(projectRoot, 'proj', 'full');
+    expect(next.success).toBe(true);
+    if (!next.success) return;
+    expect(next.data.dispatchMode).toBe('full');
+  });
+
+  test('RED: startTask honors the override', async () => {
+    await seedViolation();
+    const started = await startTask(projectRoot, 'task-1', 'implementer', 'full');
+    expect(started.success).toBe(true);
+  });
+
+  test('RED: unknown override modes fail closed', async () => {
+    await seedViolation();
+    const next = await claimNextTask(projectRoot, 'proj', 'bogus' as never);
+    expect(next.success).toBe(false);
+    if (next.success) return;
+    expect(next.error.message).toContain('bogus');
+  });
+
+  test('RED: orchestrate next --dispatch routes through the CLI', async () => {
+    await seedViolation();
+    const result = await routeCommand(parseArgs(['orchestrate', 'next', '--dispatch', 'full']), projectRoot);
+    expect(result.code).toBe(0);
+    expect(JSON.stringify(result.data)).toContain('full');
   });
 });

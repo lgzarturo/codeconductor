@@ -526,6 +526,7 @@ export async function routeCommand(
         reason: options.reason as string | undefined,
         allowCompileCheck:
           options['allow-compile-check'] === true || options['allow-compile-check'] === 'true',
+        dispatch: options.dispatch as string | undefined,
       } as OrchestrateOptions);
     }
 

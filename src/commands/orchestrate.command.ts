@@ -6,6 +6,7 @@ import {
   getNextTask,
   claimNextTask,
 } from '../core/orchestrator/runtime-orchestrator';
+import type { DispatchMode } from '../core/hooks/hook-runner';
 import { loadGoal, recordTaskStrike } from '../core/goal/goal-state';
 import { runVerification, gateTaskCompletion } from '../core/verification/verification-runner';
 import { runFeedbackLoop } from '../core/feedback/feedback-ingestor';
@@ -27,21 +28,23 @@ export interface OrchestrateOptions {
   readonly reason?: string;
   /** Explicit trust to run the repo-configured compile command during verification. */
   readonly allowCompileCheck?: boolean;
+  /** Override the task-type-derived dispatch mode for this dispatch. */
+  readonly dispatch?: string;
 }
 
 export async function orchestrateCommand(
   options: OrchestrateOptions,
 ): Promise<{ code: number; data?: unknown }> {
-  const { subcommand, projectRoot, output, taskId, complete, failed, reason, allowCompileCheck } = options;
+  const { subcommand, projectRoot, output, taskId, complete, failed, reason, allowCompileCheck, dispatch } = options;
 
   try {
     switch (subcommand) {
       case 'status':
         return await handleStatus(projectRoot, output);
       case 'next':
-        return await handleNext(projectRoot, output);
+        return await handleNext(projectRoot, output, dispatch);
       case 'run':
-        return await handleRun(projectRoot, output, taskId, complete, failed, reason, allowCompileCheck);
+        return await handleRun(projectRoot, output, taskId, complete, failed, reason, allowCompileCheck, dispatch);
       case 'cycle':
         return await handleCycle(projectRoot, output);
       default:
@@ -89,9 +92,10 @@ async function handleStatus(
 async function handleNext(
   projectRoot: string,
   output: OutputMode,
+  dispatch?: string,
 ): Promise<{ code: number; data?: unknown }> {
   const projectName = await getProjectName(projectRoot);
-  const next = await claimNextTask(projectRoot, projectName);
+  const next = await claimNextTask(projectRoot, projectName, dispatch as DispatchMode | undefined);
   if (!next.success) {
     return { code: 1, data: { success: false, command: 'orchestrate', errors: [next.error.message] } };
   }
@@ -164,6 +168,7 @@ async function handleRun(
   failed?: boolean,
   reason?: string,
   allowCompileCheck?: boolean,
+  dispatch?: string,
 ): Promise<{ code: number; data?: unknown }> {
   if (complete && failed) {
     return {
@@ -181,7 +186,7 @@ async function handleRun(
   }
 
   if (!complete) {
-    return handleNext(projectRoot, output);
+    return handleNext(projectRoot, output, dispatch);
   }
 
   if (!taskId) {

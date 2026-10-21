@@ -587,6 +587,116 @@ export async function ccepCommand(
       };
     }
 
+    case 'ballot': {
+      const { castBallot, clearBallots, listBallots, tallyBallots } = await import(
+        '../core/council/ballot-box'
+      );
+      const action = (userRequest ?? '').split(/\s+/).filter(Boolean)[0] ?? '';
+      if (!['cast', 'tally', 'list', 'clear'].includes(action)) {
+        return {
+          code: 1,
+          data: {
+            success: false,
+            command: 'ccep ballot',
+            errors: ['Usage: ccep ballot <cast|tally|list|clear> [--input @ballot.json] [--config @config.json]'],
+          },
+        };
+      }
+
+      if (action === 'cast') {
+        const payload = await readInputPayload(projectRoot, input, rest);
+        if (!payload.ok) {
+          return {
+            code: 1,
+            data: { success: false, command: 'ccep ballot cast', errors: [payload.error] },
+          };
+        }
+        const casted = await castBallot(projectRoot, payload.data);
+        if (!casted.success) {
+          return {
+            code: 1,
+            data: { success: false, command: 'ccep ballot cast', errors: [casted.error.message] },
+          };
+        }
+        return {
+          code: 0,
+          data: { success: true, command: 'ccep ballot cast', ...casted.data },
+        };
+      }
+
+      if (action === 'tally') {
+        let tallyConfig: ConsensusConfig | undefined;
+        if (config) {
+          const configPayload = await readInputPayload(projectRoot, config);
+          if (!configPayload.ok) {
+            return {
+              code: 1,
+              data: {
+                success: false,
+                command: 'ccep ballot tally',
+                errors: [`Invalid --config: ${configPayload.error}`],
+              },
+            };
+          }
+          const parsedConfig = ConsensusConfigSchema.safeParse(configPayload.data);
+          if (!parsedConfig.success) {
+            return {
+              code: 1,
+              data: {
+                success: false,
+                command: 'ccep ballot tally',
+                errors: parsedConfig.error.issues.map(
+                  (issue) => `${issue.path.join('.')}: ${issue.message}`,
+                ),
+              },
+            };
+          }
+          tallyConfig = parsedConfig.data;
+        }
+        const result = await tallyBallots(projectRoot, tallyConfig);
+        if (!result.success) {
+          return {
+            code: 1,
+            data: { success: false, command: 'ccep ballot tally', errors: [result.error.message] },
+          };
+        }
+        return {
+          code: consensusExitCode(result.data.status),
+          data: {
+            success: result.data.status === 'APPROVED',
+            command: 'ccep ballot tally',
+            verdict: result.data,
+          },
+        };
+      }
+
+      if (action === 'list') {
+        const listed = await listBallots(projectRoot);
+        if (!listed.success) {
+          return {
+            code: 1,
+            data: { success: false, command: 'ccep ballot list', errors: [listed.error.message] },
+          };
+        }
+        return {
+          code: 0,
+          data: { success: true, command: 'ccep ballot list', ballots: listed.data, count: listed.data.length },
+        };
+      }
+
+      const cleared = await clearBallots(projectRoot);
+      if (!cleared.success) {
+        return {
+          code: 1,
+          data: { success: false, command: 'ccep ballot clear', errors: [cleared.error.message] },
+        };
+      }
+      return {
+        code: 0,
+        data: { success: true, command: 'ccep ballot clear', ...cleared.data },
+      };
+    }
+
     case 'consensus': {
       let panelConfig: ConsensusConfig | undefined;
       if (panel) {

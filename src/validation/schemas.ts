@@ -1139,6 +1139,7 @@ export const TechnicalPlanOutputSchema = z.object({
   risks: z.array(z.string()).default([]),
   openQuestions: z.array(z.string()).optional(),
   edgeCases: z.array(EdgeCaseSchema).min(1),
+  symbolsAffected: z.record(z.string(), z.array(z.string())).default({}),
 });
 
 export const FixIntakeOutputSchema = z.object({

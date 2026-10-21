@@ -43,6 +43,8 @@ export interface TechnicalPlan {
   approach: string;
   filesAffected: string[];
   edgeCaseMatrix: Array<{ scenario: string; expected: string }>;
+  /** Symbol-level boundary: file -> allowed symbol names. Absent = file-level. */
+  symbolsAffected?: Record<string, string[]>;
 }
 
 export interface ValidationReport {
@@ -280,6 +282,7 @@ export async function runWorkflowPipeline(
         cwd,
         allowedFiles: plan.filesAffected,
         allowlist: config.scopeAllowlist,
+        allowedSymbols: plan.symbolsAffected,
       });
       scopeViolations = scopeResult.violations.length;
       validationReport.scopeViolations = scopeViolations;

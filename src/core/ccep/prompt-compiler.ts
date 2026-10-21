@@ -63,7 +63,7 @@ const OUTPUT_SCHEMAS: Record<string, string> = {
   "individualVerdicts": []
 }`,
   'technical-plan':
-    '{ "approach": "", "filesAffected": [], "risks": [], "edgeCases": [{ "scenario": "", "input": "", "expected": "" }] }',
+    '{ "approach": "", "filesAffected": [], "risks": [], "edgeCases": [{ "scenario": "", "input": "", "expected": "" }], "symbolsAffected": { "src/example.ts": ["touchedSymbol"] } }',
   'fix-intake-output': '{ "actualBehavior": "", "expectedBehavior": "", "reproductionSteps": [] }',
   'review-report': `{
   "status": "pass" | "fail",

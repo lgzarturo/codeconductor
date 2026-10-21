@@ -520,6 +520,22 @@ export const MemoryIndexSchema = z.object({
   pointers: z.array(MemoryPointerSchema),
 });
 
+/**
+ * Code index schema — structural symbol map persisted as plain JSON.
+ */
+export const CodeIndexSymbolSchema = z.object({
+  name: z.string().min(1),
+  kind: z.enum(['function', 'class', 'interface', 'type', 'const']),
+  startLine: z.number().int().positive(),
+  endLine: z.number().int().positive(),
+});
+
+export const CodeIndexSchema = z.object({
+  version: z.literal(1),
+  generatedAt: z.string(),
+  files: z.record(z.string(), z.array(CodeIndexSymbolSchema)),
+});
+
 // ─── Goal Graph Schemas ───────────────────────────────────────────────────────
 
 /**

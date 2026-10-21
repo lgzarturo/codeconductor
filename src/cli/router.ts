@@ -18,6 +18,7 @@ import type { IngestOptions } from '../commands/ingest.command';
 import type { ProductOptions } from '../commands/product.command';
 import type { OrchestrateOptions } from '../commands/orchestrate.command';
 import type { ImpactOptions } from '../commands/impact.command';
+import type { CodeIndexOptions } from '../commands/code-index.command';
 import type { VerifyOptions } from '../commands/verify.command';
 import type { RddOptions } from '../commands/rdd.command';
 import type { AskOptions } from '../commands/ask.command';
@@ -536,6 +537,20 @@ export async function routeCommand(
         diff: options.diff === true || options.diff === 'true',
         base: options.base as string | undefined,
       } as ImpactOptions);
+    }
+
+    case 'code-index': {
+      const validSubs = ['build', 'find', 'file'];
+      if (subcommand && !validSubs.includes(subcommand)) {
+        return unknownSubcommand(command, subcommand, validSubs);
+      }
+      const { codeIndexCommand } = await import('../commands/code-index.command');
+      return codeIndexCommand({
+        subcommand: subcommand ?? '',
+        projectRoot,
+        output: flags.output,
+        target: args.rest?.[0],
+      } as CodeIndexOptions);
     }
 
     case 'verify':

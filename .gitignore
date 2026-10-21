@@ -28,6 +28,7 @@ id_rsa
 id_ed25519
 
 # CodeConductor runtime
+.codeconductor/code-index.json
 .codeconductor/sessions/
 .codeconductor/generated/
 .codeconductor/handoff.md

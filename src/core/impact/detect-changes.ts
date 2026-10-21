@@ -106,7 +106,7 @@ export function parseDiffRanges(diff: string): DiffRange[] {
 
 // ─── Symbol scanning (TS/JS heuristic) ───────────────────────────────────────
 
-const TS_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mts', '.cts', '.mjs', '.cjs']);
+export const TS_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mts', '.cts', '.mjs', '.cjs']);
 
 const DEF_PATTERNS: ReadonlyArray<{ kind: ChangedSymbolKind; regex: RegExp }> = [
   { kind: 'function', regex: /^(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/ },

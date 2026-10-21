@@ -545,6 +545,20 @@ export async function routeCommand(
       } as ImpactOptions);
     }
 
+    case 'debug': {
+      const validSubs = ['handoff'];
+      if (subcommand && !validSubs.includes(subcommand)) {
+        return unknownSubcommand(command, subcommand, validSubs);
+      }
+      const { debugCommand } = await import('../commands/debug.command');
+      return debugCommand({
+        subcommand: subcommand ?? '',
+        projectRoot,
+        output: flags.output,
+        taskId: (options.task as string | undefined) ?? args.rest?.[0],
+      });
+    }
+
     case 'sentry': {
       const validSubs = ['issue'];
       if (subcommand && !validSubs.includes(subcommand)) {

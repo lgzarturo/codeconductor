@@ -527,6 +527,8 @@ export async function routeCommand(
         files: files?.length ? files : undefined,
         node: options.node as string | undefined,
         capability: options.capability as string | undefined,
+        diff: options.diff === true || options.diff === 'true',
+        base: options.base as string | undefined,
       } as ImpactOptions);
     }
 

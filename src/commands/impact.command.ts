@@ -1,3 +1,4 @@
+import { detectChanges } from '../core/impact/detect-changes';
 import { analyzeImpactByFiles, analyzeImpactByNode } from '../core/impact/impact-engine';
 import { loadGraph } from '../core/product-graph/graph-store';
 import type { OutputMode } from '../utils/logger';
@@ -8,12 +9,27 @@ export interface ImpactOptions {
   readonly files?: string[];
   readonly node?: string;
   readonly capability?: string;
+  /** Read-only git-diff probe; needs no ingested graph. */
+  readonly diff?: boolean;
+  readonly base?: string;
 }
 
 export async function impactCommand(
   options: ImpactOptions,
 ): Promise<{ code: number; data?: unknown }> {
   const { projectRoot, output, files, node, capability } = options;
+
+  if (options.diff) {
+    const report = await detectChanges(projectRoot, options.base ?? 'HEAD');
+    if (output === 'json') {
+      return { code: 0, data: { success: true, command: 'impact', report } };
+    }
+    const lines = [
+      `Files: ${report.affectedFiles.join(', ') || 'none'}`,
+      `Symbols: ${report.affectedSymbols.map((s) => `${s.file}:${s.name}`).join(', ') || 'none'}`,
+    ];
+    return { code: 0, data: { success: true, command: 'impact', output: lines.join('\n') } };
+  }
 
   const graph = await loadGraph(projectRoot);
   if (!graph.success) {

@@ -3,7 +3,12 @@ import { mkdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs, routeCommand } from '../src/cli/router';
-import { buildTrackerReport, writeTrackerFile } from '../src/core/goal/goal-tracker';
+import {
+  buildTrackerReport,
+  renderTrackerScreen,
+  watchTracker,
+  writeTrackerFile,
+} from '../src/core/goal/goal-tracker';
 import { recordTaskStrike, writeGoal } from '../src/core/goal/goal-state';
 import { appendOutcome, saveScorecard } from '../src/core/evaluation/outcome-store';
 import {
@@ -142,5 +147,90 @@ describe('goal tracker', () => {
     const human = await routeCommand(parseArgs(['goal', '--tracker']), dir);
     expect(human.code).toBe(0);
     expect((human.data as { output: string }).output).toContain('# Goal tracker');
+  });
+});
+
+describe('goal tracker watch', () => {
+  let dir: string;
+
+  beforeEach(async () => {
+    dir = resolve(tmpdir(), `cc-watch-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+    await mkdir(dir, { recursive: true });
+    expect((await writeGoal(dir, makeGraph())).success).toBe(true);
+  });
+
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  test('screen renders objective, task glyphs and round', async () => {
+    await passOutcome(dir, 't1');
+    const report = await buildTrackerReport(dir);
+    if (!report.success) return;
+    const screen = renderTrackerScreen(report.data, 3);
+    expect(screen).toContain('track me');
+    expect(screen).toContain('t1');
+    expect(screen).toContain('PASS');
+    expect(screen).toContain('round 3');
+    expect(screen).toContain('q to quit');
+  });
+
+  test('watch re-renders on state changes until rounds run out', async () => {
+    const screens: string[] = [];
+    let strikes = 0;
+    const result = await watchTracker(dir, {
+      rounds: 2,
+      write: (s) => screens.push(s),
+      sleep: async () => {
+        if (strikes === 0) {
+          strikes++;
+          await recordTaskStrike(dir, 't2', 'boom');
+        }
+      },
+    });
+    expect(result.rounds).toBe(2);
+    expect(screens).toHaveLength(2);
+    expect(screens[0]).not.toContain('failures: 1');
+    expect(screens[1]).toContain('failures: 1');
+  });
+
+  test('watch stops when cancelled', async () => {
+    let calls = 0;
+    const result = await watchTracker(dir, {
+      write: () => {
+        calls++;
+      },
+      sleep: async () => {},
+      isCancelled: () => calls >= 1,
+    });
+    expect(result.rounds).toBe(1);
+  });
+
+  test('watch surfaces build errors instead of looping', async () => {
+    const empty = join(dir, 'empty');
+    await mkdir(empty, { recursive: true });
+    const screens: string[] = [];
+    const result = await watchTracker(empty, {
+      rounds: 5,
+      write: (s) => screens.push(s),
+      sleep: async () => {},
+    });
+    expect(result.rounds).toBe(0);
+    expect(screens).toHaveLength(1);
+    expect(screens[0]).toMatch(/tracker error/i);
+  });
+
+  test('goal --tracker --watch runs bounded rounds off-TTY', async () => {
+    const json = await routeCommand(
+      parseArgs(['goal', '--tracker', '--watch', '--rounds', '2', '--interval-ms', '20', '--output=json']),
+      dir,
+    );
+    expect(json.code).toBe(0);
+    expect(json.data).toMatchObject({ command: 'goal tracker', rounds: 2 });
+  });
+
+  test('goal --tracker --watch needs rounds without a TTY', async () => {
+    const result = await routeCommand(parseArgs(['goal', '--tracker', '--watch']), dir);
+    expect(result.code).toBe(1);
   });
 });

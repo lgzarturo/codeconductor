@@ -5,6 +5,7 @@ import { writeGoal } from '../core/goal/goal-state';
 import {
   buildTrackerReport,
   formatTrackerMarkdown,
+  watchTracker,
   writeTrackerFile,
 } from '../core/goal/goal-tracker';
 import type { OutputMode } from '../utils/logger';
@@ -171,6 +172,9 @@ export async function goalCommand(
 export interface TrackerOptions {
   readonly projectRoot: string;
   readonly output: OutputMode;
+  readonly watch?: boolean;
+  readonly intervalMs?: string;
+  readonly rounds?: string;
 }
 
 /**
@@ -180,6 +184,10 @@ export async function trackerCommand(
   options: TrackerOptions,
 ): Promise<{ code: number; data?: unknown }> {
   const { projectRoot, output } = options;
+
+  if (options.watch === true) {
+    return watchTrackerCommand(options);
+  }
 
   const report = await buildTrackerReport(projectRoot);
   if (!report.success) {
@@ -207,4 +215,63 @@ export async function trackerCommand(
     code: 0,
     data: { success: true, command: 'goal tracker', output: formatTrackerMarkdown(report.data) },
   };
+}
+
+function parseWatchPositiveInt(raw: string | undefined, flag: string): number | undefined {
+  if (raw === undefined) return undefined;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error(`${flag} must be a positive integer, got '${raw}'`);
+  }
+  return value;
+}
+
+async function watchTrackerCommand(
+  options: TrackerOptions,
+): Promise<{ code: number; data?: unknown }> {
+  const fail = (errors: string[]) => ({
+    code: 1,
+    data: { success: false, command: 'goal tracker', errors },
+  });
+
+  let intervalMs: number | undefined;
+  let rounds: number | undefined;
+  try {
+    intervalMs = parseWatchPositiveInt(options.intervalMs, '--interval-ms');
+    rounds = parseWatchPositiveInt(options.rounds, '--rounds');
+  } catch (e) {
+    return fail([e instanceof Error ? e.message : String(e)]);
+  }
+
+  const stdin = process.stdin;
+  const interactive = stdin.isTTY === true && typeof stdin.setRawMode === 'function';
+  if (!interactive && rounds === undefined) {
+    return fail(['watch mode needs a TTY (q to quit) or --rounds <n>']);
+  }
+
+  let cancelled = false;
+  const onData = (chunk: Buffer | string): void => {
+    const key = chunk.toString();
+    if (key === 'q' || key === 'Q' || key === '\x03' || key === '\x1b') cancelled = true;
+  };
+  if (interactive) {
+    stdin.setRawMode(true);
+    stdin.resume();
+    stdin.on('data', onData);
+  }
+  try {
+    const result = await watchTracker(options.projectRoot, {
+      intervalMs,
+      rounds,
+      clear: process.stdout.isTTY === true,
+      isCancelled: () => cancelled,
+    });
+    return { code: 0, data: { success: true, command: 'goal tracker', rounds: result.rounds } };
+  } finally {
+    if (interactive) {
+      stdin.off('data', onData);
+      stdin.setRawMode(false);
+      stdin.pause();
+    }
+  }
 }

@@ -110,6 +110,66 @@ export function formatTrackerMarkdown(report: GoalTrackerReport): string {
   return `${lines.join('\n')}\n`;
 }
 
+const STATUS_GLYPH: Record<string, string> = {
+  done: '✓',
+  'in-progress': '…',
+  pending: '○',
+  blocked: '✗',
+};
+
+export function renderTrackerScreen(report: GoalTrackerReport, round: number): string {
+  const lines = [
+    `Goal: ${report.objective} — ${report.complete ? 'COMPLETE ✓' : 'in progress'} (round ${round})`,
+    `Done ${report.doneCount}/${report.totalCount} · PASS ${report.passCount}/${report.totalCount}`,
+    '',
+    ...report.tasks.map((task) => {
+      const glyph = STATUS_GLYPH[task.status] ?? '?';
+      const frozen = task.frozen ? ' FROZEN' : '';
+      return `${glyph} ${task.id} [${task.status}]${frozen} failures: ${task.failures} · ${task.scorecard} — ${task.title}`;
+    }),
+    '',
+    `updated ${report.generatedAt} · q to quit`,
+  ];
+  return `${lines.join('\n')}\n`;
+}
+
+export interface WatchTrackerOptions {
+  readonly intervalMs?: number;
+  readonly rounds?: number;
+  readonly clear?: boolean;
+  readonly write?: (screen: string) => void;
+  readonly sleep?: (ms: number) => Promise<void>;
+  readonly isCancelled?: () => boolean;
+}
+
+export async function watchTracker(
+  projectRoot: string,
+  options: WatchTrackerOptions = {},
+): Promise<{ rounds: number }> {
+  const intervalMs = options.intervalMs ?? 2000;
+  const maxRounds = options.rounds;
+  const write = options.write ?? ((screen: string) => process.stdout.write(screen));
+  const sleep = options.sleep ?? ((ms: number) => new Promise((resolve) => setTimeout(resolve, ms)));
+  const isCancelled = options.isCancelled ?? (() => false);
+  let rounds = 0;
+  for (;;) {
+    if (isCancelled()) break;
+    if (maxRounds !== undefined && rounds >= maxRounds) break;
+    const report = await buildTrackerReport(projectRoot);
+    if (!report.success) {
+      write(`tracker error: ${report.error.message}\n`);
+      break;
+    }
+    rounds += 1;
+    const prefix = options.clear === true ? '\x1b[2J\x1b[H' : '';
+    write(`${prefix}${renderTrackerScreen(report.data, rounds)}`);
+    if (maxRounds !== undefined && rounds >= maxRounds) break;
+    if (isCancelled()) break;
+    await sleep(intervalMs);
+  }
+  return { rounds };
+}
+
 export async function writeTrackerFile(
   projectRoot: string,
   report?: GoalTrackerReport,

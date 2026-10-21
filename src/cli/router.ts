@@ -458,7 +458,13 @@ export async function routeCommand(
     case 'cc-goal': {
       const { goalCommand, trackerCommand } = await import('../commands/goal.command');
       if (options.tracker === true || options.tracker === 'true') {
-        return trackerCommand({ projectRoot, output: flags.output });
+        return trackerCommand({
+          projectRoot,
+          output: flags.output,
+          watch: options.watch === true || options.watch === 'true',
+          intervalMs: options['interval-ms'] as string | undefined,
+          rounds: options.rounds as string | undefined,
+        });
       }
       return goalCommand({
         objective: subcommand || (options.objective as string) || args.rest?.join(' ') || '',

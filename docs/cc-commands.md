@@ -1,7 +1,7 @@
 # CodeConductor CLI Commands Reference
 
-Reference for the CodeConductor CLI. Published package is **1.7.2**, the
-current stable release in the **1.7.x** line. Product OS commands (`goal`,
+Reference for the CodeConductor CLI. Published package is **1.8.0**, the
+current stable release in the **1.8.x** line. Product OS commands (`goal`,
 `ingest`, `product`, `orchestrate`, `impact`, `verify`) are included in the
 published package.
 

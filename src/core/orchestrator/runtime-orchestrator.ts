@@ -22,6 +22,9 @@ import {
 } from '../verification/verification-runner';
 import { err, ok, type Result } from '../../utils/result';
 import type { CommandEnvelopeInput } from '../../validation/schemas';
+import { evaluateDispatchMode, type DispatchMode } from '../hooks/hook-runner';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 /**
  * Undo a task status change and restore the operational state captured before
@@ -126,6 +129,42 @@ export interface OrchestratorNextResult {
   task: CanonicalTaskCardInput;
   envelope: CommandEnvelopeInput;
   readyCount: number;
+  dispatchMode: DispatchMode;
+}
+
+/**
+ * Dispatch mode derived from the goal task type. The orchestrator clears
+ * the task's inferred target files against this mode before dispatch,
+ * closing the loop with the hook layer (`hook pre-tool --dispatch`).
+ */
+export function taskTypeToDispatchMode(type: GoalTaskInput['type']): DispatchMode {
+  switch (type) {
+    case 'fix':
+      return 'surgical-fix';
+    case 'refactor':
+      return 'refactor-only';
+    case 'test':
+      return 'test-add';
+    case 'feature':
+    case 'docs':
+      return 'full';
+  }
+}
+
+function checkDispatchClearance(
+  projectRoot: string,
+  mode: DispatchMode,
+  targetFiles: readonly string[],
+): Result<void, Error> {
+  for (const file of targetFiles) {
+    const verdict = evaluateDispatchMode(mode, {
+      filePath: file,
+      scopeFiles: targetFiles,
+      exists: existsSync(join(projectRoot, file)),
+    });
+    if (!verdict.allowed) return err(new Error(`Dispatch denied: ${verdict.reason}`));
+  }
+  return ok(undefined);
 }
 
 export async function getNextTask(projectRoot: string, projectName: string): Promise<Result<OrchestratorNextResult, Error>> {
@@ -173,6 +212,9 @@ async function getNextTaskUnlocked(
 
   const task = ready[0]!;
   const enrichedTask = enriched.enrichedTasks.find((t) => t.id === task.id)!;
+  const dispatchMode = taskTypeToDispatchMode(enrichedTask.type);
+  const clearance = checkDispatchClearance(projectRoot, dispatchMode, enrichedTask.targetFiles);
+  if (!clearance.success) return clearance;
   const card = goalTaskToCanonicalCard(enrichedTask, enriched.objective);
   const envelope = buildTaskEnvelope(card, projectRoot, projectName);
 
@@ -180,6 +222,7 @@ async function getNextTaskUnlocked(
     task: card,
     envelope,
     readyCount: ready.length,
+    dispatchMode,
   });
 }
 

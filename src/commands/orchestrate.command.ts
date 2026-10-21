@@ -105,6 +105,7 @@ async function handleNext(
         task: next.data.task,
         envelope: next.data.envelope,
         readyCount: next.data.readyCount,
+        dispatchMode: next.data.dispatchMode,
       },
     };
   }
@@ -112,6 +113,7 @@ async function handleNext(
   const lines = [
     `Next task: ${next.data.task.id} — ${next.data.task.title}`,
     `Agent: ${next.data.task.agentType}`,
+    `Mode: ${next.data.dispatchMode}`,
     `Target files: ${next.data.task.targetFiles.join(', ') || 'none inferred'}`,
     `Ready tasks: ${next.data.readyCount}`,
     '',

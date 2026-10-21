@@ -5,8 +5,11 @@ import { writeGoal } from '../core/goal/goal-state';
 import {
   buildTrackerReport,
   formatTrackerMarkdown,
+  handleTrackerKey,
+  initialTrackerUiState,
   watchTracker,
   writeTrackerFile,
+  type TrackerUiRef,
 } from '../core/goal/goal-tracker';
 import type { OutputMode } from '../utils/logger';
 
@@ -250,9 +253,12 @@ async function watchTrackerCommand(
   }
 
   let cancelled = false;
+  const ui: TrackerUiRef = { state: initialTrackerUiState(), taskCount: 0 };
   const onData = (chunk: Buffer | string): void => {
     const key = chunk.toString();
-    if (key === 'q' || key === 'Q' || key === '\x03' || key === '\x1b') cancelled = true;
+    const result = handleTrackerKey(ui.state, key, ui.taskCount);
+    ui.state = result.state;
+    if (result.quit) cancelled = true;
   };
   if (interactive) {
     stdin.setRawMode(true);
@@ -265,6 +271,7 @@ async function watchTrackerCommand(
       rounds,
       clear: process.stdout.isTTY === true,
       isCancelled: () => cancelled,
+      ui: interactive ? ui : undefined,
     });
     return { code: 0, data: { success: true, command: 'goal tracker', rounds: result.rounds } };
   } finally {

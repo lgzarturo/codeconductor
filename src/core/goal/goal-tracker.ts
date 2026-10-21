@@ -117,20 +117,78 @@ const STATUS_GLYPH: Record<string, string> = {
   blocked: '✗',
 };
 
-export function renderTrackerScreen(report: GoalTrackerReport, round: number): string {
+export interface TrackerUiState {
+  readonly selectedIndex: number;
+  readonly showDetail: boolean;
+}
+
+export function initialTrackerUiState(): TrackerUiState {
+  return { selectedIndex: 0, showDetail: false };
+}
+
+function clampSelection(index: number, taskCount: number): number {
+  if (taskCount <= 0) return 0;
+  return Math.min(Math.max(index, 0), taskCount - 1);
+}
+
+/**
+ * Pure key reducer for the interactive watch screen. Arrow escape sequences
+ * arrive whole in raw mode; a lone ESC still quits.
+ */
+export function handleTrackerKey(
+  state: TrackerUiState,
+  key: string,
+  taskCount: number,
+): { state: TrackerUiState; quit: boolean } {
+  if (key === 'q' || key === 'Q' || key === '\x03' || key === '\x1b') {
+    return { state, quit: true };
+  }
+  if (key === '\x1b[A' || key === '\x1bOA' || key === 'k') {
+    return { state: { ...state, selectedIndex: clampSelection(state.selectedIndex - 1, taskCount) }, quit: false };
+  }
+  if (key === '\x1b[B' || key === '\x1bOB' || key === 'j') {
+    return { state: { ...state, selectedIndex: clampSelection(state.selectedIndex + 1, taskCount) }, quit: false };
+  }
+  if (key === '\r' || key === '\n') {
+    return { state: { ...state, showDetail: !state.showDetail }, quit: false };
+  }
+  return { state, quit: false };
+}
+
+export function renderTrackerScreen(
+  report: GoalTrackerReport,
+  round: number,
+  ui?: TrackerUiState,
+): string {
+  const selected = ui ? clampSelection(ui.selectedIndex, report.tasks.length) : -1;
   const lines = [
     `Goal: ${report.objective} — ${report.complete ? 'COMPLETE ✓' : 'in progress'} (round ${round})`,
     `Done ${report.doneCount}/${report.totalCount} · PASS ${report.passCount}/${report.totalCount}`,
     '',
-    ...report.tasks.map((task) => {
+    ...report.tasks.map((task, index) => {
       const glyph = STATUS_GLYPH[task.status] ?? '?';
       const frozen = task.frozen ? ' FROZEN' : '';
-      return `${glyph} ${task.id} [${task.status}]${frozen} failures: ${task.failures} · ${task.scorecard} — ${task.title}`;
+      const marker = ui ? (index === selected ? '›' : ' ') : '';
+      const prefix = ui ? `${marker} ` : '';
+      return `${prefix}${glyph} ${task.id} [${task.status}]${frozen} failures: ${task.failures} · ${task.scorecard} — ${task.title}`;
     }),
-    '',
-    `updated ${report.generatedAt} · q to quit`,
   ];
+  if (ui?.showDetail && report.tasks.length > 0) {
+    const task = report.tasks[selected]!;
+    lines.push(
+      '',
+      `— ${task.id}: ${task.title}`,
+      `  status ${task.status} · frozen ${task.frozen ? 'yes' : 'no'} · failures ${task.failures} · scorecard ${task.scorecard}`,
+    );
+    if (task.blockedReason) lines.push(`  blocked: ${task.blockedReason}`);
+  }
+  lines.push('', `updated ${report.generatedAt} · ↑↓/jk select · enter detail · q to quit`);
   return `${lines.join('\n')}\n`;
+}
+
+export interface TrackerUiRef {
+  state: TrackerUiState;
+  taskCount: number;
 }
 
 export interface WatchTrackerOptions {
@@ -140,6 +198,8 @@ export interface WatchTrackerOptions {
   readonly write?: (screen: string) => void;
   readonly sleep?: (ms: number) => Promise<void>;
   readonly isCancelled?: () => boolean;
+  /** Shared with the key handler: watch updates taskCount, keys update state. */
+  readonly ui?: TrackerUiRef;
 }
 
 export async function watchTracker(
@@ -161,8 +221,9 @@ export async function watchTracker(
       break;
     }
     rounds += 1;
+    if (options.ui) options.ui.taskCount = report.data.tasks.length;
     const prefix = options.clear === true ? '\x1b[2J\x1b[H' : '';
-    write(`${prefix}${renderTrackerScreen(report.data, rounds)}`);
+    write(`${prefix}${renderTrackerScreen(report.data, rounds, options.ui?.state)}`);
     if (maxRounds !== undefined && rounds >= maxRounds) break;
     if (isCancelled()) break;
     await sleep(intervalMs);

@@ -576,6 +576,9 @@ export async function routeCommand(
         command: options.command as string | undefined,
         allowCompileCheck:
           options['allow-compile-check'] === true || options['allow-compile-check'] === 'true',
+        target: options.target as string | undefined,
+        timeoutMs: options['timeout-ms'] as string | undefined,
+        maxMutants: options['max-mutants'] as string | undefined,
       });
     }
 

@@ -168,3 +168,97 @@ async function markTaskBlockedUnlocked(
   propagateBlockedTasks(graph);
   return writeGoal(projectRoot, graph);
 }
+
+/** Consecutive failures before the breaker trips and freezes the task. */
+export const BREAKER_TRIP_THRESHOLD = 3;
+
+export interface StrikeResult {
+  readonly taskId: string;
+  readonly failures: number;
+  readonly tripped: boolean;
+}
+
+/**
+ * Record one failure strike. The breaker trips on the third consecutive
+ * strike: the task is blocked and frozen with an escalation reason, and
+ * dependents propagate to blocked. Strikes on frozen tasks are idempotent;
+ * strikes on done tasks are rejected. Counter resets only via unfreezeTask.
+ */
+export async function recordTaskStrike(
+  projectRoot: string,
+  taskId: string,
+  reason: string,
+): Promise<Result<StrikeResult, Error>> {
+  return withQueueLock(projectRoot, () => recordTaskStrikeUnlocked(projectRoot, taskId, reason));
+}
+
+async function recordTaskStrikeUnlocked(
+  projectRoot: string,
+  taskId: string,
+  reason: string,
+): Promise<Result<StrikeResult, Error>> {
+  const loadResult = await loadGoal(projectRoot);
+  if (!loadResult.success) return loadResult;
+
+  const graph = loadResult.data;
+  const task = graph.tasks.find((t) => t.id === taskId);
+  if (!task) {
+    return err(new Error(`Task "${taskId}" not found in goal graph`));
+  }
+  if (task.status === 'done') {
+    return err(new Error(`Task "${taskId}" is done and cannot accrue failures`));
+  }
+
+  const failures = (task.consecutive_failures ?? 0) + 1;
+  task.consecutive_failures = failures;
+  const tripped = failures >= BREAKER_TRIP_THRESHOLD || task.frozen === true;
+
+  if (tripped) {
+    task.consecutive_failures = Math.min(failures, BREAKER_TRIP_THRESHOLD);
+    if (task.frozen !== true) {
+      task.status = 'blocked';
+      task.frozen = true;
+      task.blocked_reason =
+        `Circuit breaker tripped after ${BREAKER_TRIP_THRESHOLD} consecutive failures ` +
+        `(last: ${reason}). Escalate to debug agent or /cc-help.`;
+      propagateBlockedTasks(graph);
+    }
+    const write = await writeGoal(projectRoot, graph);
+    if (!write.success) return write;
+    return ok({ taskId, failures: task.consecutive_failures, tripped: true });
+  }
+
+  const write = await writeGoal(projectRoot, graph);
+  if (!write.success) return write;
+  return ok({ taskId, failures, tripped: false });
+}
+
+/**
+ * Recovery counterpart: clear the breaker trip and re-queue the task.
+ */
+export async function unfreezeTask(
+  projectRoot: string,
+  taskId: string,
+): Promise<Result<void, Error>> {
+  return withQueueLock(projectRoot, () => unfreezeTaskUnlocked(projectRoot, taskId));
+}
+
+async function unfreezeTaskUnlocked(
+  projectRoot: string,
+  taskId: string,
+): Promise<Result<void, Error>> {
+  const loadResult = await loadGoal(projectRoot);
+  if (!loadResult.success) return loadResult;
+
+  const graph = loadResult.data;
+  const task = graph.tasks.find((t) => t.id === taskId);
+  if (!task) {
+    return err(new Error(`Task "${taskId}" not found in goal graph`));
+  }
+
+  task.status = 'pending';
+  task.consecutive_failures = 0;
+  task.frozen = false;
+  task.blocked_reason = undefined;
+  return writeGoal(projectRoot, graph);
+}

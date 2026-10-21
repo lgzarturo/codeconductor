@@ -511,6 +511,8 @@ export async function routeCommand(
         output: flags.output,
         taskId: (options.task as string) ?? args.rest?.[0],
         complete: options.complete === true || options.complete === 'true',
+        failed: options.failed === true || options.failed === 'true',
+        reason: options.reason as string | undefined,
         allowCompileCheck:
           options['allow-compile-check'] === true || options['allow-compile-check'] === 'true',
       } as OrchestrateOptions);

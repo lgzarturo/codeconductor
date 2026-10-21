@@ -536,6 +536,8 @@ export const GoalTaskSchema = z.object({
   acceptance_criteria: z.array(z.string()),
   blocked_reason: z.string().optional(),
   context_scope: z.enum(['isolated', 'continuation', 'full']).optional().default('isolated'),
+  consecutive_failures: z.number().int().nonnegative().optional(),
+  frozen: z.boolean().optional(),
 });
 
 /**

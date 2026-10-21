@@ -6,7 +6,7 @@ import {
   getNextTask,
   claimNextTask,
 } from '../core/orchestrator/runtime-orchestrator';
-import { loadGoal } from '../core/goal/goal-state';
+import { loadGoal, recordTaskStrike } from '../core/goal/goal-state';
 import { runVerification, gateTaskCompletion } from '../core/verification/verification-runner';
 import { runFeedbackLoop } from '../core/feedback/feedback-ingestor';
 import { goalTaskToCanonicalCard } from '../core/orchestrator/runtime-orchestrator';
@@ -22,6 +22,9 @@ export interface OrchestrateOptions {
   readonly output: OutputMode;
   readonly taskId?: string;
   readonly complete?: boolean;
+  /** Record one circuit-breaker failure strike instead of completing. */
+  readonly failed?: boolean;
+  readonly reason?: string;
   /** Explicit trust to run the repo-configured compile command during verification. */
   readonly allowCompileCheck?: boolean;
 }
@@ -29,7 +32,7 @@ export interface OrchestrateOptions {
 export async function orchestrateCommand(
   options: OrchestrateOptions,
 ): Promise<{ code: number; data?: unknown }> {
-  const { subcommand, projectRoot, output, taskId, complete, allowCompileCheck } = options;
+  const { subcommand, projectRoot, output, taskId, complete, failed, reason, allowCompileCheck } = options;
 
   try {
     switch (subcommand) {
@@ -38,7 +41,7 @@ export async function orchestrateCommand(
       case 'next':
         return await handleNext(projectRoot, output);
       case 'run':
-        return await handleRun(projectRoot, output, taskId, complete, allowCompileCheck);
+        return await handleRun(projectRoot, output, taskId, complete, failed, reason, allowCompileCheck);
       case 'cycle':
         return await handleCycle(projectRoot, output);
       default:
@@ -119,13 +122,62 @@ async function handleNext(
   return { code: 0, data: { success: true, command: 'orchestrate next', output: lines.join('\n') } };
 }
 
+async function handleFailed(
+  projectRoot: string,
+  output: OutputMode,
+  taskId?: string,
+  reason?: string,
+): Promise<{ code: number; data?: unknown }> {
+  if (!taskId) {
+    return {
+      code: 1,
+      data: {
+        success: false,
+        command: 'orchestrate',
+        errors: ['--failed requires --task <id>'],
+      },
+    };
+  }
+
+  const strike = await recordTaskStrike(projectRoot, taskId, reason ?? 'unspecified failure');
+  if (!strike.success) {
+    return { code: 1, data: { success: false, command: 'orchestrate', errors: [strike.error.message] } };
+  }
+
+  const { failures, tripped } = strike.data;
+  if (output === 'json') {
+    return { code: 0, data: { success: true, command: 'orchestrate run', taskId, failures, tripped } };
+  }
+  const text = tripped
+    ? `Task ${taskId}: circuit breaker TRIPPED after ${failures} failures — frozen, escalate to debug.`
+    : `Task ${taskId}: failure ${failures}/3 recorded.`;
+  return { code: 0, data: { success: true, command: 'orchestrate run', output: text } };
+}
+
 async function handleRun(
   projectRoot: string,
   output: OutputMode,
   taskId?: string,
   complete?: boolean,
+  failed?: boolean,
+  reason?: string,
   allowCompileCheck?: boolean,
 ): Promise<{ code: number; data?: unknown }> {
+  if (complete && failed) {
+    return {
+      code: 1,
+      data: {
+        success: false,
+        command: 'orchestrate',
+        errors: ['--complete and --failed are mutually exclusive'],
+      },
+    };
+  }
+
+  if (failed) {
+    return handleFailed(projectRoot, output, taskId, reason);
+  }
+
   if (!complete) {
     return handleNext(projectRoot, output);
   }

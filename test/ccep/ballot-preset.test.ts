@@ -60,9 +60,11 @@ describe('council multi-preset routing', () => {
   });
 
   test('RED: preset boxes are isolated from the default box', async () => {
-    expect((await castBallot(dir, ballot('a1'), 'trio')).data).toMatchObject({ boxSize: 1 });
+    await mkdir(join(dir, '.codeconductor/presets'), { recursive: true });
+    await writeFile(join(dir, '.codeconductor/presets/trio.yml'), TRIO_PRESET);
+    expect((await castBallot(dir, ballot('architect'), 'trio')).data).toMatchObject({ boxSize: 1 });
     expect((await listBallots(dir)).data).toEqual([]);
-    expect((await listBallots(dir, 'trio')).data).toMatchObject([{ agentId: 'a1' }]);
+    expect((await listBallots(dir, 'trio')).data).toMatchObject([{ agentId: 'architect' }]);
   });
 
   test('default preset keeps the legacy ballots.json path', async () => {
@@ -102,10 +104,33 @@ describe('council multi-preset routing', () => {
     expect(tally.data?.status).toBe('ESCALATED');
   });
 
+  test('cast to an unknown preset fails fast', async () => {
+    const casted = await castBallot(dir, ballot('a1'), 'trio');
+    expect(casted.success).toBe(false);
+    if (casted.success) return;
+    expect(casted.error.message).toContain('trio');
+  });
+
   test('tally with an unknown preset fails closed', async () => {
-    await castBallot(dir, ballot('a1'), 'trio');
+    await mkdir(join(dir, '.codeconductor/council'), { recursive: true });
+    await writeFile(
+      join(dir, '.codeconductor/council/ballots.trio.json'),
+      JSON.stringify([ballot('a1')]),
+    );
     const tally = await tallyBallots(dir, undefined, 'trio');
     expect(tally.success).toBe(false);
+  });
+
+  test('RED: cast rejects ballots from agents outside the preset roster', async () => {
+    await mkdir(join(dir, '.codeconductor/presets'), { recursive: true });
+    await writeFile(join(dir, '.codeconductor/presets/trio.yml'), TRIO_PRESET);
+    const outsider = await castBallot(dir, ballot('intruder'), 'trio');
+    expect(outsider.success).toBe(false);
+    if (outsider.success) return;
+    expect(outsider.error.message).toContain('intruder');
+
+    const insider = await castBallot(dir, ballot('architect'), 'trio');
+    expect(insider.success).toBe(true);
   });
 
   test('invalid preset names are rejected without touching the filesystem', async () => {
@@ -115,15 +140,19 @@ describe('council multi-preset routing', () => {
   });
 
   test('clear is scoped to its preset', async () => {
+    await mkdir(join(dir, '.codeconductor/presets'), { recursive: true });
+    await writeFile(join(dir, '.codeconductor/presets/trio.yml'), TRIO_PRESET);
     await castBallot(dir, ballot('a1'));
-    await castBallot(dir, ballot('a2'), 'trio');
+    await castBallot(dir, ballot('delivery'), 'trio');
     expect((await clearBallots(dir, 'trio')).data).toEqual({ cleared: 1 });
     expect((await listBallots(dir)).data).toMatchObject([{ agentId: 'a1' }]);
   });
 
   test('ccep ballot routes --preset through the CLI', async () => {
     const route = (argv: string[]) => routeCommand(parseArgs(argv), dir);
-    await writeFile(join(dir, 'b1.json'), JSON.stringify(ballot('a1')));
+    await mkdir(join(dir, '.codeconductor/presets'), { recursive: true });
+    await writeFile(join(dir, '.codeconductor/presets/trio.yml'), TRIO_PRESET);
+    await writeFile(join(dir, 'b1.json'), JSON.stringify(ballot('architect')));
     const casted = await route(['ccep', 'ballot', 'cast', '--input', '@b1.json', '--preset', 'trio', '--output=json']);
     expect(casted.code).toBe(0);
     const listed = await route(['ccep', 'ballot', 'list', '--preset', 'trio', '--output=json']);

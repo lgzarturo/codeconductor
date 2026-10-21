@@ -84,6 +84,20 @@ async function writeBox(
   }
 }
 
+async function checkPresetRoster(
+  projectRoot: string,
+  preset: string,
+  agentId: string,
+): Promise<Result<void, Error>> {
+  if (preset === DEFAULT_PRESET) return ok(undefined);
+  const spec = await loadPreset(preset, projectRoot);
+  if (!spec.success) return err(spec.error);
+  if (!spec.data.agents.some((agent) => agent.id === agentId)) {
+    return err(new Error(`Ballot rejected: agent '${agentId}' is not in the '${preset}' council roster.`));
+  }
+  return ok(undefined);
+}
+
 export async function castBallot(
   projectRoot: string,
   ballot: unknown,
@@ -98,6 +112,8 @@ export async function castBallot(
       const where = first && first.path.length > 0 ? ` at ${first.path.join('.')}` : '';
       return err(new Error(`Invalid ballot${where}: ${first?.message ?? 'rejected'}`));
     }
+    const roster = await checkPresetRoster(projectRoot, preset, validated.data.agentId);
+    if (!roster.success) return roster;
     const box = await readBox(projectRoot, boxFile.data);
     if (!box.success) return box;
     const next = [...box.data.filter((b) => b.agentId !== validated.data.agentId), validated.data];

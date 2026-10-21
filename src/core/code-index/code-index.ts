@@ -8,7 +8,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { mkdir, readdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rename, stat, unlink, writeFile } from 'node:fs/promises';
 import { extname, join, relative, resolve, sep } from 'node:path';
 import {
   findSymbolsInSource,
@@ -165,6 +165,49 @@ export function findSymbols(index: CodeIndex, name: string): CodeSymbolHit[] {
 export function symbolsInFile(index: CodeIndex, file: string): IndexedSymbol[] {
   const key = file.replace(/\\/g, '/').replace(/^\.\//, '');
   return index.files[key] ?? [];
+}
+
+export interface CodeIndexStats {
+  readonly bytes: number;
+  readonly files: number;
+  readonly symbols: number;
+  readonly loadMs: number;
+  readonly findMs: number;
+  readonly topFiles: ReadonlyArray<{ file: string; symbols: number }>;
+}
+
+/**
+ * Size/latency evidence for the JSON-vs-SQLite decision. Times a real
+ * load (parse + schema validation) and a full-sweep find over the index.
+ */
+export async function measureCodeIndex(projectRoot: string): Promise<Result<CodeIndexStats, Error>> {
+  let bytes: number;
+  try {
+    bytes = (await stat(resolve(projectRoot, INDEX_FILE))).size;
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
+      return err(new Error('Code index not found. Run `code-index build` first.'));
+    }
+    return err(e instanceof Error ? e : new Error(String(e)));
+  }
+  const loadStart = Date.now();
+  const loaded = await loadCodeIndex(projectRoot);
+  if (!loaded.success) return loaded;
+  const loadMs = Date.now() - loadStart;
+
+  const entries = Object.entries(loaded.data.files);
+  const symbols = entries.reduce((n, [, list]) => n + list.length, 0);
+  const probe = entries.length > 0 && entries[0]![1].length > 0 ? entries[0]![1][0]!.name : '';
+  const findStart = Date.now();
+  findSymbols(loaded.data, probe);
+  const findMs = Date.now() - findStart;
+
+  const topFiles = entries
+    .map(([file, list]) => ({ file, symbols: list.length }))
+    .sort((a, b) => b.symbols - a.symbols || (a.file < b.file ? -1 : 1))
+    .slice(0, 5);
+
+  return ok({ bytes, files: entries.length, symbols, loadMs, findMs, topFiles });
 }
 
 export interface ScopeSelection {

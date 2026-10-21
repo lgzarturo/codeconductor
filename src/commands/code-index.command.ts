@@ -2,6 +2,7 @@ import {
   buildCodeIndex,
   findSymbols,
   loadCodeIndex,
+  measureCodeIndex,
   saveCodeIndex,
   symbolsInFile,
 } from '../core/code-index/code-index';
@@ -21,6 +22,7 @@ export async function codeIndexCommand(
 
   switch (subcommand) {
     case 'build': {
+      const buildStart = Date.now();
       const built = await buildCodeIndex(projectRoot);
       if (!built.success) {
         return {
@@ -35,12 +37,14 @@ export async function codeIndexCommand(
           data: { success: false, command: 'code-index build', errors: [saved.error.message] },
         };
       }
+      const buildMs = Date.now() - buildStart;
       const files = Object.keys(built.data.files).length;
       const symbols = Object.values(built.data.files).reduce((n, list) => n + list.length, 0);
+      const bytes = Buffer.byteLength(JSON.stringify(built.data, null, 2));
       if (output === 'json') {
         return {
           code: 0,
-          data: { success: true, command: 'code-index build', files, symbols, path: saved.data.path },
+          data: { success: true, command: 'code-index build', files, symbols, bytes, buildMs, path: saved.data.path },
         };
       }
       return {
@@ -48,8 +52,30 @@ export async function codeIndexCommand(
         data: {
           success: true,
           command: 'code-index build',
-          output: `Indexed ${symbols} symbols across ${files} files → .codeconductor/code-index.json`,
+          output: `Indexed ${symbols} symbols across ${files} files (${(bytes / 1024).toFixed(1)} KB, ${buildMs} ms) → .codeconductor/code-index.json`,
         },
+      };
+    }
+
+    case 'stats': {
+      const stats = await measureCodeIndex(projectRoot);
+      if (!stats.success) {
+        return {
+          code: 1,
+          data: { success: false, command: 'code-index stats', errors: [stats.error.message] },
+        };
+      }
+      if (output === 'json') {
+        return { code: 0, data: { success: true, command: 'code-index stats', ...stats.data } };
+      }
+      const lines = [
+        `Index: ${(stats.data.bytes / 1024).toFixed(1)} KB · ${stats.data.symbols} symbols across ${stats.data.files} files`,
+        `Load: ${stats.data.loadMs} ms · full-sweep find: ${stats.data.findMs} ms`,
+        ...stats.data.topFiles.map((t) => `  ${t.symbols} ${t.file}`),
+      ];
+      return {
+        code: 0,
+        data: { success: true, command: 'code-index stats', output: lines.join('\n') },
       };
     }
 
@@ -109,7 +135,7 @@ export async function codeIndexCommand(
         data: {
           success: false,
           command: 'code-index',
-          errors: ['Usage: code-index build|find|file'],
+          errors: ['Usage: code-index build|find|file|stats'],
         },
       };
   }

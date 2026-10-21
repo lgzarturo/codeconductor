@@ -577,7 +577,7 @@ export async function routeCommand(
     }
 
     case 'code-index': {
-      const validSubs = ['build', 'find', 'file'];
+      const validSubs = ['build', 'find', 'file', 'stats'];
       if (subcommand && !validSubs.includes(subcommand)) {
         return unknownSubcommand(command, subcommand, validSubs);
       }

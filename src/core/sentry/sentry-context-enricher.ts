@@ -91,6 +91,34 @@ function formatStackTrace(frames: StackFrame[]): string {
 
 // ─── Pure Mapper ────────────────────────────────────────────────────────────
 
+const VENDOR_FRAME_MARKERS = ['site-packages', 'dist-packages', 'node_modules'];
+
+function isProjectFrame(filename: string): boolean {
+  if (filename.startsWith('<')) return false;
+  return !VENDOR_FRAME_MARKERS.some((marker) => filename.includes(marker));
+}
+
+/**
+ * Unique project-owned filenames from a raw webhook body, sorted.
+ * Lenient by design: anything unparsable yields no files instead of throwing.
+ */
+export function extractScopeFiles(rawBody: string): string[] {
+  let parsedBody: unknown;
+  try {
+    parsedBody = JSON.parse(rawBody);
+  } catch {
+    return [];
+  }
+  const parsed = SentryWebhookSchema.safeParse(parsedBody);
+  if (!parsed.success) return [];
+  const files = new Set<string>();
+  if (parsed.data.filename) files.add(parsed.data.filename);
+  for (const frame of parsed.data.stackTrace) {
+    if (isProjectFrame(frame.filename)) files.add(frame.filename);
+  }
+  return [...files].sort();
+}
+
 /**
  * Maps a SentryIssueContext to a Partial<TaskCard>.
  * Pure function — no side effects.

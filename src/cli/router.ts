@@ -545,6 +545,23 @@ export async function routeCommand(
       } as ImpactOptions);
     }
 
+    case 'sentry': {
+      const validSubs = ['issue'];
+      if (subcommand && !validSubs.includes(subcommand)) {
+        return unknownSubcommand(command, subcommand, validSubs);
+      }
+      const { sentryCommand } = await import('../commands/sentry.command');
+      return sentryCommand({
+        subcommand: subcommand ?? '',
+        projectRoot,
+        output: flags.output,
+        input: options.input as string | undefined,
+        signature: options.signature as string | undefined,
+        secret: options.secret as string | undefined,
+        skipVerify: options['skip-verify'] === true || options['skip-verify'] === 'true',
+      });
+    }
+
     case 'code-index': {
       const validSubs = ['build', 'find', 'file'];
       if (subcommand && !validSubs.includes(subcommand)) {

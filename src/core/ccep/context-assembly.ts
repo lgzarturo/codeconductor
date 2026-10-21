@@ -1,4 +1,5 @@
 import { Buffer } from 'node:buffer';
+import { evaluateScopeAccess } from '../hooks/hook-runner';
 
 export interface ContextFragment {
   readonly source: 'rules' | 'scope' | 'ledger' | 'memory' | 'evidence' | 'compaction';
@@ -7,6 +8,8 @@ export interface ContextFragment {
   readonly id?: string;
   /** Required fragments are never omitted; if they do not fit, the assembly reports it. */
   readonly required?: boolean;
+  /** Repo-relative paths this fragment draws from; absent means global (never scope-filtered). */
+  readonly files?: readonly string[];
 }
 
 export interface ContextBudgetBlock {
@@ -32,19 +35,35 @@ const SOURCE_ORDER: readonly ContextFragment['source'][] = [
   'compaction',
 ];
 
+export interface AssembleContextOptions {
+  /** When set, file-attributed fragments outside the scope are omitted (required still wins). */
+  readonly scopeFiles?: readonly string[];
+}
+
 /** Assemble bounded context in a fixed source order, without truncating fragments. */
 export function assembleContext(
   fragments: readonly ContextFragment[],
   maxBytes: number,
+  options?: AssembleContextOptions,
 ): ContextAssembly {
   const bytesOf = (fragment: ContextFragment): number => Buffer.byteLength(fragment.content, 'utf-8');
-  const required = fragments.filter((fragment) => fragment.required === true);
+  const scopeFiles = options?.scopeFiles;
+  const inScope = (fragment: ContextFragment): boolean => {
+    if (!scopeFiles || scopeFiles.length === 0) return true;
+    if (fragment.required === true) return true;
+    if (!fragment.files || fragment.files.length === 0) return true;
+    return fragment.files.some((file) => evaluateScopeAccess(file, scopeFiles).allowed);
+  };
+  const scoped = fragments.filter(inScope);
+  const required = scoped.filter((fragment) => fragment.required === true);
   const requiredBytes = required.reduce((sum, fragment) => sum + bytesOf(fragment), 0);
   let contextBytes = requiredBytes;
   const accepted: ContextFragment[] = [];
-  const omittedSources: ContextFragment['source'][] = [];
+  const omittedSources: ContextFragment['source'][] = fragments
+    .filter((fragment) => !inScope(fragment))
+    .map((fragment) => fragment.source);
   for (const source of SOURCE_ORDER) {
-    for (const fragment of fragments.filter((candidate) => candidate.source === source)) {
+    for (const fragment of scoped.filter((candidate) => candidate.source === source)) {
       if (fragment.required === true) {
         accepted.push(fragment);
         continue;

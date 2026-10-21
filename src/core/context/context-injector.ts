@@ -7,6 +7,7 @@
  */
 
 import { readFileWithinRoot } from '../filesystem/path-containment';
+import { resolveScopeFiles, type ScopeSelection } from '../code-index/code-index';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -86,6 +87,28 @@ export async function injectScopedContext(
     fileCount: Object.keys(files).length,
     truncated,
   };
+}
+
+/**
+ * Scope-aware injection: expand scope entries (prefixes or files) through the
+ * code index, then inject only the resolved files. An unresolvable scope
+ * (missing index) yields an empty payload, mirroring the skip-silently
+ * philosophy; use resolveScopeFiles when the caller needs the reason.
+ */
+export async function injectScopeAwareContext(
+  projectRoot: string,
+  scope: ScopeSelection,
+  options?: { readonly maxContextBytes?: number; readonly mode?: ContextScope['mode'] },
+): Promise<ContextPayload> {
+  const resolved = await resolveScopeFiles(projectRoot, scope);
+  if (!resolved.success) {
+    return { files: {}, deferred: [], totalBytes: 0, fileCount: 0, truncated: false };
+  }
+  return injectScopedContext(
+    projectRoot,
+    { scopeFiles: resolved.data, mode: options?.mode ?? 'isolated' },
+    options ? { maxContextBytes: options.maxContextBytes } : undefined,
+  );
 }
 
 /**

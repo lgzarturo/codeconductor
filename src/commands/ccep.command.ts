@@ -217,6 +217,7 @@ export async function ccepCommand(
   const {
     subcommand,
     projectRoot,
+    output,
     command,
     userRequest,
     phase,
@@ -585,6 +586,46 @@ export async function ccepCommand(
           errors: issues.map((issue) => issue.message),
         },
       };
+    }
+
+    case 'context': {
+      const entries = (panelScope ?? '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+      if (entries.length === 0) {
+        return {
+          code: 1,
+          data: {
+            success: false,
+            command: 'ccep context',
+            errors: ['Usage: ccep context --scope <csv paths>'],
+          },
+        };
+      }
+      const { resolveScopeFiles } = await import('../core/code-index/code-index');
+      const { injectScopedContext } = await import('../core/context/context-injector');
+      const resolved = await resolveScopeFiles(projectRoot, { in: entries });
+      if (!resolved.success) {
+        return {
+          code: 1,
+          data: { success: false, command: 'ccep context', errors: [resolved.error.message] },
+        };
+      }
+      const payload = await injectScopedContext(projectRoot, {
+        scopeFiles: resolved.data,
+        mode: 'isolated',
+      });
+      if (output === 'json') {
+        return { code: 0, data: { success: true, command: 'ccep context', ...payload } };
+      }
+      const lines = [
+        `Scope: ${entries.join(', ')}`,
+        `Files: ${payload.fileCount} (${payload.totalBytes} bytes${payload.truncated ? ', truncated' : ''})`,
+        ...Object.keys(payload.files).map((file) => `  - ${file}`),
+        ...payload.deferred.map((file) => `  ~ ${file} (deferred)`),
+      ];
+      return { code: 0, data: { success: true, command: 'ccep context', output: lines.join('\n') } };
     }
 
     case 'ballot': {

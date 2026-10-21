@@ -15,6 +15,7 @@ import {
   TS_EXTENSIONS,
   type ChangedSymbolKind,
 } from '../impact/detect-changes';
+import { scopeMatchesFile } from '../hooks/hook-runner';
 import { CodeIndexSchema } from '../../validation/schemas';
 import { err, ok, type Result } from '../../utils/result';
 
@@ -164,4 +165,27 @@ export function findSymbols(index: CodeIndex, name: string): CodeSymbolHit[] {
 export function symbolsInFile(index: CodeIndex, file: string): IndexedSymbol[] {
   const key = file.replace(/\\/g, '/').replace(/^\.\//, '');
   return index.files[key] ?? [];
+}
+
+export interface ScopeSelection {
+  readonly in: readonly string[];
+  readonly out?: readonly string[];
+}
+
+/**
+ * Expand scope entries (prefixes like TaskCard Scope `in`) to indexed files.
+ * An empty `in` list resolves to no files; exclusions in `out` win.
+ */
+export async function resolveScopeFiles(
+  projectRoot: string,
+  scope: ScopeSelection,
+): Promise<Result<string[], Error>> {
+  if (scope.in.length === 0) return ok([]);
+  const loaded = await loadCodeIndex(projectRoot);
+  if (!loaded.success) return loaded;
+  const out = scope.out ?? [];
+  const files = Object.keys(loaded.data.files)
+    .filter((file) => scopeMatchesFile(file, scope.in) && !scopeMatchesFile(file, out))
+    .sort();
+  return ok(files);
 }

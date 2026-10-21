@@ -601,7 +601,7 @@ export async function routeCommand(
     }
 
     case 'ccep': {
-      const validSubs = ['parse', 'profile', 'resolve', 'compile', 'validate', 'evaluate', 'consensus', 'taskcard', 'ballot'];
+      const validSubs = ['parse', 'profile', 'resolve', 'compile', 'validate', 'evaluate', 'consensus', 'taskcard', 'ballot', 'context'];
       if (subcommand && !validSubs.includes(subcommand)) {
         return unknownSubcommand('ccep', subcommand, validSubs);
       }

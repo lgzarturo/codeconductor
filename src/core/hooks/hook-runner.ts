@@ -65,17 +65,21 @@ export function evaluateRoleAccess(
  * Matching mirrors the scorecard scope audit (substring after stripping
  * `**`). An empty scope list is fail-open: no restriction configured.
  */
+export function scopeMatchesFile(filePath: string, scopeFiles: readonly string[]): boolean {
+  if (scopeFiles.length === 0) return false;
+  const normalizedPath = normalizeHookPath(filePath, filePath);
+  return scopeFiles.some((entry) => {
+    const pattern = normalizeHookPath(filePath, entry).replace(/\*\*/g, '');
+    return pattern !== '' && normalizedPath.includes(pattern);
+  });
+}
+
 export function evaluateScopeAccess(
   filePath: string,
   scopeFiles: readonly string[],
 ): RoleAccessResult {
   if (scopeFiles.length === 0) return { allowed: true };
-  const normalizedPath = normalizeHookPath(filePath, filePath);
-  const inScope = scopeFiles.some((entry) => {
-    const pattern = normalizeHookPath(filePath, entry).replace(/\*\*/g, '');
-    return pattern !== '' && normalizedPath.includes(pattern);
-  });
-  if (!inScope) {
+  if (!scopeMatchesFile(filePath, scopeFiles)) {
     return { allowed: false, reason: `ScopeViolation: File '${filePath}' is outside the task scope.` };
   }
   return { allowed: true };

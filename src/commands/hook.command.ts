@@ -31,6 +31,7 @@ export interface HookOptions {
   readonly command?: string;
   readonly filePath?: string;
   readonly stdinText?: string;
+  readonly scopeFiles?: readonly string[];
 }
 
 export function parseHookFormat(raw: unknown): HookFormat | undefined {
@@ -72,6 +73,7 @@ function resolvePreToolInput(options: HookOptions, stdinText: string, format: Ho
       (process.env.CLAUDE_TOOL_INPUT_FILE_PATH || undefined) ??
       fromStdin.filePath,
     toolName: fromStdin.toolName,
+    scopeFiles: options.scopeFiles,
   };
 }
 

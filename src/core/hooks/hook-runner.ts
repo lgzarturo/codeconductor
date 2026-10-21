@@ -15,16 +15,18 @@ const DEFAULT_PROTECTED_PATTERNS = [
   '.test.', '.spec.', '_test.', '_spec.',
 ];
 
+function normalizeHookPath(filePath: string, path: string): string {
+  const windowsPath = filePath.includes('\\') || /^[a-z]:\//i.test(filePath);
+  const normalized = path.replace(/\\/g, '/');
+  return windowsPath ? normalized.toLowerCase() : normalized;
+}
+
 export function evaluateRoleAccess(
   role: AgentRole,
   filePath: string,
   protectedDirs?: string[],
 ): RoleAccessResult {
-  const windowsPath = filePath.includes('\\') || /^[a-z]:\//i.test(filePath);
-  const normalizePath = (path: string): string => {
-    const normalized = path.replace(/\\/g, '/');
-    return windowsPath ? normalized.toLowerCase() : normalized;
-  };
+  const normalizePath = (path: string): string => normalizeHookPath(filePath, path);
   const normalizedPath = normalizePath(filePath);
   const patterns = (protectedDirs ?? DEFAULT_PROTECTED_PATTERNS).map(normalizePath);
   
@@ -57,6 +59,28 @@ export function evaluateRoleAccess(
   }
 }
 
+/**
+ * Deny-first TaskCard scope check for file writes.
+ *
+ * Matching mirrors the scorecard scope audit (substring after stripping
+ * `**`). An empty scope list is fail-open: no restriction configured.
+ */
+export function evaluateScopeAccess(
+  filePath: string,
+  scopeFiles: readonly string[],
+): RoleAccessResult {
+  if (scopeFiles.length === 0) return { allowed: true };
+  const normalizedPath = normalizeHookPath(filePath, filePath);
+  const inScope = scopeFiles.some((entry) => {
+    const pattern = normalizeHookPath(filePath, entry).replace(/\*\*/g, '');
+    return pattern !== '' && normalizedPath.includes(pattern);
+  });
+  if (!inScope) {
+    return { allowed: false, reason: `ScopeViolation: File '${filePath}' is outside the task scope.` };
+  }
+  return { allowed: true };
+}
+
 export type HookEvent =
   | 'pre-tool'
   | 'post-tool'
@@ -87,6 +111,7 @@ export interface PreToolInput {
   readonly command?: string;
   readonly filePath?: string;
   readonly toolName?: string;
+  readonly scopeFiles?: readonly string[];
 }
 
 const SENSITIVE_PATH =
@@ -191,6 +216,10 @@ function evaluateSingleCommand(rawCommand: string): HookVerdict {
 }
 
 export function evaluatePreTool(input: PreToolInput): HookVerdict {
+  if (input.filePath && input.scopeFiles && input.scopeFiles.length > 0) {
+    const scope = evaluateScopeAccess(input.filePath, input.scopeFiles);
+    if (!scope.allowed) return deny(scope.reason ?? 'Bloqueado: file outside task scope');
+  }
   if (input.filePath) {
     const pathVerdict = evaluatePath(input.filePath);
     if (pathVerdict.action === 'deny') return pathVerdict;

@@ -7,6 +7,7 @@ import type {
 } from '../../domain/council/council-consensus';
 import { LoopEngine, type GuardrailHit } from '../loop/loop-engine';
 import type { GitStatsReader } from '../loop/git-stats';
+import { compactAfterTestPass } from '../compaction/compaction-hook';
 import { verifyTestFreeze } from '../verification/test-freeze';
 import { checkScopeCompliance } from '../verification/scope-guard';
 import { evaluateGate } from '../evaluation/scorecard-gatekeeper';
@@ -67,8 +68,10 @@ export interface PipelineCallbacks {
   runValidate: (plan: TechnicalPlan) => Promise<ValidationReport>;
   // Phase 7: Council Verdict
   runCouncilReview: (plan: TechnicalPlan, validation: ValidationReport) => Promise<CouncilVerdictInput[]>;
-  // Phase 8: Compact
-  runCompact: (card: TaskCard, summary: string) => Promise<void>;
+  // Phase 8: Compact. Optional: when omitted and `cwd` is set, the
+  // pipeline compacts TDD history via compactAfterTestPass; without `cwd`
+  // the phase is a no-op.
+  runCompact?: (card: TaskCard, summary: string) => Promise<void>;
   
   // STOP Gates
   onStopGate: (phase: number, data: unknown) => Promise<'APPROVE' | 'REJECT' | 'ESCALATE'>;
@@ -94,6 +97,19 @@ export interface PipelineResult {
   taskCard?: TaskCard;
   technicalPlan?: TechnicalPlan;
   verdict?: CouncilVerdict;
+}
+
+/**
+ * Default Phase 8 (Compact) callback: compacts the task's TDD history via
+ * compactAfterTestPass when a working directory is known, otherwise no-op.
+ */
+export function createDefaultCompactCallback(
+  cwd: string | undefined,
+): (card: TaskCard, summary: string) => Promise<void> {
+  if (!cwd) return async () => {};
+  return async (card, summary) => {
+    await compactAfterTestPass(cwd, card.id ?? card.title, summary);
+  };
 }
 
 /**
@@ -373,7 +389,8 @@ export async function runWorkflowPipeline(
 
   // Phase 8: Compact
   try {
-    await callbacks.runCompact(compactedCard, consensusVerdict.summary);
+    const runCompact = callbacks.runCompact ?? createDefaultCompactCallback(cwd);
+    await runCompact(compactedCard, consensusVerdict.summary);
   } catch (e) {
     return {
       success: false,

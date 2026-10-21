@@ -1,4 +1,7 @@
 import { describe, expect, test } from 'bun:test';
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   runWorkflowPipeline,
   type PipelineCallbacks,
@@ -180,6 +183,44 @@ describe('core/pipeline/workflow-loop', () => {
     expect(result.phase).toBe('COMPACT');
     expect(result.error).toContain('compact boom');
     expect(result.verdict?.status).toBe('APPROVED');
+  });
+
+  test('COMPACT defaults to compactAfterTestPass when runCompact is omitted and cwd is set', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'cc-compact-'));
+    const taskId = 'task-compact-default';
+    await mkdir(join(dir, '.codeconductor'), { recursive: true });
+    const seed = [1, 2]
+      .map((i) =>
+        JSON.stringify({
+          taskId,
+          phase: i === 1 ? 'red' : 'green',
+          iteration: i,
+          timestamp: new Date().toISOString(),
+          summary: `iter ${i}`,
+          errors: [],
+        }),
+      )
+      .join('\n') + '\n';
+    await writeFile(join(dir, '.codeconductor', 'history.jsonl'), seed, 'utf-8');
+    const { runCompact: _omitted, ...rest } = makeCallbacks({
+      runIntake: async () => ({ ...CARD, id: taskId }),
+    });
+    void _omitted;
+    const result = await runWorkflowPipeline('do the thing', { callbacks: rest, cwd: dir });
+    expect(result.success).toBe(true);
+    expect(result.phase).toBe('DONE');
+    const history = await readFile(join(dir, '.codeconductor', 'history.jsonl'), 'utf-8');
+    const entries = history.split('\n').filter((l) => l.trim() !== '');
+    expect(entries).toHaveLength(1);
+    expect((JSON.parse(entries[0]!) as { phase: string }).phase).toBe('compacted');
+  });
+
+  test('COMPACT is a no-op when runCompact is omitted and no cwd is set', async () => {
+    const { runCompact: _omitted, ...rest } = makeCallbacks();
+    void _omitted;
+    const result = await runWorkflowPipeline('do the thing', { callbacks: rest });
+    expect(result.success).toBe(true);
+    expect(result.phase).toBe('DONE');
   });
 
   test('a tiny wall-clock budget trips the timeout guardrail', async () => {

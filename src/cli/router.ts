@@ -699,6 +699,10 @@ export async function routeCommand(
       const { hookCommand, parseHookFormat, readStdinText } = await import('../commands/hook.command');
       const format = parseHookFormat(options.format);
       const stdinText = await readStdinText();
+      const scopeOpt = options.scope;
+      const scopeFiles = typeof scopeOpt === 'string' && scopeOpt.trim() !== ''
+        ? (await import('../core/evaluation/scorecard-signals')).parseScopeFiles(scopeOpt)
+        : undefined;
       return hookCommand({
         event,
         projectRoot,
@@ -707,6 +711,7 @@ export async function routeCommand(
         command: typeof options.command === 'string' ? options.command : undefined,
         filePath: typeof options.file === 'string' ? options.file : undefined,
         stdinText,
+        scopeFiles,
       });
     }
 

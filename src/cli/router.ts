@@ -687,6 +687,7 @@ export async function routeCommand(
         panelType: options.type as string | undefined,
         panelScope: options.scope as string | undefined,
         panelRisk: options.risk as string | undefined,
+        preset: options.preset as string | undefined,
       } as CcepOptions);
     }
 

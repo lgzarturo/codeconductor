@@ -56,6 +56,7 @@ export interface CcepOptions {
   readonly panelType?: string;
   readonly panelScope?: string;
   readonly panelRisk?: string;
+  readonly preset?: string;
 }
 
 function parseWorkflowCommand(command: string | undefined): {
@@ -237,6 +238,7 @@ export async function ccepCommand(
     panelType,
     panelScope,
     panelRisk,
+    preset,
   } = options;
 
   switch (subcommand) {
@@ -680,10 +682,11 @@ export async function ccepCommand(
           data: {
             success: false,
             command: 'ccep ballot',
-            errors: ['Usage: ccep ballot <cast|tally|list|clear> [--input @ballot.json] [--config @config.json]'],
+            errors: ['Usage: ccep ballot <cast|tally|list|clear> [--input @ballot.json] [--config @config.json] [--preset <name>]'],
           },
         };
       }
+      const ballotPreset = preset?.trim() ? preset.trim() : undefined;
 
       if (action === 'cast') {
         const payload = await readInputPayload(projectRoot, input, rest);
@@ -693,7 +696,7 @@ export async function ccepCommand(
             data: { success: false, command: 'ccep ballot cast', errors: [payload.error] },
           };
         }
-        const casted = await castBallot(projectRoot, payload.data);
+        const casted = await castBallot(projectRoot, payload.data, ballotPreset);
         if (!casted.success) {
           return {
             code: 1,
@@ -702,7 +705,7 @@ export async function ccepCommand(
         }
         return {
           code: 0,
-          data: { success: true, command: 'ccep ballot cast', ...casted.data },
+          data: { success: true, command: 'ccep ballot cast', preset: ballotPreset ?? 'default', ...casted.data },
         };
       }
 
@@ -735,7 +738,7 @@ export async function ccepCommand(
           }
           tallyConfig = parsedConfig.data;
         }
-        const result = await tallyBallots(projectRoot, tallyConfig);
+        const result = await tallyBallots(projectRoot, tallyConfig, ballotPreset);
         if (!result.success) {
           return {
             code: 1,
@@ -747,13 +750,14 @@ export async function ccepCommand(
           data: {
             success: result.data.status === 'APPROVED',
             command: 'ccep ballot tally',
+            preset: ballotPreset ?? 'default',
             verdict: result.data,
           },
         };
       }
 
       if (action === 'list') {
-        const listed = await listBallots(projectRoot);
+        const listed = await listBallots(projectRoot, ballotPreset);
         if (!listed.success) {
           return {
             code: 1,
@@ -762,11 +766,11 @@ export async function ccepCommand(
         }
         return {
           code: 0,
-          data: { success: true, command: 'ccep ballot list', ballots: listed.data, count: listed.data.length },
+          data: { success: true, command: 'ccep ballot list', preset: ballotPreset ?? 'default', ballots: listed.data, count: listed.data.length },
         };
       }
 
-      const cleared = await clearBallots(projectRoot);
+      const cleared = await clearBallots(projectRoot, ballotPreset);
       if (!cleared.success) {
         return {
           code: 1,
@@ -775,7 +779,7 @@ export async function ccepCommand(
       }
       return {
         code: 0,
-        data: { success: true, command: 'ccep ballot clear', ...cleared.data },
+        data: { success: true, command: 'ccep ballot clear', preset: ballotPreset ?? 'default', ...cleared.data },
       };
     }
 

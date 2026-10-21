@@ -455,7 +455,10 @@ export async function routeCommand(
 
     case 'goal':
     case 'cc-goal': {
-      const { goalCommand } = await import('../commands/goal.command');
+      const { goalCommand, trackerCommand } = await import('../commands/goal.command');
+      if (options.tracker === true || options.tracker === 'true') {
+        return trackerCommand({ projectRoot, output: flags.output });
+      }
       return goalCommand({
         objective: subcommand || (options.objective as string) || args.rest?.join(' ') || '',
         projectRoot,

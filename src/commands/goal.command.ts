@@ -2,6 +2,11 @@ import { planGoal } from '../core/goal/goal-planner';
 import { planProductGoal, enrichGoalWithProduct } from '../core/planner/product-planner';
 import { loadGraph } from '../core/product-graph/graph-store';
 import { writeGoal } from '../core/goal/goal-state';
+import {
+  buildTrackerReport,
+  formatTrackerMarkdown,
+  writeTrackerFile,
+} from '../core/goal/goal-tracker';
 import type { OutputMode } from '../utils/logger';
 
 export interface GoalOptions {
@@ -161,4 +166,45 @@ export async function goalCommand(
       },
     };
   }
+}
+
+export interface TrackerOptions {
+  readonly projectRoot: string;
+  readonly output: OutputMode;
+}
+
+/**
+ * Goal tracker — completion report plus goal-tracker.md artifact.
+ */
+export async function trackerCommand(
+  options: TrackerOptions,
+): Promise<{ code: number; data?: unknown }> {
+  const { projectRoot, output } = options;
+
+  const report = await buildTrackerReport(projectRoot);
+  if (!report.success) {
+    return {
+      code: 1,
+      data: { success: false, command: 'goal tracker', errors: [report.error.message] },
+    };
+  }
+
+  const written = await writeTrackerFile(projectRoot, report.data);
+  if (!written.success) {
+    return {
+      code: 1,
+      data: { success: false, command: 'goal tracker', errors: [written.error.message] },
+    };
+  }
+
+  if (output === 'json') {
+    return {
+      code: 0,
+      data: { success: true, command: 'goal tracker', report: report.data, path: written.data.path },
+    };
+  }
+  return {
+    code: 0,
+    data: { success: true, command: 'goal tracker', output: formatTrackerMarkdown(report.data) },
+  };
 }

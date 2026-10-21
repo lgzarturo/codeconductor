@@ -245,7 +245,7 @@ export function buildHarnessV1CompileContext(
     outputSchema: phase.outputSchema ?? 'planner-output',
   };
   return {
-    role: phase.agent,
+    role: phase.agent ?? phase.agents?.[0] ?? 'orchestrator',
     phase: phase.id,
     promptVersion: 'v1.0.0',
     context,

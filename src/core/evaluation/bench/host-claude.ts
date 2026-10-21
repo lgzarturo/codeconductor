@@ -650,7 +650,8 @@ export async function runClaudeHostCell(
         (runEnd?.cost?.basis as BenchCostBasis | undefined) ??
         (collected.totals.costUsd === null
           ? 'none'
-          : resolveClaudeJsonCostBasis(options.modelId));
+          // Sound: the resolver only ever returns 'unknown' | 'host-estimate'.
+          : (resolveClaudeJsonCostBasis(options.modelId) as BenchCostBasis));
 
       const cell: BenchRunCell = {
         taskId: slot.taskId,

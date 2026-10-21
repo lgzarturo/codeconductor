@@ -82,7 +82,7 @@ export function parseOtlpLogsPayload(
           (typeof attrs['event.name'] === 'string' && attrs['event.name']) ||
           (typeof attrs.event_name === 'string' && attrs.event_name) ||
           (typeof rec.body === 'object' &&
-            asRecord(rec.body)?.stringValue &&
+            !!asRecord(rec.body)?.stringValue &&
             String(asRecord(rec.body)!.stringValue)) ||
           '';
 
@@ -217,7 +217,7 @@ export async function startClaudeOtelReceiver(
 
   return {
     host,
-    port: server.port,
+    port: server.port ?? port,
     endpoint: `http://${host}:${server.port}`,
     events: collected,
     async stop() {

@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   claimNextTask,
+  startTask,
   taskTypeToDispatchMode,
 } from '../src/core/orchestrator/runtime-orchestrator';
 import { loadGoal, writeGoal } from '../src/core/goal/goal-state';
@@ -114,5 +115,64 @@ describe('orchestrator dispatch-mode enforcement', () => {
     expect(next.success).toBe(true);
     if (!next.success) return;
     expect(next.data.dispatchMode).toBe('test-add');
+  });
+});
+
+describe('startTask dispatch-mode clearance', () => {
+  let projectRoot: string;
+
+  beforeEach(async () => {
+    projectRoot = await mkdtemp(join(tmpdir(), 'cc-start-modes-'));
+  });
+
+  afterEach(async () => {
+    await rm(projectRoot, { recursive: true, force: true });
+  });
+
+  async function seed(task: GoalTaskInput, componentPath: string) {
+    expect((await writeGoal(projectRoot, makeGraph([task]))).success).toBe(true);
+    expect(
+      (
+        await saveGraph(projectRoot, {
+          version: 1,
+          productId: 'p',
+          productName: 'p',
+          nodes: [{ id: 'n1', type: 'component', name: 'Widget', data: { path: componentPath } }],
+          edges: [],
+          updatedAt: new Date().toISOString(),
+        })
+      ).success,
+    ).toBe(true);
+  }
+
+  test('RED: direct startTask denies a task whose targets violate its mode', async () => {
+    await seed(makeTask({ title: 'Widget tests' }), 'src/widget.ts');
+    await mkdir(join(projectRoot, 'src'), { recursive: true });
+    await writeFile(join(projectRoot, 'src/widget.ts'), 'export {};\n');
+
+    const started = await startTask(projectRoot, 'task-1', 'implementer');
+    expect(started.success).toBe(false);
+    if (started.success) return;
+    expect(started.error.message).toContain('DispatchMode(test-add)');
+
+    const goal = await loadGoal(projectRoot);
+    expect(goal.success).toBe(true);
+    if (!goal.success) return;
+    expect(goal.data.tasks[0]!.status).toBe('pending');
+  });
+
+  test('direct startTask allows a mode-compliant task', async () => {
+    await seed(makeTask({ title: 'Widget bugfix', type: 'fix' }), 'src/widget.ts');
+    await mkdir(join(projectRoot, 'src'), { recursive: true });
+    await writeFile(join(projectRoot, 'src/widget.ts'), 'export {};\n');
+
+    const started = await startTask(projectRoot, 'task-1', 'implementer');
+    expect(started.success).toBe(true);
+  });
+
+  test('direct startTask without inferred targets is unaffected', async () => {
+    expect((await writeGoal(projectRoot, makeGraph([makeTask()]))).success).toBe(true);
+    const started = await startTask(projectRoot, 'task-1', 'implementer');
+    expect(started.success).toBe(true);
   });
 });

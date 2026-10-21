@@ -244,6 +244,16 @@ async function startTaskUnlocked(
   const unmet = (task.depends_on ?? []).filter((id) => !done.has(id));
   if (unmet.length > 0) return err(new Error(`Task ${taskId} has unmet dependencies: ${unmet.join(', ')}`));
 
+  const graphResult = await loadGraph(projectRoot);
+  const enriched = enrichGoalWithProduct(goalResult.data, graphResult.success ? graphResult.data : undefined);
+  const enrichedTask = enriched.enrichedTasks.find((t) => t.id === taskId);
+  const clearance = checkDispatchClearance(
+    projectRoot,
+    taskTypeToDispatchMode(task.type),
+    enrichedTask?.targetFiles ?? [],
+  );
+  if (!clearance.success) return clearance;
+
   const stateBefore = await loadOperationalState(projectRoot);
   if (!stateBefore.success) return stateBefore;
   const previousState = stateBefore.data;

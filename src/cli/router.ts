@@ -616,6 +616,8 @@ export async function routeCommand(
         target: options.target as string | undefined,
         timeoutMs: options['timeout-ms'] as string | undefined,
         maxMutants: options['max-mutants'] as string | undefined,
+        matrix: options.matrix as string | undefined,
+        outFile: options.out as string | undefined,
       });
     }
 

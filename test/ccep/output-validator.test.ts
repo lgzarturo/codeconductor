@@ -36,10 +36,21 @@ describe('ccep output-validator', () => {
       filesAffected: ['src/core/ccep/prompt-compiler.ts'],
       risks: ['Prompt compatibility'],
       openQuestions: [],
+      edgeCases: [{ scenario: 'empty input', input: '[]', expected: 'empty result' }],
     });
 
     expect(result.valid).toBe(true);
     expect(result.schema).toBe('technical-plan');
+  });
+
+  test('rejects technical-plan output without an edge-case matrix', () => {
+    const result = validateOutputForRole('task-coach', 'technical-plan', {
+      approach: 'Keep routing and context transfer independent',
+      filesAffected: [],
+      risks: [],
+    });
+
+    expect(result.valid).toBe(false);
   });
 
   test('validates task-coach fix intake output with the explicit phase schema', () => {

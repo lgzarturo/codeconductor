@@ -1125,11 +1125,20 @@ export const ReviewerOutputSchema = z.object({
   next_actions: z.array(z.string()).default([]),
 });
 
+export const EdgeCaseSchema = z.object({
+  scenario: z.string().min(1),
+  input: z.string().min(1),
+  expected: z.string().min(1),
+});
+
+export type EdgeCaseInput = z.infer<typeof EdgeCaseSchema>;
+
 export const TechnicalPlanOutputSchema = z.object({
   approach: z.string(),
   filesAffected: z.array(z.string()).default([]),
   risks: z.array(z.string()).default([]),
   openQuestions: z.array(z.string()).optional(),
+  edgeCases: z.array(EdgeCaseSchema).min(1),
 });
 
 export const FixIntakeOutputSchema = z.object({

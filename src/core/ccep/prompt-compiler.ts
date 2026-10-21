@@ -62,7 +62,8 @@ const OUTPUT_SCHEMAS: Record<string, string> = {
   "summary": "",
   "individualVerdicts": []
 }`,
-  'technical-plan': '{ "approach": "", "filesAffected": [], "risks": [] }',
+  'technical-plan':
+    '{ "approach": "", "filesAffected": [], "risks": [], "edgeCases": [{ "scenario": "", "input": "", "expected": "" }] }',
   'fix-intake-output': '{ "actualBehavior": "", "expectedBehavior": "", "reproductionSteps": [] }',
   'review-report': `{
   "status": "pass" | "fail",

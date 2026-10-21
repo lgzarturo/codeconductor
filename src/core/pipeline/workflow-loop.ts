@@ -274,6 +274,7 @@ export async function runWorkflowPipeline(
     validationReport = await callbacks.runValidate(plan);
 
     let scopeViolations = 0;
+    let scopeDetail = '';
     if (cwd) {
       const scopeResult = await checkScopeCompliance({
         cwd,
@@ -282,6 +283,9 @@ export async function runWorkflowPipeline(
       });
       scopeViolations = scopeResult.violations.length;
       validationReport.scopeViolations = scopeViolations;
+      if (scopeResult.violations.length > 0) {
+        scopeDetail = ` [${scopeResult.violations.map((v) => v.symbols?.length ? `${v.file} (${v.symbols.join(', ')})` : v.file).join('; ')}]`;
+      }
     }
 
     let hashValid = true;
@@ -306,7 +310,7 @@ export async function runWorkflowPipeline(
       return {
         success: false,
         phase: 'VALIDATE',
-        error: `Validation failed: ${gateResult.reasons.join(', ')}`,
+        error: `Validation failed: ${gateResult.reasons.join(', ')}${scopeDetail}`,
         taskCard: compactedCard,
         technicalPlan: plan,
       };

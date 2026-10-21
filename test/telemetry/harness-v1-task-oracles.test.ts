@@ -30,7 +30,9 @@ function run(cmd: string, cwd: string): { code: number; stdout: string } {
   const r = spawnSync('bash', ['-lc', cmd], {
     cwd,
     encoding: 'utf-8',
-    env: process.env,
+    // Same marker the eval runner (suite-run.ts) sets for task commands,
+    // so context-aware oracles behave as they do under real evals.
+    env: { ...process.env, CODECONDUCTOR_EVAL_RUN: '1' },
   });
   return { code: r.status ?? 1, stdout: (r.stdout ?? '') + (r.stderr ?? '') };
 }

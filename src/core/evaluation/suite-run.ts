@@ -105,6 +105,9 @@ function runTaskCommand(
     encoding: 'utf8',
     windowsHide: true,
     timeout: 60_000,
+    // Marks eval-scratch execution so oracles can tell it apart from a
+    // pristine repo checkout (e.g. review-report.test.ts).
+    env: { ...process.env, CODECONDUCTOR_EVAL_RUN: '1' },
   });
   const ok = result.status === 0;
   return {

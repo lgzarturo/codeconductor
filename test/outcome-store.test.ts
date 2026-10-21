@@ -4,8 +4,11 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { rm } from 'node:fs/promises';
 import { mkdtemp } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { withQueueLock } from '../src/core/queue/lock';
+import { ok } from '../src/utils/result';
 import {
   appendOutcome,
   listOutcomes,
@@ -257,5 +260,61 @@ describe('outcome-store', () => {
     expect(agg.byVariant.baseline.count).toBe(1);
     expect(agg.byVariant.baseline.avgScore).toBe(2.4);
     expect(agg.byVariant['minus:review'].avgScore).toBe(2.0);
+  });
+});
+
+describe('outcome-store locked writes', () => {
+  let dir: string;
+
+  function makeOutcome(id: string) {
+    return {
+      id,
+      taskId: 'BC-LOCK',
+      source: 'manual' as const,
+      agent: 'reviewer',
+      model: 'test-model',
+      contractVersion: '0.0.0-test',
+      timestamp: new Date().toISOString(),
+      verdict: 'PASS' as const,
+    };
+  }
+
+  beforeEach(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'cc-lock-test-'));
+  });
+
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  test('appendOutcome waits for the held queue lock', async () => {
+    const holder = withQueueLock(dir, async () => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      return ok(undefined);
+    });
+    // Let the holder acquire first, then time only the append.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const start = Date.now();
+    const written = await appendOutcome(dir, makeOutcome('out-locked'));
+    const elapsed = Date.now() - start;
+    const held = await holder;
+    expect(held.success).toBe(true);
+    expect(written.success).toBe(true);
+    expect(elapsed).toBeGreaterThanOrEqual(250);
+  });
+
+  test('concurrent appends keep every line valid', async () => {
+    const results = await Promise.all(
+      Array.from({ length: 20 }, (_, i) => appendOutcome(dir, makeOutcome(`out-${i}`))),
+    );
+    expect(results.every((r) => r.success)).toBe(true);
+    const raw = await readFile(join(dir, '.codeconductor', 'telemetry', 'outcomes.jsonl'), 'utf-8');
+    const lines = raw.split('\n').filter((l) => l.trim() !== '');
+    expect(lines).toHaveLength(20);
+    for (const line of lines) {
+      expect(() => JSON.parse(line)).not.toThrow();
+    }
+    const listed = await listOutcomes(dir, { taskId: 'BC-LOCK' });
+    expect(listed.success && listed.data).toHaveLength(20);
   });
 });

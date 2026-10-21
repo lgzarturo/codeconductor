@@ -8,6 +8,7 @@ import {
   type ScorecardRecordInput,
   type TaskOutcomeInput,
 } from '../../validation/schemas';
+import { withQueueLock } from '../queue/lock';
 import { err, ok, type Result } from '../../utils/result';
 
 const EVAL_DIR = '.codeconductor/evaluation';
@@ -48,6 +49,13 @@ export async function ensureEvaluationDir(projectRoot: string): Promise<string> 
  * a repo decision for Arturo — this code leaves it untouched.
  */
 export async function appendOutcome(
+  projectRoot: string,
+  outcome: TaskOutcomeInput
+): Promise<Result<void, Error>> {
+  return withQueueLock(projectRoot, () => appendOutcomeUnlocked(projectRoot, outcome));
+}
+
+async function appendOutcomeUnlocked(
   projectRoot: string,
   outcome: TaskOutcomeInput
 ): Promise<Result<void, Error>> {

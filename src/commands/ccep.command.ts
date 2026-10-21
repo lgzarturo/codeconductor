@@ -588,6 +588,47 @@ export async function ccepCommand(
       };
     }
 
+    case 'structure': {
+      const request = (userRequest ?? '').trim();
+      if (!request) {
+        return {
+          code: 1,
+          data: {
+            success: false,
+            command: 'ccep structure',
+            errors: ['Usage: ccep structure "<request>" [--scope <csv>] [--role <role>] [--type <type>]'],
+          },
+        };
+      }
+      const entries = (panelScope ?? '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+      const { structurePrompt } = await import('../core/ccep/prompt-structurer');
+      const result = await structurePrompt(projectRoot, {
+        request,
+        scope: entries,
+        role,
+        type: panelType,
+      });
+      if (output === 'json') {
+        return {
+          code: 0,
+          data: {
+            success: true,
+            command: 'ccep structure',
+            card: result.card,
+            envelope: result.envelope,
+            warnings: result.warnings,
+          },
+        };
+      }
+      return {
+        code: 0,
+        data: { success: true, command: 'ccep structure', output: result.envelope },
+      };
+    }
+
     case 'context': {
       const entries = (panelScope ?? '')
         .split(',')

@@ -25,6 +25,7 @@ import type { SetupOptions } from '../commands/setup.command';
 import type { StatusOptions } from '../commands/status.command';
 import type { VersionOptions } from '../commands/version.command';
 import type { OutputMode } from '../utils/logger';
+import type { DispatchMode } from '../core/hooks/hook-runner';
 import { RUNNER_TARGETS } from '../core/runner/runner-target';
 import { renderCompletion, renderDocs, renderHelp } from './command-registry';
 import { renderUsageGuide } from './usage-guide';
@@ -707,6 +708,22 @@ export async function routeCommand(
       const scopeFiles = typeof scopeOpt === 'string' && scopeOpt.trim() !== ''
         ? (await import('../core/evaluation/scorecard-signals')).parseScopeFiles(scopeOpt)
         : undefined;
+      const dispatchRaw = options.dispatch;
+      let dispatchMode: DispatchMode | undefined;
+      if (typeof dispatchRaw === 'string' && dispatchRaw.trim() !== '') {
+        const { isDispatchMode, DISPATCH_MODES } = await import('../core/hooks/hook-runner');
+        if (!isDispatchMode(dispatchRaw)) {
+          return {
+            code: 1,
+            data: {
+              success: false,
+              command: 'hook',
+              errors: [`Unknown dispatch mode: ${dispatchRaw}. Use: ${DISPATCH_MODES.join(', ')}`],
+            },
+          };
+        }
+        dispatchMode = dispatchRaw;
+      }
       return hookCommand({
         event,
         projectRoot,
@@ -716,6 +733,8 @@ export async function routeCommand(
         filePath: typeof options.file === 'string' ? options.file : undefined,
         stdinText,
         scopeFiles,
+        dispatchMode,
+        leaf: options.leaf === true || options.leaf === 'true' || undefined,
       });
     }
 

@@ -10,6 +10,7 @@ import {
   parseAgyPayload,
   parseClaudePayload,
   parseMusePayload,
+  type DispatchMode,
   type HookEvent,
   type HookFormat,
   type PreToolInput,
@@ -32,6 +33,8 @@ export interface HookOptions {
   readonly filePath?: string;
   readonly stdinText?: string;
   readonly scopeFiles?: readonly string[];
+  readonly dispatchMode?: DispatchMode;
+  readonly leaf?: boolean;
 }
 
 export function parseHookFormat(raw: unknown): HookFormat | undefined {
@@ -63,17 +66,24 @@ function resolvePreToolInput(options: HookOptions, stdinText: string, format: Ho
       : format === 'muse'
         ? parseMusePayload(stdinText)
         : parseClaudePayload(stdinText);
+  const filePath =
+    options.filePath ??
+    (process.env.CLAUDE_TOOL_INPUT_FILE_PATH || undefined) ??
+    fromStdin.filePath;
   return {
     command:
       options.command ??
       (process.env.CLAUDE_TOOL_INPUT_COMMAND || undefined) ??
       fromStdin.command,
-    filePath:
-      options.filePath ??
-      (process.env.CLAUDE_TOOL_INPUT_FILE_PATH || undefined) ??
-      fromStdin.filePath,
+    filePath,
     toolName: fromStdin.toolName,
     scopeFiles: options.scopeFiles,
+    dispatchMode: options.dispatchMode,
+    leaf: options.leaf,
+    exists:
+      options.dispatchMode && filePath
+        ? existsSync(resolve(options.projectRoot, filePath))
+        : undefined,
   };
 }
 

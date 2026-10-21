@@ -81,6 +81,172 @@ export function evaluateScopeAccess(
   return { allowed: true };
 }
 
+export type DispatchMode =
+  | 'full'
+  | 'surgical-fix'
+  | 'refactor-only'
+  | 'test-add'
+  | 'scaffold'
+  | 'rename-move'
+  | 'dep-bump';
+
+export const DISPATCH_MODES: readonly DispatchMode[] = [
+  'full',
+  'surgical-fix',
+  'refactor-only',
+  'test-add',
+  'scaffold',
+  'rename-move',
+  'dep-bump',
+];
+
+export function isDispatchMode(raw: unknown): raw is DispatchMode {
+  return typeof raw === 'string' && (DISPATCH_MODES as readonly string[]).includes(raw);
+}
+
+const DEP_MANIFESTS = new Set([
+  'package.json',
+  'package-lock.json',
+  'bun.lock',
+  'yarn.lock',
+  'pnpm-lock.yaml',
+  'cargo.toml',
+  'cargo.lock',
+  'go.mod',
+  'go.sum',
+  'requirements.txt',
+  'pyproject.toml',
+  'poetry.lock',
+  'gemfile',
+  'gemfile.lock',
+  'pom.xml',
+  'build.gradle',
+  'build.gradle.kts',
+  'composer.json',
+  'composer.lock',
+]);
+
+function isTestFile(filePath: string): boolean {
+  const normalized = normalizeHookPath(filePath, filePath);
+  return DEFAULT_PROTECTED_PATTERNS.some((p) =>
+    normalized.includes(normalizeHookPath(filePath, p)),
+  );
+}
+
+export interface DispatchInput {
+  readonly filePath?: string;
+  readonly command?: string;
+  readonly scopeFiles?: readonly string[];
+  /** File existence resolved by the caller; unknown fails closed where it matters. */
+  readonly exists?: boolean;
+}
+
+/**
+ * Deny-first dispatch-mode write profiles for leaf implementers.
+ * Judges file writes; bare commands fall through to the command safety net,
+ * except rename-move which only permits `git mv`.
+ */
+export function evaluateDispatchMode(mode: DispatchMode, input: DispatchInput): RoleAccessResult {
+  const { filePath, command } = input;
+
+  if (mode === 'rename-move') {
+    if (filePath) {
+      return { allowed: false, reason: `DispatchMode(rename-move): file writes denied, rename via git mv instead of touching '${filePath}'.` };
+    }
+    if (command) {
+      const normalized = stripGitBinary(normalizeCommand(command));
+      if (/^git\s+mv\b/i.test(normalized)) return { allowed: true };
+      return { allowed: false, reason: 'DispatchMode(rename-move): only `git mv` commands allowed.' };
+    }
+    return { allowed: true };
+  }
+
+  if (!filePath) return { allowed: true };
+
+  switch (mode) {
+    case 'full':
+      if (isTestFile(filePath)) {
+        return { allowed: false, reason: `DispatchMode(full): test files are read-only, use test-add for '${filePath}'.` };
+      }
+      return { allowed: true };
+
+    case 'surgical-fix': {
+      if (!input.scopeFiles || input.scopeFiles.length === 0) {
+        return { allowed: false, reason: 'DispatchMode(surgical-fix): requires --scope with the task boundary.' };
+      }
+      const scope = evaluateScopeAccess(filePath, input.scopeFiles);
+      if (!scope.allowed) return scope;
+      if (input.exists !== true) {
+        return {
+          allowed: false,
+          reason: input.exists === false
+            ? `DispatchMode(surgical-fix): no new files, use scaffold for '${filePath}'.`
+            : `DispatchMode(surgical-fix): cannot verify '${filePath}' exists.`,
+        };
+      }
+      if (isTestFile(filePath)) {
+        return { allowed: false, reason: `DispatchMode(surgical-fix): tests are frozen, '${filePath}' is out of mode.` };
+      }
+      return { allowed: true };
+    }
+
+    case 'refactor-only':
+      if (input.exists !== true) {
+        return {
+          allowed: false,
+          reason: input.exists === false
+            ? `DispatchMode(refactor-only): no new files, use scaffold for '${filePath}'.`
+            : `DispatchMode(refactor-only): cannot verify '${filePath}' exists.`,
+        };
+      }
+      return { allowed: true };
+
+    case 'test-add':
+      if (!isTestFile(filePath)) {
+        return { allowed: false, reason: `DispatchMode(test-add): only test files are writable, got '${filePath}'.` };
+      }
+      return { allowed: true };
+
+    case 'scaffold':
+      if (input.exists !== false) {
+        return {
+          allowed: false,
+          reason: input.exists === true
+            ? `DispatchMode(scaffold): '${filePath}' already exists.`
+            : `DispatchMode(scaffold): cannot verify '${filePath}' is new.`,
+        };
+      }
+      return { allowed: true };
+
+    case 'dep-bump': {
+      const base = filePath.replace(/\\/g, '/').split('/').pop()!.toLowerCase();
+      if (!DEP_MANIFESTS.has(base)) {
+        return { allowed: false, reason: `DispatchMode(dep-bump): only manifests/lockfiles are writable, got '${filePath}'.` };
+      }
+      return { allowed: true };
+    }
+
+    default: {
+      const _exhaustive: never = mode;
+      void _exhaustive;
+      return { allowed: true };
+    }
+  }
+}
+
+const DELEGATION_TOOLS = new Set(['task', 'subagent']);
+
+/**
+ * Leaf task-deny: leaf agents (no sub-delegation) cannot invoke delegation tools.
+ */
+export function evaluateLeafTaskAccess(toolName: string | undefined): RoleAccessResult {
+  if (!toolName) return { allowed: true };
+  if (DELEGATION_TOOLS.has(toolName.toLowerCase())) {
+    return { allowed: false, reason: `LeafDeny: leaf agents cannot delegate via '${toolName}'.` };
+  }
+  return { allowed: true };
+}
+
 export type HookEvent =
   | 'pre-tool'
   | 'post-tool'
@@ -112,6 +278,9 @@ export interface PreToolInput {
   readonly filePath?: string;
   readonly toolName?: string;
   readonly scopeFiles?: readonly string[];
+  readonly dispatchMode?: DispatchMode;
+  readonly leaf?: boolean;
+  readonly exists?: boolean;
 }
 
 const SENSITIVE_PATH =
@@ -223,6 +392,19 @@ export function evaluatePreTool(input: PreToolInput): HookVerdict {
   if (input.filePath) {
     const pathVerdict = evaluatePath(input.filePath);
     if (pathVerdict.action === 'deny') return pathVerdict;
+  }
+  if (input.leaf === true && input.toolName) {
+    const leaf = evaluateLeafTaskAccess(input.toolName);
+    if (!leaf.allowed) return deny(leaf.reason ?? 'Bloqueado: leaf agents cannot delegate');
+  }
+  if (input.dispatchMode) {
+    const mode = evaluateDispatchMode(input.dispatchMode, {
+      filePath: input.filePath,
+      command: input.command,
+      scopeFiles: input.scopeFiles,
+      exists: input.exists,
+    });
+    if (!mode.allowed) return deny(mode.reason ?? 'Bloqueado: dispatch mode violation');
   }
   if (input.command) {
     return evaluateCommand(input.command);

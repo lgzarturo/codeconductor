@@ -27,8 +27,10 @@ import {
   createBenchBudget,
   meterStreamLine,
   runClaudeHostCell,
+  extractSanitizedErrorResult,
   sanitizeStderr,
 } from '../../src/core/evaluation/bench/host-claude';
+import { publicProxyHops } from '../../src/core/evaluation/bench/openrouter-request-proxy';
 import type { OpenRouterKeySnapshot } from '../../src/core/telemetry/openrouter-spend-lock';
 import { loadHarnessSuite } from '../../src/core/evaluation/harness-experiment';
 import { scorecardCommand } from '../../src/commands/scorecard.command';
@@ -452,14 +454,51 @@ describe('M5 free-model pricing gate', () => {
     expect(minRepetitionsForMode(false)).toBe(5);
   });
 
-  test('sanitizeStderr redacts keys and truncates', () => {
+  test('sanitizeStderr redacts keys, paths, session ids and truncates', () => {
     const raw =
       'Bearer sk-or-v1-abcdefghijklmnopqrstuvwxyz012345 OPENROUTER_API_KEY=sk-or-v1-abc ' +
+      'session_id=abc123 path=/home/runner/work/codeconductor/x ' +
       'x'.repeat(600);
     const s = sanitizeStderr(raw, 200);
     expect(s).not.toContain('sk-or-v1-abc');
+    expect(s).not.toContain('/home/runner');
+    expect(s).not.toContain('abc123');
     expect(s).toContain('[REDACTED');
     expect(s.length).toBeLessThanOrEqual(201);
+  });
+
+  test('extractSanitizedErrorResult keeps API error text when is_error=true', () => {
+    const payload = {
+      type: 'result',
+      subtype: 'success',
+      is_error: true,
+      result:
+        'API Error: 404 Function nvidia/nemotron-3-super-120b-a12b:free Not found ' +
+        'session_id=deadbeef /home/runner/work/repo/file sk-or-v1-secrettokenvaluehere',
+    };
+    const s = extractSanitizedErrorResult(payload, true, 500);
+    expect(s).toBeTruthy();
+    expect(s!).toContain('404');
+    expect(s!).toContain('Not found');
+    expect(s!).not.toContain('sk-or-v1-secrettokenvaluehere');
+    expect(s!).not.toContain('deadbeef');
+    expect(s!).not.toContain('/home/runner');
+    expect(extractSanitizedErrorResult(payload, false)).toBeNull();
+    expect(extractSanitizedErrorResult({ type: 'result', is_error: true }, true)).toBeNull();
+  });
+
+  test('publicProxyHops exposes upstream HTTP status without paths', () => {
+    const pub = publicProxyHops([
+      {
+        method: 'POST',
+        inboundPath: '/api/v1/messages',
+        upstreamPath: '/api/v1/messages',
+        upstreamStatus: 404,
+        streamed: false,
+      },
+    ]);
+    expect(pub).toEqual([{ method: 'POST', upstreamStatus: 404, streamed: false }]);
+    expect(JSON.stringify(pub)).not.toContain('/api');
   });
 
   test('rejects non-:free and non-zero pricing', async () => {

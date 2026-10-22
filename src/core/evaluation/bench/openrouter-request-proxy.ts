@@ -78,13 +78,29 @@ export interface OpenRouterRequestProxyOptions {
   now?: () => Date;
 }
 
-/** Sanitized per-hop diagnostic (no tokens / bodies). */
+/** Per-hop diagnostic (paths kept in-process for tests; scrub before logging). */
 export interface ProxyHopRecord {
   method: string;
   inboundPath: string;
   upstreamPath: string;
   upstreamStatus: number | null;
   streamed: boolean;
+}
+
+/** Artifact-safe hop: method + upstream HTTP status only (no paths / tokens). */
+export interface ProxyHopPublic {
+  method: string;
+  upstreamStatus: number | null;
+  streamed: boolean;
+}
+
+/** Strip paths from hop records for logs and aggregates. */
+export function publicProxyHops(hops: ProxyHopRecord[]): ProxyHopPublic[] {
+  return hops.map((h) => ({
+    method: h.method,
+    upstreamStatus: h.upstreamStatus,
+    streamed: h.streamed,
+  }));
 }
 
 export interface OpenRouterRequestProxy {

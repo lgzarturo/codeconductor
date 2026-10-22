@@ -30,6 +30,7 @@ import {
   DEFAULT_OPENROUTER_REQUEST_CAP,
   defaultRequestCounterPath,
   mintProxyLocalToken,
+  publicProxyHops,
   startOpenRouterRequestProxy,
   type OpenRouterRequestProxy,
 } from '../src/core/evaluation/bench/openrouter-request-proxy';
@@ -262,7 +263,7 @@ async function main(): Promise<void> {
         );
       }
 
-      const hops = proxy.hops();
+      const hops = publicProxyHops(proxy.hops());
       await writeAggregate({
         schema: 'bench-baseline-cheap/v1',
         cheap: true,
@@ -276,6 +277,7 @@ async function main(): Promise<void> {
         requestsAlreadyUsed: REQUESTS_ALREADY_USED,
         requestCap: MAX_REQUESTS,
         anthropicBaseUrl: proxy.anthropicBaseUrl,
+        /** Upstream HTTP status per hop (no paths). */
         hops,
         aborted: true,
         abortReason: smoke.reason,
@@ -324,7 +326,7 @@ async function main(): Promise<void> {
         usageAfter,
         proxyRequestCount: proxyCount,
         requestsAlreadyUsed: REQUESTS_ALREADY_USED,
-        hops: proxy.hops(),
+        hops: publicProxyHops(proxy.hops()),
         smoke: { ok: true, attempts: smoke.attempts, reason: null },
         verdict: 'NO CONCLUYENTE',
         verdictReasons: ['smoke-only mode — full cheap not run'],
@@ -392,6 +394,7 @@ async function main(): Promise<void> {
       proxyRequestCount: proxyCount,
       requestsAlreadyUsed: REQUESTS_ALREADY_USED,
       requestCap: MAX_REQUESTS,
+      hops: publicProxyHops(proxy.hops()),
       runValid: result.runValid,
       budget,
       aborted: result.aborted,
@@ -522,8 +525,8 @@ async function main(): Promise<void> {
         proxyCount,
         maxRequests: MAX_REQUESTS,
         streamBudgetRequests: budget.requests,
-        // Sanitized hops only (method/path/status) — no tokens or bodies.
-        hops: proxy.hops(),
+        // method + upstreamStatus only — no paths, tokens, or bodies.
+        hops: publicProxyHops(proxy.hops()),
       });
       await proxy.close().catch(() => undefined);
       proxy = null;

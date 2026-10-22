@@ -126,6 +126,11 @@ export interface ClaudeHostDiagnostics {
   exitCode: number | null;
   /** stderr truncated to 500 chars, secrets scrubbed. */
   stderrTruncated: string | null;
+  /**
+   * When `is_error=true`, Claude Code puts the API error in stream-json `result`.
+   * Sanitized + truncated (~500); never keys, session ids, or filesystem paths.
+   */
+  resultTruncated: string | null;
   subtype: string | null;
   isError: boolean | null;
   timedOut: boolean;
@@ -162,7 +167,7 @@ async function rateLimit(minIntervalMs: number): Promise<void> {
   lastCallAt = Date.now();
 }
 
-/** Scrub secrets / long blobs from stderr for artifacts. */
+/** Scrub secrets, session ids, and filesystem paths; truncate for artifacts. */
 export function sanitizeStderr(stderr: string, maxLen = 500): string {
   let s = stderr
     .replace(/sk-or-v1-[A-Za-z0-9_-]+/g, '[REDACTED_OR_KEY]')
@@ -171,15 +176,36 @@ export function sanitizeStderr(stderr: string, maxLen = 500): string {
     .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [REDACTED]')
     .replace(/ANTHROPIC_AUTH_TOKEN=\S+/g, 'ANTHROPIC_AUTH_TOKEN=[REDACTED]')
     .replace(/OPENROUTER_API_KEY=\S+/g, 'OPENROUTER_API_KEY=[REDACTED]')
-    .replace(/session[_-]?id["\s:=]+[A-Za-z0-9_-]+/gi, 'session_id=[REDACTED]');
+    .replace(/session[_-]?id["\s:=]+[A-Za-z0-9_-]+/gi, 'session_id=[REDACTED]')
+    // Absolute and home-relative paths (Unix + Windows).
+    .replace(/\/(?:home|Users|tmp|var|opt|workspace|runner)\/[^\s"'\\]+/gi, '[REDACTED_PATH]')
+    .replace(/[A-Za-z]:\\[^\s"']+/g, '[REDACTED_PATH]')
+    .replace(/~\/[^\s"']+/g, '[REDACTED_PATH]');
   if (s.length > maxLen) s = `${s.slice(0, maxLen)}…`;
   return s;
+}
+
+/**
+ * When `is_error=true`, Claude Code places the API error message in `result`
+ * (string). Sanitize + truncate for artifacts; otherwise null.
+ */
+export function extractSanitizedErrorResult(
+  payload: unknown,
+  isError: boolean | null,
+  maxLen = 500,
+): string | null {
+  if (isError !== true || !payload || typeof payload !== 'object') return null;
+  const rec = payload as Record<string, unknown>;
+  const raw = rec.result;
+  if (typeof raw !== 'string' || raw.trim().length === 0) return null;
+  return sanitizeStderr(raw, maxLen);
 }
 
 function emptyDiagnostics(attempt: number): ClaudeHostDiagnostics {
   return {
     exitCode: null,
     stderrTruncated: null,
+    resultTruncated: null,
     subtype: null,
     isError: null,
     timedOut: false,
@@ -194,11 +220,16 @@ function extractMeta(payload: unknown): { subtype: string | null; isError: boole
     return { subtype: null, isError: null };
   }
   const rec = payload as Record<string, unknown>;
+  // `result` is often the error *string* when is_error=true — do not treat it as nested meta.
+  const nested =
+    rec.result && typeof rec.result === 'object' && !Array.isArray(rec.result)
+      ? (rec.result as { subtype?: string })
+      : null;
   const subtype =
     typeof rec.subtype === 'string'
       ? rec.subtype
-      : typeof (rec.result as { subtype?: string } | undefined)?.subtype === 'string'
-        ? (rec.result as { subtype: string }).subtype
+      : typeof nested?.subtype === 'string'
+        ? nested.subtype
         : null;
   const isError =
     typeof rec.is_error === 'boolean'
@@ -487,6 +518,7 @@ export async function runClaudeSmoke(
       subtype = meta.subtype;
       isError = meta.isError;
       parsedOk = true;
+      const resultTruncated = extractSanitizedErrorResult(payload, isError);
       // Treat result with usage / type result as success even if empty text.
       if (
         payload &&
@@ -498,6 +530,7 @@ export async function runClaudeSmoke(
         attempts.push({
           exitCode: result.code,
           stderrTruncated: sanitizeStderr(result.stderr),
+          resultTruncated,
           subtype,
           isError,
           timedOut: result.timedOut,
@@ -516,6 +549,7 @@ export async function runClaudeSmoke(
     attempts.push({
       exitCode: result.code,
       stderrTruncated: sanitizeStderr(result.stderr || result.stdout.slice(0, 200)),
+      resultTruncated: extractSanitizedErrorResult(result.payload, isError),
       subtype,
       isError,
       timedOut: result.timedOut,
@@ -541,7 +575,7 @@ export async function runClaudeSmoke(
 
   const last = attempts[attempts.length - 1];
   const reason = last
-    ? `smoke failed after ${attempts.length} attempts: exit=${last.exitCode} timedOut=${last.timedOut} 429=${last.http429} subtype=${last.subtype} is_error=${last.isError} stderr=${last.stderrTruncated ?? ''}`
+    ? `smoke failed after ${attempts.length} attempts: exit=${last.exitCode} timedOut=${last.timedOut} 429=${last.http429} subtype=${last.subtype} is_error=${last.isError} result=${last.resultTruncated ?? ''} stderr=${last.stderrTruncated ?? ''}`
     : 'smoke failed with no attempts';
   return { ok: false, attempts, reason };
 }
@@ -628,6 +662,7 @@ export async function runClaudeHostCell(
       lastDiag = {
         exitCode: result.code,
         stderrTruncated: sanitizeStderr(result.stderr),
+        resultTruncated: extractSanitizedErrorResult(payload, isError),
         subtype,
         isError,
         timedOut: result.timedOut,

@@ -16,10 +16,12 @@ import {
   parseRequestCounter,
   readRequestCounter,
   reserveRequestSlot,
+  rewriteOpenRouterUpstreamPath,
   startOpenRouterRequestProxy,
   writeRequestCounter,
   RequestBudgetExhaustedError,
   RequestCounterError,
+  type ProxyHopRecord,
 } from '../../src/core/evaluation/bench/openrouter-request-proxy';
 import { buildClaudeEnv } from '../../src/core/evaluation/bench/host-claude';
 
@@ -358,6 +360,181 @@ describe('OpenRouter request proxy', () => {
       max: 5,
     });
   });
+});
+
+describe('OpenRouter path rewrite (Claude /api + /v1/messages)', () => {
+  test('rewrites bare /v1/messages to /api/v1/messages', () => {
+    expect(rewriteOpenRouterUpstreamPath('/v1/messages')).toBe('/api/v1/messages');
+    expect(rewriteOpenRouterUpstreamPath('/v1/messages?beta=true')).toBe(
+      '/api/v1/messages?beta=true',
+    );
+    expect(rewriteOpenRouterUpstreamPath('/api/v1/messages')).toBe('/api/v1/messages');
+    expect(rewriteOpenRouterUpstreamPath('/api/v1/chat/completions')).toBe(
+      '/api/v1/chat/completions',
+    );
+  });
+});
+
+describe('smoke conversation vs fake upstream (SSE + Anthropic headers)', () => {
+  test(
+    'forwards /api/v1/messages with real key, anthropic headers, body; streams SSE; never leaks local token',
+    async () => {
+      const dir = await tmpDir();
+      const token = localToken();
+      const seen: Array<{
+        method?: string;
+        url?: string;
+        authorization?: string;
+        anthropicVersion?: string;
+        anthropicBeta?: string;
+        body: string;
+        xApiKey?: string;
+      }> = [];
+      const chunkArrivalGaps: number[] = [];
+
+      // Fake OpenRouter: Anthropic Messages SSE like a successful smoke hop.
+      const upstream = createServer((req, res) => {
+        const chunks: Buffer[] = [];
+        req.on('data', (c: Buffer) => chunks.push(c));
+        req.on('end', () => {
+          const body = Buffer.concat(chunks).toString('utf8');
+          seen.push({
+            method: req.method,
+            url: req.url,
+            authorization: String(req.headers.authorization ?? ''),
+            anthropicVersion: String(req.headers['anthropic-version'] ?? ''),
+            anthropicBeta: String(req.headers['anthropic-beta'] ?? ''),
+            xApiKey: String(req.headers['x-api-key'] ?? ''),
+            body,
+          });
+          res.writeHead(200, {
+            'content-type': 'text/event-stream; charset=utf-8',
+            'cache-control': 'no-cache',
+          });
+          const events = [
+            'event: message_start\ndata: {"type":"message_start","message":{"id":"msg_smoke","type":"message","role":"assistant","model":"nvidia/nemotron-3-super-120b-a12b:free"}}\n\n',
+            'event: content_block_delta\ndata: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"hola"}}\n\n',
+            'event: message_delta\ndata: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":1}}\n\n',
+            'event: message_stop\ndata: {"type":"message_stop"}\n\n',
+          ];
+          let i = 0;
+          const tick = () => {
+            if (i >= events.length) {
+              res.end();
+              return;
+            }
+            res.write(events[i]!);
+            i += 1;
+            setTimeout(tick, 15);
+          };
+          tick();
+        });
+      });
+      await new Promise<void>((r) => upstream.listen(0, '127.0.0.1', () => r()));
+      const upAddr = upstream.address();
+      if (!upAddr || typeof upAddr === 'string') throw new Error('no upstream port');
+
+      const hops: ProxyHopRecord[] = [];
+      const proxy = await startOpenRouterRequestProxy({
+        counterPath: join(dir, 'c.json'),
+        maxRequests: 100,
+        initialCount: 0,
+        upstreamApiKey: UPSTREAM_KEY,
+        localAuthToken: token,
+        upstreamHost: '127.0.0.1',
+        useHttpUpstream: true,
+        upstreamPort: upAddr.port,
+        onHop: (h) => hops.push(h),
+      });
+
+      try {
+        expect(proxy.anthropicBaseUrl).toBe(`${proxy.url}/api`);
+
+        // Replicate Claude Code smoke: BASE_URL=…/api + POST /v1/messages
+        // (full URL = anthropicBaseUrl + /v1/messages = …/api/v1/messages).
+        const smokeBody = {
+          model: 'nvidia/nemotron-3-super-120b-a12b:free',
+          max_tokens: 64,
+          stream: true,
+          messages: [{ role: 'user', content: 'di hola' }],
+        };
+        const res = await fetch(`${proxy.anthropicBaseUrl}/v1/messages`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            'anthropic-version': '2023-06-01',
+            'anthropic-beta': 'interleaved-thinking-2025-05-14',
+            'x-api-key': token, // must be stripped, never forwarded
+          },
+          body: JSON.stringify(smokeBody),
+        });
+
+        expect(res.status).toBe(200);
+        expect(res.headers.get('content-type')).toMatch(/text\/event-stream/i);
+
+        // Read as a stream to prove we are not buffering the whole SSE body.
+        const reader = res.body?.getReader();
+        expect(reader).toBeDefined();
+        const decoder = new TextDecoder();
+        let text = '';
+        let lastAt = Date.now();
+        for (;;) {
+          const { done, value } = await reader!.read();
+          if (done) break;
+          const now = Date.now();
+          chunkArrivalGaps.push(now - lastAt);
+          lastAt = now;
+          text += decoder.decode(value, { stream: true });
+        }
+        text += decoder.decode();
+
+        expect(text).toContain('event: message_start');
+        expect(text).toContain('hola');
+        expect(text).toContain('event: message_stop');
+        // Local token must never appear in the streamed body.
+        expect(text).not.toContain(token);
+        expect(text).not.toContain(PROXY_LOCAL_TOKEN_PREFIX);
+        // More than one read chunk ⇒ proxy did not coalesce the whole SSE.
+        expect(chunkArrivalGaps.length).toBeGreaterThan(1);
+
+        expect(seen).toHaveLength(1);
+        expect(seen[0]!.method).toBe('POST');
+        expect(seen[0]!.url).toBe('/api/v1/messages');
+        expect(seen[0]!.authorization).toBe(`Bearer ${UPSTREAM_KEY}`);
+        expect(seen[0]!.authorization).not.toContain(token);
+        expect(seen[0]!.xApiKey).toBe('');
+        expect(seen[0]!.anthropicVersion).toBe('2023-06-01');
+        expect(seen[0]!.anthropicBeta).toBe('interleaved-thinking-2025-05-14');
+        expect(JSON.parse(seen[0]!.body)).toEqual(smokeBody);
+
+        // Safety-net rewrite: bare /v1/messages (wrong BASE_URL) still reaches /api/v1.
+        const bare = await fetch(`${proxy.url}/v1/messages`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify(smokeBody),
+        });
+        expect(bare.status).toBe(200);
+        await bare.text();
+        expect(seen[1]!.url).toBe('/api/v1/messages');
+
+        expect(hops.map((h) => h.upstreamPath)).toEqual([
+          '/api/v1/messages',
+          '/api/v1/messages',
+        ]);
+        expect(hops.every((h) => h.upstreamStatus === 200)).toBe(true);
+        expect(hops.every((h) => h.streamed)).toBe(true);
+      } finally {
+        await proxy.close();
+        await new Promise<void>((r) => upstream.close(() => r()));
+      }
+    },
+    20_000,
+  );
 });
 
 describe('OpenRouter public catalog check (no key)', () => {

@@ -8,8 +8,17 @@ do not cross-spend.
 
 Claude Code is **pinned to 2.1.197** in `bench-baseline.yml` (fixture #18 /
 run 39203481151). Do not use `latest` — 2.1.308 returned `unrecognized_model`.
-With 2.1.197 the model is still listed `:free` on OpenRouter, but smoke still
-exits `is_error=true` (no substitute chosen).
+
+### Root cause of 39777659383 smoke (`is_error=true` under proxy)
+
+Historical working config: `ANTHROPIC_BASE_URL=https://openrouter.ai/api`
+(Claude SDK appends `/v1/messages` → `/api/v1/messages`).
+
+The proxy set `ANTHROPIC_BASE_URL=http://127.0.0.1:PORT` (origin only), so Claude
+POSTed `/v1/messages` and the proxy forwarded to `openrouter.ai/v1/messages`
+(**missing `/api`**). Fix: `proxy.anthropicBaseUrl = origin + '/api'` plus a
+safety rewrite `/v1/…` → `/api/v1/…`; SSE is piped without buffering; local
+token never forwarded. Offline smoke-replay test covers this.
 
 Auth: Claude presents a one-shot `cc-proxy-local-*` token
 (`ANTHROPIC_AUTH_TOKEN`). The proxy never forwards that token upstream; it

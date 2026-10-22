@@ -9,6 +9,15 @@
  * The proxy never forwards that token upstream; it injects OPENROUTER_API_KEY
  * only on the outbound hop. Claude's env must not contain OPENROUTER_API_KEY.
  *
+ * Base URL: Claude Code (Anthropic SDK) appends `/v1/messages` to
+ * `ANTHROPIC_BASE_URL`. The working direct config is
+ * `https://openrouter.ai/api` → full path `/api/v1/messages`. Point Claude at
+ * `proxy.anthropicBaseUrl` (`http://host:port/api`), and the proxy also
+ * rewrites bare `/v1/…` → `/api/v1/…` as a safety net.
+ *
+ * Responses (including SSE) are piped without buffering. The local token is
+ * never present in upstream request headers or in the response body we emit.
+ *
  * If the counter file cannot be read or written, the proxy refuses to
  * forward (fail-closed).
  */
@@ -63,12 +72,29 @@ export interface OpenRouterRequestProxyOptions {
    */
   useHttpUpstream?: boolean;
   upstreamPort?: number;
+  /** Optional hop recorder (tests / diagnostics). Never pass secrets. */
+  onHop?: (hop: ProxyHopRecord) => void;
   /** Injected for tests. */
   now?: () => Date;
 }
 
+/** Sanitized per-hop diagnostic (no tokens / bodies). */
+export interface ProxyHopRecord {
+  method: string;
+  inboundPath: string;
+  upstreamPath: string;
+  upstreamStatus: number | null;
+  streamed: boolean;
+}
+
 export interface OpenRouterRequestProxy {
+  /** Origin only (`http://host:port`) — prefer `anthropicBaseUrl` for Claude. */
   url: string;
+  /**
+   * `ANTHROPIC_BASE_URL` for Claude Code — mirrors `https://openrouter.ai/api`
+   * so `/v1/messages` resolves to `/api/v1/messages` upstream.
+   */
+  anthropicBaseUrl: string;
   host: string;
   port: number;
   counterPath: string;
@@ -76,6 +102,8 @@ export interface OpenRouterRequestProxy {
   localAuthToken: string;
   /** Current durable count (re-reads file). */
   readCount: () => Promise<number>;
+  /** Sanitized hop log for this process (newest last). */
+  hops: () => ProxyHopRecord[];
   close: () => Promise<void>;
 }
 
@@ -243,6 +271,38 @@ function extractBearer(req: IncomingMessage): string | null {
 }
 
 /**
+ * Map Claude's Anthropic-SDK path onto OpenRouter's `/api` prefix.
+ * `/v1/messages` → `/api/v1/messages`; already-prefixed paths unchanged.
+ */
+export function rewriteOpenRouterUpstreamPath(inboundPath: string): string {
+  const raw = inboundPath && inboundPath.length > 0 ? inboundPath : '/';
+  const qIndex = raw.indexOf('?');
+  const pathname = qIndex >= 0 ? raw.slice(0, qIndex) : raw;
+  const query = qIndex >= 0 ? raw.slice(qIndex) : '';
+  if (pathname === '/v1' || pathname.startsWith('/v1/')) {
+    return `/api${pathname}${query}`;
+  }
+  return raw;
+}
+
+const HOP_BY_HOP = new Set([
+  'connection',
+  'keep-alive',
+  'proxy-authenticate',
+  'proxy-authorization',
+  'te',
+  'trailers',
+  'transfer-encoding',
+  'upgrade',
+  'proxy-connection',
+]);
+
+function isSseContentType(value: string | string[] | undefined): boolean {
+  const raw = Array.isArray(value) ? value.join(',') : (value ?? '');
+  return /text\/event-stream/i.test(raw);
+}
+
+/**
  * Start the fail-closed OpenRouter request proxy.
  * Point Claude Code at `proxy.url` via ANTHROPIC_BASE_URL and give it
  * `localAuthToken` as ANTHROPIC_AUTH_TOKEN (never OPENROUTER_API_KEY).
@@ -296,10 +356,26 @@ export async function startOpenRouterRequestProxy(
     }
   }
 
+  const hopLog: ProxyHopRecord[] = [];
+  const recordHop = (hop: ProxyHopRecord): void => {
+    hopLog.push(hop);
+    options.onHop?.(hop);
+  };
+
   const server: Server = createServer(async (req, res) => {
+    const method = req.method ?? 'GET';
+    const inboundPath = req.url ?? '/';
+    let upstreamPath = rewriteOpenRouterUpstreamPath(inboundPath);
     try {
       const presented = extractBearer(req);
       if (presented !== localAuthToken) {
+        recordHop({
+          method,
+          inboundPath,
+          upstreamPath,
+          upstreamStatus: 401,
+          streamed: false,
+        });
         sendJson(res, 401, {
           error: {
             message: 'invalid or missing local proxy token',
@@ -314,6 +390,13 @@ export async function startOpenRouterRequestProxy(
         reserved = await reserveRequestSlot(counterPath, maxRequests, now);
       } catch (err) {
         if (err instanceof RequestBudgetExhaustedError) {
+          recordHop({
+            method,
+            inboundPath,
+            upstreamPath,
+            upstreamStatus: 429,
+            streamed: false,
+          });
           sendJson(res, 429, {
             error: {
               message: err.message,
@@ -324,6 +407,13 @@ export async function startOpenRouterRequestProxy(
           });
           return;
         }
+        recordHop({
+          method,
+          inboundPath,
+          upstreamPath,
+          upstreamStatus: 503,
+          streamed: false,
+        });
         sendJson(res, 503, {
           error: {
             message: err instanceof Error ? err.message : String(err),
@@ -338,13 +428,15 @@ export async function startOpenRouterRequestProxy(
       for (const [k, v] of Object.entries(req.headers)) {
         if (v === undefined) continue;
         const lk = k.toLowerCase();
-        // Never forward Host, inbound Authorization, or the local token.
+        // Never forward Host, inbound Authorization, x-api-key, or hop-by-hop.
         if (lk === 'host' || lk === 'authorization' || lk === 'x-api-key') continue;
+        if (HOP_BY_HOP.has(lk)) continue;
         headers[k] = Array.isArray(v) ? v.join(',') : v;
       }
       headers.host = upstreamHost;
-      // Inject real OpenRouter key only on the outbound hop.
+      // Inject real OpenRouter key only on the outbound hop (never the local token).
       headers.authorization = `Bearer ${upstreamApiKey}`;
+      headers['content-length'] = String(body.length);
       headers['x-cc-request-slot'] = String(reserved);
 
       const useHttp = options.useHttpUpstream === true;
@@ -356,22 +448,51 @@ export async function startOpenRouterRequestProxy(
           {
             hostname: upstreamHost,
             port: upstreamPort,
-            path: req.url ?? '/',
-            method: req.method ?? 'GET',
+            path: upstreamPath,
+            method,
             headers,
           },
           (upRes) => {
-            const outHeaders = { ...upRes.headers } as Record<
-              string,
-              string | string[] | undefined
-            >;
-            res.writeHead(upRes.statusCode ?? 502, outHeaders);
-            upRes.pipe(res);
+            const status = upRes.statusCode ?? 502;
+            const streamed = isSseContentType(upRes.headers['content-type']);
+            recordHop({
+              method,
+              inboundPath,
+              upstreamPath,
+              upstreamStatus: status,
+              streamed,
+            });
+
+            const outHeaders: Record<string, number | string | string[]> = {};
+            for (const [k, v] of Object.entries(upRes.headers)) {
+              if (v === undefined) continue;
+              const lk = k.toLowerCase();
+              // Drop hop-by-hop; Node will re-chunk the piped body as needed.
+              if (HOP_BY_HOP.has(lk)) continue;
+              // Never leak the local token via echo headers.
+              if (lk === 'authorization' || lk === 'x-api-key') continue;
+              outHeaders[k] = v;
+            }
+            // SSE / event-stream: never advertise a fixed length (would buffer).
+            if (streamed) {
+              delete outHeaders['content-length'];
+            }
+            res.writeHead(status, outHeaders);
+            // Pipe without buffering so SSE flushes promptly (end:true closes client).
+            upRes.pipe(res, { end: true });
             upRes.on('end', () => resolve());
             upRes.on('error', reject);
+            res.on('error', reject);
           },
         );
         upstream.on('error', (e) => {
+          recordHop({
+            method,
+            inboundPath,
+            upstreamPath,
+            upstreamStatus: 502,
+            streamed: false,
+          });
           if (!res.headersSent) {
             sendJson(res, 502, {
               error: {
@@ -388,6 +509,13 @@ export async function startOpenRouterRequestProxy(
         // Response already handled when possible.
       });
     } catch (err) {
+      recordHop({
+        method,
+        inboundPath,
+        upstreamPath,
+        upstreamStatus: 500,
+        streamed: false,
+      });
       if (!res.headersSent) {
         sendJson(res, 500, {
           error: {
@@ -410,14 +538,17 @@ export async function startOpenRouterRequestProxy(
     throw new RequestCounterError('proxy failed to bind a TCP port');
   }
 
+  const origin = `http://${host}:${addr.port}`;
   return {
-    url: `http://${host}:${addr.port}`,
+    url: origin,
+    anthropicBaseUrl: `${origin}/api`,
     host,
     port: addr.port,
     counterPath,
     maxRequests,
     localAuthToken,
     readCount: async () => (await readRequestCounter(counterPath)).count,
+    hops: () => hopLog.slice(),
     close: () =>
       new Promise((resolve, reject) => {
         server.close((err) => (err ? reject(err) : resolve()));

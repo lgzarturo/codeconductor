@@ -159,7 +159,9 @@ async function main(): Promise<void> {
       });
       process.exit(1);
     }
-    process.env.ANTHROPIC_BASE_URL = proxy.url;
+    // Mirror historical `https://openrouter.ai/api` so Claude's `/v1/messages`
+    // lands on OpenRouter `/api/v1/messages` (bare proxy.origin would miss `/api`).
+    process.env.ANTHROPIC_BASE_URL = proxy.anthropicBaseUrl;
     logEvent({
       event: 'request-proxy-started',
       maxRequests: MAX_REQUESTS,
@@ -168,6 +170,7 @@ async function main(): Promise<void> {
       counterPath,
       proxyHost: proxy.host,
       proxyPort: proxy.port,
+      anthropicBaseUrl: proxy.anthropicBaseUrl,
       taskIds: TASK_IDS,
       n: N,
       maxTurns: MAX_TURNS,
@@ -513,6 +516,8 @@ async function main(): Promise<void> {
         proxyCount,
         maxRequests: MAX_REQUESTS,
         streamBudgetRequests: budget.requests,
+        // Sanitized hops only (method/path/status) — no tokens or bodies.
+        hops: proxy.hops(),
       });
       await proxy.close().catch(() => undefined);
       proxy = null;

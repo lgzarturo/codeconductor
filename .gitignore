@@ -82,3 +82,4 @@ BACKLOG.md
 /openspec/
 !skills/openspec/
 .codeconductor/openspec-state.json
+bench-out/

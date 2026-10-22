@@ -20,6 +20,12 @@ import {
   ensureClaudeCiConfig,
   runClaudeSmoke,
 } from '../src/core/evaluation/bench/host-claude';
+import {
+  DEFAULT_OPENROUTER_REQUEST_CAP,
+  defaultRequestCounterPath,
+  startOpenRouterRequestProxy,
+  type OpenRouterRequestProxy,
+} from '../src/core/evaluation/bench/openrouter-request-proxy';
 import { fetchOpenRouterKeySnapshot } from '../src/core/telemetry/openrouter-spend-lock';
 
 const MODEL_ID =
@@ -30,9 +36,11 @@ const PROJECT_ROOT = resolve(process.env.BENCH_PROJECT_ROOT?.trim() || '.');
 const N = Number(process.env.BENCH_N ?? '3');
 const SEED = Number(process.env.BENCH_SEED ?? '42');
 const SMOKE_ONLY = process.env.BENCH_SMOKE_ONLY === '1';
-// Hard per-run caps (smoke + all cells). Claude is killed when either is hit.
+// Hard per-run caps (smoke + all cells). Proxy rejects request max+1; Claude is also killed on stream budget.
 const MAX_TOKENS = Number(process.env.BENCH_MAX_TOKENS ?? '2000000');
-const MAX_REQUESTS = Number(process.env.BENCH_MAX_REQUESTS ?? '150');
+const MAX_REQUESTS = Number(
+  process.env.BENCH_MAX_REQUESTS ?? String(DEFAULT_OPENROUTER_REQUEST_CAP),
+);
 
 function logEvent(payload: Record<string, unknown>): void {
   // Never include env values / secrets.
@@ -73,8 +81,6 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  process.env.ANTHROPIC_BASE_URL =
-    process.env.ANTHROPIC_BASE_URL || 'https://openrouter.ai/api';
   if (!process.env.ANTHROPIC_AUTH_TOKEN) {
     process.env.ANTHROPIC_AUTH_TOKEN = process.env.OPENROUTER_API_KEY;
   }
@@ -83,7 +89,46 @@ async function main(): Promise<void> {
   await ensureClaudeCiConfig();
   const budget = createBenchBudget(MAX_TOKENS, MAX_REQUESTS);
 
+  let proxy: OpenRouterRequestProxy | null = null;
   try {
+    // Fail-closed OpenRouter request proxy (counts every Claude Code hop,
+    // including small-fast). Point ANTHROPIC_BASE_URL at the proxy.
+    const counterPath =
+      process.env.BENCH_REQUEST_COUNTER_PATH?.trim() ||
+      defaultRequestCounterPath(`m5-${Date.now()}`);
+    try {
+      proxy = await startOpenRouterRequestProxy({
+        counterPath,
+        maxRequests: MAX_REQUESTS,
+      });
+    } catch (err) {
+      abortReason =
+        err instanceof Error
+          ? `request proxy failed to start (fail-closed): ${err.message}`
+          : 'request proxy failed to start (fail-closed)';
+      await writeAggregate({
+        schema: 'bench-baseline-cheap/v1',
+        cheap: true,
+        aborted: true,
+        abortReason,
+        usageBefore: null,
+        usageAfter: null,
+        completedCells: [],
+        pendingCells: [],
+        verdict: 'NO CONCLUYENTE',
+      });
+      process.exit(1);
+    }
+    process.env.ANTHROPIC_BASE_URL = proxy.url;
+    logEvent({
+      event: 'request-proxy-started',
+      maxRequests: MAX_REQUESTS,
+      // Never log secrets; counter path is under tmp, safe.
+      counterPath,
+      proxyHost: proxy.host,
+      proxyPort: proxy.port,
+    });
+
     const keyBefore = await fetchOpenRouterKeySnapshot();
     usageBefore = keyBefore?.usage ?? null;
 
@@ -343,6 +388,23 @@ async function main(): Promise<void> {
       verdict: 'NO CONCLUYENTE',
       verdictReasons: [abortReason],
     });
+  } finally {
+    if (proxy) {
+      let proxyCount: number | null = null;
+      try {
+        proxyCount = await proxy.readCount();
+      } catch {
+        proxyCount = null;
+      }
+      logEvent({
+        event: 'request-proxy-stopping',
+        proxyCount,
+        maxRequests: MAX_REQUESTS,
+        streamBudgetRequests: budget.requests,
+      });
+      await proxy.close().catch(() => undefined);
+      proxy = null;
+    }
   }
 
   if (exitCode !== 0) {

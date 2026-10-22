@@ -2,8 +2,11 @@
 
 > **Invalid — do not use as a reference.** This run executed the same prompt on
 > a bare fixture for both variants (treatment did not load the harness), with
-> no request/token cap. Treatment now installs the Claude preset and runs are
-> capped at 2M tokens / 150 requests. Regenerate via `workflow_dispatch`.
+> no request/token cap. Treatment now installs the Claude preset; OpenRouter
+> traffic is hard-capped at **100 requests** via a fail-closed local proxy
+> (plus stream-json metering / `--max-turns`). See `REQUEST_BUDGET.md` for the
+> Phase-1 estimate and proposed regen matrix. Do **not** regenerate until Arturo
+> approves Phase 2.
 
 - **Mode:** `cheap: true`, N=3, seed=42
 - **Model:** `nvidia/nemotron-3-super-120b-a12b:free` (list price 0 verified)

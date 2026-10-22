@@ -1,8 +1,9 @@
 # M5 cheap baseline — manual dispatch or push to bench/baseline-m5-run.
 # Never runs on pull_request. Key from secrets.OPENROUTER_API_KEY only.
-# Hard caps: BENCH_MAX_REQUESTS=100 accumulated (seed prior spend) + stream budget.
-# Matrix: 1 task × 2 arms × N=3 (see eval/baselines/m5-cheap/REQUEST_BUDGET.md).
-# Claude Code pinned to 2.1.197 (worked with this :free model on run 39203481151).
+# Hard caps: BENCH_MAX_REQUESTS=100 accumulated + 20 req/min rate limit +
+# $5 usage-Δ spend candado (Arturo 22 Oct). Matrix: 1 task × 2 × N=3.
+# Claude Code 2.1.197. Probe :free first; paid fallback openai/gpt-oss-20b
+# ($0.018/$0.09 per MTok) when free tier is exhausted.
 name: bench-baseline-m5
 
 on:
@@ -53,12 +54,13 @@ jobs:
           printf '%s\n' '{"hasTrustDialogAccepted":true,"hasCompletedProjectOnboarding":true}' > "$HOME/.claude/settings.json"
 
       # Smoke + matrix. Proxy seeds at BENCH_REQUESTS_ALREADY_USED (repo-accumulated
-      # cap 100). Claude gets a one-shot local token; OPENROUTER_API_KEY stays parent-only.
+      # cap 100). Rate limit 20/min. Spend candado $5 usage Δ. Key parent-only.
       - name: Run cheap baseline (1 task × 2 × N=3, cap 100 accum)
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           ANTHROPIC_API_KEY: ""
-          BENCH_MODEL_ID: nvidia/nemotron-3-super-120b-a12b:free
+          BENCH_MODEL_ID: cohere/north-mini-code:free
+          BENCH_FALLBACK_MODEL_ID: openai/gpt-oss-20b
           BENCH_N: "3"
           BENCH_SEED: "42"
           BENCH_TASK_IDS: fix-add-off-by-one
@@ -67,7 +69,10 @@ jobs:
           BENCH_PROJECT_ROOT: .
           BENCH_MAX_TOKENS: "2000000"
           BENCH_MAX_REQUESTS: "100"
-          # Accumulated spend across aborted smokes (… + 39778489974).
+          BENCH_MAX_REQUESTS_PER_MINUTE: "20"
+          BENCH_MAX_SPEND_USD: "5"
+          BENCH_MAX_PROBES: "3"
+          # Accumulated spend across aborted smokes (… + 39778489974) = 10.
           BENCH_REQUESTS_ALREADY_USED: "10"
         run: bun run scripts/bench-baseline-cheap.ts
 

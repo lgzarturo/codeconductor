@@ -19,8 +19,10 @@ import {
 import { buildOtelEnv, FORBIDDEN_OTEL_LOG_VARS } from '../../src/core/telemetry/otel-env';
 import {
   assertOpenRouterUsageUnchanged,
+  assertOpenRouterUsageWithinCap,
   assertOpenRouterZeroSpend,
   DEFAULT_OPENROUTER_LIMIT_CAP_USD,
+  DEFAULT_OPENROUTER_SPEND_CAP_USD,
   enforceOpenRouterUsageUnchanged,
   enforceOpenRouterZeroSpend,
   isOpenRouterFreeModel,
@@ -153,107 +155,74 @@ describe('M3 otel-env privacy', () => {
   });
 });
 
-describe('M3 OpenRouter zero-spend lock', () => {
+describe('M3 OpenRouter spend lock ($5/repo usage Δ)', () => {
   const keyAtCap = {
-    limit: DEFAULT_OPENROUTER_LIMIT_CAP_USD,
-    limitRemaining: 4.2,
+    limit: 10,
+    limitRemaining: 9.2,
     usage: 0.8,
     isFreeTier: false,
-    label: 'arturo-$5',
+    label: 'arturo-$10-credit',
   };
 
-  test('rejects non-:free models', async () => {
+  test('isOpenRouterFreeModel still requires exact lowercase :free', () => {
     expect(isOpenRouterFreeModel('anthropic/claude-sonnet-5-5')).toBe(false);
     expect(isOpenRouterFreeModel('anthropic/claude-sonnet-5-5:free')).toBe(true);
     expect(isOpenRouterFreeModel('meta/llama-free')).toBe(false);
-    const locked = await assertOpenRouterZeroSpend({
-      modelId: 'openai/gpt-5',
-      skipKeyCheck: true,
-    });
-    expect(locked.ok).toBe(false);
-    expect(locked.reason).toContain(':free');
-  });
-
-  test('requires exact lowercase :free suffix (rejects :FREE / :Free)', async () => {
     expect(isOpenRouterFreeModel('anthropic/claude-sonnet-5-5:FREE')).toBe(false);
     expect(isOpenRouterFreeModel('anthropic/claude-sonnet-5-5:Free')).toBe(false);
-    expect(isOpenRouterFreeModel('anthropic/claude-sonnet-5-5:FrEe')).toBe(false);
-    const upper = await assertOpenRouterZeroSpend({
-      modelId: 'meta/llama:FREE',
-      skipKeyCheck: true,
-    });
-    expect(upper.ok).toBe(false);
-    expect(upper.reason).toContain(':free');
   });
 
-  test('allows :free + finite limit ≤ $5 cap (Arturo key)', async () => {
+  test('allows paid models under the $5 spend cap (Arturo 22 Oct)', async () => {
+    expect(DEFAULT_OPENROUTER_SPEND_CAP_USD).toBe(5);
     expect(DEFAULT_OPENROUTER_LIMIT_CAP_USD).toBe(5);
-    expect(keyLimitWithinCap(keyAtCap)).toBe(true);
+    const locked = await assertOpenRouterZeroSpend({
+      modelId: 'openai/gpt-oss-20b',
+      skipKeyCheck: true,
+    });
+    expect(locked.ok).toBe(true);
+    expect(locked.maxSpendUsd).toBe(5);
+  });
+
+  test('allows :free or paid + finite usage baseline (key limit may be $10)', async () => {
+    expect(keyLimitWithinCap(keyAtCap)).toBe(false); // limit 10 > historical $5 label
     const ok = await assertOpenRouterZeroSpend({
-      modelId: 'meta/llama-3.3-70b-instruct:free',
+      modelId: 'openai/gpt-oss-20b',
       key: keyAtCap,
     });
     expect(ok.ok).toBe(true);
     expect(ok.usageBefore).toBe(0.8);
     expect(ok.checkedKey).toBe(true);
-  });
 
-  test('aborts when limit exceeds cap', async () => {
-    expect(
-      keyLimitWithinCap({
-        limit: 5.01,
-        limitRemaining: 5,
-        usage: 0,
-        isFreeTier: true,
-        label: 'over',
-      }),
-    ).toBe(false);
-    const locked = await assertOpenRouterZeroSpend({
-      modelId: 'meta/llama:free',
-      key: {
-        limit: 10,
-        limitRemaining: 10,
-        usage: 0,
-        isFreeTier: true,
-        label: 'too-high',
-      },
+    const freeOk = await assertOpenRouterZeroSpend({
+      modelId: 'meta/llama-3.3-70b-instruct:free',
+      key: keyAtCap,
     });
-    expect(locked.ok).toBe(false);
-    expect(locked.reason).toMatch(/exceeds cap|5/);
+    expect(freeOk.ok).toBe(true);
   });
 
-  test('aborts when limit is null or unlimited', async () => {
-    expect(
-      keyLimitWithinCap({
-        limit: null,
-        limitRemaining: null,
-        usage: 0,
-        isFreeTier: true,
-        label: 'unlimited',
-      }),
-    ).toBe(false);
+  test('allows key limit null / above $5 (spend cap is usage Δ, not key.limit)', async () => {
     const locked = await assertOpenRouterZeroSpend({
-      modelId: 'meta/llama:free',
+      modelId: 'openai/gpt-oss-20b',
       key: {
         limit: null,
         limitRemaining: null,
-        usage: 0,
-        isFreeTier: true,
-        label: 'unlimited',
+        usage: 1.2,
+        isFreeTier: false,
+        label: 'unlimited-ok',
       },
     });
-    expect(locked.ok).toBe(false);
-    expect(locked.reason).toMatch(/null|unlimited/i);
+    expect(locked.ok).toBe(true);
+    expect(locked.usageBefore).toBe(1.2);
   });
 
   test('aborts when usage baseline is not a finite number', async () => {
     const locked = await assertOpenRouterZeroSpend({
-      modelId: 'meta/llama:free',
+      modelId: 'openai/gpt-oss-20b',
       key: {
-        limit: 5,
-        limitRemaining: 5,
+        limit: 10,
+        limitRemaining: 10,
         usage: null,
-        isFreeTier: true,
+        isFreeTier: false,
         label: 'no-usage',
       },
     });
@@ -261,42 +230,79 @@ describe('M3 OpenRouter zero-spend lock', () => {
     expect(locked.reason).toMatch(/usage/i);
   });
 
-  test('post-run: usage Δ > 0 aborts and marks run invalid', async () => {
-    const delta = await assertOpenRouterUsageUnchanged({
+  test('post-run: usage Δ above $5 cap aborts and marks run invalid', async () => {
+    const delta = await assertOpenRouterUsageWithinCap({
       usageBefore: 1.0,
+      maxSpendUsd: 5,
       keyAfter: {
-        limit: 5,
+        limit: 10,
         limitRemaining: 3.5,
-        usage: 1.25,
+        usage: 7.25,
         isFreeTier: false,
         label: 'spent',
       },
     });
     expect(delta.ok).toBe(false);
     expect(delta.runValid).toBe(false);
-    expect(delta.deltaUsd).toBeCloseTo(0.25);
-    expect(delta.reason).toMatch(/usage rose|invalid|\$0/i);
+    expect(delta.deltaUsd).toBeCloseTo(6.25);
+    expect(delta.reason).toMatch(/cap|invalid|5/i);
 
     await expect(
       enforceOpenRouterUsageUnchanged({
         usageBefore: 2,
+        maxSpendUsd: 5,
         keyAfter: {
-          limit: 5,
+          limit: 10,
           limitRemaining: 2,
-          usage: 2.01,
+          usage: 8.01,
           isFreeTier: false,
           label: 'spent',
         },
       }),
-    ).rejects.toThrow(/usage rose|invalid/i);
+    ).rejects.toThrow(/cap|approaches|invalid/i);
+  });
+
+  test('post-run: usage Δ approaching cap (90%) aborts', async () => {
+    const delta = await assertOpenRouterUsageWithinCap({
+      usageBefore: 0,
+      maxSpendUsd: 5,
+      keyAfter: {
+        limit: 10,
+        limitRemaining: 5.5,
+        usage: 4.5,
+        isFreeTier: false,
+        label: 'near-cap',
+      },
+    });
+    expect(delta.ok).toBe(false);
+    expect(delta.runValid).toBe(false);
+    expect(delta.deltaUsd).toBeCloseTo(4.5);
+    expect(delta.reason).toMatch(/approaches/i);
+  });
+
+  test('post-run: small paid Δ under approach threshold keeps run valid', async () => {
+    const delta = await assertOpenRouterUsageUnchanged({
+      usageBefore: 1.0,
+      maxSpendUsd: 5,
+      keyAfter: {
+        limit: 10,
+        limitRemaining: 8.75,
+        usage: 1.25,
+        isFreeTier: false,
+        label: 'cheap-paid',
+      },
+    });
+    expect(delta.ok).toBe(true);
+    expect(delta.runValid).toBe(true);
+    expect(delta.deltaUsd).toBeCloseTo(0.25);
   });
 
   test('post-run: usage Δ = 0 keeps run valid', async () => {
     const delta = await assertOpenRouterUsageUnchanged({
       usageBefore: 1.0,
       keyAfter: {
-        limit: 5,
-        limitRemaining: 4,
+        limit: 10,
+        limitRemaining: 9,
         usage: 1.0,
         isFreeTier: false,
         label: 'flat',

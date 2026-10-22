@@ -387,7 +387,7 @@ describe('M5 runner (dry / fake provider)', () => {
     expect(result.report.cells).toHaveLength(5 * 2 * 3);
   });
 
-  test('cheap aborts when model is not :free', async () => {
+  test('cheap allows paid models under the $5 spend cap (Arturo 22 Oct)', async () => {
     const result = await runBench({
       projectRoot: REPO_ROOT,
       suitePath: SUITE_PATH,
@@ -395,15 +395,14 @@ describe('M5 runner (dry / fake provider)', () => {
       cheap: true,
       keyBefore: FREE_KEY,
       keyAfter: FREE_KEY,
-      modelId: 'anthropic/claude-sonnet-4',
+      modelId: 'openai/gpt-oss-20b',
       writeReport: false,
     });
-    expect(result.aborted).toBe(true);
-    expect(result.runValid).toBe(false);
-    expect(result.abortReason).toMatch(/:free/i);
+    expect(result.aborted).toBe(false);
+    expect(result.runValid).toBe(true);
   });
 
-  test('cheap aborts when usage rises between tasks', async () => {
+  test('cheap aborts when usage Δ approaches the $5 repo spend cap', async () => {
     let calls = 0;
     const result = await runBench({
       projectRoot: REPO_ROOT,
@@ -413,15 +412,15 @@ describe('M5 runner (dry / fake provider)', () => {
       keyBefore: FREE_KEY,
       fetchKey: async () => {
         calls += 1;
-        // First resolve for pre-run uses keyBefore; between-task uses fetchKey.
-        return { ...FREE_KEY, usage: calls === 1 ? 0 : 0.01 };
+        // Between-task check: jump usage by $4.50 (approach threshold).
+        return { ...FREE_KEY, usage: calls === 1 ? 0 : 4.5 };
       },
-      modelId: 'nvidia/nemotron-3-super-120b-a12b:free',
+      modelId: 'openai/gpt-oss-20b',
       writeReport: false,
     });
     expect(result.aborted).toBe(true);
     expect(result.runValid).toBe(false);
-    expect(result.abortReason).toMatch(/usage|Δ|delta|spend/i);
+    expect(result.abortReason).toMatch(/usage|Δ|delta|spend|approaches|cap/i);
   });
 
   test('cellsPath replays a fake provider schedule', async () => {
@@ -501,13 +500,14 @@ describe('M5 free-model pricing gate', () => {
     expect(JSON.stringify(pub)).not.toContain('/api');
   });
 
-  test('rejects non-:free and non-zero pricing', async () => {
-    const paid = await assertOpenRouterModelFreeZeroPrice('anthropic/claude-sonnet-4', {
+  test('accepts :free at zero price and paid with tools + finite price', async () => {
+    const missing = await assertOpenRouterModelFreeZeroPrice('anthropic/claude-sonnet-4', {
       apiKey: 'test',
       fetchImpl: async () =>
         new Response(JSON.stringify({ data: [] }), { status: 200 }),
     });
-    expect(paid.ok).toBe(false);
+    expect(missing.ok).toBe(false);
+    expect(missing.reason).toMatch(/not found/i);
 
     const free = await assertOpenRouterModelFreeZeroPrice(
       'nvidia/nemotron-3-super-120b-a12b:free',
@@ -520,6 +520,7 @@ describe('M5 free-model pricing gate', () => {
                 {
                   id: 'nvidia/nemotron-3-super-120b-a12b:free',
                   pricing: { prompt: '0', completion: '0' },
+                  supported_parameters: ['tools', 'tool_choice'],
                 },
               ],
             }),
@@ -529,6 +530,27 @@ describe('M5 free-model pricing gate', () => {
     );
     expect(free.ok).toBe(true);
     expect(free.pricing).toEqual({ prompt: 0, completion: 0 });
+
+    const paid = await assertOpenRouterModelFreeZeroPrice('openai/gpt-oss-20b', {
+      apiKey: 'test',
+      fetchImpl: async () =>
+        new Response(
+          JSON.stringify({
+            data: [
+              {
+                id: 'openai/gpt-oss-20b',
+                pricing: { prompt: '0.000000018', completion: '0.00000009' },
+                supported_parameters: ['max_tokens', 'tools', 'tool_choice'],
+              },
+            ],
+          }),
+          { status: 200 },
+        ),
+    });
+    expect(paid.ok).toBe(true);
+    expect(paid.isFree).toBe(false);
+    expect(paid.supportsTools).toBe(true);
+    expect(paid.pricing?.prompt).toBeCloseTo(0.000000018);
   });
 });
 

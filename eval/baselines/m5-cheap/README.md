@@ -1,28 +1,32 @@
-# M5 cheap baseline (OpenRouter :free)
+# M5 cheap baseline (OpenRouter)
 
-> **Invalid — do not use as a reference.** Proxied regen attempts under the
-> **100-request repo-accumulated** cap keep aborting at smoke. Claude Code
-> pinned to **2.1.197**. Matrix remains **1×2×N=3**. See `REQUEST_BUDGET.md`.
+> Proxied regen under the **100-request repo-accumulated** cap + **20 req/min**
+> fail-closed rate limit. Claude Code pinned to **2.1.197**. Matrix:
+> **1×2×N=3** (`fix-add-off-by-one`, max-turns 3).
 
-## Root cause (proxy path) — fixed in `d8fae60`
+## Model (Arturo 22 Oct)
 
-Working historical config used `ANTHROPIC_BASE_URL=https://openrouter.ai/api`
-so Claude’s `/v1/messages` hit OpenRouter `/api/v1/messages`. The proxy set
-BASE_URL to the bare origin (`http://host:port`), forwarding to
-`openrouter.ai/v1/messages` (**missing `/api`**). Fix: `proxy.anthropicBaseUrl`
-(`…/api`), rewrite bare `/v1`→`/api/v1`, SSE pipe, offline smoke-replay test.
+- **Primary probe:** `cohere/north-mini-code:free` (tools). May 404 if the
+  OpenRouter free tier is exhausted (earlier CodeConductor builds burned
+  &gt;1000 free requests).
+- **Paid economic fallback (pinned when free fails):** `openai/gpt-oss-20b`
+  - List price (OpenRouter `/api/v1/models`): **$0.018 / MTok prompt**,
+    **$0.09 / MTok completion**; supports `tools` / `tool_choice`.
+  - Chosen as a cheap paid + tools route after free-tier exhaustion / NVIDIA
+    `:free` provider 404 on `nvidia/nemotron-3-super-120b-a12b:free`.
+- Probe: ≤1 hop per candidate through the fail-closed proxy (counts toward the
+  cap). Max **3 probes** total; no substitute loop beyond that.
 
-## Latest attempt — [39778489974](https://github.com/lgzarturo/codeconductor/actions/runs/39778489974)
+## Caps / hygiene
 
-- **Head:** `d8fae60` · Claude **2.1.197** · `anthropicBaseUrl=http://127.0.0.1:…/api` (confirmed in log)
-- **Proxy:** **10 / 100** (seed 8 + ≈2 smoke hops)
-- **Abort:** smoke still `is_error=true` — **no further relaunch**
-- **Usage:** $0 → $0 · cells 0/6 · **NO CONCLUYENTE**
+- OpenRouter requests: **accumulated 100** (`BENCH_REQUESTS_ALREADY_USED` seeds
+  prior spend; currently **10** before this regen → **90** left).
+- Proxy rate limit: **20 requests / minute** (fail-closed; rejects do not
+  consume the durable counter).
+- Spend candado: **max $5 usage Δ per repo** (not `:free`-only). Verified with
+  `/api/v1/key` usage before and after; abort when Δ approaches the cap (90%).
+  Account has ~$10 credit; key stays on the proxy outbound hop only.
+- Diagnostics: sanitized `resultTruncated` on `is_error`; hop log =
+  `{method, upstreamStatus}` only.
 
-## Prior attempts
-
-| Run | Claude | Proxy | Notes |
-|---|---|---:|---|
-| [39777070216](https://github.com/lgzarturo/codeconductor/actions/runs/39777070216) | 2.1.308 | 4 | `unrecognized_model` |
-| [39777659383](https://github.com/lgzarturo/codeconductor/actions/runs/39777659383) | 2.1.197 | 8 | `is_error` (path bug still present) |
-| [39778489974](https://github.com/lgzarturo/codeconductor/actions/runs/39778489974) | 2.1.197 | **10** | `/api` fixed; smoke still `is_error` |
+See `REQUEST_BUDGET.md` for matrix math and path-fix history.

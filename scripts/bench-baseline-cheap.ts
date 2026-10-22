@@ -27,6 +27,7 @@ import {
   runClaudeSmoke,
 } from '../src/core/evaluation/bench/host-claude';
 import {
+  DEFAULT_OPENROUTER_RATE_LIMIT_PER_MIN,
   DEFAULT_OPENROUTER_REQUEST_CAP,
   defaultRequestCounterPath,
   mintProxyLocalToken,
@@ -34,11 +35,25 @@ import {
   startOpenRouterRequestProxy,
   type OpenRouterRequestProxy,
 } from '../src/core/evaluation/bench/openrouter-request-proxy';
-import { fetchOpenRouterKeySnapshot } from '../src/core/telemetry/openrouter-spend-lock';
+import {
+  DEFAULT_OPENROUTER_SPEND_CAP_USD,
+  fetchOpenRouterKeySnapshot,
+} from '../src/core/telemetry/openrouter-spend-lock';
+import { probeModelViaProxy } from '../src/core/evaluation/bench/model-probe';
 
-const MODEL_ID =
+/** Primary: try `:free` first; paid economic fallback if free fails (Arturo 22 Oct). */
+const PRIMARY_MODEL_ID =
   process.env.BENCH_MODEL_ID?.trim() ||
-  'nvidia/nemotron-3-super-120b-a12b:free';
+  'cohere/north-mini-code:free';
+/** Cheap paid + tools: $0.018/MTok prompt, $0.09/MTok completion (OpenRouter list). */
+const FALLBACK_MODEL_ID =
+  process.env.BENCH_FALLBACK_MODEL_ID?.trim() ||
+  'openai/gpt-oss-20b';
+const FALLBACK_LIST_PRICE = {
+  promptPerMTokUsd: 0.018,
+  completionPerMTokUsd: 0.09,
+  source: 'openrouter.ai/api/v1/models',
+} as const;
 const OUT_DIR = resolve(process.env.BENCH_OUT_DIR?.trim() || 'bench-out');
 const PROJECT_ROOT = resolve(process.env.BENCH_PROJECT_ROOT?.trim() || '.');
 const N = Number(process.env.BENCH_N ?? '3');
@@ -55,8 +70,17 @@ const MAX_TOKENS = Number(process.env.BENCH_MAX_TOKENS ?? '2000000');
 const MAX_REQUESTS = Number(
   process.env.BENCH_MAX_REQUESTS ?? String(DEFAULT_OPENROUTER_REQUEST_CAP),
 );
+const MAX_REQUESTS_PER_MINUTE = Number(
+  process.env.BENCH_MAX_REQUESTS_PER_MINUTE ??
+    String(DEFAULT_OPENROUTER_RATE_LIMIT_PER_MIN),
+);
+const MAX_SPEND_USD = Number(
+  process.env.BENCH_MAX_SPEND_USD ?? String(DEFAULT_OPENROUTER_SPEND_CAP_USD),
+);
 const REQUESTS_ALREADY_USED = Number(process.env.BENCH_REQUESTS_ALREADY_USED ?? '0');
 const STREAM_MAX_REQUESTS = Math.max(0, MAX_REQUESTS - REQUESTS_ALREADY_USED);
+/** Max model probes this process (Arturo: ≤3 total across attempts). */
+const MAX_PROBES = Number(process.env.BENCH_MAX_PROBES ?? '3');
 
 function logEvent(payload: Record<string, unknown>): void {
   // Never include env values / secrets.
@@ -78,6 +102,13 @@ async function main(): Promise<void> {
   let exitCode = 0;
   let abortReason: string | null = null;
   let proxyCount: number | null = null;
+  let MODEL_ID = PRIMARY_MODEL_ID;
+  let probesUsed = 0;
+  let listPrice: {
+    promptPerMTokUsd: number | null;
+    completionPerMTokUsd: number | null;
+    source: string;
+  } | null = null;
 
   const upstreamApiKey = process.env.OPENROUTER_API_KEY?.trim();
   if (!upstreamApiKey) {
@@ -138,6 +169,7 @@ async function main(): Promise<void> {
       proxy = await startOpenRouterRequestProxy({
         counterPath,
         maxRequests: MAX_REQUESTS,
+        maxRequestsPerMinute: MAX_REQUESTS_PER_MINUTE,
         initialCount: REQUESTS_ALREADY_USED,
         upstreamApiKey,
         localAuthToken,
@@ -166,6 +198,8 @@ async function main(): Promise<void> {
     logEvent({
       event: 'request-proxy-started',
       maxRequests: MAX_REQUESTS,
+      maxRequestsPerMinute: MAX_REQUESTS_PER_MINUTE,
+      maxSpendUsd: MAX_SPEND_USD,
       requestsAlreadyUsed: REQUESTS_ALREADY_USED,
       streamMaxRequests: STREAM_MAX_REQUESTS,
       counterPath,
@@ -175,35 +209,162 @@ async function main(): Promise<void> {
       taskIds: TASK_IDS,
       n: N,
       maxTurns: MAX_TURNS,
+      primaryModelId: PRIMARY_MODEL_ID,
+      fallbackModelId: FALLBACK_MODEL_ID,
     });
 
     const keyBefore = await fetchOpenRouterKeySnapshot();
     usageBefore = keyBefore?.usage ?? null;
 
-    const pricing = await assertOpenRouterModelFreeZeroPrice(MODEL_ID);
-    if (!pricing.ok) {
-      abortReason = pricing.reason ?? 'free-model pricing check failed';
+    const candidates = [PRIMARY_MODEL_ID];
+    if (
+      FALLBACK_MODEL_ID &&
+      FALLBACK_MODEL_ID !== PRIMARY_MODEL_ID &&
+      candidates.length < MAX_PROBES
+    ) {
+      candidates.push(FALLBACK_MODEL_ID);
+    }
+
+    let probeOk = false;
+    let lastProbe: Awaited<ReturnType<typeof probeModelViaProxy>> | null = null;
+    let pricing: Awaited<ReturnType<typeof assertOpenRouterModelFreeZeroPrice>> | null =
+      null;
+    let probeCount: number | null = null;
+
+    for (const candidate of candidates) {
+      if (probesUsed >= MAX_PROBES) break;
+      MODEL_ID = candidate;
+      pricing = await assertOpenRouterModelFreeZeroPrice(MODEL_ID);
+      if (!pricing.ok) {
+        logEvent({
+          event: 'bench-model-pricing-reject',
+          modelId: MODEL_ID,
+          reason: pricing.reason,
+        });
+        lastProbe = {
+          ok: false,
+          httpStatus: null,
+          errorTruncated: null,
+          reason: pricing.reason ?? 'pricing check failed',
+        };
+        continue;
+      }
+      if (pricing.isFree) {
+        listPrice = {
+          promptPerMTokUsd: 0,
+          completionPerMTokUsd: 0,
+          source: 'openrouter.ai/api/v1/models (:free)',
+        };
+      } else if (MODEL_ID === FALLBACK_MODEL_ID) {
+        listPrice = { ...FALLBACK_LIST_PRICE };
+      } else {
+        listPrice = {
+          promptPerMTokUsd:
+            pricing.pricing?.prompt != null
+              ? pricing.pricing.prompt * 1e6
+              : null,
+          completionPerMTokUsd:
+            pricing.pricing?.completion != null
+              ? pricing.pricing.completion * 1e6
+              : null,
+          source: 'openrouter.ai/api/v1/models',
+        };
+      }
+
+      probesUsed += 1;
+      logEvent({
+        event: 'bench-model-probe-start',
+        modelId: MODEL_ID,
+        probeIndex: probesUsed,
+        maxProbes: MAX_PROBES,
+        listPrice,
+      });
+      lastProbe = await probeModelViaProxy({
+        modelId: MODEL_ID,
+        anthropicBaseUrl: proxy.anthropicBaseUrl,
+        localAuthToken,
+      });
+      try {
+        probeCount = await proxy.readCount();
+      } catch {
+        probeCount = null;
+      }
+      logEvent({
+        event: 'bench-model-probe-done',
+        modelId: MODEL_ID,
+        probeIndex: probesUsed,
+        ok: lastProbe.ok,
+        httpStatus: lastProbe.httpStatus,
+        reason: lastProbe.reason,
+        errorTruncated: lastProbe.errorTruncated,
+        proxyRequestCount: probeCount,
+        hops: publicProxyHops(proxy.hops()),
+      });
+      if (lastProbe.ok) {
+        probeOk = true;
+        break;
+      }
+      // Free failed → try next candidate (paid). Do not loop beyond MAX_PROBES.
+      logEvent({
+        event: 'bench-model-probe-fallback',
+        failedModelId: MODEL_ID,
+        next:
+          candidates[candidates.indexOf(candidate) + 1] ?? null,
+        probesUsed,
+      });
+    }
+
+    if (!probeOk || !lastProbe) {
+      abortReason = `model probe failed after ${probesUsed} attempt(s): ${lastProbe?.reason ?? 'no candidate'}${lastProbe?.errorTruncated ? ` — ${lastProbe.errorTruncated}` : ''}`;
       exitCode = 1;
+      try {
+        const keyAfter = await fetchOpenRouterKeySnapshot();
+        usageAfter = keyAfter?.usage ?? null;
+      } catch {
+        usageAfter = null;
+      }
       await writeAggregate({
         schema: 'bench-baseline-cheap/v1',
         cheap: true,
         modelId: MODEL_ID,
+        listPrice,
+        probesUsed,
+        maxSpendUsd: MAX_SPEND_USD,
         aborted: true,
         abortReason,
         usageBefore,
-        usageAfter: null,
+        usageAfter,
+        usageDeltaUsd:
+          usageBefore != null && usageAfter != null
+            ? usageAfter - usageBefore
+            : null,
+        proxyRequestCount: probeCount,
+        requestsAlreadyUsed: REQUESTS_ALREADY_USED,
+        requestCap: MAX_REQUESTS,
+        maxRequestsPerMinute: MAX_REQUESTS_PER_MINUTE,
+        hops: publicProxyHops(proxy.hops()),
+        probe: lastProbe
+          ? {
+              ok: false,
+              httpStatus: lastProbe.httpStatus,
+              reason: lastProbe.reason,
+              errorTruncated: lastProbe.errorTruncated,
+            }
+          : null,
+        smoke: null,
         completedCells: [],
         pendingCells: [],
-        smoke: null,
         verdict: 'NO CONCLUYENTE',
+        verdictReasons: [abortReason],
       });
-      process.exit(1);
-    }
-
+      // Fall through to finally (do not process.exit here).
+    } else {
     logEvent({
       event: 'bench-smoke-start',
       modelId: MODEL_ID,
+      listPrice,
       usageBefore,
+      probesUsed,
     });
 
     const smoke = await runClaudeSmoke({
@@ -269,10 +430,18 @@ async function main(): Promise<void> {
         cheap: true,
         n: N,
         modelId: MODEL_ID,
-        pricingVerifiedZero: true,
+        listPrice,
+        probesUsed,
+        pricingVerified: pricing?.ok === true,
+        maxSpendUsd: MAX_SPEND_USD,
+        maxRequestsPerMinute: MAX_REQUESTS_PER_MINUTE,
         generatedAt: new Date().toISOString(),
         usageBefore,
         usageAfter,
+        usageDeltaUsd:
+          usageBefore != null && usageAfter != null
+            ? usageAfter - usageBefore
+            : null,
         proxyRequestCount: proxyCount,
         requestsAlreadyUsed: REQUESTS_ALREADY_USED,
         requestCap: MAX_REQUESTS,
@@ -341,8 +510,11 @@ async function main(): Promise<void> {
       taskIds: TASK_IDS,
       maxTurns: MAX_TURNS,
       modelId: MODEL_ID,
-      pricing: pricing.pricing,
+      listPrice,
+      pricing: pricing?.pricing ?? null,
       usageBefore,
+      maxSpendUsd: MAX_SPEND_USD,
+      probesUsed,
     });
 
     const result = await runBench({
@@ -360,6 +532,7 @@ async function main(): Promise<void> {
       budget,
       taskIds: TASK_IDS,
       maxTurns: MAX_TURNS,
+      maxSpendUsd: MAX_SPEND_USD,
     });
 
     usageAfter = result.usageAfter;
@@ -378,6 +551,11 @@ async function main(): Promise<void> {
       proxyCount = null;
     }
 
+    const usageBeforeFinal = result.usageBefore ?? usageBefore;
+    const usageDeltaUsd =
+      usageBeforeFinal != null && usageAfter != null
+        ? usageAfter - usageBeforeFinal
+        : null;
     const aggregate = {
       schema: 'bench-baseline-cheap/v1',
       cheap: true,
@@ -386,11 +564,18 @@ async function main(): Promise<void> {
       taskIds: TASK_IDS,
       maxTurns: MAX_TURNS,
       modelId: MODEL_ID,
-      pricingVerifiedZero: true,
+      listPrice,
+      probesUsed,
+      pricingVerified: pricing?.ok === true,
+      isFreeModel: pricing?.isFree === true,
+      supportsTools: pricing?.supportsTools === true,
+      maxSpendUsd: MAX_SPEND_USD,
+      maxRequestsPerMinute: MAX_REQUESTS_PER_MINUTE,
       generatedAt: new Date().toISOString(),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-      usageBefore: result.usageBefore ?? usageBefore,
+      usageBefore: usageBeforeFinal,
       usageAfter,
+      usageDeltaUsd,
       proxyRequestCount: proxyCount,
       requestsAlreadyUsed: REQUESTS_ALREADY_USED,
       requestCap: MAX_REQUESTS,
@@ -481,6 +666,7 @@ async function main(): Promise<void> {
       abortReason = result.abortReason;
     }
     } // end else (full bench after successful smoke)
+    } // end else (probe ok → smoke/matrix)
   } catch (err) {
     exitCode = 1;
     abortReason = err instanceof Error ? err.message : String(err);

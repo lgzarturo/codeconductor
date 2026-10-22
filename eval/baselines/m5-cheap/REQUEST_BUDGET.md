@@ -6,6 +6,9 @@ Hard cap for **this repo**: **100** OpenRouter requests (fail-closed local proxy
 39777659383 + 39778489974) → **90 left**. Combined with microsdd the org budget
 is 200; do not cross-spend.
 
+Additional proxy guard (Arturo 22 Oct): **20 requests / minute** sliding window,
+fail-closed. Rate-limit rejects do **not** consume the durable 100 counter.
+
 Claude Code is **pinned to 2.1.197** in `bench-baseline.yml` (fixture #18 /
 run 39203481151). Do not use `latest` — 2.1.308 returned `unrecognized_model`.
 
@@ -22,8 +25,17 @@ offline smoke-replay test.
 
 Relaunch [39778489974](https://github.com/lgzarturo/codeconductor/actions/runs/39778489974)
 logged `anthropicBaseUrl=http://127.0.0.1:…/api` but smoke still
-`is_error=true`. **Stopped** (no further relaunch). Remaining failure mode
-needs hop HTTP statuses (now recorded before exit).
+`is_error=true`. Confirmed elsewhere as **NVIDIA provider 404** on
+`nvidia/nemotron-3-super-120b-a12b:free` (not a remaining proxy bug). Free-tier
+exhaustion is also plausible (earlier builds &gt;1000 free requests).
+
+**Model switch (Arturo 22 Oct):** probe `cohere/north-mini-code:free` first; on
+failure use paid economic `openai/gpt-oss-20b` (**$0.018 / MTok prompt**,
+**$0.09 / MTok completion**, tools). Max 3 probes total.
+
+**Spend candado:** max **$5 usage Δ per repo** (key usage before/after). No
+longer `:free`-only / key-limit ≤ $5 (account has ~$10 credit). Abort when Δ
+approaches the cap.
 
 Auth: Claude presents a one-shot `cc-proxy-local-*` token
 (`ANTHROPIC_AUTH_TOKEN`). The proxy never forwards that token upstream; it
@@ -54,7 +66,7 @@ Without stream/proxy counters in 39203481151, infer from tokens + agentic shape:
 
 - Uncapped `claude -p` cell: **≈ 8–20 OpenRouter HTTP requests** (main turns +
   tool loops + `ANTHROPIC_SMALL_FAST_MODEL` / haiku-style side calls).
-- With `--max-turns 3`–`5` and all aliases forced to `:free`: **≈ 5–12 requests / cell**.
+- With `--max-turns 3`–`5` and all aliases forced to one model: **≈ 5–12 requests / cell**.
 - Smoke `di hola` (1 turn): **≈ 1–3 requests**.
 
 Use **10 requests / cell** as the planning figure for a capped regen
@@ -88,6 +100,10 @@ BENCH_N=3
 BENCH_TASK_IDS=fix-add-off-by-one
 BENCH_MAX_TURNS=3
 BENCH_MAX_REQUESTS=100
+BENCH_MAX_REQUESTS_PER_MINUTE=20
+BENCH_MAX_SPEND_USD=5
+BENCH_MODEL_ID=cohere/north-mini-code:free
+BENCH_FALLBACK_MODEL_ID=openai/gpt-oss-20b
 ```
 
 The frozen aggregates under this directory remain **Invalid** until a proxied,

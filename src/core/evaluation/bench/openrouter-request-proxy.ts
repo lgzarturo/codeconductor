@@ -35,6 +35,9 @@ import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 export const DEFAULT_OPENROUTER_REQUEST_CAP = 100;
+/** Fail-closed sliding-window rate limit (Arturo 22 Oct): 20 requests / minute. */
+export const DEFAULT_OPENROUTER_RATE_LIMIT_PER_MIN = 20;
+export const OPENROUTER_RATE_LIMIT_WINDOW_MS = 60_000;
 export const OPENROUTER_UPSTREAM_HOST = 'openrouter.ai';
 /** Prefix for one-shot local tokens — never a real OpenRouter key. */
 export const PROXY_LOCAL_TOKEN_PREFIX = 'cc-proxy-local-';
@@ -55,6 +58,12 @@ export interface OpenRouterRequestProxyOptions {
   localAuthToken: string;
   /** Hard cap (inclusive). Request max+1 is rejected. Default 100. */
   maxRequests?: number;
+  /**
+   * Max forwarded requests per rolling 60s window (fail-closed).
+   * Default {@link DEFAULT_OPENROUTER_RATE_LIMIT_PER_MIN}. Rate-limited
+   * rejects do **not** consume the durable request counter.
+   */
+  maxRequestsPerMinute?: number;
   /**
    * Seed the durable counter when the file does not yet exist (repo-accumulated
    * budget across Actions runs). Must be 0 ≤ initialCount ≤ maxRequests.
@@ -115,6 +124,7 @@ export interface OpenRouterRequestProxy {
   port: number;
   counterPath: string;
   maxRequests: number;
+  maxRequestsPerMinute: number;
   localAuthToken: string;
   /** Current durable count (re-reads file). */
   readCount: () => Promise<number>;
@@ -138,6 +148,62 @@ export class RequestBudgetExhaustedError extends Error {
     this.name = 'RequestBudgetExhaustedError';
     this.count = count;
     this.max = max;
+  }
+}
+
+export class RequestRateLimitError extends Error {
+  readonly windowCount: number;
+  readonly maxPerMinute: number;
+  constructor(windowCount: number, maxPerMinute: number) {
+    super(
+      `OpenRouter proxy rate limit: ${windowCount}/${maxPerMinute} requests in the last 60s`,
+    );
+    this.name = 'RequestRateLimitError';
+    this.windowCount = windowCount;
+    this.maxPerMinute = maxPerMinute;
+  }
+}
+
+/**
+ * Sliding-window rate limiter (in-process). Fail-closed: callers must not
+ * forward when this throws.
+ */
+export class SlidingWindowRateLimiter {
+  private readonly timestamps: number[] = [];
+  constructor(
+    readonly maxPerWindow: number,
+    readonly windowMs: number = OPENROUTER_RATE_LIMIT_WINDOW_MS,
+  ) {
+    if (
+      !Number.isFinite(maxPerWindow) ||
+      maxPerWindow < 1 ||
+      Math.floor(maxPerWindow) !== maxPerWindow
+    ) {
+      throw new RequestCounterError('maxRequestsPerMinute must be a positive integer');
+    }
+  }
+
+  /** Prune and count timestamps still inside the window. */
+  countInWindow(nowMs: number): number {
+    this.prune(nowMs);
+    return this.timestamps.length;
+  }
+
+  /** Reserve one slot or throw {@link RequestRateLimitError}. */
+  reserve(nowMs: number = Date.now()): number {
+    this.prune(nowMs);
+    if (this.timestamps.length >= this.maxPerWindow) {
+      throw new RequestRateLimitError(this.timestamps.length, this.maxPerWindow);
+    }
+    this.timestamps.push(nowMs);
+    return this.timestamps.length;
+  }
+
+  private prune(nowMs: number): void {
+    const cutoff = nowMs - this.windowMs;
+    while (this.timestamps.length > 0 && this.timestamps[0]! <= cutoff) {
+      this.timestamps.shift();
+    }
   }
 }
 
@@ -339,6 +405,8 @@ export async function startOpenRouterRequestProxy(
   }
 
   const maxRequests = options.maxRequests ?? DEFAULT_OPENROUTER_REQUEST_CAP;
+  const maxRequestsPerMinute =
+    options.maxRequestsPerMinute ?? DEFAULT_OPENROUTER_RATE_LIMIT_PER_MIN;
   const initialCount = options.initialCount ?? 0;
   if (!isFiniteNonNegInt(initialCount) || initialCount > maxRequests) {
     throw new RequestCounterError(
@@ -351,6 +419,7 @@ export async function startOpenRouterRequestProxy(
   const counterPath = options.counterPath;
   const localAuthToken = options.localAuthToken;
   const upstreamApiKey = options.upstreamApiKey;
+  const rateLimiter = new SlidingWindowRateLimiter(maxRequestsPerMinute);
 
   try {
     const existing = await readRequestCounter(counterPath);
@@ -399,6 +468,31 @@ export async function startOpenRouterRequestProxy(
           },
         });
         return;
+      }
+
+      // Rate limit BEFORE consuming the durable slot (rejects do not count).
+      try {
+        rateLimiter.reserve(now().getTime());
+      } catch (err) {
+        if (err instanceof RequestRateLimitError) {
+          recordHop({
+            method,
+            inboundPath,
+            upstreamPath,
+            upstreamStatus: 429,
+            streamed: false,
+          });
+          sendJson(res, 429, {
+            error: {
+              message: err.message,
+              type: 'request_rate_limited',
+              windowCount: err.windowCount,
+              maxPerMinute: err.maxPerMinute,
+            },
+          });
+          return;
+        }
+        throw err;
       }
 
       let reserved: number;
@@ -562,6 +656,7 @@ export async function startOpenRouterRequestProxy(
     port: addr.port,
     counterPath,
     maxRequests,
+    maxRequestsPerMinute,
     localAuthToken,
     readCount: async () => (await readRequestCounter(counterPath)).count,
     hops: () => hopLog.slice(),

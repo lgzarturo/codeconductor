@@ -8,8 +8,10 @@ import { mkdtemp, readFile, rm, writeFile, chmod, mkdir } from 'node:fs/promises
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
+  DEFAULT_OPENROUTER_RATE_LIMIT_PER_MIN,
   DEFAULT_OPENROUTER_REQUEST_CAP,
   PROXY_LOCAL_TOKEN_PREFIX,
+  SlidingWindowRateLimiter,
   buildClaudeChildEnv,
   isProxyLocalToken,
   mintProxyLocalToken,
@@ -21,6 +23,7 @@ import {
   writeRequestCounter,
   RequestBudgetExhaustedError,
   RequestCounterError,
+  RequestRateLimitError,
   type ProxyHopRecord,
 } from '../../src/core/evaluation/bench/openrouter-request-proxy';
 import { buildClaudeEnv } from '../../src/core/evaluation/bench/host-claude';
@@ -45,8 +48,20 @@ function localToken(): string {
 }
 
 describe('request counter file', () => {
-  test('default cap is 100', () => {
+  test('default cap is 100 and rate limit is 20/min', () => {
     expect(DEFAULT_OPENROUTER_REQUEST_CAP).toBe(100);
+    expect(DEFAULT_OPENROUTER_RATE_LIMIT_PER_MIN).toBe(20);
+  });
+
+  test('SlidingWindowRateLimiter rejects the 21st request in 60s', () => {
+    const lim = new SlidingWindowRateLimiter(20);
+    const t0 = 1_000_000;
+    for (let i = 0; i < 20; i++) {
+      expect(lim.reserve(t0 + i)).toBe(i + 1);
+    }
+    expect(() => lim.reserve(t0 + 20)).toThrow(RequestRateLimitError);
+    // Past the window relative to the newest stamp (t0+19) → empty again.
+    expect(lim.reserve(t0 + 19 + 60_001)).toBe(1);
   });
 
   test('parseRequestCounter rejects corrupt JSON / schema / types', () => {
@@ -206,6 +221,63 @@ describe('OpenRouter request proxy', () => {
       expect(await proxy.readCount()).toBe(0);
     } finally {
       await proxy.close();
+    }
+  });
+
+  test('rate-limits at 20/min without consuming the durable counter', async () => {
+    const dir = await tmpDir();
+    let upstreamHits = 0;
+    const upstream = createServer((_req, res) => {
+      upstreamHits += 1;
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ ok: true }));
+    });
+    await new Promise<void>((r) => upstream.listen(0, '127.0.0.1', () => r()));
+    const upAddr = upstream.address();
+    if (!upAddr || typeof upAddr === 'string') throw new Error('no upstream port');
+
+    const counterPath = join(dir, 'rate.json');
+    const token = localToken();
+    const proxy = await startOpenRouterRequestProxy({
+      counterPath,
+      maxRequests: 100,
+      maxRequestsPerMinute: 3,
+      initialCount: 10,
+      upstreamApiKey: UPSTREAM_KEY,
+      localAuthToken: token,
+      upstreamHost: '127.0.0.1',
+      useHttpUpstream: true,
+      upstreamPort: upAddr.port,
+    });
+    try {
+      for (let i = 0; i < 3; i++) {
+        const res = await fetch(`${proxy.url}/api/v1/messages`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ model: 'x', messages: [] }),
+        });
+        expect(res.status).toBe(200);
+      }
+      const limited = await fetch(`${proxy.url}/api/v1/messages`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ model: 'x', messages: [] }),
+      });
+      expect(limited.status).toBe(429);
+      const body = (await limited.json()) as { error?: { type?: string } };
+      expect(body.error?.type).toBe('request_rate_limited');
+      expect(upstreamHits).toBe(3);
+      // Rate-limit reject must not burn another durable slot.
+      expect(await proxy.readCount()).toBe(13);
+    } finally {
+      await proxy.close();
+      await new Promise<void>((r) => upstream.close(() => r()));
     }
   });
 

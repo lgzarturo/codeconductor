@@ -2,23 +2,28 @@
 
 Hard cap for **this repo**: **100** OpenRouter requests (fail-closed local proxy),
 **accumulated across Actions runs**. Seed prior spend with
-`BENCH_REQUESTS_ALREADY_USED`. Spent so far: **8 / 100** (4 from 39777070216 +
-4 from 39777659383) → **92 left**. Combined with microsdd the org budget is 200;
-do not cross-spend.
+`BENCH_REQUESTS_ALREADY_USED`. Spent so far: **10 / 100** (runs 39777070216 +
+39777659383 + 39778489974) → **90 left**. Combined with microsdd the org budget
+is 200; do not cross-spend.
 
 Claude Code is **pinned to 2.1.197** in `bench-baseline.yml` (fixture #18 /
 run 39203481151). Do not use `latest` — 2.1.308 returned `unrecognized_model`.
 
-### Root cause of 39777659383 smoke (`is_error=true` under proxy)
+### Root cause (proxy `/api` path) — fixed; smoke still fails after fix
 
 Historical working config: `ANTHROPIC_BASE_URL=https://openrouter.ai/api`
 (Claude SDK appends `/v1/messages` → `/api/v1/messages`).
 
 The proxy set `ANTHROPIC_BASE_URL=http://127.0.0.1:PORT` (origin only), so Claude
 POSTed `/v1/messages` and the proxy forwarded to `openrouter.ai/v1/messages`
-(**missing `/api`**). Fix: `proxy.anthropicBaseUrl = origin + '/api'` plus a
-safety rewrite `/v1/…` → `/api/v1/…`; SSE is piped without buffering; local
-token never forwarded. Offline smoke-replay test covers this.
+(**missing `/api`**). Fix in `d8fae60`: `proxy.anthropicBaseUrl = origin + '/api'`
+plus rewrite `/v1/…` → `/api/v1/…`; SSE piped; local token never forwarded;
+offline smoke-replay test.
+
+Relaunch [39778489974](https://github.com/lgzarturo/codeconductor/actions/runs/39778489974)
+logged `anthropicBaseUrl=http://127.0.0.1:…/api` but smoke still
+`is_error=true`. **Stopped** (no further relaunch). Remaining failure mode
+needs hop HTTP statuses (now recorded before exit).
 
 Auth: Claude presents a one-shot `cc-proxy-local-*` token
 (`ANTHROPIC_AUTH_TOKEN`). The proxy never forwards that token upstream; it

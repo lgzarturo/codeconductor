@@ -67,8 +67,8 @@ jobs:
           BENCH_PROJECT_ROOT: .
           BENCH_MAX_TOKENS: "2000000"
           BENCH_MAX_REQUESTS: "100"
-          # Accumulated spend across aborted smokes (39777070216 + 39777659383).
-          BENCH_REQUESTS_ALREADY_USED: "8"
+          # Accumulated spend across aborted smokes (… + 39778489974).
+          BENCH_REQUESTS_ALREADY_USED: "10"
         run: bun run scripts/bench-baseline-cheap.ts
 
       - name: Post-candado usage snapshot (always)

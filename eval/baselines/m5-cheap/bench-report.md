@@ -1,14 +1,19 @@
-# Bench report (M5 cheap regen — aborted at smoke)
+# Bench report (M5 cheap — path fix relaunch aborted at smoke)
 
-- **Actions run:** https://github.com/lgzarturo/codeconductor/actions/runs/39777659383
-- **Code head:** `44d5a30` (Claude Code **2.1.197**, seed 4/100)
-- **Matrix planned:** 1 task (`fix-add-off-by-one`) × 2 × N=3
+- **Actions run:** https://github.com/lgzarturo/codeconductor/actions/runs/39778489974
+- **Code head:** `d8fae60` (Claude Code 2.1.197, `anthropicBaseUrl=…/api`, seed 8/100)
+- **Matrix planned:** 1 × 2 × N=3
 - **Completed cells:** 0
-- **Pending cells:** none (smoke aborted first)
-- **Proxy requests (accumulated):** **8 / 100** (prior 4 + this smoke 4)
-- **Usage:** before=$0 → after=$0 (Δ=$0); limit=$5
+- **Proxy (accumulated):** **10 / 100** (prior 8 + this smoke ≈2)
+- **Usage:** before=$0 → after=$0
 - **Verdict:** NO CONCLUYENTE
-- **Abort:** smoke `exit=1` `subtype=success` `is_error=true` (not `unrecognized_model`)
-- **OpenRouter catalog:** model still listed `:free` @ price 0 — no substitute chosen
+- **Abort:** smoke `exit=1` `subtype=success` `is_error=true` despite correct `/api` base URL
+- **Stop:** no further relaunch per instructions
 
-No per-task table (no cells completed).
+## Root cause fixed (necessary, not yet sufficient)
+
+Historical: `ANTHROPIC_BASE_URL=https://openrouter.ai/api` → `/api/v1/messages`.
+Broken proxy: origin-only BASE_URL → Claude POST `/v1/messages` → forwarded to
+`openrouter.ai/v1/messages` (missing `/api`). Fix shipped: `anthropicBaseUrl`
++ path rewrite + SSE pipe test. This relaunch confirmed BASE_URL=`…/api` in logs
+but smoke still failed; remaining host/proxy issue unknown without hop statuses.

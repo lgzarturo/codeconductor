@@ -262,6 +262,7 @@ async function main(): Promise<void> {
         );
       }
 
+      const hops = proxy.hops();
       await writeAggregate({
         schema: 'bench-baseline-cheap/v1',
         cheap: true,
@@ -273,6 +274,9 @@ async function main(): Promise<void> {
         usageAfter,
         proxyRequestCount: proxyCount,
         requestsAlreadyUsed: REQUESTS_ALREADY_USED,
+        requestCap: MAX_REQUESTS,
+        anthropicBaseUrl: proxy.anthropicBaseUrl,
+        hops,
         aborted: true,
         abortReason: smoke.reason,
         openRouterCatalog: catalog,
@@ -294,11 +298,12 @@ async function main(): Promise<void> {
         usageAfter,
         proxyRequestCount: proxyCount,
         openRouterCatalog: catalog,
+        hops,
       });
-      process.exit(1);
-    }
-
-    if (SMOKE_ONLY) {
+      exitCode = 1;
+      abortReason = smoke.reason;
+      // Fall through to finally so proxy hops are logged and the server closes.
+    } else if (SMOKE_ONLY) {
       try {
         const keyAfter = await fetchOpenRouterKeySnapshot();
         usageAfter = keyAfter?.usage ?? null;
@@ -318,15 +323,15 @@ async function main(): Promise<void> {
         usageBefore,
         usageAfter,
         proxyRequestCount: proxyCount,
+        requestsAlreadyUsed: REQUESTS_ALREADY_USED,
+        hops: proxy.hops(),
         smoke: { ok: true, attempts: smoke.attempts, reason: null },
         verdict: 'NO CONCLUYENTE',
         verdictReasons: ['smoke-only mode — full cheap not run'],
         completedCells: [],
         pendingCells: [],
       });
-      process.exit(0);
-    }
-
+    } else {
     logEvent({
       event: 'bench-baseline-start',
       cheap: true,
@@ -472,6 +477,7 @@ async function main(): Promise<void> {
       exitCode = 1;
       abortReason = result.abortReason;
     }
+    } // end else (full bench after successful smoke)
   } catch (err) {
     exitCode = 1;
     abortReason = err instanceof Error ? err.message : String(err);

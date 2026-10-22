@@ -4,23 +4,14 @@
   "n": 3,
   "modelId": "nvidia/nemotron-3-super-120b-a12b:free",
   "pricingVerifiedZero": true,
-  "generatedAt": "2026-10-22T12:21:46.569Z",
+  "generatedAt": "2026-10-22T12:27:49.142Z",
   "usageBefore": 0,
   "usageAfter": 0,
-  "proxyRequestCount": 8,
-  "requestsAlreadyUsed": 4,
+  "proxyRequestCount": 10,
+  "requestsAlreadyUsed": 8,
   "aborted": true,
   "abortReason": "smoke failed after 4 attempts: exit=1 timedOut=false 429=false subtype=success is_error=true stderr={\"type\":\"system\",\"subtype\":\"init\",\"cwd\":\"/home/runner/work/codeconductor/codeconductor\",\"session_id=[REDACTED]\",\"tools\":[\"Task\",\"Bash\",\"CronCreate\",\"CronDelete\",\"CronList\",",
-  "openRouterCatalog": {
-    "listed": true,
-    "freeListed": true,
-    "httpStatus": 200,
-    "reason": "model nvidia/nemotron-3-super-120b-a12b:free still listed as :free on OpenRouter (public GET /api/v1/models, no key; verified post-run)",
-    "pricing": {
-      "prompt": "0",
-      "completion": "0"
-    }
-  },
+  "openRouterCatalog": null,
   "smoke": {
     "ok": false,
     "attempts": [
@@ -73,8 +64,10 @@
   "verdict": "NO CONCLUYENTE",
   "verdictReasons": [
     "smoke failed after 2 attempts — no valid Claude Code cell",
-    "Claude Code pinned 2.1.197; exit=1 subtype=success is_error=true (not unrecognized_model)",
-    "model nvidia/nemotron-3-super-120b-a12b:free still listed as :free on OpenRouter (public GET /api/v1/models, no key; verified post-run) — no substitute chosen"
+    "anthropicBaseUrl correctly set to …/api this run; proxy +2 hops (8→10); smoke still is_error=true",
+    "no further relaunch (user stop rule); path /api fix remains necessary vs historical openrouter.ai/api"
   ],
-  "requestCap": 100
+  "anthropicBaseUrl": "http://127.0.0.1:37753/api",
+  "requestCap": 100,
+  "hopsNote": "hop statuses not logged this run (process.exit skipped finally); subsequent commits log hops before exit"
 }

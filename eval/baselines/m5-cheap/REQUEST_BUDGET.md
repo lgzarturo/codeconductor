@@ -1,7 +1,12 @@
-# M5 cheap baseline — OpenRouter request budget (Phase 1, offline)
+# M5 cheap baseline — OpenRouter request budget (Phase 1→2)
 
 Hard cap for **this repo**: **100** OpenRouter requests (fail-closed local proxy).
 Combined with microsdd the org budget is 200; do not cross-spend.
+
+Auth: Claude presents a one-shot `cc-proxy-local-*` token
+(`ANTHROPIC_AUTH_TOKEN`). The proxy never forwards that token upstream; it
+injects `OPENROUTER_API_KEY` only on the outbound hop. The Claude child env
+must not contain `OPENROUTER_API_KEY`.
 
 ## Evidence from run [39203481151](https://github.com/lgzarturo/codeconductor/actions/runs/39203481151)
 
@@ -27,28 +32,41 @@ Without stream/proxy counters in 39203481151, infer from tokens + agentic shape:
 
 - Uncapped `claude -p` cell: **≈ 8–20 OpenRouter HTTP requests** (main turns +
   tool loops + `ANTHROPIC_SMALL_FAST_MODEL` / haiku-style side calls).
-- With `--max-turns 5` and all aliases forced to `:free`: **≈ 5–12 requests / cell**.
+- With `--max-turns 3`–`5` and all aliases forced to `:free`: **≈ 5–12 requests / cell**.
 - Smoke `di hola` (1 turn): **≈ 1–3 requests**.
 
 Use **10 requests / cell** as the planning figure for a capped regen
 (middle of the max-turns range, includes small-fast).
 
-## Matrix that fits in 100
+## Matrix that fits in 100 (N ≥ minN=3)
+
+`minRepetitionsForMode(cheap) = 3`. Any matrix with **N&lt;3** yields
+`NO CONCLUYENTE` by construction — do not use N=2.
 
 Reserve **10** for smoke + lock/pricing admin + slack → **90** for cells.
 
-| Matrix | Cells | Est. requests @10/cell | Fits in 100? |
-| --- | ---: | ---: | --- |
-| 1 task × 2 var × N=3 | 6 | 60 + smoke | yes |
-| 2 tasks × 2 × N=3 | 12 | 120 | **no** |
-| 3 tasks × 2 × N=2 | 12 | 120 | **no** |
-| 5 tasks × 2 × N=1 | 10 | 100 | borderline (no slack) |
-| 2 tasks × 2 × N=2 | 8 | 80 + smoke | **yes (recommended)** |
-| 1 task × 2 × N=5 | 10 | 100 | borderline |
+| Matrix | Cells | Est. requests @10/cell | Fits in 100? | minN=3? |
+| --- | ---: | ---: | --- | --- |
+| **1 task × 2 var × N=3** | **6** | **60 + smoke** | **yes** | **yes** |
+| 2 tasks × 2 × N=3 | 12 | 120 | **no** | yes |
+| 3 tasks × 2 × N=3 | 18 | 180 | **no** | yes |
+| 2 tasks × 2 × N=2 | 8 | 80 + smoke | yes (numeric) | **no** → NO CONCLUYENTE |
+| 5 tasks × 2 × N=3 | 30 | 300 | **no** | yes |
 
-**Proposed Phase-2 matrix:** `fix-add-off-by-one` + `review-seeded-bug`,
-N=2, both variants → **8 cells** (~80 requests) + smoke ≤ 100, with headroom if
-a cell spikes. Do **not** launch until Arturo approves.
+Worst-case check @12/cell + smoke≈3: 6×12+3=**75** ≤ 100. Two tasks at N=3
+would be 12×12+3=**147** — does not fit safely.
+
+**Phase-2 matrix (approved):** `fix-add-off-by-one` only, both variants, **N=3**,
+`--max-turns 3` → **6 cells** (~60–75 requests) + smoke ≤ 100.
+
+Env for Actions:
+
+```bash
+BENCH_N=3
+BENCH_TASK_IDS=fix-add-off-by-one
+BENCH_MAX_TURNS=3
+BENCH_MAX_REQUESTS=100
+```
 
 The frozen aggregates under this directory remain **Invalid** until a proxied,
-harness-loading regen lands.
+harness-loading regen with this matrix lands.

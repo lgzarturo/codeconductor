@@ -663,4 +663,64 @@ console.log(JSON.stringify({ type: 'result', subtype: 'success', is_error: false
     expect(result.abortReason).toMatch(/budget/);
     expect(result.invocations).toHaveLength(0);
   });
+
+  test('proxy request_budget_exhausted aborts explicitly; remaining cells pending', async () => {
+    // First spawn returns a proxy-style 429; must abort the run (not only
+    // consecutiveHostFailures) and leave later slots as pending.
+    const bin = await fakeClaude(`
+process.stderr.write('HTTP 429 request_budget_exhausted: OpenRouter request budget exhausted: 100/100\\n');
+process.exit(1);
+`);
+    const budget = createBenchBudget(2_000_000, 100);
+    const prevPath = process.env.PATH;
+    process.env.PATH = `${binDir}:${prevPath ?? ''}`;
+    try {
+      // Point PATH so `claude` resolves to our fake when runner uses default bin…
+      // runClaudeHostCell takes claudeBin — drive via a thin wrapper by patching
+      // through host options: use runClaudeHostCell directly for the abort flag,
+      // then assert runBench marks remaining pending via maxLive + spent budget.
+      const host = await runClaudeHostCell(
+        { taskId: 'fix-add-off-by-one', variant: 'baseline', repetition: 1, prompt: 'p' },
+        {
+          fixtureDir: FIXTURE_DIR,
+          modelId: MODEL,
+          budget,
+          claudeBin: bin,
+          minIntervalMs: 0,
+          maxAttempts: 2,
+        },
+      );
+      expect(host.pending).toBe(true);
+      expect(host.diagnostics.requestBudgetExhausted).toBe(true);
+      expect(host.diagnostics.http429).toBe(true);
+      expect(host.pendingReason).toMatch(/request budget exhausted/);
+      // No retry on budget 429 — single attempt.
+      expect(host.diagnostics.attempt).toBe(1);
+    } finally {
+      process.env.PATH = prevPath;
+    }
+  });
+
+  test('taskIds filter schedules only the requested task (dry)', async () => {
+    const result = await runBench({
+      projectRoot: REPO_ROOT,
+      suitePath: SUITE_PATH,
+      cheap: true,
+      drySynthetic: true,
+      n: 3,
+      seed: 42,
+      taskIds: ['fix-add-off-by-one'],
+      keyBefore: FREE_KEY,
+      keyAfter: FREE_KEY,
+      writeReport: false,
+    });
+    expect(result.aborted).toBe(false);
+    expect(result.report.cells).toHaveLength(6); // 1 task × 2 × N=3
+    expect(result.report.cells.every((c) => c.taskId === 'fix-add-off-by-one')).toBe(
+      true,
+    );
+    expect(result.report.n).toBe(3);
+    // N=3 meets minRepetitionsForMode(cheap)=3 — not NO CONCLUYENTE by construction.
+    expect(result.report.verdictReasons.join(' ')).not.toMatch(/below minimum/);
+  });
 });

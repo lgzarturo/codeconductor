@@ -1,8 +1,11 @@
 /**
  * Cheap M5 baseline entrypoint for GitHub Actions.
  *
- * - Requires OPENROUTER_API_KEY in env (never printed).
- * - Smoke: `claude -p "di hola" --output-format json` (2 attempts).
+ * - Requires OPENROUTER_API_KEY in env (parent/proxy only — never printed,
+ *   never passed to the Claude child).
+ * - Starts a fail-closed local request proxy; Claude gets a one-shot
+ *   `cc-proxy-local-*` token in ANTHROPIC_AUTH_TOKEN (never forwarded upstream).
+ * - Smoke: `claude -p "di hola"` (2 attempts).
  * - Verifies model is :free with list price 0 via /api/v1/models.
  * - Enforces M3 spend lock before run + between tasks; post-lock always.
  * - Writes sanitized aggregates even on failure (§7).
@@ -23,6 +26,7 @@ import {
 import {
   DEFAULT_OPENROUTER_REQUEST_CAP,
   defaultRequestCounterPath,
+  mintProxyLocalToken,
   startOpenRouterRequestProxy,
   type OpenRouterRequestProxy,
 } from '../src/core/evaluation/bench/openrouter-request-proxy';
@@ -36,6 +40,11 @@ const PROJECT_ROOT = resolve(process.env.BENCH_PROJECT_ROOT?.trim() || '.');
 const N = Number(process.env.BENCH_N ?? '3');
 const SEED = Number(process.env.BENCH_SEED ?? '42');
 const SMOKE_ONLY = process.env.BENCH_SMOKE_ONLY === '1';
+const MAX_TURNS = Number(process.env.BENCH_MAX_TURNS ?? '3');
+const TASK_IDS = (process.env.BENCH_TASK_IDS ?? 'fix-add-off-by-one')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
 // Hard per-run caps (smoke + all cells). Proxy rejects request max+1; Claude is also killed on stream budget.
 const MAX_TOKENS = Number(process.env.BENCH_MAX_TOKENS ?? '2000000');
 const MAX_REQUESTS = Number(
@@ -61,8 +70,10 @@ async function main(): Promise<void> {
   let usageAfter: number | null = null;
   let exitCode = 0;
   let abortReason: string | null = null;
+  let proxyCount: number | null = null;
 
-  if (!process.env.OPENROUTER_API_KEY) {
+  const upstreamApiKey = process.env.OPENROUTER_API_KEY?.trim();
+  if (!upstreamApiKey) {
     const payload = {
       schema: 'bench-baseline-cheap/v1',
       cheap: true,
@@ -81,18 +92,17 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  if (!process.env.ANTHROPIC_AUTH_TOKEN) {
-    process.env.ANTHROPIC_AUTH_TOKEN = process.env.OPENROUTER_API_KEY;
-  }
+  // Parent keeps OPENROUTER_API_KEY for /api/v1/key + pricing only.
+  // Claude child must never see it — mint a one-shot local proxy token.
+  const localAuthToken = mintProxyLocalToken();
   process.env.ANTHROPIC_API_KEY = '';
+  process.env.ANTHROPIC_AUTH_TOKEN = localAuthToken;
 
   await ensureClaudeCiConfig();
   const budget = createBenchBudget(MAX_TOKENS, MAX_REQUESTS);
 
   let proxy: OpenRouterRequestProxy | null = null;
   try {
-    // Fail-closed OpenRouter request proxy (counts every Claude Code hop,
-    // including small-fast). Point ANTHROPIC_BASE_URL at the proxy.
     const counterPath =
       process.env.BENCH_REQUEST_COUNTER_PATH?.trim() ||
       defaultRequestCounterPath(`m5-${Date.now()}`);
@@ -100,6 +110,8 @@ async function main(): Promise<void> {
       proxy = await startOpenRouterRequestProxy({
         counterPath,
         maxRequests: MAX_REQUESTS,
+        upstreamApiKey,
+        localAuthToken,
       });
     } catch (err) {
       abortReason =
@@ -123,10 +135,12 @@ async function main(): Promise<void> {
     logEvent({
       event: 'request-proxy-started',
       maxRequests: MAX_REQUESTS,
-      // Never log secrets; counter path is under tmp, safe.
       counterPath,
       proxyHost: proxy.host,
       proxyPort: proxy.port,
+      taskIds: TASK_IDS,
+      n: N,
+      maxTurns: MAX_TURNS,
     });
 
     const keyBefore = await fetchOpenRouterKeySnapshot();
@@ -174,12 +188,16 @@ async function main(): Promise<void> {
     });
 
     if (!smoke.ok) {
-      // Capture usage after failed smoke (post-candado).
       try {
         const keyAfter = await fetchOpenRouterKeySnapshot();
         usageAfter = keyAfter?.usage ?? null;
       } catch {
         usageAfter = null;
+      }
+      try {
+        proxyCount = await proxy.readCount();
+      } catch {
+        proxyCount = null;
       }
       await writeAggregate({
         schema: 'bench-baseline-cheap/v1',
@@ -190,6 +208,7 @@ async function main(): Promise<void> {
         generatedAt: new Date().toISOString(),
         usageBefore,
         usageAfter,
+        proxyRequestCount: proxyCount,
         aborted: true,
         abortReason: smoke.reason,
         smoke: {
@@ -210,6 +229,7 @@ async function main(): Promise<void> {
         reason: 'smoke failed after 2 attempts',
         usageBefore,
         usageAfter,
+        proxyRequestCount: proxyCount,
       });
       process.exit(1);
     }
@@ -221,6 +241,11 @@ async function main(): Promise<void> {
       } catch {
         usageAfter = null;
       }
+      try {
+        proxyCount = await proxy.readCount();
+      } catch {
+        proxyCount = null;
+      }
       await writeAggregate({
         schema: 'bench-baseline-cheap/v1',
         cheap: true,
@@ -228,6 +253,7 @@ async function main(): Promise<void> {
         modelId: MODEL_ID,
         usageBefore,
         usageAfter,
+        proxyRequestCount: proxyCount,
         smoke: { ok: true, attempts: smoke.attempts, reason: null },
         verdict: 'NO CONCLUYENTE',
         verdictReasons: ['smoke-only mode — full cheap not run'],
@@ -241,6 +267,8 @@ async function main(): Promise<void> {
       event: 'bench-baseline-start',
       cheap: true,
       n: N,
+      taskIds: TASK_IDS,
+      maxTurns: MAX_TURNS,
       modelId: MODEL_ID,
       pricing: pricing.pricing,
       usageBefore,
@@ -259,6 +287,8 @@ async function main(): Promise<void> {
       reportDir: OUT_DIR,
       fetchKey: () => fetchOpenRouterKeySnapshot(),
       budget,
+      taskIds: TASK_IDS,
+      maxTurns: MAX_TURNS,
     });
 
     usageAfter = result.usageAfter;
@@ -271,17 +301,26 @@ async function main(): Promise<void> {
       }
     }
 
+    try {
+      proxyCount = await proxy.readCount();
+    } catch {
+      proxyCount = null;
+    }
+
     const aggregate = {
       schema: 'bench-baseline-cheap/v1',
       cheap: true,
       n: N,
       seed: SEED,
+      taskIds: TASK_IDS,
+      maxTurns: MAX_TURNS,
       modelId: MODEL_ID,
       pricingVerifiedZero: true,
       generatedAt: new Date().toISOString(),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       usageBefore: result.usageBefore ?? usageBefore,
       usageAfter,
+      proxyRequestCount: proxyCount,
       runValid: result.runValid,
       budget,
       aborted: result.aborted,
@@ -352,6 +391,7 @@ async function main(): Promise<void> {
       modelId: MODEL_ID,
       usageBefore: aggregate.usageBefore,
       usageAfter: aggregate.usageAfter,
+      proxyRequestCount: proxyCount,
       completed: aggregate.completedCells.length,
       budget,
       pending: aggregate.pendingCells.length,
@@ -375,6 +415,13 @@ async function main(): Promise<void> {
     } catch {
       // ignore
     }
+    if (proxy) {
+      try {
+        proxyCount = await proxy.readCount();
+      } catch {
+        proxyCount = null;
+      }
+    }
     await writeAggregate({
       schema: 'bench-baseline-cheap/v1',
       cheap: true,
@@ -383,6 +430,7 @@ async function main(): Promise<void> {
       abortReason,
       usageBefore,
       usageAfter,
+      proxyRequestCount: proxyCount,
       completedCells: [],
       pendingCells: [],
       verdict: 'NO CONCLUYENTE',
@@ -390,11 +438,12 @@ async function main(): Promise<void> {
     });
   } finally {
     if (proxy) {
-      let proxyCount: number | null = null;
-      try {
-        proxyCount = await proxy.readCount();
-      } catch {
-        proxyCount = null;
+      if (proxyCount === null) {
+        try {
+          proxyCount = await proxy.readCount();
+        } catch {
+          proxyCount = null;
+        }
       }
       logEvent({
         event: 'request-proxy-stopping',
@@ -414,6 +463,7 @@ async function main(): Promise<void> {
       budget,
       usageBefore,
       usageAfter,
+      proxyRequestCount: proxyCount,
     });
     process.exit(exitCode);
   }

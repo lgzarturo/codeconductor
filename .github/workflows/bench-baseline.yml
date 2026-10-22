@@ -1,10 +1,14 @@
-# M5 cheap baseline — manual dispatch only (no push / pull_request triggers).
-# Key from secrets.OPENROUTER_API_KEY only. Hard caps per run:
-# BENCH_MAX_TOKENS / BENCH_MAX_REQUESTS (Claude is killed when either is hit).
+# M5 cheap baseline — manual dispatch or push to bench/baseline-m5-run.
+# Never runs on pull_request. Key from secrets.OPENROUTER_API_KEY only.
+# Hard caps: BENCH_MAX_REQUESTS=100 (fail-closed proxy) + stream budget.
+# Matrix: 1 task × 2 arms × N=3 (see eval/baselines/m5-cheap/REQUEST_BUDGET.md).
 name: bench-baseline-m5
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - bench/baseline-m5-run
 
 permissions:
   contents: read
@@ -48,20 +52,21 @@ jobs:
           mkdir -p "$HOME/.claude"
           printf '%s\n' '{"hasTrustDialogAccepted":true,"hasCompletedProjectOnboarding":true}' > "$HOME/.claude/settings.json"
 
-      # Smoke (2 attempts max) runs inside the script before any cell.
-      - name: Run cheap baseline (N=3)
+      # Smoke (2 attempts) + matrix run inside the script. Proxy mints a
+      # one-shot local token for Claude; OPENROUTER_API_KEY stays parent-only.
+      - name: Run cheap baseline (1 task × 2 × N=3, cap 100)
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          ANTHROPIC_BASE_URL: https://openrouter.ai/api
-          ANTHROPIC_AUTH_TOKEN: ${{ secrets.OPENROUTER_API_KEY }}
           ANTHROPIC_API_KEY: ""
           BENCH_MODEL_ID: nvidia/nemotron-3-super-120b-a12b:free
           BENCH_N: "3"
           BENCH_SEED: "42"
+          BENCH_TASK_IDS: fix-add-off-by-one
+          BENCH_MAX_TURNS: "3"
           BENCH_OUT_DIR: bench-out
           BENCH_PROJECT_ROOT: .
           BENCH_MAX_TOKENS: "2000000"
-          BENCH_MAX_REQUESTS: "150"
+          BENCH_MAX_REQUESTS: "100"
         run: bun run scripts/bench-baseline-cheap.ts
 
       - name: Post-candado usage snapshot (always)

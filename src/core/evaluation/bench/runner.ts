@@ -26,6 +26,7 @@ import {
 } from './report';
 import {
   budgetExhausted,
+  isRequestBudgetAbortReason,
   runClaudeHostCell,
   type BenchBudget,
   type ClaudeHostDiagnostics,
@@ -88,6 +89,13 @@ export interface BenchRunOptions {
   maxLiveCells?: number;
   /** Hard token/request budget for live runs (required with `live`). */
   budget?: BenchBudget;
+  /**
+   * Optional subset of suite task ids (Phase-2 matrix under the 100-req cap).
+   * When set, only these tasks are scheduled.
+   */
+  taskIds?: string[];
+  /** Main-loop turn cap passed to Claude host (default 5). */
+  maxTurns?: number;
 }
 
 export interface BenchRunResult {
@@ -207,8 +215,16 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
   if (!suite.success) {
     throw suite.error;
   }
-  const taskIds = suite.data.tasks.map((t) => t.id);
+  const allTaskIds = suite.data.tasks.map((t) => t.id);
   const taskById = new Map(suite.data.tasks.map((t) => [t.id, t]));
+  let taskIds = allTaskIds;
+  if (options.taskIds && options.taskIds.length > 0) {
+    const missing = options.taskIds.filter((id) => !taskById.has(id));
+    if (missing.length > 0) {
+      throw new Error(`unknown bench taskIds: ${missing.join(', ')}`);
+    }
+    taskIds = options.taskIds;
+  }
 
   // Copy fixture to /tmp (clean workdir per §3.1) — even for dry runs, to
   // exercise the isolation path.
@@ -343,12 +359,22 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
                 budget: options.budget,
                 hostVersion: process.env.CLAUDE_CODE_VERSION ?? null,
                 maxAttempts: 2,
+                maxTurns: options.maxTurns,
               },
             );
             const spent = budgetExhausted(options.budget);
-            if (spent) {
+            // Explicit abort on stream/proxy request budget — not only via
+            // consecutive host failures (review #24).
+            if (
+              spent ||
+              hostResult.diagnostics.requestBudgetExhausted ||
+              isRequestBudgetAbortReason(hostResult.pendingReason)
+            ) {
               aborted = true;
-              abortReason = spent;
+              abortReason =
+                spent ??
+                hostResult.pendingReason ??
+                'request budget exhausted';
               runValid = false;
             }
             invocations.push({

@@ -5,8 +5,7 @@
 > no request/token cap. Treatment now installs the Claude preset; OpenRouter
 > traffic is hard-capped at **100 requests** via a fail-closed local proxy
 > (plus stream-json metering / `--max-turns`). See `REQUEST_BUDGET.md` for the
-> Phase-1 estimate and proposed regen matrix. Do **not** regenerate until Arturo
-> approves Phase 2.
+> Phase-2 matrix: **1 task × 2 × N=3** (`fix-add-off-by-one`, max-turns 3).
 
 - **Mode:** `cheap: true`, N=3, seed=42
 - **Model:** `nvidia/nemotron-3-super-120b-a12b:free` (list price 0 verified)

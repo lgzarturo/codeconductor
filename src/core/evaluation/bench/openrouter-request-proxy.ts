@@ -2,20 +2,33 @@
  * Fail-closed local proxy between Claude Code and OpenRouter.
  *
  * Counts every HTTP request forwarded to openrouter.ai (chat completions,
- * small-fast / haiku aliases, /api/v1/key, /models, …). Persists the count
- * to disk. Request N+1 when max=N is rejected and the run must abort.
+ * small-fast / haiku aliases, …). Persists the count to disk. Request N+1
+ * when max=N is rejected and the run must abort.
+ *
+ * Auth: Claude presents a one-shot *local* token (ANTHROPIC_AUTH_TOKEN).
+ * The proxy never forwards that token upstream; it injects OPENROUTER_API_KEY
+ * only on the outbound hop. Claude's env must not contain OPENROUTER_API_KEY.
  *
  * If the counter file cannot be read or written, the proxy refuses to
- * forward (fail-closed) — never proceeds without a durable count.
+ * forward (fail-closed).
  */
-import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+import {
+  createServer,
+  request as httpRequest,
+  type IncomingMessage,
+  type Server,
+  type ServerResponse,
+} from 'node:http';
 import { request as httpsRequest } from 'node:https';
+import { randomBytes } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 export const DEFAULT_OPENROUTER_REQUEST_CAP = 100;
 export const OPENROUTER_UPSTREAM_HOST = 'openrouter.ai';
+/** Prefix for one-shot local tokens — never a real OpenRouter key. */
+export const PROXY_LOCAL_TOKEN_PREFIX = 'cc-proxy-local-';
 
 export interface RequestCounterState {
   schema: 'openrouter-request-counter/v1';
@@ -27,6 +40,10 @@ export interface RequestCounterState {
 export interface OpenRouterRequestProxyOptions {
   /** Absolute path to the durable counter JSON file. */
   counterPath: string;
+  /** Real OpenRouter key — used ONLY on the outbound hop. */
+  upstreamApiKey: string;
+  /** One-shot token Claude must present; never forwarded upstream. */
+  localAuthToken: string;
   /** Hard cap (inclusive). Request max+1 is rejected. Default 100. */
   maxRequests?: number;
   /** Bind address (default 127.0.0.1). */
@@ -35,6 +52,12 @@ export interface OpenRouterRequestProxyOptions {
   port?: number;
   /** Upstream host (default openrouter.ai). */
   upstreamHost?: string;
+  /**
+   * Test-only: forward over plain HTTP to `upstreamHost:upstreamPort`
+   * (lets unit tests assert outbound Authorization without TLS).
+   */
+  useHttpUpstream?: boolean;
+  upstreamPort?: number;
   /** Injected for tests. */
   now?: () => Date;
 }
@@ -45,6 +68,7 @@ export interface OpenRouterRequestProxy {
   port: number;
   counterPath: string;
   maxRequests: number;
+  localAuthToken: string;
   /** Current durable count (re-reads file). */
   readCount: () => Promise<number>;
   close: () => Promise<void>;
@@ -66,6 +90,15 @@ export class RequestBudgetExhaustedError extends Error {
     this.count = count;
     this.max = max;
   }
+}
+
+/** Mint a one-shot local token for Claude → proxy (not a real API key). */
+export function mintProxyLocalToken(): string {
+  return `${PROXY_LOCAL_TOKEN_PREFIX}${randomBytes(24).toString('hex')}`;
+}
+
+export function isProxyLocalToken(token: string | null | undefined): boolean {
+  return typeof token === 'string' && token.startsWith(PROXY_LOCAL_TOKEN_PREFIX);
 }
 
 function isFiniteNonNegInt(n: unknown): n is number {
@@ -132,8 +165,6 @@ export async function writeRequestCounter(
 /**
  * Atomically reserve the next request slot.
  * Returns the new count (1-based after increment).
- * Throws RequestBudgetExhaustedError if the next slot would exceed max.
- * Throws RequestCounterError if the file is unreadable/unwritable/corrupt.
  */
 export async function reserveRequestSlot(
   path: string,
@@ -148,7 +179,6 @@ export async function reserveRequestSlot(
     state = await readRequestCounter(path);
   } catch (err) {
     if (err instanceof RequestCounterError && /cannot read/.test(err.message)) {
-      // First use: initialize. Still fail-closed if write fails.
       state = {
         schema: 'openrouter-request-counter/v1',
         count: 0,
@@ -160,7 +190,6 @@ export async function reserveRequestSlot(
     }
   }
   if (state.max !== max) {
-    // Cap is immutable for the run; mismatch = corrupt / wrong file.
     throw new RequestCounterError(
       `request counter max mismatch: file=${state.max} expected=${max}`,
     );
@@ -196,21 +225,46 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.end(raw);
 }
 
+function extractBearer(req: IncomingMessage): string | null {
+  const auth = req.headers.authorization;
+  if (typeof auth === 'string') {
+    const m = auth.match(/^Bearer\s+(.+)$/i);
+    if (m?.[1]) return m[1].trim();
+  }
+  const xApi = req.headers['x-api-key'];
+  if (typeof xApi === 'string' && xApi.trim()) return xApi.trim();
+  if (Array.isArray(xApi) && xApi[0]) return String(xApi[0]).trim();
+  return null;
+}
+
 /**
  * Start the fail-closed OpenRouter request proxy.
- * Point Claude Code at `proxy.url` via ANTHROPIC_BASE_URL.
+ * Point Claude Code at `proxy.url` via ANTHROPIC_BASE_URL and give it
+ * `localAuthToken` as ANTHROPIC_AUTH_TOKEN (never OPENROUTER_API_KEY).
  */
 export async function startOpenRouterRequestProxy(
   options: OpenRouterRequestProxyOptions,
 ): Promise<OpenRouterRequestProxy> {
+  if (!options.upstreamApiKey || !options.upstreamApiKey.trim()) {
+    throw new RequestCounterError('upstreamApiKey is required');
+  }
+  if (!isProxyLocalToken(options.localAuthToken)) {
+    throw new RequestCounterError(
+      'localAuthToken must be a minted cc-proxy-local-* token',
+    );
+  }
+  if (options.localAuthToken === options.upstreamApiKey) {
+    throw new RequestCounterError('localAuthToken must not equal upstreamApiKey');
+  }
+
   const maxRequests = options.maxRequests ?? DEFAULT_OPENROUTER_REQUEST_CAP;
   const host = options.host ?? '127.0.0.1';
   const upstreamHost = options.upstreamHost ?? OPENROUTER_UPSTREAM_HOST;
   const now = options.now ?? (() => new Date());
   const counterPath = options.counterPath;
+  const localAuthToken = options.localAuthToken;
+  const upstreamApiKey = options.upstreamApiKey;
 
-  // Initialize durable counter before accepting traffic.
-  // Missing file → create zeros. Corrupt / mismatched → fail closed (do not start).
   try {
     const existing = await readRequestCounter(counterPath);
     if (existing.max !== maxRequests) {
@@ -233,6 +287,17 @@ export async function startOpenRouterRequestProxy(
 
   const server: Server = createServer(async (req, res) => {
     try {
+      const presented = extractBearer(req);
+      if (presented !== localAuthToken) {
+        sendJson(res, 401, {
+          error: {
+            message: 'invalid or missing local proxy token',
+            type: 'proxy_auth_failed',
+          },
+        });
+        return;
+      }
+
       let reserved: number;
       try {
         reserved = await reserveRequestSlot(counterPath, maxRequests, now);
@@ -261,24 +326,34 @@ export async function startOpenRouterRequestProxy(
       const headers: Record<string, string> = {};
       for (const [k, v] of Object.entries(req.headers)) {
         if (v === undefined) continue;
-        if (k.toLowerCase() === 'host') continue;
+        const lk = k.toLowerCase();
+        // Never forward Host, inbound Authorization, or the local token.
+        if (lk === 'host' || lk === 'authorization' || lk === 'x-api-key') continue;
         headers[k] = Array.isArray(v) ? v.join(',') : v;
       }
       headers.host = upstreamHost;
-      // Trace which slot this was (no secrets).
+      // Inject real OpenRouter key only on the outbound hop.
+      headers.authorization = `Bearer ${upstreamApiKey}`;
       headers['x-cc-request-slot'] = String(reserved);
 
+      const useHttp = options.useHttpUpstream === true;
+      const upstreamPort = useHttp ? (options.upstreamPort ?? 80) : 443;
+      const transport = useHttp ? httpRequest : httpsRequest;
+
       await new Promise<void>((resolve, reject) => {
-        const upstream = httpsRequest(
+        const upstream = transport(
           {
             hostname: upstreamHost,
-            port: 443,
+            port: upstreamPort,
             path: req.url ?? '/',
             method: req.method ?? 'GET',
             headers,
           },
           (upRes) => {
-            const outHeaders = { ...upRes.headers } as Record<string, string | string[] | undefined>;
+            const outHeaders = { ...upRes.headers } as Record<
+              string,
+              string | string[] | undefined
+            >;
             res.writeHead(upRes.statusCode ?? 502, outHeaders);
             upRes.pipe(res);
             upRes.on('end', () => resolve());
@@ -288,7 +363,10 @@ export async function startOpenRouterRequestProxy(
         upstream.on('error', (e) => {
           if (!res.headersSent) {
             sendJson(res, 502, {
-              error: { message: `upstream error: ${e.message}`, type: 'upstream_error' },
+              error: {
+                message: `upstream error: ${e.message}`,
+                type: 'upstream_error',
+              },
             });
           }
           reject(e);
@@ -296,7 +374,7 @@ export async function startOpenRouterRequestProxy(
         if (body.length > 0) upstream.write(body);
         upstream.end();
       }).catch(() => {
-        // Response already handled in handlers above when possible.
+        // Response already handled when possible.
       });
     } catch (err) {
       if (!res.headersSent) {
@@ -327,6 +405,7 @@ export async function startOpenRouterRequestProxy(
     port: addr.port,
     counterPath,
     maxRequests,
+    localAuthToken,
     readCount: async () => (await readRequestCounter(counterPath)).count,
     close: () =>
       new Promise((resolve, reject) => {
@@ -338,4 +417,44 @@ export async function startOpenRouterRequestProxy(
 /** Default counter path under the OS temp dir for a given run id. */
 export function defaultRequestCounterPath(runId: string): string {
   return join(tmpdir(), 'cc-bench-request-counter', `${runId}.json`);
+}
+
+/**
+ * Build Claude child env: no OPENROUTER_API_KEY; local proxy token only.
+ * Exported for tests.
+ */
+export function buildClaudeChildEnv(input: {
+  modelId: string;
+  proxyBaseUrl: string;
+  localAuthToken: string;
+  parentEnv?: NodeJS.ProcessEnv;
+}): NodeJS.ProcessEnv {
+  if (!isProxyLocalToken(input.localAuthToken)) {
+    throw new RequestCounterError('localAuthToken must be a minted cc-proxy-local-* token');
+  }
+  const parent = input.parentEnv ?? process.env;
+  // Whitelist — never copy OPENROUTER_API_KEY or a real sk-or token.
+  const env: NodeJS.ProcessEnv = {
+    PATH: parent.PATH,
+    HOME: parent.HOME,
+    USER: parent.USER,
+    LANG: parent.LANG,
+    TMPDIR: parent.TMPDIR,
+    XDG_STATE_HOME: parent.XDG_STATE_HOME,
+    CI: 'true',
+    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1',
+    CLAUDE_CODE_VERSION: parent.CLAUDE_CODE_VERSION,
+    ANTHROPIC_API_KEY: '',
+    ANTHROPIC_BASE_URL: input.proxyBaseUrl,
+    ANTHROPIC_AUTH_TOKEN: input.localAuthToken,
+    ANTHROPIC_MODEL: input.modelId,
+    ANTHROPIC_SMALL_FAST_MODEL: input.modelId,
+    ANTHROPIC_DEFAULT_HAIKU_MODEL: input.modelId,
+    ANTHROPIC_DEFAULT_SONNET_MODEL: input.modelId,
+    ANTHROPIC_DEFAULT_OPUS_MODEL: input.modelId,
+    CLAUDE_CODE_SUBAGENT_MODEL: input.modelId,
+  };
+  // Explicitly ensure the real key is absent.
+  delete env.OPENROUTER_API_KEY;
+  return env;
 }

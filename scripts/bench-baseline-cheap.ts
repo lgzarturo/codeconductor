@@ -17,7 +17,10 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { runBench } from '../src/core/evaluation/bench/runner';
-import { assertOpenRouterModelFreeZeroPrice } from '../src/core/evaluation/bench/openrouter-free-model';
+import {
+  assertOpenRouterModelFreeZeroPrice,
+  openRouterFreeModelStillListed,
+} from '../src/core/evaluation/bench/openrouter-free-model';
 import {
   createBenchBudget,
   ensureClaudeCiConfig,
@@ -45,11 +48,14 @@ const TASK_IDS = (process.env.BENCH_TASK_IDS ?? 'fix-add-off-by-one')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
-// Hard per-run caps (smoke + all cells). Proxy rejects request max+1; Claude is also killed on stream budget.
+// Repo-accumulated OpenRouter request cap (default 100). Prior Actions spend
+// seeds the durable counter so this run only consumes the remainder.
 const MAX_TOKENS = Number(process.env.BENCH_MAX_TOKENS ?? '2000000');
 const MAX_REQUESTS = Number(
   process.env.BENCH_MAX_REQUESTS ?? String(DEFAULT_OPENROUTER_REQUEST_CAP),
 );
+const REQUESTS_ALREADY_USED = Number(process.env.BENCH_REQUESTS_ALREADY_USED ?? '0');
+const STREAM_MAX_REQUESTS = Math.max(0, MAX_REQUESTS - REQUESTS_ALREADY_USED);
 
 function logEvent(payload: Record<string, unknown>): void {
   // Never include env values / secrets.
@@ -98,8 +104,29 @@ async function main(): Promise<void> {
   process.env.ANTHROPIC_API_KEY = '';
   process.env.ANTHROPIC_AUTH_TOKEN = localAuthToken;
 
+  if (
+    !Number.isFinite(REQUESTS_ALREADY_USED) ||
+    REQUESTS_ALREADY_USED < 0 ||
+    Math.floor(REQUESTS_ALREADY_USED) !== REQUESTS_ALREADY_USED ||
+    REQUESTS_ALREADY_USED > MAX_REQUESTS
+  ) {
+    await writeAggregate({
+      schema: 'bench-baseline-cheap/v1',
+      cheap: true,
+      aborted: true,
+      abortReason: `BENCH_REQUESTS_ALREADY_USED must be an integer in [0, ${MAX_REQUESTS}]`,
+      usageBefore: null,
+      usageAfter: null,
+      completedCells: [],
+      pendingCells: [],
+      verdict: 'NO CONCLUYENTE',
+    });
+    process.exit(1);
+  }
+
   await ensureClaudeCiConfig();
-  const budget = createBenchBudget(MAX_TOKENS, MAX_REQUESTS);
+  // Stream meter only counts this run's hops; proxy enforces the absolute cap.
+  const budget = createBenchBudget(MAX_TOKENS, STREAM_MAX_REQUESTS);
 
   let proxy: OpenRouterRequestProxy | null = null;
   try {
@@ -110,6 +137,7 @@ async function main(): Promise<void> {
       proxy = await startOpenRouterRequestProxy({
         counterPath,
         maxRequests: MAX_REQUESTS,
+        initialCount: REQUESTS_ALREADY_USED,
         upstreamApiKey,
         localAuthToken,
       });
@@ -135,6 +163,8 @@ async function main(): Promise<void> {
     logEvent({
       event: 'request-proxy-started',
       maxRequests: MAX_REQUESTS,
+      requestsAlreadyUsed: REQUESTS_ALREADY_USED,
+      streamMaxRequests: STREAM_MAX_REQUESTS,
       counterPath,
       proxyHost: proxy.host,
       proxyPort: proxy.port,
@@ -199,6 +229,36 @@ async function main(): Promise<void> {
       } catch {
         proxyCount = null;
       }
+
+      // If Claude Code rejects the model id, confirm OpenRouter still lists it
+      // (public /api/v1/models, no key, outside proxy). Do not pick a substitute.
+      let catalog: Awaited<ReturnType<typeof openRouterFreeModelStillListed>> | null =
+        null;
+      const unrecognized = /unrecognized_model/i.test(smoke.reason ?? '');
+      if (unrecognized) {
+        catalog = await openRouterFreeModelStillListed(MODEL_ID);
+        logEvent({
+          event: 'openrouter-model-catalog-check',
+          modelId: MODEL_ID,
+          listed: catalog.listed,
+          freeListed: catalog.freeListed,
+          reason: catalog.reason,
+        });
+      }
+
+      const verdictReasons = [
+        'smoke failed after 2 attempts — no valid Claude Code cell',
+      ];
+      if (catalog && !catalog.listed) {
+        verdictReasons.push(
+          `OpenRouter catalog: model gone — ${catalog.reason} (no substitute chosen)`,
+        );
+      } else if (catalog?.listed) {
+        verdictReasons.push(
+          `OpenRouter catalog: model still listed — ${catalog.reason}; Claude Code host rejected the id`,
+        );
+      }
+
       await writeAggregate({
         schema: 'bench-baseline-cheap/v1',
         cheap: true,
@@ -209,8 +269,10 @@ async function main(): Promise<void> {
         usageBefore,
         usageAfter,
         proxyRequestCount: proxyCount,
+        requestsAlreadyUsed: REQUESTS_ALREADY_USED,
         aborted: true,
         abortReason: smoke.reason,
+        openRouterCatalog: catalog,
         smoke: {
           ok: false,
           attempts: smoke.attempts,
@@ -220,9 +282,7 @@ async function main(): Promise<void> {
         pendingCells: [],
         invocations: [],
         verdict: 'NO CONCLUYENTE',
-        verdictReasons: [
-          'smoke failed after 2 attempts — no valid Claude Code cell',
-        ],
+        verdictReasons,
       });
       logEvent({
         event: 'bench-baseline-stop',
@@ -230,6 +290,7 @@ async function main(): Promise<void> {
         usageBefore,
         usageAfter,
         proxyRequestCount: proxyCount,
+        openRouterCatalog: catalog,
       });
       process.exit(1);
     }
@@ -321,6 +382,8 @@ async function main(): Promise<void> {
       usageBefore: result.usageBefore ?? usageBefore,
       usageAfter,
       proxyRequestCount: proxyCount,
+      requestsAlreadyUsed: REQUESTS_ALREADY_USED,
+      requestCap: MAX_REQUESTS,
       runValid: result.runValid,
       budget,
       aborted: result.aborted,

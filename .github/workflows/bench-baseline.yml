@@ -1,7 +1,8 @@
 # M5 cheap baseline — manual dispatch or push to bench/baseline-m5-run.
 # Never runs on pull_request. Key from secrets.OPENROUTER_API_KEY only.
-# Hard caps: BENCH_MAX_REQUESTS=100 (fail-closed proxy) + stream budget.
+# Hard caps: BENCH_MAX_REQUESTS=100 accumulated (seed prior spend) + stream budget.
 # Matrix: 1 task × 2 arms × N=3 (see eval/baselines/m5-cheap/REQUEST_BUDGET.md).
+# Claude Code pinned to 2.1.197 (worked with this :free model on run 39203481151).
 name: bench-baseline-m5
 
 on:
@@ -43,18 +44,17 @@ jobs:
           fi
           echo "OPENROUTER_API_KEY is present (value not printed)"
 
-      - name: Install Claude Code CLI
+      - name: Install Claude Code CLI (pinned 2.1.197)
         run: |
-          npm install -g @anthropic-ai/claude-code
+          npm install -g @anthropic-ai/claude-code@2.1.197
           claude --version || true
           echo "CLAUDE_CODE_VERSION=$(claude --version 2>/dev/null | head -1 || echo unknown)" >> "$GITHUB_ENV"
-          # Minimal non-interactive config (no onboarding / login prompts).
           mkdir -p "$HOME/.claude"
           printf '%s\n' '{"hasTrustDialogAccepted":true,"hasCompletedProjectOnboarding":true}' > "$HOME/.claude/settings.json"
 
-      # Smoke (2 attempts) + matrix run inside the script. Proxy mints a
-      # one-shot local token for Claude; OPENROUTER_API_KEY stays parent-only.
-      - name: Run cheap baseline (1 task × 2 × N=3, cap 100)
+      # Smoke + matrix. Proxy seeds at BENCH_REQUESTS_ALREADY_USED (repo-accumulated
+      # cap 100). Claude gets a one-shot local token; OPENROUTER_API_KEY stays parent-only.
+      - name: Run cheap baseline (1 task × 2 × N=3, cap 100 accum)
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           ANTHROPIC_API_KEY: ""
@@ -67,6 +67,8 @@ jobs:
           BENCH_PROJECT_ROOT: .
           BENCH_MAX_TOKENS: "2000000"
           BENCH_MAX_REQUESTS: "100"
+          # Prior aborted smoke (run 39777070216) spent 4; remainder = 96.
+          BENCH_REQUESTS_ALREADY_USED: "4"
         run: bun run scripts/bench-baseline-cheap.ts
 
       - name: Post-candado usage snapshot (always)

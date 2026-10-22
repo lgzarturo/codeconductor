@@ -46,6 +46,11 @@ export interface OpenRouterRequestProxyOptions {
   localAuthToken: string;
   /** Hard cap (inclusive). Request max+1 is rejected. Default 100. */
   maxRequests?: number;
+  /**
+   * Seed the durable counter when the file does not yet exist (repo-accumulated
+   * budget across Actions runs). Must be 0 ≤ initialCount ≤ maxRequests.
+   */
+  initialCount?: number;
   /** Bind address (default 127.0.0.1). */
   host?: string;
   /** Port 0 = ephemeral. */
@@ -258,6 +263,12 @@ export async function startOpenRouterRequestProxy(
   }
 
   const maxRequests = options.maxRequests ?? DEFAULT_OPENROUTER_REQUEST_CAP;
+  const initialCount = options.initialCount ?? 0;
+  if (!isFiniteNonNegInt(initialCount) || initialCount > maxRequests) {
+    throw new RequestCounterError(
+      `initialCount must be an integer in [0, ${maxRequests}]`,
+    );
+  }
   const host = options.host ?? '127.0.0.1';
   const upstreamHost = options.upstreamHost ?? OPENROUTER_UPSTREAM_HOST;
   const now = options.now ?? (() => new Date());
@@ -276,7 +287,7 @@ export async function startOpenRouterRequestProxy(
     if (err instanceof RequestCounterError && /cannot read/.test(err.message)) {
       await writeRequestCounter(counterPath, {
         schema: 'openrouter-request-counter/v1',
-        count: 0,
+        count: initialCount,
         max: maxRequests,
         updatedAt: now().toISOString(),
       });

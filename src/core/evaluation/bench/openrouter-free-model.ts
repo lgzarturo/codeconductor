@@ -99,3 +99,58 @@ export async function assertOpenRouterModelFreeZeroPrice(
 
   return { ok: true, reason: null, modelId: trimmed, pricing };
 }
+
+/**
+ * Public catalog check (no API key, outside the request proxy).
+ * Used when Claude Code rejects a model id — confirm whether OpenRouter still
+ * lists it as `:free` before stopping. Does not pick a replacement model.
+ */
+export async function openRouterFreeModelStillListed(
+  modelId: string,
+  options: { fetchImpl?: typeof fetch } = {},
+): Promise<{ listed: boolean; freeListed: boolean; httpStatus: number | null; reason: string }> {
+  const trimmed = modelId.trim();
+  const fetchImpl = options.fetchImpl ?? fetch;
+  let res: Response;
+  try {
+    res = await fetchImpl('https://openrouter.ai/api/v1/models', {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    });
+  } catch (err) {
+    return {
+      listed: false,
+      freeListed: false,
+      httpStatus: null,
+      reason: `OpenRouter /api/v1/models unreachable: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+  if (!res.ok) {
+    return {
+      listed: false,
+      freeListed: false,
+      httpStatus: res.status,
+      reason: `OpenRouter /api/v1/models failed: HTTP ${res.status}`,
+    };
+  }
+  const body = (await res.json()) as { data?: Array<{ id?: unknown }> };
+  const models = Array.isArray(body.data) ? body.data : [];
+  const match = models.find((m) => m.id === trimmed);
+  if (!match) {
+    return {
+      listed: false,
+      freeListed: false,
+      httpStatus: res.status,
+      reason: `model ${trimmed} not in OpenRouter public /api/v1/models`,
+    };
+  }
+  const freeListed = trimmed.endsWith(':free');
+  return {
+    listed: true,
+    freeListed,
+    httpStatus: res.status,
+    reason: freeListed
+      ? `model ${trimmed} still listed as :free on OpenRouter`
+      : `model ${trimmed} listed but is not a :free id`,
+  };
+}

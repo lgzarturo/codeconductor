@@ -1,7 +1,13 @@
 # M5 cheap baseline — OpenRouter request budget (Phase 1→2)
 
-Hard cap for **this repo**: **100** OpenRouter requests (fail-closed local proxy).
+Hard cap for **this repo**: **100** OpenRouter requests (fail-closed local proxy),
+**accumulated across Actions runs**. Seed prior spend with
+`BENCH_REQUESTS_ALREADY_USED` (e.g. 4 from aborted run 39777070216 → 96 left).
 Combined with microsdd the org budget is 200; do not cross-spend.
+
+Claude Code is **pinned to 2.1.197** in `bench-baseline.yml` (the version that
+accepted this `:free` model on run 39203481151 / fixture #18). Do not use
+`latest` — 2.1.308 returned `unrecognized_model` for the same id.
 
 Auth: Claude presents a one-shot `cc-proxy-local-*` token
 (`ANTHROPIC_AUTH_TOKEN`). The proxy never forwards that token upstream; it

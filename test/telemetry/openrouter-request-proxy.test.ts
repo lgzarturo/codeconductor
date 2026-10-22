@@ -167,6 +167,23 @@ describe('local proxy token + Claude child env', () => {
 });
 
 describe('OpenRouter request proxy', () => {
+  test('seeds initialCount when counter file is missing', async () => {
+    const dir = await tmpDir();
+    const token = localToken();
+    const proxy = await startOpenRouterRequestProxy({
+      counterPath: join(dir, 'seeded.json'),
+      maxRequests: 100,
+      initialCount: 4,
+      upstreamApiKey: UPSTREAM_KEY,
+      localAuthToken: token,
+    });
+    try {
+      expect(await proxy.readCount()).toBe(4);
+    } finally {
+      await proxy.close();
+    }
+  });
+
   test('rejects missing/wrong local token with 401', async () => {
     const dir = await tmpDir();
     const token = localToken();
@@ -340,6 +357,36 @@ describe('OpenRouter request proxy', () => {
       count: 5,
       max: 5,
     });
+  });
+});
+
+describe('OpenRouter public catalog check (no key)', () => {
+  test('openRouterFreeModelStillListed reports missing vs present', async () => {
+    const { openRouterFreeModelStillListed } = await import(
+      '../../src/core/evaluation/bench/openrouter-free-model'
+    );
+    const missing = await openRouterFreeModelStillListed('no-such-model:free', {
+      fetchImpl: async () =>
+        new Response(JSON.stringify({ data: [{ id: 'other:free' }] }), {
+          status: 200,
+        }),
+    });
+    expect(missing.listed).toBe(false);
+
+    const present = await openRouterFreeModelStillListed(
+      'nvidia/nemotron-3-super-120b-a12b:free',
+      {
+        fetchImpl: async () =>
+          new Response(
+            JSON.stringify({
+              data: [{ id: 'nvidia/nemotron-3-super-120b-a12b:free' }],
+            }),
+            { status: 200 },
+          ),
+      },
+    );
+    expect(present.listed).toBe(true);
+    expect(present.freeListed).toBe(true);
   });
 });
 

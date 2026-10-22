@@ -58,7 +58,8 @@ const SMOKE_ONLY = process.env.BENCH_SMOKE_ONLY === '1';
 /** One baseline cell only — stop if not success before full matrix. */
 const SONDA = process.env.BENCH_SONDA === '1';
 const N = Number(process.env.BENCH_N ?? (SONDA ? '1' : '3'));
-const MAX_TURNS = Number(process.env.BENCH_MAX_TURNS ?? '3');
+/** Default 6 — maxTurns=3 caused near-total error_max_turns (microsdd / Arturo). */
+const MAX_TURNS = Number(process.env.BENCH_MAX_TURNS ?? '6');
 const TASK_IDS = (process.env.BENCH_TASK_IDS ?? 'fix-add-off-by-one')
   .split(',')
   .map((s) => s.trim())

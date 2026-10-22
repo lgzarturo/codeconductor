@@ -12,25 +12,18 @@
 
 | Cap | Value |
 | --- | --- |
-| Requests | **100** accumulated — **counter RESET** then sonda used **9** → seed matrix at 9 |
+| Requests | **100** accumulated — counter RESET; prior sonda(maxTurns=3) used **9** |
 | Rate limit | **20/min** — proxy **waits** (no 429); wait timeout 180s → 403 |
 | Spend candado | **$0.49** usage Δ this repo (both-repos total $0.99) |
+| **maxTurns** | **6** (was 3 — microsdd: `error_max_turns` on almost all cells at 3; 6 → 15/16 nemotron) |
 | What counts | Only **POST** messages forwarded |
 | Retries | `CLAUDE_CODE_MAX_RETRIES=0` |
 
 Proxy ported from microsdd `0755fde` / `3165a84`.
 
-## Sonda — [39800247302](https://github.com/lgzarturo/codeconductor/actions/runs/39800247302)
+## Sonda (maxTurns=3, historical) — [39800247302](https://github.com/lgzarturo/codeconductor/actions/runs/39800247302)
 
-| | |
-| --- | --- |
-| Cell | baseline `fix-add-off-by-one` rep 1 — **success=true** |
-| Requests | **9 / 100** |
-| Usage Δ | **$0** (`0.037115136` → `0.037115136`) |
-| Gate | **PASS** → matrix authorized |
-
-## Matrix
-
-2 arms × N=3 (in progress / see latest Actions).
+Succeeded with maxTurns=3 but Arturo/microsdd require **6** before authorizing matrix.
+Re-run sonda with maxTurns=6 (seed requests at 9).
 
 See `REQUEST_BUDGET.md` and `sonda-39800247302/`.

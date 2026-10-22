@@ -87,7 +87,8 @@ jobs:
           BENCH_MODEL_ID: deepseek/deepseek-v4-flash
           BENCH_SEED: "42"
           BENCH_TASK_IDS: fix-add-off-by-one
-          BENCH_MAX_TURNS: "3"
+          # microsdd: maxTurns=3 → error_max_turns almost always; 6 fixes (15/16 nemotron).
+          BENCH_MAX_TURNS: "6"
           BENCH_OUT_DIR: bench-out
           BENCH_PROJECT_ROOT: .
           BENCH_MAX_TOKENS: "2000000"

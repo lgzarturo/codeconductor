@@ -1,29 +1,30 @@
 # M5 cheap baseline (OpenRouter)
 
-> New budget (Arturo **22 Oct 9:51 Cancún**). Claude Code **2.1.197**.
+> Arturo **22 Oct 9:51** + maxTurns=6 (microsdd). Claude Code **2.1.197**.
 
 ## Model
 
-- **`deepseek/deepseek-v4-flash`**
-  - List price: **$0.091 / MTok prompt**, **$0.182 / MTok completion**
-  - Tools / `tool_choice` supported
+- **`deepseek/deepseek-v4-flash`** — **$0.091 / MTok prompt**, **$0.182 / MTok completion**
 
-## Caps (reset)
+## Caps
 
 | Cap | Value |
 | --- | --- |
-| Requests | **100** accumulated — counter RESET; prior sonda(maxTurns=3) used **9** |
-| Rate limit | **20/min** — proxy **waits** (no 429); wait timeout 180s → 403 |
-| Spend candado | **$0.49** usage Δ this repo (both-repos total $0.99) |
-| **maxTurns** | **6** (was 3 — microsdd: `error_max_turns` on almost all cells at 3; 6 → 15/16 nemotron) |
-| What counts | Only **POST** messages forwarded |
-| Retries | `CLAUDE_CODE_MAX_RETRIES=0` |
+| Requests | **100** (reset); now **60 / 100** after sonda#2 |
+| Spend | **$0.49** usage Δ; campaign Δ so far ≈ **$0.056** (matrix-3) + **$0** (sondas) |
+| maxTurns | **6** |
+| Proxy | POST-only count; rpm wait; budget 403; MAX_RETRIES=0 |
 
-Proxy ported from microsdd `0755fde` / `3165a84`.
+## Sonda maxTurns=6 — [39801814203](https://github.com/lgzarturo/codeconductor/actions/runs/39801814203)
 
-## Sonda (maxTurns=3, historical) — [39800247302](https://github.com/lgzarturo/codeconductor/actions/runs/39800247302)
+| | |
+| --- | --- |
+| Cell | baseline rep1 — host OK (`subtype=success`) but **oracle success=false** |
+| Requests | **60 / 100** (seed 55 + 5) |
+| Usage Δ | **$0** |
+| Gate | **FAIL** → **matrix NOT run** (Arturo stop rule) |
 
-Succeeded with maxTurns=3 but Arturo/microsdd require **6** before authorizing matrix.
-Re-run sonda with maxTurns=6 (seed requests at 9).
+## Other runs
 
-See `REQUEST_BUDGET.md` and `sonda-39800247302/`.
+- Sonda maxTurns=3 [39800247302](https://github.com/lgzarturo/codeconductor/actions/runs/39800247302): success=true (9 req)
+- Accidental matrix maxTurns=3 [39800579851](https://github.com/lgzarturo/codeconductor/actions/runs/39800579851): B 3/3 T 0/3 **RECHAZA**, 55 req, Δ+$0.056

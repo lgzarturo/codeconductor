@@ -1,0 +1,155 @@
+{
+  "schema": "bench-report/v1",
+  "generatedAt": "2026-10-22T14:58:26.763Z",
+  "timezone": "UTC",
+  "suiteId": "harness-v1",
+  "n": 1,
+  "cheap": true,
+  "claim": "success-only",
+  "efficiencyThreshold": 0.1,
+  "qualityTokenCeiling": 0.15,
+  "verdict": "NO CONCLUYENTE",
+  "verdictReasons": [
+    "N=1 below minimum 3 for this mode — IC unreliable (NO CONCLUYENTE)"
+  ],
+  "fingerprints": {
+    "harness": null,
+    "prompt": null,
+    "host": null,
+    "model": "deepseek/deepseek-v4-flash",
+    "pricingVersion": null
+  },
+  "totalCostUsd": 0.235246,
+  "tasks": [
+    {
+      "taskId": "fix-add-off-by-one",
+      "baseline": {
+        "n": 1,
+        "median": 92950,
+        "q1": 92950,
+        "q3": 92950,
+        "iqr": 0,
+        "mean": 92950
+      },
+      "treatment": {
+        "n": 0,
+        "median": null,
+        "q1": null,
+        "q3": null,
+        "iqr": null,
+        "mean": null
+      },
+      "deltaMedian": null,
+      "bootstrap": {
+        "deltaMedian": null,
+        "ciLow": null,
+        "ciHigh": null,
+        "entirelyBelowZero": false,
+        "crossesZero": true,
+        "samples": 10000,
+        "seed": 42
+      },
+      "baselineSuccess": {
+        "k": 1,
+        "n": 1,
+        "p": 1,
+        "low": 0.20654329147389294,
+        "high": 1
+      },
+      "treatmentSuccess": {
+        "k": 0,
+        "n": 0,
+        "p": 0,
+        "low": 0,
+        "high": 1
+      },
+      "nonInferiorityOk": false,
+      "metric": "tokensTotal"
+    }
+  ],
+  "overall": {
+    "baselineSuccess": {
+      "k": 1,
+      "n": 1,
+      "p": 1,
+      "low": 0.20654329147389294,
+      "high": 1
+    },
+    "treatmentSuccess": {
+      "k": 0,
+      "n": 0,
+      "p": 0,
+      "low": 0,
+      "high": 1
+    },
+    "tokens": {
+      "taskId": "_overall",
+      "baseline": {
+        "n": 1,
+        "median": 92950,
+        "q1": 92950,
+        "q3": 92950,
+        "iqr": 0,
+        "mean": 92950
+      },
+      "treatment": {
+        "n": 0,
+        "median": null,
+        "q1": null,
+        "q3": null,
+        "iqr": null,
+        "mean": null
+      },
+      "deltaMedian": null,
+      "bootstrap": {
+        "deltaMedian": null,
+        "ciLow": null,
+        "ciHigh": null,
+        "entirelyBelowZero": false,
+        "crossesZero": true,
+        "samples": 10000,
+        "seed": 42
+      },
+      "baselineSuccess": {
+        "k": 1,
+        "n": 1,
+        "p": 1,
+        "low": 0.20654329147389294,
+        "high": 1
+      },
+      "treatmentSuccess": {
+        "k": 0,
+        "n": 0,
+        "p": 0,
+        "low": 0,
+        "high": 1
+      },
+      "nonInferiorityOk": true,
+      "metric": "tokensTotal"
+    }
+  },
+  "cells": [
+    {
+      "taskId": "fix-add-off-by-one",
+      "variant": "baseline",
+      "repetition": 1,
+      "success": true,
+      "iterations": 1,
+      "retries": 0,
+      "calls": 5,
+      "tokensTotal": 92950,
+      "tokensInput": 31670,
+      "tokensOutput": 1888,
+      "tokensCacheRead": 59392,
+      "tokensCacheWrite": 0,
+      "costUsd": 0.235246,
+      "costBasis": "unknown",
+      "durationMs": 54695,
+      "cacheHitRate": 0.6522149744130372,
+      "firstTry": true,
+      "modelId": "deepseek/deepseek-v4-flash",
+      "hostVersion": "2.1.197 (Claude Code)"
+    }
+  ],
+  "contentHash": "c82149846a27bdf2ea6870d77f852c27afd0b17c9e69fe878aa6de0f53bfcfab"
+}

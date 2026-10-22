@@ -12,22 +12,25 @@
 
 | Cap | Value |
 | --- | --- |
-| Requests | **100** accumulated — **counter RESET to 0** (new deepseek campaign; prior cohere 100/100 archived) |
+| Requests | **100** accumulated — **counter RESET** then sonda used **9** → seed matrix at 9 |
 | Rate limit | **20/min** — proxy **waits** (no 429); wait timeout 180s → 403 |
-| Spend candado | **$0.49** usage Δ this repo (both-repos total $0.99); fail-closed; abort approaching |
-| What counts | Only **POST** `/v1/messages` or `/v1/chat/completions` forwarded |
-| Local free | **HEAD** + `/health` — no slot |
-| Retries | `CLAUDE_CODE_MAX_RETRIES=0`, `ANTHROPIC_MAX_RETRIES=0` |
+| Spend candado | **$0.49** usage Δ this repo (both-repos total $0.99) |
+| What counts | Only **POST** messages forwarded |
+| Retries | `CLAUDE_CODE_MAX_RETRIES=0` |
 
 Proxy ported from microsdd `0755fde` / `3165a84`.
 
-## Flow
+## Sonda — [39800247302](https://github.com/lgzarturo/codeconductor/actions/runs/39800247302)
 
-1. **Sonda:** 1 cell (`fix-add-off-by-one`, **baseline** only). If `success≠true` → **STOP**, no matrix.
-2. **Matrix** (only after sonda ok): 2 arms × N=3.
+| | |
+| --- | --- |
+| Cell | baseline `fix-add-off-by-one` rep 1 — **success=true** |
+| Requests | **9 / 100** |
+| Usage Δ | **$0** (`0.037115136` → `0.037115136`) |
+| Gate | **PASS** → matrix authorized |
 
-## Prior run (archived)
+## Matrix
 
-Cohere `:free` run [39789258349](https://github.com/lgzarturo/codeconductor/actions/runs/39789258349) exhausted the previous 100-cap mid-matrix. Not comparable to this reset.
+2 arms × N=3 (in progress / see latest Actions).
 
-See `REQUEST_BUDGET.md`.
+See `REQUEST_BUDGET.md` and `sonda-39800247302/`.

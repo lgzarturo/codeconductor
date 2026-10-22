@@ -95,7 +95,7 @@ jobs:
           BENCH_MAX_REQUESTS_PER_MINUTE: "20"
           BENCH_MAX_SPEND_USD: "0.49"
           # Counter RESET for new deepseek baseline (Arturo 22 Oct 9:51).
-          BENCH_REQUESTS_ALREADY_USED: "0"
+          BENCH_REQUESTS_ALREADY_USED: "9"  # sonda 39800247302 used 9 countable POSTs
           BENCH_SONDA: ${{ steps.mode.outputs.mode == 'sonda' && '1' || '0' }}
           BENCH_N: ${{ steps.mode.outputs.mode == 'sonda' && '1' || '3' }}
           CLAUDE_CODE_MAX_RETRIES: "0"

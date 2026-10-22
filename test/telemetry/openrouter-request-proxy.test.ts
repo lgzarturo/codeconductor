@@ -13,6 +13,7 @@ import {
   PROXY_LOCAL_TOKEN_PREFIX,
   SlidingWindowRateLimiter,
   buildClaudeChildEnv,
+  isCountableRequest,
   isProxyLocalToken,
   mintProxyLocalToken,
   parseRequestCounter,
@@ -53,15 +54,25 @@ describe('request counter file', () => {
     expect(DEFAULT_OPENROUTER_RATE_LIMIT_PER_MIN).toBe(20);
   });
 
-  test('SlidingWindowRateLimiter rejects the 21st request in 60s', () => {
-    const lim = new SlidingWindowRateLimiter(20);
-    const t0 = 1_000_000;
-    for (let i = 0; i < 20; i++) {
-      expect(lim.reserve(t0 + i)).toBe(i + 1);
-    }
-    expect(() => lim.reserve(t0 + 20)).toThrow(RequestRateLimitError);
-    // Past the window relative to the newest stamp (t0+19) → empty again.
-    expect(lim.reserve(t0 + 19 + 60_001)).toBe(1);
+  test('SlidingWindowRateLimiter.acquire waits then succeeds', async () => {
+    const lim = new SlidingWindowRateLimiter(1, 60_000, 2_000);
+    let t = 1_000_000;
+    const now = () => t;
+    expect(await lim.acquire(now)).toBe(1);
+    // Advance just past the window so the waiter can proceed quickly.
+    const waiter = lim.acquire(now);
+    await new Promise((r) => setTimeout(r, 20));
+    t = 1_000_000 + 60_001;
+    expect(await waiter).toBe(1);
+  });
+
+  test('isCountableRequest only POST message routes', () => {
+    expect(isCountableRequest('POST', '/v1/messages')).toBe(true);
+    expect(isCountableRequest('POST', '/api/v1/messages')).toBe(true);
+    expect(isCountableRequest('POST', '/v1/chat/completions')).toBe(true);
+    expect(isCountableRequest('GET', '/v1/messages')).toBe(false);
+    expect(isCountableRequest('HEAD', '/v1/messages')).toBe(false);
+    expect(isCountableRequest('POST', '/v1/models')).toBe(false);
   });
 
   test('parseRequestCounter rejects corrupt JSON / schema / types', () => {
@@ -159,6 +170,8 @@ describe('local proxy token + Claude child env', () => {
     expect(env.ANTHROPIC_AUTH_TOKEN).toBe(token);
     expect(env.ANTHROPIC_BASE_URL).toBe('http://127.0.0.1:9999');
     expect(env.ANTHROPIC_AUTH_TOKEN).not.toBe(UPSTREAM_KEY);
+    expect(env.CLAUDE_CODE_MAX_RETRIES).toBe('0');
+    expect(env.ANTHROPIC_MAX_RETRIES).toBe('0');
   });
 
   test('buildClaudeEnv (host) strips OPENROUTER_API_KEY even offline', () => {
@@ -224,7 +237,7 @@ describe('OpenRouter request proxy', () => {
     }
   });
 
-  test('rate-limits at 20/min without consuming the durable counter', async () => {
+  test('HEAD and /health do not consume the durable counter', async () => {
     const dir = await tmpDir();
     let upstreamHits = 0;
     const upstream = createServer((_req, res) => {
@@ -236,13 +249,11 @@ describe('OpenRouter request proxy', () => {
     const upAddr = upstream.address();
     if (!upAddr || typeof upAddr === 'string') throw new Error('no upstream port');
 
-    const counterPath = join(dir, 'rate.json');
     const token = localToken();
     const proxy = await startOpenRouterRequestProxy({
-      counterPath,
+      counterPath: join(dir, 'h.json'),
       maxRequests: 100,
-      maxRequestsPerMinute: 3,
-      initialCount: 10,
+      initialCount: 7,
       upstreamApiKey: UPSTREAM_KEY,
       localAuthToken: token,
       upstreamHost: '127.0.0.1',
@@ -250,38 +261,24 @@ describe('OpenRouter request proxy', () => {
       upstreamPort: upAddr.port,
     });
     try {
-      for (let i = 0; i < 3; i++) {
-        const res = await fetch(`${proxy.url}/api/v1/messages`, {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ model: 'x', messages: [] }),
-        });
-        expect(res.status).toBe(200);
-      }
-      const limited = await fetch(`${proxy.url}/api/v1/messages`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ model: 'x', messages: [] }),
+      const head = await fetch(`${proxy.url}/v1/messages`, {
+        method: 'HEAD',
+        headers: { Authorization: `Bearer ${token}` },
       });
-      expect(limited.status).toBe(429);
-      const body = (await limited.json()) as { error?: { type?: string } };
-      expect(body.error?.type).toBe('request_rate_limited');
-      expect(upstreamHits).toBe(3);
-      // Rate-limit reject must not burn another durable slot.
-      expect(await proxy.readCount()).toBe(13);
+      expect(head.status).toBe(200);
+      const health = await fetch(`${proxy.url}/health`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      expect(health.status).toBe(200);
+      expect(await proxy.readCount()).toBe(7);
+      expect(upstreamHits).toBe(0);
     } finally {
       await proxy.close();
       await new Promise<void>((r) => upstream.close(() => r()));
     }
   });
 
-  test('rejects request max+1 with 429 and does not forward', async () => {
+  test('rejects request max+1 with 403 (not 429) and does not forward', async () => {
     const dir = await tmpDir();
     let upstreamHits = 0;
     const upstream = createServer((_req, res) => {
@@ -319,9 +316,9 @@ describe('OpenRouter request proxy', () => {
         },
         body: JSON.stringify({ model: 'x:free', messages: [] }),
       });
-      expect(res.status).toBe(429);
+      expect(res.status).toBe(403);
       const body = (await res.json()) as { error?: { type?: string } };
-      expect(body.error?.type).toBe('request_budget_exhausted');
+      expect(body.error?.type).toBe('cc_proxy_budget');
       expect(upstreamHits).toBe(0);
       expect(await proxy.readCount()).toBe(2);
     } finally {

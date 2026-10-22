@@ -1,39 +1,33 @@
 # M5 cheap baseline (OpenRouter)
 
-> Proxied regen under the **100-request repo-accumulated** cap + **20 req/min**
-> fail-closed rate limit. Claude Code pinned to **2.1.197**. Matrix:
-> **1×2×N=3** (`fix-add-off-by-one`, max-turns 3).
+> New budget (Arturo **22 Oct 9:51 Cancún**). Claude Code **2.1.197**.
 
-## Latest run — [39789258349](https://github.com/lgzarturo/codeconductor/actions/runs/39789258349)
+## Model
 
-| Field | Value |
+- **`deepseek/deepseek-v4-flash`**
+  - List price: **$0.091 / MTok prompt**, **$0.182 / MTok completion**
+  - Tools / `tool_choice` supported
+
+## Caps (reset)
+
+| Cap | Value |
 | --- | --- |
-| Model | `cohere/north-mini-code:free` (1 probe ok; paid fallback unused) |
-| List price | **$0 / MTok** prompt + completion (`:free`) |
-| Requests | **100 / 100** accumulated (seed 10 + 90 this run) |
-| Usage Δ | **$0.00000298** (`0` → `0.00000298`; limit `$5`) |
-| Cells | **4 completed / 2 pending** (budget exhausted mid-matrix) |
-| Baseline | 2 cells, success **0/2** (reps 2,3; rep 1 pending) |
-| Treatment | 2 cells, success **0/2** (reps 2,3; rep 1 pending) |
-| Auto verdict | `ACEPTA` (success-only) but **`runValid=false`**, aborted |
-| Abort | `request budget exhausted (proxy 429 request_budget_exhausted)` |
-| Hops | 140 logged (83×200, 48×429 rate/budget, 9×HEAD 401) |
+| Requests | **100** accumulated — **counter RESET to 0** (new deepseek campaign; prior cohere 100/100 archived) |
+| Rate limit | **20/min** — proxy **waits** (no 429); wait timeout 180s → 403 |
+| Spend candado | **$0.49** usage Δ this repo (both-repos total $0.99); fail-closed; abort approaching |
+| What counts | Only **POST** `/v1/messages` or `/v1/chat/completions` forwarded |
+| Local free | **HEAD** + `/health` — no slot |
+| Retries | `CLAUDE_CODE_MAX_RETRIES=0`, `ANTHROPIC_MAX_RETRIES=0` |
 
-**No relaunch:** accumulated cap is exhausted. Incomplete N&lt;3 per arm → treat as
-**NO CONCLUYENTE** for decision-making despite the auto `ACEPTA` label.
+Proxy ported from microsdd `0755fde` / `3165a84`.
 
-## Model (Arturo 22 Oct)
+## Flow
 
-- **Primary probe:** `cohere/north-mini-code:free` (tools). Worked on this run.
-- **Paid economic fallback:** `openai/gpt-oss-20b` — **$0.018 / MTok prompt**,
-  **$0.09 / MTok completion**; tools. Not needed this run.
-- Max **3 probes** total.
+1. **Sonda:** 1 cell (`fix-add-off-by-one`, **baseline** only). If `success≠true` → **STOP**, no matrix.
+2. **Matrix** (only after sonda ok): 2 arms × N=3.
 
-## Caps / hygiene
+## Prior run (archived)
 
-- OpenRouter requests: **accumulated 100** — now **exhausted** after 39789258349.
-- Proxy rate limit: **20 requests / minute** (fail-closed).
-- Spend candado: **max $5 usage Δ / repo**; this run Δ ≈ $0.000003.
-- Key only on the proxy outbound hop.
+Cohere `:free` run [39789258349](https://github.com/lgzarturo/codeconductor/actions/runs/39789258349) exhausted the previous 100-cap mid-matrix. Not comparable to this reset.
 
-See `REQUEST_BUDGET.md` and frozen aggregates in this directory.
+See `REQUEST_BUDGET.md`.

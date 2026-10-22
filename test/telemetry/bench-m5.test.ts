@@ -402,7 +402,7 @@ describe('M5 runner (dry / fake provider)', () => {
     expect(result.runValid).toBe(true);
   });
 
-  test('cheap aborts when usage Δ approaches the $5 repo spend cap', async () => {
+  test('cheap aborts when usage Δ approaches the $0.49 repo spend cap', async () => {
     let calls = 0;
     const result = await runBench({
       projectRoot: REPO_ROOT,
@@ -412,10 +412,10 @@ describe('M5 runner (dry / fake provider)', () => {
       keyBefore: FREE_KEY,
       fetchKey: async () => {
         calls += 1;
-        // Between-task check: jump usage by $4.50 (approach threshold).
-        return { ...FREE_KEY, usage: calls === 1 ? 0 : 4.5 };
+        // Between-task check: jump usage by $0.441 (90% of $0.49).
+        return { ...FREE_KEY, usage: calls === 1 ? 0 : 0.441 };
       },
-      modelId: 'openai/gpt-oss-20b',
+      modelId: 'deepseek/deepseek-v4-flash',
       writeReport: false,
     });
     expect(result.aborted).toBe(true);
@@ -726,10 +726,9 @@ console.log(JSON.stringify({ type: 'result', subtype: 'success', is_error: false
   });
 
   test('proxy request_budget_exhausted aborts explicitly; remaining cells pending', async () => {
-    // First spawn returns a proxy-style 429; must abort the run (not only
-    // consecutiveHostFailures) and leave later slots as pending.
+    // Proxy budget is 403 cc_proxy_budget (microsdd 0755fde); must abort, no retry.
     const bin = await fakeClaude(`
-process.stderr.write('HTTP 429 request_budget_exhausted: OpenRouter request budget exhausted: 100/100\\n');
+process.stderr.write('HTTP 403 cc_proxy_budget: OpenRouter request budget exhausted: 100/100\\n');
 process.exit(1);
 `);
     const budget = createBenchBudget(2_000_000, 100);
@@ -753,9 +752,8 @@ process.exit(1);
       );
       expect(host.pending).toBe(true);
       expect(host.diagnostics.requestBudgetExhausted).toBe(true);
-      expect(host.diagnostics.http429).toBe(true);
-      expect(host.pendingReason).toMatch(/request budget exhausted/);
-      // No retry on budget 429 — single attempt.
+      expect(host.pendingReason).toMatch(/request budget exhausted|cc_proxy_budget/);
+      // No retry on budget 403 — single attempt.
       expect(host.diagnostics.attempt).toBe(1);
     } finally {
       process.env.PATH = prevPath;

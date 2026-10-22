@@ -15,8 +15,11 @@
  * requires `:free` or key `limit` ≤ $5 (credit may be $10).
  */
 
-/** Max allowed usage Δ (USD) per repo for cheap bench. */
-export const DEFAULT_OPENROUTER_SPEND_CAP_USD = 5;
+/**
+ * Max allowed usage Δ (USD) per repo for cheap bench.
+ * Arturo 22 Oct 9:51: **$0.49** this repo (both-repos total $0.99).
+ */
+export const DEFAULT_OPENROUTER_SPEND_CAP_USD = 0.49;
 /** @deprecated Alias — same value as {@link DEFAULT_OPENROUTER_SPEND_CAP_USD}. */
 export const DEFAULT_OPENROUTER_LIMIT_CAP_USD = DEFAULT_OPENROUTER_SPEND_CAP_USD;
 

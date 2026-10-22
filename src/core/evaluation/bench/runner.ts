@@ -88,7 +88,7 @@ export interface BenchRunOptions {
   /** Directory outside the repo for bench-report.json (default XDG state). */
   reportDir?: string;
   writeReport?: boolean;
-  /** Cap live cells (tests / partial baseline). */
+  /** Cap live cells (tests / partial baseline / sonda). */
   maxLiveCells?: number;
   /** Hard token/request budget for live runs (required with `live`). */
   budget?: BenchBudget;
@@ -97,6 +97,8 @@ export interface BenchRunOptions {
    * When set, only these tasks are scheduled.
    */
   taskIds?: string[];
+  /** Restrict scheduled variants (sonda = baseline only). */
+  variants?: Array<'baseline' | 'treatment'>;
   /** Main-loop turn cap passed to Claude host (default 5). */
   maxTurns?: number;
 }
@@ -250,9 +252,12 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
   let aborted = false;
   let abortReason: string | null = null;
   const modelId =
-    options.modelId ?? 'openai/gpt-oss-20b';
+    options.modelId ?? 'deepseek/deepseek-v4-flash';
   const maxSpendUsd =
     options.maxSpendUsd ?? options.maxLimitUsd ?? DEFAULT_OPENROUTER_SPEND_CAP_USD;
+  const variantAllow = options.variants
+    ? new Set(options.variants)
+    : null;
 
   if (cheap) {
     const lock = await assertOpenRouterZeroSpend({
@@ -296,7 +301,9 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
       } else if (aborted) {
         cells = [];
       } else {
-        const schedule = interleaveSchedule(taskIds, n, seed);
+        const schedule = interleaveSchedule(taskIds, n, seed).filter((s) =>
+          variantAllow ? variantAllow.has(s.variant) : true,
+        );
         const maxLive = options.maxLiveCells ?? schedule.length;
         cells = [];
         let lastTaskId: string | null = null;

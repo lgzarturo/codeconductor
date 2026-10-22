@@ -41,31 +41,29 @@ import {
 } from '../src/core/telemetry/openrouter-spend-lock';
 import { probeModelViaProxy } from '../src/core/evaluation/bench/model-probe';
 
-/** Primary: try `:free` first; paid economic fallback if free fails (Arturo 22 Oct). */
-const PRIMARY_MODEL_ID =
-  process.env.BENCH_MODEL_ID?.trim() ||
-  'cohere/north-mini-code:free';
-/** Cheap paid + tools: $0.018/MTok prompt, $0.09/MTok completion (OpenRouter list). */
-const FALLBACK_MODEL_ID =
-  process.env.BENCH_FALLBACK_MODEL_ID?.trim() ||
-  'openai/gpt-oss-20b';
-const FALLBACK_LIST_PRICE = {
-  promptPerMTokUsd: 0.018,
-  completionPerMTokUsd: 0.09,
-  source: 'openrouter.ai/api/v1/models',
+/**
+ * Arturo 22 Oct 9:51: deepseek/deepseek-v4-flash
+ * ($0.091 / MTok prompt, $0.182 / MTok completion; tools).
+ */
+const MODEL_ID_DEFAULT = 'deepseek/deepseek-v4-flash';
+const LIST_PRICE = {
+  promptPerMTokUsd: 0.091,
+  completionPerMTokUsd: 0.182,
+  source: 'openrouter.ai/api/v1/models (Arturo pin)',
 } as const;
 const OUT_DIR = resolve(process.env.BENCH_OUT_DIR?.trim() || 'bench-out');
 const PROJECT_ROOT = resolve(process.env.BENCH_PROJECT_ROOT?.trim() || '.');
-const N = Number(process.env.BENCH_N ?? '3');
 const SEED = Number(process.env.BENCH_SEED ?? '42');
 const SMOKE_ONLY = process.env.BENCH_SMOKE_ONLY === '1';
+/** One baseline cell only — stop if not success before full matrix. */
+const SONDA = process.env.BENCH_SONDA === '1';
+const N = Number(process.env.BENCH_N ?? (SONDA ? '1' : '3'));
 const MAX_TURNS = Number(process.env.BENCH_MAX_TURNS ?? '3');
 const TASK_IDS = (process.env.BENCH_TASK_IDS ?? 'fix-add-off-by-one')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
-// Repo-accumulated OpenRouter request cap (default 100). Prior Actions spend
-// seeds the durable counter so this run only consumes the remainder.
+// New budget (Arturo): counter reset to 0/100 for this deepseek baseline.
 const MAX_TOKENS = Number(process.env.BENCH_MAX_TOKENS ?? '2000000');
 const MAX_REQUESTS = Number(
   process.env.BENCH_MAX_REQUESTS ?? String(DEFAULT_OPENROUTER_REQUEST_CAP),
@@ -79,8 +77,11 @@ const MAX_SPEND_USD = Number(
 );
 const REQUESTS_ALREADY_USED = Number(process.env.BENCH_REQUESTS_ALREADY_USED ?? '0');
 const STREAM_MAX_REQUESTS = Math.max(0, MAX_REQUESTS - REQUESTS_ALREADY_USED);
-/** Max model probes this process (Arturo: ≤3 total across attempts). */
-const MAX_PROBES = Number(process.env.BENCH_MAX_PROBES ?? '3');
+const MAX_LIVE_CELLS = SONDA
+  ? 1
+  : process.env.BENCH_MAX_LIVE_CELLS
+    ? Number(process.env.BENCH_MAX_LIVE_CELLS)
+    : undefined;
 
 function logEvent(payload: Record<string, unknown>): void {
   // Never include env values / secrets.
@@ -102,13 +103,10 @@ async function main(): Promise<void> {
   let exitCode = 0;
   let abortReason: string | null = null;
   let proxyCount: number | null = null;
-  let MODEL_ID = PRIMARY_MODEL_ID;
+  const MODEL_ID =
+    process.env.BENCH_MODEL_ID?.trim() || MODEL_ID_DEFAULT;
   let probesUsed = 0;
-  let listPrice: {
-    promptPerMTokUsd: number | null;
-    completionPerMTokUsd: number | null;
-    source: string;
-  } | null = null;
+  const listPrice = { ...LIST_PRICE };
 
   const upstreamApiKey = process.env.OPENROUTER_API_KEY?.trim();
   if (!upstreamApiKey) {
@@ -209,21 +207,13 @@ async function main(): Promise<void> {
       taskIds: TASK_IDS,
       n: N,
       maxTurns: MAX_TURNS,
-      primaryModelId: PRIMARY_MODEL_ID,
-      fallbackModelId: FALLBACK_MODEL_ID,
+      modelId: MODEL_ID,
+      sonda: SONDA,
+      listPrice,
     });
 
     const keyBefore = await fetchOpenRouterKeySnapshot();
     usageBefore = keyBefore?.usage ?? null;
-
-    const candidates = [PRIMARY_MODEL_ID];
-    if (
-      FALLBACK_MODEL_ID &&
-      FALLBACK_MODEL_ID !== PRIMARY_MODEL_ID &&
-      candidates.length < MAX_PROBES
-    ) {
-      candidates.push(FALLBACK_MODEL_ID);
-    }
 
     let probeOk = false;
     let lastProbe: Awaited<ReturnType<typeof probeModelViaProxy>> | null = null;
@@ -231,52 +221,20 @@ async function main(): Promise<void> {
       null;
     let probeCount: number | null = null;
 
-    for (const candidate of candidates) {
-      if (probesUsed >= MAX_PROBES) break;
-      MODEL_ID = candidate;
-      pricing = await assertOpenRouterModelFreeZeroPrice(MODEL_ID);
-      if (!pricing.ok) {
-        logEvent({
-          event: 'bench-model-pricing-reject',
-          modelId: MODEL_ID,
-          reason: pricing.reason,
-        });
-        lastProbe = {
-          ok: false,
-          httpStatus: null,
-          errorTruncated: null,
-          reason: pricing.reason ?? 'pricing check failed',
-        };
-        continue;
-      }
-      if (pricing.isFree) {
-        listPrice = {
-          promptPerMTokUsd: 0,
-          completionPerMTokUsd: 0,
-          source: 'openrouter.ai/api/v1/models (:free)',
-        };
-      } else if (MODEL_ID === FALLBACK_MODEL_ID) {
-        listPrice = { ...FALLBACK_LIST_PRICE };
-      } else {
-        listPrice = {
-          promptPerMTokUsd:
-            pricing.pricing?.prompt != null
-              ? pricing.pricing.prompt * 1e6
-              : null,
-          completionPerMTokUsd:
-            pricing.pricing?.completion != null
-              ? pricing.pricing.completion * 1e6
-              : null,
-          source: 'openrouter.ai/api/v1/models',
-        };
-      }
-
-      probesUsed += 1;
+    pricing = await assertOpenRouterModelFreeZeroPrice(MODEL_ID);
+    if (!pricing.ok) {
+      lastProbe = {
+        ok: false,
+        httpStatus: null,
+        errorTruncated: null,
+        reason: pricing.reason ?? 'pricing check failed',
+      };
+    } else {
+      probesUsed = 1;
       logEvent({
         event: 'bench-model-probe-start',
         modelId: MODEL_ID,
-        probeIndex: probesUsed,
-        maxProbes: MAX_PROBES,
+        probeIndex: 1,
         listPrice,
       });
       lastProbe = await probeModelViaProxy({
@@ -292,7 +250,6 @@ async function main(): Promise<void> {
       logEvent({
         event: 'bench-model-probe-done',
         modelId: MODEL_ID,
-        probeIndex: probesUsed,
         ok: lastProbe.ok,
         httpStatus: lastProbe.httpStatus,
         reason: lastProbe.reason,
@@ -300,22 +257,11 @@ async function main(): Promise<void> {
         proxyRequestCount: probeCount,
         hops: publicProxyHops(proxy.hops()),
       });
-      if (lastProbe.ok) {
-        probeOk = true;
-        break;
-      }
-      // Free failed → try next candidate (paid). Do not loop beyond MAX_PROBES.
-      logEvent({
-        event: 'bench-model-probe-fallback',
-        failedModelId: MODEL_ID,
-        next:
-          candidates[candidates.indexOf(candidate) + 1] ?? null,
-        probesUsed,
-      });
+      probeOk = lastProbe.ok;
     }
 
     if (!probeOk || !lastProbe) {
-      abortReason = `model probe failed after ${probesUsed} attempt(s): ${lastProbe?.reason ?? 'no candidate'}${lastProbe?.errorTruncated ? ` — ${lastProbe.errorTruncated}` : ''}`;
+      abortReason = `model probe failed: ${lastProbe?.reason ?? 'pricing/probe'}${lastProbe?.errorTruncated ? ` — ${lastProbe.errorTruncated}` : ''}`;
       exitCode = 1;
       try {
         const keyAfter = await fetchOpenRouterKeySnapshot();
@@ -365,6 +311,7 @@ async function main(): Promise<void> {
       listPrice,
       usageBefore,
       probesUsed,
+      sonda: SONDA,
     });
 
     const smoke = await runClaudeSmoke({
@@ -533,6 +480,8 @@ async function main(): Promise<void> {
       taskIds: TASK_IDS,
       maxTurns: MAX_TURNS,
       maxSpendUsd: MAX_SPEND_USD,
+      maxLiveCells: MAX_LIVE_CELLS,
+      variants: SONDA ? ['baseline'] : undefined,
     });
 
     usageAfter = result.usageAfter;
@@ -566,6 +515,7 @@ async function main(): Promise<void> {
       modelId: MODEL_ID,
       listPrice,
       probesUsed,
+      sonda: SONDA,
       pricingVerified: pricing?.ok === true,
       isFreeModel: pricing?.isFree === true,
       supportsTools: pricing?.supportsTools === true,
@@ -641,6 +591,27 @@ async function main(): Promise<void> {
       invocations: result.invocations,
     };
 
+    // Sonda gate (Arturo): require ≥1 successful baseline cell or stop.
+    let sondaOk: boolean | null = null;
+    if (SONDA) {
+      const baselineOk = aggregate.completedCells.some(
+        (c) => c.variant === 'baseline' && c.success === true,
+      );
+      sondaOk = baselineOk;
+      (aggregate as Record<string, unknown>).sonda = {
+        ok: baselineOk,
+        required: 'baseline cell with success=true',
+      };
+      if (!baselineOk) {
+        (aggregate as Record<string, unknown>).verdict = 'NO CONCLUYENTE';
+        (aggregate as Record<string, unknown>).verdictReasons = [
+          'sonda failed — no successful baseline cell; matrix not authorized',
+        ];
+        exitCode = 1;
+        abortReason = 'sonda failed — no successful baseline cell';
+      }
+    }
+
     await writeAggregate(aggregate);
     await writeFile(resolve(OUT_DIR, 'bench-report.md'), result.markdown, 'utf-8');
 
@@ -648,13 +619,15 @@ async function main(): Promise<void> {
       event: 'bench-baseline-done',
       cheap: true,
       modelId: MODEL_ID,
+      sonda: SONDA,
+      sondaOk,
       usageBefore: aggregate.usageBefore,
       usageAfter: aggregate.usageAfter,
       proxyRequestCount: proxyCount,
       completed: aggregate.completedCells.length,
       budget,
       pending: aggregate.pendingCells.length,
-      verdict: aggregate.verdict,
+      verdict: (aggregate as { verdict?: string }).verdict,
       runValid: aggregate.runValid,
       aborted: aggregate.aborted,
       contentHash: aggregate.contentHash,

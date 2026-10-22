@@ -1,13 +1,25 @@
 # M5 cheap baseline — manual dispatch or push to bench/baseline-m5-run.
 # Never runs on pull_request. Key from secrets.OPENROUTER_API_KEY only.
-# Hard caps: BENCH_MAX_REQUESTS=100 accumulated + 20 req/min rate limit +
-# $5 usage-Δ spend candado (Arturo 22 Oct). Matrix: 1 task × 2 × N=3.
-# Claude Code 2.1.197. Probe :free first; paid fallback openai/gpt-oss-20b
-# ($0.018/$0.09 per MTok) when free tier is exhausted.
+#
+# Arturo 22 Oct 9:51 Cancún:
+# - Model: deepseek/deepseek-v4-flash ($0.091/$0.182 per MTok)
+# - NEW budget: 100 requests (counter reset) + $0.49 usage-Δ candado
+# - Proxy (microsdd 0755fde): count only POST messages; HEAD/health free;
+#   rate-limit 20/min WAITS (no 429); budget → 403; MAX_RETRIES=0
+# - BENCH_SONDA=1 → 1 baseline cell; full matrix only after sonda success
 name: bench-baseline-m5
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'sonda (1 baseline cell) or matrix (2×N=3)'
+        required: true
+        default: 'sonda'
+        type: choice
+        options:
+          - sonda
+          - matrix
   push:
     branches:
       - bench/baseline-m5-run
@@ -53,15 +65,26 @@ jobs:
           mkdir -p "$HOME/.claude"
           printf '%s\n' '{"hasTrustDialogAccepted":true,"hasCompletedProjectOnboarding":true}' > "$HOME/.claude/settings.json"
 
-      # Smoke + matrix. Proxy seeds at BENCH_REQUESTS_ALREADY_USED (repo-accumulated
-      # cap 100). Rate limit 20/min. Spend candado $5 usage Δ. Key parent-only.
-      - name: Run cheap baseline (1 task × 2 × N=3, cap 100 accum)
+      - name: Resolve mode (sonda vs matrix)
+        id: mode
+        run: |
+          MODE="${{ github.event.inputs.mode }}"
+          if [ -z "$MODE" ]; then
+            # push to bench/baseline-m5-run: read .bench-mode if present, else sonda
+            if [ -f .bench-mode ]; then
+              MODE=$(tr -d '[:space:]' < .bench-mode)
+            else
+              MODE=sonda
+            fi
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "Resolved mode=$MODE"
+
+      - name: Run cheap baseline
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           ANTHROPIC_API_KEY: ""
-          BENCH_MODEL_ID: cohere/north-mini-code:free
-          BENCH_FALLBACK_MODEL_ID: openai/gpt-oss-20b
-          BENCH_N: "3"
+          BENCH_MODEL_ID: deepseek/deepseek-v4-flash
           BENCH_SEED: "42"
           BENCH_TASK_IDS: fix-add-off-by-one
           BENCH_MAX_TURNS: "3"
@@ -70,10 +93,13 @@ jobs:
           BENCH_MAX_TOKENS: "2000000"
           BENCH_MAX_REQUESTS: "100"
           BENCH_MAX_REQUESTS_PER_MINUTE: "20"
-          BENCH_MAX_SPEND_USD: "5"
-          BENCH_MAX_PROBES: "3"
-          # Accumulated spend across aborted smokes (… + 39778489974) = 10.
-          BENCH_REQUESTS_ALREADY_USED: "10"
+          BENCH_MAX_SPEND_USD: "0.49"
+          # Counter RESET for new deepseek baseline (Arturo 22 Oct 9:51).
+          BENCH_REQUESTS_ALREADY_USED: "0"
+          BENCH_SONDA: ${{ steps.mode.outputs.mode == 'sonda' && '1' || '0' }}
+          BENCH_N: ${{ steps.mode.outputs.mode == 'sonda' && '1' || '3' }}
+          CLAUDE_CODE_MAX_RETRIES: "0"
+          ANTHROPIC_MAX_RETRIES: "0"
         run: bun run scripts/bench-baseline-cheap.ts
 
       - name: Post-candado usage snapshot (always)

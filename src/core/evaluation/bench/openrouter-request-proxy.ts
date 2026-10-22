@@ -35,12 +35,25 @@ import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 export const DEFAULT_OPENROUTER_REQUEST_CAP = 100;
-/** Fail-closed sliding-window rate limit (Arturo 22 Oct): 20 requests / minute. */
+/** Sliding-window rate limit (Arturo / microsdd 0755fde): 20 requests / minute. */
 export const DEFAULT_OPENROUTER_RATE_LIMIT_PER_MIN = 20;
 export const OPENROUTER_RATE_LIMIT_WINDOW_MS = 60_000;
+/** Max wait for a rate-limit slot before fail-closed abort (no 429). */
+export const DEFAULT_OPENROUTER_RATE_WAIT_TIMEOUT_MS = 180_000;
 export const OPENROUTER_UPSTREAM_HOST = 'openrouter.ai';
 /** Prefix for one-shot local tokens — never a real OpenRouter key. */
 export const PROXY_LOCAL_TOKEN_PREFIX = 'cc-proxy-local-';
+
+/**
+ * POST paths that consume the durable 100-request cap (messages only).
+ * Matches inbound Anthropic `/v1/…` and OpenRouter `/api/v1/…` forms.
+ */
+export const COUNTABLE_POST_PATH_SUFFIXES = [
+  '/v1/messages',
+  '/v1/chat/completions',
+  '/messages',
+  '/chat/completions',
+] as const;
 
 export interface RequestCounterState {
   schema: 'openrouter-request-counter/v1';
@@ -59,11 +72,14 @@ export interface OpenRouterRequestProxyOptions {
   /** Hard cap (inclusive). Request max+1 is rejected. Default 100. */
   maxRequests?: number;
   /**
-   * Max forwarded requests per rolling 60s window (fail-closed).
-   * Default {@link DEFAULT_OPENROUTER_RATE_LIMIT_PER_MIN}. Rate-limited
-   * rejects do **not** consume the durable request counter.
+   * Max countable POSTs per rolling 60s window. The limiter **waits** for a
+   * slot (microsdd 0755fde) instead of returning 429 — Claude must not retry
+   * loops on our own rate limit. Default
+   * {@link DEFAULT_OPENROUTER_RATE_LIMIT_PER_MIN}.
    */
   maxRequestsPerMinute?: number;
+  /** Max ms to wait for a rate-limit slot (default 180s). */
+  rateWaitTimeoutMs?: number;
   /**
    * Seed the durable counter when the file does not yet exist (repo-accumulated
    * budget across Actions runs). Must be 0 ≤ initialCount ≤ maxRequests.
@@ -154,9 +170,11 @@ export class RequestBudgetExhaustedError extends Error {
 export class RequestRateLimitError extends Error {
   readonly windowCount: number;
   readonly maxPerMinute: number;
-  constructor(windowCount: number, maxPerMinute: number) {
+  constructor(windowCount: number, maxPerMinute: number, message?: string) {
     super(
-      `OpenRouter proxy rate limit: ${windowCount}/${maxPerMinute} requests in the last 60s`,
+      message ??
+        `OpenRouter proxy rate limit: wait exhausted for ${maxPerMinute}/min ` +
+          `(window=${windowCount})`,
     );
     this.name = 'RequestRateLimitError';
     this.windowCount = windowCount;
@@ -164,15 +182,42 @@ export class RequestRateLimitError extends Error {
   }
 }
 
+/** Pathname without query string. */
+export function pathOnly(path: string): string {
+  const raw = path && path.length > 0 ? path : '/';
+  const q = raw.indexOf('?');
+  return q >= 0 ? raw.slice(0, q) : raw;
+}
+
 /**
- * Sliding-window rate limiter (in-process). Fail-closed: callers must not
- * forward when this throws.
+ * True only for POST message routes that must consume the durable 100 cap
+ * (microsdd 0755fde / Arturo). HEAD, health, GET /models do not count.
+ */
+export function isCountableRequest(method: string, path: string): boolean {
+  if ((method || '').toUpperCase() !== 'POST') return false;
+  const p = pathOnly(path);
+  for (const suffix of COUNTABLE_POST_PATH_SUFFIXES) {
+    if (p === suffix || p.endsWith(suffix)) return true;
+  }
+  return false;
+}
+
+function isLocalHealthPath(path: string): boolean {
+  const p = pathOnly(path);
+  return p === '/health' || p.endsWith('/health');
+}
+
+/**
+ * Sliding-window rate limiter (in-process). Waits for a free slot instead of
+ * rejecting with 429 (Claude retries 429 in a loop).
  */
 export class SlidingWindowRateLimiter {
   private readonly timestamps: number[] = [];
+  readonly waitTimeoutMs: number;
   constructor(
     readonly maxPerWindow: number,
     readonly windowMs: number = OPENROUTER_RATE_LIMIT_WINDOW_MS,
+    waitTimeoutMs: number = DEFAULT_OPENROUTER_RATE_WAIT_TIMEOUT_MS,
   ) {
     if (
       !Number.isFinite(maxPerWindow) ||
@@ -181,6 +226,10 @@ export class SlidingWindowRateLimiter {
     ) {
       throw new RequestCounterError('maxRequestsPerMinute must be a positive integer');
     }
+    if (!Number.isFinite(waitTimeoutMs) || waitTimeoutMs <= 0) {
+      throw new RequestCounterError('rateWaitTimeoutMs must be a positive number');
+    }
+    this.waitTimeoutMs = waitTimeoutMs;
   }
 
   /** Prune and count timestamps still inside the window. */
@@ -189,7 +238,37 @@ export class SlidingWindowRateLimiter {
     return this.timestamps.length;
   }
 
-  /** Reserve one slot or throw {@link RequestRateLimitError}. */
+  /**
+   * Wait until a slot is free, then reserve it.
+   * Throws {@link RequestRateLimitError} only if waitTimeoutMs elapses.
+   */
+  async acquire(nowMs: () => number = () => Date.now()): Promise<number> {
+    const deadline = nowMs() + this.waitTimeoutMs;
+    for (;;) {
+      const t = nowMs();
+      this.prune(t);
+      if (this.timestamps.length < this.maxPerWindow) {
+        this.timestamps.push(t);
+        return this.timestamps.length;
+      }
+      if (t >= deadline) {
+        throw new RequestRateLimitError(
+          this.timestamps.length,
+          this.maxPerWindow,
+          `OpenRouter proxy rate limit ${this.maxPerWindow}/min: wait exhausted ` +
+            `(${this.waitTimeoutMs}ms)`,
+        );
+      }
+      const oldest = this.timestamps[0]!;
+      const sleepFor = Math.min(
+        Math.max(oldest + this.windowMs - t, 10),
+        Math.max(deadline - t, 10),
+      );
+      await new Promise<void>((r) => setTimeout(r, sleepFor));
+    }
+  }
+
+  /** @deprecated Prefer {@link acquire}. Sync try — throws if window full. */
   reserve(nowMs: number = Date.now()): number {
     this.prune(nowMs);
     if (this.timestamps.length >= this.maxPerWindow) {
@@ -407,6 +486,8 @@ export async function startOpenRouterRequestProxy(
   const maxRequests = options.maxRequests ?? DEFAULT_OPENROUTER_REQUEST_CAP;
   const maxRequestsPerMinute =
     options.maxRequestsPerMinute ?? DEFAULT_OPENROUTER_RATE_LIMIT_PER_MIN;
+  const rateWaitTimeoutMs =
+    options.rateWaitTimeoutMs ?? DEFAULT_OPENROUTER_RATE_WAIT_TIMEOUT_MS;
   const initialCount = options.initialCount ?? 0;
   if (!isFiniteNonNegInt(initialCount) || initialCount > maxRequests) {
     throw new RequestCounterError(
@@ -419,7 +500,11 @@ export async function startOpenRouterRequestProxy(
   const counterPath = options.counterPath;
   const localAuthToken = options.localAuthToken;
   const upstreamApiKey = options.upstreamApiKey;
-  const rateLimiter = new SlidingWindowRateLimiter(maxRequestsPerMinute);
+  const rateLimiter = new SlidingWindowRateLimiter(
+    maxRequestsPerMinute,
+    OPENROUTER_RATE_LIMIT_WINDOW_MS,
+    rateWaitTimeoutMs,
+  );
 
   try {
     const existing = await readRequestCounter(counterPath);
@@ -462,6 +547,7 @@ export async function startOpenRouterRequestProxy(
           streamed: false,
         });
         sendJson(res, 401, {
+          type: 'error',
           error: {
             message: 'invalid or missing local proxy token',
             type: 'proxy_auth_failed',
@@ -470,70 +556,106 @@ export async function startOpenRouterRequestProxy(
         return;
       }
 
-      // Rate limit BEFORE consuming the durable slot (rejects do not count).
-      try {
-        rateLimiter.reserve(now().getTime());
-      } catch (err) {
-        if (err instanceof RequestRateLimitError) {
-          recordHop({
-            method,
-            inboundPath,
-            upstreamPath,
-            upstreamStatus: 429,
-            streamed: false,
-          });
-          sendJson(res, 429, {
-            error: {
-              message: err.message,
-              type: 'request_rate_limited',
-              windowCount: err.windowCount,
-              maxPerMinute: err.maxPerMinute,
-            },
-          });
-          return;
-        }
-        throw err;
-      }
-
-      let reserved: number;
-      try {
-        reserved = await reserveRequestSlot(counterPath, maxRequests, now);
-      } catch (err) {
-        if (err instanceof RequestBudgetExhaustedError) {
-          recordHop({
-            method,
-            inboundPath,
-            upstreamPath,
-            upstreamStatus: 429,
-            streamed: false,
-          });
-          sendJson(res, 429, {
-            error: {
-              message: err.message,
-              type: 'request_budget_exhausted',
-              count: err.count,
-              max: err.max,
-            },
-          });
-          return;
+      // HEAD and /health are local — no forward, no durable slot (microsdd 0755fde).
+      if (method.toUpperCase() === 'HEAD' || isLocalHealthPath(inboundPath)) {
+        let count = 0;
+        try {
+          count = (await readRequestCounter(counterPath)).count;
+        } catch {
+          count = -1;
         }
         recordHop({
           method,
           inboundPath,
           upstreamPath,
-          upstreamStatus: 503,
+          upstreamStatus: 200,
           streamed: false,
         });
-        sendJson(res, 503, {
-          error: {
-            message: err instanceof Error ? err.message : String(err),
-            type: 'request_counter_unavailable',
-          },
-        });
+        if (method.toUpperCase() === 'HEAD') {
+          res.writeHead(200, { 'content-type': 'application/json' });
+          res.end();
+        } else {
+          sendJson(res, 200, {
+            ok: true,
+            count,
+            max: maxRequests,
+          });
+        }
         return;
       }
 
+      // Read body before counting so parse failures do not burn a slot.
       const body = await collectBody(req);
+      const countable = isCountableRequest(method, inboundPath);
+
+      let reserved: number | null = null;
+      if (countable) {
+        // Wait for rpm slot (never 429 — Claude retries 429 in a loop).
+        try {
+          await rateLimiter.acquire(() => now().getTime());
+        } catch (err) {
+          if (err instanceof RequestRateLimitError) {
+            recordHop({
+              method,
+              inboundPath,
+              upstreamPath,
+              upstreamStatus: 403,
+              streamed: false,
+            });
+            sendJson(res, 403, {
+              type: 'error',
+              error: {
+                message: err.message,
+                type: 'cc_proxy_rate_wait_timeout',
+                windowCount: err.windowCount,
+                maxPerMinute: err.maxPerMinute,
+              },
+            });
+            return;
+          }
+          throw err;
+        }
+        try {
+          reserved = await reserveRequestSlot(counterPath, maxRequests, now);
+        } catch (err) {
+          if (err instanceof RequestBudgetExhaustedError) {
+            // 403 not 429 — avoid Claude SDK retry storms (microsdd 0755fde).
+            recordHop({
+              method,
+              inboundPath,
+              upstreamPath,
+              upstreamStatus: 403,
+              streamed: false,
+            });
+            sendJson(res, 403, {
+              type: 'error',
+              error: {
+                message: err.message,
+                type: 'cc_proxy_budget',
+                count: err.count,
+                max: err.max,
+              },
+            });
+            return;
+          }
+          recordHop({
+            method,
+            inboundPath,
+            upstreamPath,
+            upstreamStatus: 503,
+            streamed: false,
+          });
+          sendJson(res, 503, {
+            type: 'error',
+            error: {
+              message: err instanceof Error ? err.message : String(err),
+              type: 'request_counter_unavailable',
+            },
+          });
+          return;
+        }
+      }
+
       const headers: Record<string, string> = {};
       for (const [k, v] of Object.entries(req.headers)) {
         if (v === undefined) continue;
@@ -547,7 +669,9 @@ export async function startOpenRouterRequestProxy(
       // Inject real OpenRouter key only on the outbound hop (never the local token).
       headers.authorization = `Bearer ${upstreamApiKey}`;
       headers['content-length'] = String(body.length);
-      headers['x-cc-request-slot'] = String(reserved);
+      if (reserved !== null) {
+        headers['x-cc-request-slot'] = String(reserved);
+      }
 
       const useHttp = options.useHttpUpstream === true;
       const upstreamPort = useHttp ? (options.upstreamPort ?? 80) : 443;
@@ -605,6 +729,7 @@ export async function startOpenRouterRequestProxy(
           });
           if (!res.headersSent) {
             sendJson(res, 502, {
+              type: 'error',
               error: {
                 message: `upstream error: ${e.message}`,
                 type: 'upstream_error',
@@ -628,6 +753,7 @@ export async function startOpenRouterRequestProxy(
       });
       if (!res.headersSent) {
         sendJson(res, 500, {
+          type: 'error',
           error: {
             message: err instanceof Error ? err.message : String(err),
             type: 'proxy_internal_error',
@@ -696,6 +822,9 @@ export function buildClaudeChildEnv(input: {
     XDG_STATE_HOME: parent.XDG_STATE_HOME,
     CI: 'true',
     CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1',
+    // microsdd 0755fde: no SDK retry storms on proxy 403/network blips.
+    CLAUDE_CODE_MAX_RETRIES: '0',
+    ANTHROPIC_MAX_RETRIES: '0',
     CLAUDE_CODE_VERSION: parent.CLAUDE_CODE_VERSION,
     ANTHROPIC_API_KEY: '',
     ANTHROPIC_BASE_URL: input.proxyBaseUrl,

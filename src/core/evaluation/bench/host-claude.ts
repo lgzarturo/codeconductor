@@ -250,7 +250,7 @@ function looksLike429(stderr: string, stdout: string): boolean {
   );
 }
 
-/** Proxy fail-closed budget 429 (or stream meter) — abort the run, do not retry. */
+/** Proxy fail-closed budget 403 (or stream meter) — abort the run, do not retry. */
 export function looksLikeRequestBudgetExhausted(
   stderr: string,
   stdout: string,
@@ -258,6 +258,7 @@ export function looksLikeRequestBudgetExhausted(
   const blob = `${stderr}\n${stdout}`;
   return (
     blob.includes('request_budget_exhausted') ||
+    blob.includes('cc_proxy_budget') ||
     /request budget exhausted/i.test(blob)
   );
 }
@@ -266,6 +267,7 @@ export function isRequestBudgetAbortReason(reason: string | null | undefined): b
   if (!reason) return false;
   return (
     reason.includes('request_budget_exhausted') ||
+    reason.includes('cc_proxy_budget') ||
     /request budget exhausted/i.test(reason) ||
     /token budget exhausted/i.test(reason)
   );
@@ -357,6 +359,8 @@ export function buildClaudeEnv(modelId: string): NodeJS.ProcessEnv {
     XDG_STATE_HOME: process.env.XDG_STATE_HOME,
     CI: 'true',
     CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1',
+    CLAUDE_CODE_MAX_RETRIES: '0',
+    ANTHROPIC_MAX_RETRIES: '0',
     CLAUDE_CODE_VERSION: process.env.CLAUDE_CODE_VERSION,
     ANTHROPIC_API_KEY: '',
     // No openrouter.ai fallback — live path must set the proxy URL + local token.
@@ -677,7 +681,7 @@ export async function runClaudeHostCell(
           pending: true,
           pendingReason:
             result.budgetStop ??
-            'request budget exhausted (proxy 429 request_budget_exhausted)',
+            'request budget exhausted (proxy 403 cc_proxy_budget)',
           durationMs: Date.now() - started,
           diagnostics: lastDiag,
           totals: null,

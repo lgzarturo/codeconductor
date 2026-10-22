@@ -172,15 +172,15 @@ describe('M3 OpenRouter spend lock ($5/repo usage Δ)', () => {
     expect(isOpenRouterFreeModel('anthropic/claude-sonnet-5-5:Free')).toBe(false);
   });
 
-  test('allows paid models under the $5 spend cap (Arturo 22 Oct)', async () => {
-    expect(DEFAULT_OPENROUTER_SPEND_CAP_USD).toBe(5);
-    expect(DEFAULT_OPENROUTER_LIMIT_CAP_USD).toBe(5);
+  test('allows paid models under the $0.49 spend cap (Arturo 22 Oct 9:51)', async () => {
+    expect(DEFAULT_OPENROUTER_SPEND_CAP_USD).toBe(0.49);
+    expect(DEFAULT_OPENROUTER_LIMIT_CAP_USD).toBe(0.49);
     const locked = await assertOpenRouterZeroSpend({
-      modelId: 'openai/gpt-oss-20b',
+      modelId: 'deepseek/deepseek-v4-flash',
       skipKeyCheck: true,
     });
     expect(locked.ok).toBe(true);
-    expect(locked.maxSpendUsd).toBe(5);
+    expect(locked.maxSpendUsd).toBe(0.49);
   });
 
   test('allows :free or paid + finite usage baseline (key limit may be $10)', async () => {
@@ -230,31 +230,31 @@ describe('M3 OpenRouter spend lock ($5/repo usage Δ)', () => {
     expect(locked.reason).toMatch(/usage/i);
   });
 
-  test('post-run: usage Δ above $5 cap aborts and marks run invalid', async () => {
+  test('post-run: usage Δ above $0.49 cap aborts and marks run invalid', async () => {
     const delta = await assertOpenRouterUsageWithinCap({
       usageBefore: 1.0,
-      maxSpendUsd: 5,
+      maxSpendUsd: 0.49,
       keyAfter: {
         limit: 10,
         limitRemaining: 3.5,
-        usage: 7.25,
+        usage: 1.75,
         isFreeTier: false,
         label: 'spent',
       },
     });
     expect(delta.ok).toBe(false);
     expect(delta.runValid).toBe(false);
-    expect(delta.deltaUsd).toBeCloseTo(6.25);
-    expect(delta.reason).toMatch(/cap|invalid|5/i);
+    expect(delta.deltaUsd).toBeCloseTo(0.75);
+    expect(delta.reason).toMatch(/cap|invalid|0\.49/i);
 
     await expect(
       enforceOpenRouterUsageUnchanged({
         usageBefore: 2,
-        maxSpendUsd: 5,
+        maxSpendUsd: 0.49,
         keyAfter: {
           limit: 10,
           limitRemaining: 2,
-          usage: 8.01,
+          usage: 2.6,
           isFreeTier: false,
           label: 'spent',
         },
@@ -265,36 +265,36 @@ describe('M3 OpenRouter spend lock ($5/repo usage Δ)', () => {
   test('post-run: usage Δ approaching cap (90%) aborts', async () => {
     const delta = await assertOpenRouterUsageWithinCap({
       usageBefore: 0,
-      maxSpendUsd: 5,
+      maxSpendUsd: 0.49,
       keyAfter: {
         limit: 10,
-        limitRemaining: 5.5,
-        usage: 4.5,
+        limitRemaining: 9.5,
+        usage: 0.441,
         isFreeTier: false,
         label: 'near-cap',
       },
     });
     expect(delta.ok).toBe(false);
     expect(delta.runValid).toBe(false);
-    expect(delta.deltaUsd).toBeCloseTo(4.5);
+    expect(delta.deltaUsd).toBeCloseTo(0.441);
     expect(delta.reason).toMatch(/approaches/i);
   });
 
   test('post-run: small paid Δ under approach threshold keeps run valid', async () => {
     const delta = await assertOpenRouterUsageUnchanged({
       usageBefore: 1.0,
-      maxSpendUsd: 5,
+      maxSpendUsd: 0.49,
       keyAfter: {
         limit: 10,
-        limitRemaining: 8.75,
-        usage: 1.25,
+        limitRemaining: 9.9,
+        usage: 1.05,
         isFreeTier: false,
         label: 'cheap-paid',
       },
     });
     expect(delta.ok).toBe(true);
     expect(delta.runValid).toBe(true);
-    expect(delta.deltaUsd).toBeCloseTo(0.25);
+    expect(delta.deltaUsd).toBeCloseTo(0.05);
   });
 
   test('post-run: usage Δ = 0 keeps run valid', async () => {
@@ -383,7 +383,9 @@ describe('M3 OpenRouter spend lock ($5/repo usage Δ)', () => {
     });
     expect(snap.limit).toBe(5);
     expect(keySnapshotIsComplete(snap)).toBe(true);
-    expect(keyLimitWithinCap(snap)).toBe(true);
+    // Historical helper: key.limit ≤ label; spend candado is usage Δ ($0.49).
+    expect(keyLimitWithinCap(snap, 5)).toBe(true);
+    expect(keyLimitWithinCap(snap)).toBe(false);
   });
 });
 

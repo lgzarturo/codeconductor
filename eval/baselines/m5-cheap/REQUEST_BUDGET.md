@@ -2,9 +2,10 @@
 
 Hard cap for **this repo**: **100** OpenRouter requests (fail-closed local proxy),
 **accumulated across Actions runs**. Seed prior spend with
-`BENCH_REQUESTS_ALREADY_USED`. Spent so far: **10 / 100** (runs 39777070216 +
-39777659383 + 39778489974) → **90 left**. Combined with microsdd the org budget
-is 200; do not cross-spend.
+`BENCH_REQUESTS_ALREADY_USED`. Spent so far: **100 / 100** after run
+[39789258349](https://github.com/lgzarturo/codeconductor/actions/runs/39789258349)
+(prior 10 + 90 this regen) → **0 left**. Do not relaunch under this cap.
+Combined with microsdd the org budget is 200; do not cross-spend.
 
 Additional proxy guard (Arturo 22 Oct): **20 requests / minute** sliding window,
 fail-closed. Rate-limit rejects do **not** consume the durable 100 counter.

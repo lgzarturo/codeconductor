@@ -1,19 +1,28 @@
-# Bench report (M5 cheap — path fix relaunch aborted at smoke)
+# Bench Report
 
-- **Actions run:** https://github.com/lgzarturo/codeconductor/actions/runs/39778489974
-- **Code head:** `d8fae60` (Claude Code 2.1.197, `anthropicBaseUrl=…/api`, seed 8/100)
-- **Matrix planned:** 1 × 2 × N=3
-- **Completed cells:** 0
-- **Proxy (accumulated):** **10 / 100** (prior 8 + this smoke ≈2)
-- **Usage:** before=$0 → after=$0
-- **Verdict:** NO CONCLUYENTE
-- **Abort:** smoke `exit=1` `subtype=success` `is_error=true` despite correct `/api` base URL
-- **Stop:** no further relaunch per instructions
+Generated: 2026-10-22T13:53:00.059Z (UTC)
+Suite: `harness-v1` · N=3 · cheap=true
+Claim: success-only
+Verdict: **ACEPTA**
+Hash: `8e8077dd6a148c018a9b4cd2597d79a6cda7d0dd76193d8fde1230a7ee77b22a`
 
-## Root cause fixed (necessary, not yet sufficient)
+## Reasons
 
-Historical: `ANTHROPIC_BASE_URL=https://openrouter.ai/api` → `/api/v1/messages`.
-Broken proxy: origin-only BASE_URL → Claude POST `/v1/messages` → forwarded to
-`openrouter.ai/v1/messages` (missing `/api`). Fix shipped: `anthropicBaseUrl`
-+ path rewrite + SSE pipe test. This relaunch confirmed BASE_URL=`…/api` in logs
-but smoke still failed; remaining host/proxy issue unknown without hop statuses.
+- success criterion met
+
+## Fingerprints
+
+- harness: `n/a`
+- prompt: `n/a`
+- host: `n/a`
+- model: `cohere/north-mini-code:free`
+- pricing: `n/a`
+
+Total cost (sum of cells): 3.4328000000000003
+
+## Per-task tokens (median [IQR])
+
+| Task | Baseline | Treatment | Δ median | IC 95% | Success B→T | NI |
+| --- | --- | --- | ---: | --- | --- | --- |
+| fix-add-off-by-one | 80498.0 [48121.0, 112875.0] | 246338.0 [134640.5, 358035.5] | 165840.0 | [-122309.0, 453989.0] | 0/2→0/2 | ok |
+| TOTAL | 80498.0 | 246338.0 | 165840.0 | [-122309.0, 453989.0] | 0/2→0/2 | — |

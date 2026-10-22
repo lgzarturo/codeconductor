@@ -4,18 +4,29 @@
   "n": 3,
   "modelId": "nvidia/nemotron-3-super-120b-a12b:free",
   "pricingVerifiedZero": true,
-  "generatedAt": "2026-10-22T12:17:19.534Z",
+  "generatedAt": "2026-10-22T12:21:46.569Z",
   "usageBefore": 0,
   "usageAfter": 0,
-  "proxyRequestCount": 4,
+  "proxyRequestCount": 8,
+  "requestsAlreadyUsed": 4,
   "aborted": true,
-  "abortReason": "smoke failed after 4 attempts: exit=1 timedOut=false 429=false subtype=success is_error=true stderr=[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
+  "abortReason": "smoke failed after 4 attempts: exit=1 timedOut=false 429=false subtype=success is_error=true stderr={\"type\":\"system\",\"subtype\":\"init\",\"cwd\":\"/home/runner/work/codeconductor/codeconductor\",\"session_id=[REDACTED]\",\"tools\":[\"Task\",\"Bash\",\"CronCreate\",\"CronDelete\",\"CronList\",",
+  "openRouterCatalog": {
+    "listed": true,
+    "freeListed": true,
+    "httpStatus": 200,
+    "reason": "model nvidia/nemotron-3-super-120b-a12b:free still listed as :free on OpenRouter (public GET /api/v1/models, no key; verified post-run)",
+    "pricing": {
+      "prompt": "0",
+      "completion": "0"
+    }
+  },
   "smoke": {
     "ok": false,
     "attempts": [
       {
         "exitCode": 1,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
+        "stderrTruncated": "",
         "subtype": "success",
         "isError": true,
         "timedOut": false,
@@ -25,7 +36,7 @@
       },
       {
         "exitCode": 1,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
+        "stderrTruncated": "{\"type\":\"system\",\"subtype\":\"init\",\"cwd\":\"/home/runner/work/codeconductor/codeconductor\",\"session_id=[REDACTED]\",\"tools\":[\"Task\",\"Bash\",\"CronCreate\",\"CronDelete\",\"CronList\",",
         "subtype": "success",
         "isError": true,
         "timedOut": false,
@@ -35,7 +46,7 @@
       },
       {
         "exitCode": 1,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
+        "stderrTruncated": "",
         "subtype": "success",
         "isError": true,
         "timedOut": false,
@@ -45,7 +56,7 @@
       },
       {
         "exitCode": 1,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
+        "stderrTruncated": "{\"type\":\"system\",\"subtype\":\"init\",\"cwd\":\"/home/runner/work/codeconductor/codeconductor\",\"session_id=[REDACTED]\",\"tools\":[\"Task\",\"Bash\",\"CronCreate\",\"CronDelete\",\"CronList\",",
         "subtype": "success",
         "isError": true,
         "timedOut": false,
@@ -54,13 +65,16 @@
         "attempt": 2
       }
     ],
-    "reason": "smoke failed after 4 attempts: exit=1 timedOut=false 429=false subtype=success is_error=true stderr=[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n"
+    "reason": "smoke failed after 4 attempts: exit=1 timedOut=false 429=false subtype=success is_error=true stderr={\"type\":\"system\",\"subtype\":\"init\",\"cwd\":\"/home/runner/work/codeconductor/codeconductor\",\"session_id=[REDACTED]\",\"tools\":[\"Task\",\"Bash\",\"CronCreate\",\"CronDelete\",\"CronList\","
   },
   "completedCells": [],
   "pendingCells": [],
   "invocations": [],
   "verdict": "NO CONCLUYENTE",
   "verdictReasons": [
-    "smoke failed after 2 attempts — no valid Claude Code cell"
-  ]
+    "smoke failed after 2 attempts — no valid Claude Code cell",
+    "Claude Code pinned 2.1.197; exit=1 subtype=success is_error=true (not unrecognized_model)",
+    "model nvidia/nemotron-3-super-120b-a12b:free still listed as :free on OpenRouter (public GET /api/v1/models, no key; verified post-run) — no substitute chosen"
+  ],
+  "requestCap": 100
 }

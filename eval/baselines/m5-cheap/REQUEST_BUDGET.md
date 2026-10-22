@@ -2,12 +2,14 @@
 
 Hard cap for **this repo**: **100** OpenRouter requests (fail-closed local proxy),
 **accumulated across Actions runs**. Seed prior spend with
-`BENCH_REQUESTS_ALREADY_USED` (e.g. 4 from aborted run 39777070216 → 96 left).
-Combined with microsdd the org budget is 200; do not cross-spend.
+`BENCH_REQUESTS_ALREADY_USED`. Spent so far: **8 / 100** (4 from 39777070216 +
+4 from 39777659383) → **92 left**. Combined with microsdd the org budget is 200;
+do not cross-spend.
 
-Claude Code is **pinned to 2.1.197** in `bench-baseline.yml` (the version that
-accepted this `:free` model on run 39203481151 / fixture #18). Do not use
-`latest` — 2.1.308 returned `unrecognized_model` for the same id.
+Claude Code is **pinned to 2.1.197** in `bench-baseline.yml` (fixture #18 /
+run 39203481151). Do not use `latest` — 2.1.308 returned `unrecognized_model`.
+With 2.1.197 the model is still listed `:free` on OpenRouter, but smoke still
+exits `is_error=true` (no substitute chosen).
 
 Auth: Claude presents a one-shot `cc-proxy-local-*` token
 (`ANTHROPIC_AUTH_TOKEN`). The proxy never forwards that token upstream; it

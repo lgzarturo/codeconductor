@@ -25,7 +25,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      # Full history + tags: M4 prompt-diff --compiled needs v1.7.1 / v1.7.2
+      # (default shallow checkout has neither, so git worktree add fails).
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest

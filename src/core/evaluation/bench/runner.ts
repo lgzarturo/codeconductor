@@ -3,7 +3,7 @@
  *
  * Live model calls are opt-in (`live: true`). Default and CI paths use recorded
  * cells or a deterministic dry schedule. Cheap mode enforces OpenRouter
- * zero-spend lock before the run and between tasks.
+ * max-spend lock ($5/repo usage Δ) before the run and between tasks.
  */
 import { cp, mkdtemp, readFile, rm, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -11,9 +11,9 @@ import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { loadHarnessSuite } from '../harness-experiment';
 import {
-  assertOpenRouterUsageUnchanged,
+  assertOpenRouterUsageWithinCap,
   assertOpenRouterZeroSpend,
-  DEFAULT_OPENROUTER_LIMIT_CAP_USD,
+  DEFAULT_OPENROUTER_SPEND_CAP_USD,
   type OpenRouterKeySnapshot,
 } from '../../telemetry/openrouter-spend-lock';
 import { createLcg } from './stats';
@@ -26,6 +26,7 @@ import {
 } from './report';
 import {
   budgetExhausted,
+  isRequestBudgetAbortReason,
   runClaudeHostCell,
   type BenchBudget,
   type ClaudeHostDiagnostics,
@@ -70,10 +71,13 @@ export interface BenchRunOptions {
    */
   drySynthetic?: boolean;
   /**
-   * Opt-in live Claude Code host (OpenRouter :free). Requires cheap + key.
-   * Incomplete cells are listed in `pendingCells`.
+   * Opt-in live Claude Code host (OpenRouter `:free` or cheap paid).
+   * Requires cheap + key. Incomplete cells are listed in `pendingCells`.
    */
   live?: boolean;
+  /** Max usage Δ USD for cheap mode (default $5/repo). */
+  maxSpendUsd?: number;
+  /** @deprecated Prefer {@link maxSpendUsd}. */
   maxLimitUsd?: number;
   /** Pre/post key snapshots for cheap-mode usage Δ (tests inject these). */
   keyBefore?: OpenRouterKeySnapshot | null;
@@ -84,10 +88,19 @@ export interface BenchRunOptions {
   /** Directory outside the repo for bench-report.json (default XDG state). */
   reportDir?: string;
   writeReport?: boolean;
-  /** Cap live cells (tests / partial baseline). */
+  /** Cap live cells (tests / partial baseline / sonda). */
   maxLiveCells?: number;
   /** Hard token/request budget for live runs (required with `live`). */
   budget?: BenchBudget;
+  /**
+   * Optional subset of suite task ids (Phase-2 matrix under the 100-req cap).
+   * When set, only these tasks are scheduled.
+   */
+  taskIds?: string[];
+  /** Restrict scheduled variants (sonda = baseline only). */
+  variants?: Array<'baseline' | 'treatment'>;
+  /** Main-loop turn cap passed to Claude host (default 5). */
+  maxTurns?: number;
 }
 
 export interface BenchRunResult {
@@ -207,8 +220,16 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
   if (!suite.success) {
     throw suite.error;
   }
-  const taskIds = suite.data.tasks.map((t) => t.id);
+  const allTaskIds = suite.data.tasks.map((t) => t.id);
   const taskById = new Map(suite.data.tasks.map((t) => [t.id, t]));
+  let taskIds = allTaskIds;
+  if (options.taskIds && options.taskIds.length > 0) {
+    const missing = options.taskIds.filter((id) => !taskById.has(id));
+    if (missing.length > 0) {
+      throw new Error(`unknown bench taskIds: ${missing.join(', ')}`);
+    }
+    taskIds = options.taskIds;
+  }
 
   // Copy fixture to /tmp (clean workdir per §3.1) — even for dry runs, to
   // exercise the isolation path.
@@ -231,14 +252,19 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
   let aborted = false;
   let abortReason: string | null = null;
   const modelId =
-    options.modelId ?? 'nvidia/nemotron-3-super-120b-a12b:free';
+    options.modelId ?? 'deepseek/deepseek-v4-flash';
+  const maxSpendUsd =
+    options.maxSpendUsd ?? options.maxLimitUsd ?? DEFAULT_OPENROUTER_SPEND_CAP_USD;
+  const variantAllow = options.variants
+    ? new Set(options.variants)
+    : null;
 
   if (cheap) {
     const lock = await assertOpenRouterZeroSpend({
       modelId,
       key: options.keyBefore,
       fetchKey: options.fetchKey,
-      maxLimitUsd: options.maxLimitUsd ?? DEFAULT_OPENROUTER_LIMIT_CAP_USD,
+      maxSpendUsd,
       skipKeyCheck:
         options.keyBefore === undefined &&
         !options.fetchKey &&
@@ -259,7 +285,7 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
     if (options.live === true) {
       if (!cheap) {
         aborted = true;
-        abortReason = 'live bench requires --cheap (OpenRouter :free lock)';
+        abortReason = 'live bench requires --cheap (OpenRouter $5 spend lock)';
         runValid = false;
         cells = [];
       } else if (!fixtureDir) {
@@ -275,7 +301,9 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
       } else if (aborted) {
         cells = [];
       } else {
-        const schedule = interleaveSchedule(taskIds, n, seed);
+        const schedule = interleaveSchedule(taskIds, n, seed).filter((s) =>
+          variantAllow ? variantAllow.has(s.variant) : true,
+        );
         const maxLive = options.maxLiveCells ?? schedule.length;
         cells = [];
         let lastTaskId: string | null = null;
@@ -308,10 +336,11 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
               slot.taskId !== lastTaskId &&
               usageBefore !== null
             ) {
-              const mid = await assertOpenRouterUsageUnchanged({
+              const mid = await assertOpenRouterUsageWithinCap({
                 usageBefore,
                 keyAfter: options.keyAfter,
                 fetchKey: options.fetchKey,
+                maxSpendUsd,
               });
               if (!mid.ok) {
                 aborted = true;
@@ -343,12 +372,22 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
                 budget: options.budget,
                 hostVersion: process.env.CLAUDE_CODE_VERSION ?? null,
                 maxAttempts: 2,
+                maxTurns: options.maxTurns,
               },
             );
             const spent = budgetExhausted(options.budget);
-            if (spent) {
+            // Explicit abort on stream/proxy request budget — not only via
+            // consecutive host failures (review #24).
+            if (
+              spent ||
+              hostResult.diagnostics.requestBudgetExhausted ||
+              isRequestBudgetAbortReason(hostResult.pendingReason)
+            ) {
               aborted = true;
-              abortReason = spent;
+              abortReason =
+                spent ??
+                hostResult.pendingReason ??
+                'request budget exhausted';
               runValid = false;
             }
             invocations.push({
@@ -389,10 +428,11 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
           // Post-candado always runs when we had a usage baseline (even on abort).
           if (usageBefore !== null) {
             try {
-              const after = await assertOpenRouterUsageUnchanged({
+              const after = await assertOpenRouterUsageWithinCap({
                 usageBefore,
                 keyAfter: options.keyAfter,
                 fetchKey: options.fetchKey,
+                maxSpendUsd,
               });
               usageAfter = after.usageAfter;
               if (!after.ok) {
@@ -427,10 +467,11 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
   // Dry / cells path: re-check usage between tasks so a mid-run Δ aborts.
   if (!options.live && cheap && !aborted && usageBefore !== null) {
     for (const taskId of taskIds) {
-      const after = await assertOpenRouterUsageUnchanged({
+      const after = await assertOpenRouterUsageWithinCap({
         usageBefore,
         keyAfter: options.keyAfter,
         fetchKey: options.fetchKey,
+        maxSpendUsd,
       });
       usageAfter = after.usageAfter;
       if (!after.ok) {
@@ -449,7 +490,7 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
       harness: null,
       prompt: null,
       host: null,
-      model: options.modelId ?? (cheap ? 'openrouter:free' : 'dry-synthetic'),
+      model: options.modelId ?? (cheap ? 'openrouter:cheap' : 'dry-synthetic'),
       pricingVersion: null,
     },
     claim: options.claim ?? 'success-only',

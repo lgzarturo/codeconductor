@@ -1,0 +1,174 @@
+{
+  "schema": "bench-baseline-cheap/v1",
+  "cheap": true,
+  "n": 1,
+  "seed": 42,
+  "taskIds": [
+    "fix-add-off-by-one"
+  ],
+  "maxTurns": 6,
+  "modelId": "deepseek/deepseek-v4-flash",
+  "listPrice": {
+    "promptPerMTokUsd": 0.091,
+    "completionPerMTokUsd": 0.182,
+    "source": "openrouter.ai/api/v1/models (Arturo pin)"
+  },
+  "probesUsed": 1,
+  "sonda": {
+    "ok": false,
+    "required": "baseline cell with success=true"
+  },
+  "pricingVerified": true,
+  "isFreeModel": false,
+  "supportsTools": true,
+  "maxSpendUsd": 0.49,
+  "maxRequestsPerMinute": 20,
+  "generatedAt": "2026-10-22T15:09:04.484Z",
+  "timezone": "UTC",
+  "usageBefore": 0.104585439,
+  "usageAfter": 0.104585439,
+  "usageDeltaUsd": 0,
+  "proxyRequestCount": 60,
+  "requestsAlreadyUsed": 55,
+  "requestCap": 100,
+  "hops": [
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": false
+    },
+    {
+      "method": "HEAD",
+      "upstreamStatus": 401,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "HEAD",
+      "upstreamStatus": 401,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    }
+  ],
+  "runValid": true,
+  "budget": {
+    "maxTokens": 2000000,
+    "maxRequests": 45,
+    "tokens": 0,
+    "requests": 4
+  },
+  "aborted": false,
+  "abortReason": null,
+  "contentHash": "062d70a39299436ac5b315b8a90f18ea8818c8937d481f638871139673e7fe51",
+  "verdict": "NO CONCLUYENTE",
+  "verdictReasons": [
+    "sonda failed — no successful baseline cell; matrix not authorized"
+  ],
+  "fingerprints": {
+    "harness": null,
+    "prompt": null,
+    "host": null,
+    "model": "deepseek/deepseek-v4-flash",
+    "pricingVersion": null
+  },
+  "smoke": {
+    "ok": true,
+    "attempts": [
+      {
+        "exitCode": 0,
+        "stderrTruncated": "",
+        "resultTruncated": null,
+        "subtype": "success",
+        "isError": false,
+        "timedOut": false,
+        "http429": false,
+        "requestBudgetExhausted": false,
+        "attempt": 1
+      }
+    ],
+    "reason": null
+  },
+  "tasks": [
+    {
+      "taskId": "fix-add-off-by-one",
+      "metric": "tokensTotal",
+      "baselineMedian": 38275,
+      "treatmentMedian": null,
+      "deltaMedian": null,
+      "ciLow": null,
+      "ciHigh": null,
+      "baselineSuccess": "0/1",
+      "treatmentSuccess": "0/0",
+      "nonInferiorityOk": false
+    }
+  ],
+  "overall": {
+    "baselineSuccess": "0/1",
+    "treatmentSuccess": "0/0",
+    "tokensDeltaMedian": null,
+    "tokensCi": [
+      null,
+      null
+    ]
+  },
+  "completedCells": [
+    {
+      "taskId": "fix-add-off-by-one",
+      "variant": "baseline",
+      "repetition": 1,
+      "success": false,
+      "tokensTotal": 38275,
+      "tokensInput": 21640,
+      "tokensOutput": 251,
+      "costUsd": 0.122667,
+      "costBasis": "unknown",
+      "durationMs": 11952,
+      "modelId": "deepseek/deepseek-v4-flash"
+    }
+  ],
+  "costBasisSummary": {
+    "default": "unknown",
+    "note": "Claude Code total_cost_usd/costUSD on :free OpenRouter routes is an Anthropic list-price estimate, not OpenRouter billed spend",
+    "byCell": {
+      "unknown": 1
+    }
+  },
+  "pendingCells": [],
+  "invocations": [
+    {
+      "taskId": "fix-add-off-by-one",
+      "variant": "baseline",
+      "repetition": 1,
+      "ok": true,
+      "diagnostics": {
+        "exitCode": 0,
+        "stderrTruncated": "",
+        "resultTruncated": null,
+        "subtype": "success",
+        "isError": false,
+        "timedOut": false,
+        "http429": false,
+        "requestBudgetExhausted": false,
+        "attempt": 1
+      }
+    }
+  ]
+}

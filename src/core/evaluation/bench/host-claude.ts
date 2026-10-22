@@ -17,6 +17,10 @@ import {
   resolveClaudeJsonCostBasis,
 } from '../../telemetry/collectors/claude-json';
 import { installPresetCommand } from '../../../commands/install.command';
+import {
+  buildClaudeChildEnv,
+  isProxyLocalToken,
+} from './openrouter-request-proxy';
 import type { BenchCostBasis, BenchRunCell } from './report';
 
 export interface ClaudeHostSlot {
@@ -117,15 +121,22 @@ export interface ClaudeHostOptions {
   beforeCall?: () => Promise<void> | void;
 }
 
-/** Sanitized per-invocation diagnostics (safe for artifacts). */
+  /** Sanitized per-invocation diagnostics (safe for artifacts). */
 export interface ClaudeHostDiagnostics {
   exitCode: number | null;
   /** stderr truncated to 500 chars, secrets scrubbed. */
   stderrTruncated: string | null;
+  /**
+   * When `is_error=true`, Claude Code puts the API error in stream-json `result`.
+   * Sanitized + truncated (~500); never keys, session ids, or filesystem paths.
+   */
+  resultTruncated: string | null;
   subtype: string | null;
   isError: boolean | null;
   timedOut: boolean;
   http429: boolean;
+  /** True when the 429 is the fail-closed request budget (abort, do not retry). */
+  requestBudgetExhausted: boolean;
   attempt: number;
 }
 
@@ -156,27 +167,50 @@ async function rateLimit(minIntervalMs: number): Promise<void> {
   lastCallAt = Date.now();
 }
 
-/** Scrub secrets / long blobs from stderr for artifacts. */
+/** Scrub secrets, session ids, and filesystem paths; truncate for artifacts. */
 export function sanitizeStderr(stderr: string, maxLen = 500): string {
   let s = stderr
     .replace(/sk-or-v1-[A-Za-z0-9_-]+/g, '[REDACTED_OR_KEY]')
     .replace(/sk-ant-[A-Za-z0-9_-]+/g, '[REDACTED_ANT_KEY]')
+    .replace(/cc-proxy-local-[A-Za-z0-9_-]+/g, '[REDACTED_PROXY_LOCAL]')
     .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [REDACTED]')
     .replace(/ANTHROPIC_AUTH_TOKEN=\S+/g, 'ANTHROPIC_AUTH_TOKEN=[REDACTED]')
     .replace(/OPENROUTER_API_KEY=\S+/g, 'OPENROUTER_API_KEY=[REDACTED]')
-    .replace(/session[_-]?id["\s:=]+[A-Za-z0-9_-]+/gi, 'session_id=[REDACTED]');
+    .replace(/session[_-]?id["\s:=]+[A-Za-z0-9_-]+/gi, 'session_id=[REDACTED]')
+    // Absolute and home-relative paths (Unix + Windows).
+    .replace(/\/(?:home|Users|tmp|var|opt|workspace|runner)\/[^\s"'\\]+/gi, '[REDACTED_PATH]')
+    .replace(/[A-Za-z]:\\[^\s"']+/g, '[REDACTED_PATH]')
+    .replace(/~\/[^\s"']+/g, '[REDACTED_PATH]');
   if (s.length > maxLen) s = `${s.slice(0, maxLen)}…`;
   return s;
+}
+
+/**
+ * When `is_error=true`, Claude Code places the API error message in `result`
+ * (string). Sanitize + truncate for artifacts; otherwise null.
+ */
+export function extractSanitizedErrorResult(
+  payload: unknown,
+  isError: boolean | null,
+  maxLen = 500,
+): string | null {
+  if (isError !== true || !payload || typeof payload !== 'object') return null;
+  const rec = payload as Record<string, unknown>;
+  const raw = rec.result;
+  if (typeof raw !== 'string' || raw.trim().length === 0) return null;
+  return sanitizeStderr(raw, maxLen);
 }
 
 function emptyDiagnostics(attempt: number): ClaudeHostDiagnostics {
   return {
     exitCode: null,
     stderrTruncated: null,
+    resultTruncated: null,
     subtype: null,
     isError: null,
     timedOut: false,
     http429: false,
+    requestBudgetExhausted: false,
     attempt,
   };
 }
@@ -186,11 +220,16 @@ function extractMeta(payload: unknown): { subtype: string | null; isError: boole
     return { subtype: null, isError: null };
   }
   const rec = payload as Record<string, unknown>;
+  // `result` is often the error *string* when is_error=true — do not treat it as nested meta.
+  const nested =
+    rec.result && typeof rec.result === 'object' && !Array.isArray(rec.result)
+      ? (rec.result as { subtype?: string })
+      : null;
   const subtype =
     typeof rec.subtype === 'string'
       ? rec.subtype
-      : typeof (rec.result as { subtype?: string } | undefined)?.subtype === 'string'
-        ? (rec.result as { subtype: string }).subtype
+      : typeof nested?.subtype === 'string'
+        ? nested.subtype
         : null;
   const isError =
     typeof rec.is_error === 'boolean'
@@ -208,6 +247,29 @@ function looksLike429(stderr: string, stdout: string): boolean {
     blob.includes('rate limit') ||
     blob.includes('rate_limit') ||
     blob.includes('too many requests')
+  );
+}
+
+/** Proxy fail-closed budget 403 (or stream meter) — abort the run, do not retry. */
+export function looksLikeRequestBudgetExhausted(
+  stderr: string,
+  stdout: string,
+): boolean {
+  const blob = `${stderr}\n${stdout}`;
+  return (
+    blob.includes('request_budget_exhausted') ||
+    blob.includes('cc_proxy_budget') ||
+    /request budget exhausted/i.test(blob)
+  );
+}
+
+export function isRequestBudgetAbortReason(reason: string | null | undefined): boolean {
+  if (!reason) return false;
+  return (
+    reason.includes('request_budget_exhausted') ||
+    reason.includes('cc_proxy_budget') ||
+    /request budget exhausted/i.test(reason) ||
+    /token budget exhausted/i.test(reason)
   );
 }
 
@@ -271,17 +333,39 @@ export async function ensureClaudeCiConfig(): Promise<void> {
  * Route every model alias Claude Code may pick (main loop, haiku background
  * calls, harness agents declaring sonnet/opus, subagents) to the :free model,
  * so no request can land on a paid OpenRouter model.
+ *
+ * Never inherits OPENROUTER_API_KEY. Live runs must present a minted
+ * `cc-proxy-local-*` token (ANTHROPIC_AUTH_TOKEN) and point ANTHROPIC_BASE_URL
+ * at the local request proxy — no direct openrouter.ai fallback.
  */
-function buildClaudeEnv(modelId: string): NodeJS.ProcessEnv {
-  return {
-    ...process.env,
-    // Force non-interactive / CI-friendly behavior.
+export function buildClaudeEnv(modelId: string): NodeJS.ProcessEnv {
+  const localToken = process.env.ANTHROPIC_AUTH_TOKEN;
+  const baseUrl = process.env.ANTHROPIC_BASE_URL?.trim();
+  if (isProxyLocalToken(localToken) && baseUrl) {
+    return buildClaudeChildEnv({
+      modelId,
+      proxyBaseUrl: baseUrl,
+      localAuthToken: localToken!,
+      parentEnv: process.env,
+    });
+  }
+  // Offline / unit-test path (fake claude): whitelist only, still no OpenRouter key.
+  const env: NodeJS.ProcessEnv = {
+    PATH: process.env.PATH,
+    HOME: process.env.HOME,
+    USER: process.env.USER,
+    LANG: process.env.LANG,
+    TMPDIR: process.env.TMPDIR,
+    XDG_STATE_HOME: process.env.XDG_STATE_HOME,
     CI: 'true',
     CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1',
-    // Empty Anthropic key so OpenRouter AUTH_TOKEN path is used.
+    CLAUDE_CODE_MAX_RETRIES: '0',
+    ANTHROPIC_MAX_RETRIES: '0',
+    CLAUDE_CODE_VERSION: process.env.CLAUDE_CODE_VERSION,
     ANTHROPIC_API_KEY: '',
-    ANTHROPIC_BASE_URL:
-      process.env.ANTHROPIC_BASE_URL || 'https://openrouter.ai/api',
+    // No openrouter.ai fallback — live path must set the proxy URL + local token.
+    ANTHROPIC_BASE_URL: baseUrl || '',
+    ANTHROPIC_AUTH_TOKEN: localToken || '',
     ANTHROPIC_MODEL: modelId,
     ANTHROPIC_SMALL_FAST_MODEL: modelId,
     ANTHROPIC_DEFAULT_HAIKU_MODEL: modelId,
@@ -289,6 +373,8 @@ function buildClaudeEnv(modelId: string): NodeJS.ProcessEnv {
     ANTHROPIC_DEFAULT_OPUS_MODEL: modelId,
     CLAUDE_CODE_SUBAGENT_MODEL: modelId,
   };
+  delete env.OPENROUTER_API_KEY;
+  return env;
 }
 
 /**
@@ -423,6 +509,9 @@ export async function runClaudeSmoke(
       options.budget,
     );
     const http429 = looksLike429(result.stderr, result.stdout);
+    const requestBudgetExhausted =
+      Boolean(result.budgetStop && isRequestBudgetAbortReason(result.budgetStop)) ||
+      looksLikeRequestBudgetExhausted(result.stderr, result.stdout);
     let subtype: string | null = null;
     let isError: boolean | null = null;
     let parsedOk = false;
@@ -433,6 +522,7 @@ export async function runClaudeSmoke(
       subtype = meta.subtype;
       isError = meta.isError;
       parsedOk = true;
+      const resultTruncated = extractSanitizedErrorResult(payload, isError);
       // Treat result with usage / type result as success even if empty text.
       if (
         payload &&
@@ -444,10 +534,12 @@ export async function runClaudeSmoke(
         attempts.push({
           exitCode: result.code,
           stderrTruncated: sanitizeStderr(result.stderr),
+          resultTruncated,
           subtype,
           isError,
           timedOut: result.timedOut,
           http429,
+          requestBudgetExhausted,
           attempt,
         });
         if (result.code === 0 && isError !== true) {
@@ -461,12 +553,19 @@ export async function runClaudeSmoke(
     attempts.push({
       exitCode: result.code,
       stderrTruncated: sanitizeStderr(result.stderr || result.stdout.slice(0, 200)),
+      resultTruncated: extractSanitizedErrorResult(result.payload, isError),
       subtype,
       isError,
       timedOut: result.timedOut,
       http429,
+      requestBudgetExhausted,
       attempt,
     });
+
+    // Budget 429 / stream cap: do not retry — caller must abort the run.
+    if (requestBudgetExhausted) {
+      break;
+    }
 
     if (http429 && attempt < maxAttempts) {
       await new Promise((r) => setTimeout(r, 15_000));
@@ -480,7 +579,7 @@ export async function runClaudeSmoke(
 
   const last = attempts[attempts.length - 1];
   const reason = last
-    ? `smoke failed after ${attempts.length} attempts: exit=${last.exitCode} timedOut=${last.timedOut} 429=${last.http429} subtype=${last.subtype} is_error=${last.isError} stderr=${last.stderrTruncated ?? ''}`
+    ? `smoke failed after ${attempts.length} attempts: exit=${last.exitCode} timedOut=${last.timedOut} 429=${last.http429} subtype=${last.subtype} is_error=${last.isError} result=${last.resultTruncated ?? ''} stderr=${last.stderrTruncated ?? ''}`
     : 'smoke failed with no attempts';
   return { ok: false, attempts, reason };
 }
@@ -552,6 +651,9 @@ export async function runClaudeHostCell(
       );
       requests += result.requests;
       const http429 = looksLike429(result.stderr, result.stdout);
+      const requestBudgetExhausted =
+        Boolean(result.budgetStop && isRequestBudgetAbortReason(result.budgetStop)) ||
+        looksLikeRequestBudgetExhausted(result.stderr, result.stdout);
       const payload = result.payload;
       let subtype: string | null = null;
       let isError: boolean | null = null;
@@ -564,18 +666,22 @@ export async function runClaudeHostCell(
       lastDiag = {
         exitCode: result.code,
         stderrTruncated: sanitizeStderr(result.stderr),
+        resultTruncated: extractSanitizedErrorResult(payload, isError),
         subtype,
         isError,
         timedOut: result.timedOut,
         http429,
+        requestBudgetExhausted,
         attempt,
       };
 
-      if (result.budgetStop) {
+      if (result.budgetStop || requestBudgetExhausted) {
         return {
           cell: null,
           pending: true,
-          pendingReason: result.budgetStop,
+          pendingReason:
+            result.budgetStop ??
+            'request budget exhausted (proxy 403 cc_proxy_budget)',
           durationMs: Date.now() - started,
           diagnostics: lastDiag,
           totals: null,

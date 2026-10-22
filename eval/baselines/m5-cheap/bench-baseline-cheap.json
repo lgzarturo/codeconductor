@@ -3,16 +3,742 @@
   "cheap": true,
   "n": 3,
   "seed": 42,
-  "modelId": "nvidia/nemotron-3-super-120b-a12b:free",
-  "pricingVerifiedZero": true,
-  "generatedAt": "2026-10-19T05:35:35.055Z",
+  "taskIds": [
+    "fix-add-off-by-one"
+  ],
+  "maxTurns": 3,
+  "modelId": "cohere/north-mini-code:free",
+  "listPrice": {
+    "promptPerMTokUsd": 0,
+    "completionPerMTokUsd": 0,
+    "source": "openrouter.ai/api/v1/models (:free)"
+  },
+  "probesUsed": 1,
+  "pricingVerified": true,
+  "isFreeModel": true,
+  "supportsTools": true,
+  "maxSpendUsd": 5,
+  "maxRequestsPerMinute": 20,
+  "generatedAt": "2026-10-22T13:53:00.066Z",
   "timezone": "UTC",
   "usageBefore": 0,
-  "usageAfter": 0,
-  "runValid": true,
-  "aborted": false,
-  "abortReason": null,
-  "contentHash": "691bdfdf8193e11d166b34a62cda5184426b7ef6258465e333ec2eb074dbcdd8",
+  "usageAfter": 0.00000298,
+  "usageDeltaUsd": 0.00000298,
+  "proxyRequestCount": 100,
+  "requestsAlreadyUsed": 10,
+  "requestCap": 100,
+  "hops": [
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": false
+    },
+    {
+      "method": "HEAD",
+      "upstreamStatus": 401,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "HEAD",
+      "upstreamStatus": 401,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "HEAD",
+      "upstreamStatus": 401,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "HEAD",
+      "upstreamStatus": 401,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "HEAD",
+      "upstreamStatus": 401,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "HEAD",
+      "upstreamStatus": 401,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "HEAD",
+      "upstreamStatus": 401,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "HEAD",
+      "upstreamStatus": 401,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "HEAD",
+      "upstreamStatus": 401,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 200,
+      "streamed": true
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    },
+    {
+      "method": "POST",
+      "upstreamStatus": 429,
+      "streamed": false
+    }
+  ],
+  "runValid": false,
+  "budget": {
+    "maxTokens": 2000000,
+    "maxRequests": 90,
+    "tokens": 0,
+    "requests": 78
+  },
+  "aborted": true,
+  "abortReason": "request budget exhausted (proxy 429 request_budget_exhausted)",
+  "contentHash": "8e8077dd6a148c018a9b4cd2597d79a6cda7d0dd76193d8fde1230a7ee77b22a",
   "verdict": "ACEPTA",
   "verdictReasons": [
     "success criterion met"
@@ -21,7 +747,7 @@
     "harness": null,
     "prompt": null,
     "host": null,
-    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "model": "cohere/north-mini-code:free",
     "pricingVersion": null
   },
   "smoke": {
@@ -29,11 +755,13 @@
     "attempts": [
       {
         "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
+        "stderrTruncated": "",
+        "resultTruncated": null,
         "subtype": "success",
         "isError": false,
         "timedOut": false,
-        "http429": false,
+        "http429": true,
+        "requestBudgetExhausted": false,
         "attempt": 1
       }
     ],
@@ -41,767 +769,146 @@
   },
   "tasks": [
     {
-      "taskId": "feature-multiply",
-      "metric": "tokensTotal",
-      "baselineMedian": 227899,
-      "treatmentMedian": 141497,
-      "deltaMedian": -86402,
-      "ciLow": -259992,
-      "ciHigh": 86938,
-      "baselineSuccess": "0/3",
-      "treatmentSuccess": "0/3",
-      "nonInferiorityOk": true
-    },
-    {
       "taskId": "fix-add-off-by-one",
       "metric": "tokensTotal",
-      "baselineMedian": 248000,
-      "treatmentMedian": 245212,
-      "deltaMedian": -2788,
-      "ciLow": -47049,
-      "ciHigh": 189145,
-      "baselineSuccess": "3/3",
-      "treatmentSuccess": "3/3",
-      "nonInferiorityOk": true
-    },
-    {
-      "taskId": "out-of-scope-guard",
-      "metric": "tokensTotal",
-      "baselineMedian": 118954,
-      "treatmentMedian": 119134,
-      "deltaMedian": 180,
-      "ciLow": -21806,
-      "ciHigh": 170742,
-      "baselineSuccess": "3/3",
-      "treatmentSuccess": "3/3",
-      "nonInferiorityOk": true
-    },
-    {
-      "taskId": "refactor-greet",
-      "metric": "tokensTotal",
-      "baselineMedian": 228839,
-      "treatmentMedian": 267015,
-      "deltaMedian": 38176,
-      "ciLow": -108529,
-      "ciHigh": 74770,
-      "baselineSuccess": "3/3",
-      "treatmentSuccess": "3/3",
-      "nonInferiorityOk": true
-    },
-    {
-      "taskId": "review-seeded-bug",
-      "metric": "tokensTotal",
-      "baselineMedian": 59418,
-      "treatmentMedian": 59241,
-      "deltaMedian": -177,
-      "ciLow": -357,
-      "ciHigh": 20515,
-      "baselineSuccess": "0/3",
-      "treatmentSuccess": "0/3",
+      "baselineMedian": 80498,
+      "treatmentMedian": 246338,
+      "deltaMedian": 165840,
+      "ciLow": -122309,
+      "ciHigh": 453989,
+      "baselineSuccess": "0/2",
+      "treatmentSuccess": "0/2",
       "nonInferiorityOk": true
     }
   ],
   "overall": {
-    "baselineSuccess": "9/15",
-    "treatmentSuccess": "9/15",
-    "tokensDeltaMedian": 85755,
+    "baselineSuccess": "0/2",
+    "treatmentSuccess": "0/2",
+    "tokensDeltaMedian": 165840,
     "tokensCi": [
-      -109034,
-      130811
+      -122309,
+      453989
     ]
   },
   "completedCells": [
     {
-      "taskId": "out-of-scope-guard",
-      "variant": "baseline",
-      "repetition": 1,
-      "success": true,
-      "tokensTotal": 118954,
-      "tokensInput": 26674,
-      "tokensOutput": 760,
-      "costUsd": 0.1402,
-      "durationMs": 24666,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "out-of-scope-guard",
-      "variant": "treatment",
-      "repetition": 1,
-      "success": true,
-      "tokensTotal": 118561,
-      "tokensInput": 26480,
-      "tokensOutput": 561,
-      "costUsd": 0.135444,
-      "durationMs": 16345,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "review-seeded-bug",
-      "variant": "baseline",
-      "repetition": 3,
-      "success": false,
-      "tokensTotal": 39112,
-      "tokensInput": 20358,
-      "tokensOutput": 450,
-      "costUsd": 0.0940928,
-      "durationMs": 10524,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "review-seeded-bug",
-      "variant": "treatment",
-      "repetition": 3,
-      "success": false,
-      "tokensTotal": 59192,
-      "tokensInput": 21937,
-      "tokensOutput": 647,
-      "costUsd": 0.10800960000000001,
-      "durationMs": 14993,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "out-of-scope-guard",
-      "variant": "baseline",
-      "repetition": 3,
-      "success": true,
-      "tokensTotal": 99593,
-      "tokensInput": 25533,
-      "tokensOutput": 844,
-      "costUsd": 0.1336552,
-      "durationMs": 31613,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "out-of-scope-guard",
-      "variant": "treatment",
-      "repetition": 3,
-      "success": true,
-      "tokensTotal": 270335,
-      "tokensInput": 48897,
-      "tokensOutput": 1790,
-      "costUsd": 0.27531759999999994,
-      "durationMs": 42712,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "out-of-scope-guard",
-      "variant": "baseline",
-      "repetition": 2,
-      "success": true,
-      "tokensTotal": 140367,
-      "tokensInput": 29586,
-      "tokensOutput": 957,
-      "costUsd": 0.15944880000000003,
-      "durationMs": 22343,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "out-of-scope-guard",
-      "variant": "treatment",
-      "repetition": 2,
-      "success": true,
-      "tokensTotal": 119134,
-      "tokensInput": 26852,
-      "tokensOutput": 762,
-      "costUsd": 0.140952,
-      "durationMs": 16184,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "refactor-greet",
-      "variant": "baseline",
-      "repetition": 3,
-      "success": true,
-      "tokensTotal": 228839,
-      "tokensInput": 43898,
-      "tokensOutput": 1901,
-      "costUsd": 0.25022,
-      "durationMs": 45864,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "refactor-greet",
-      "variant": "treatment",
-      "repetition": 3,
-      "success": true,
-      "tokensTotal": 255053,
-      "tokensInput": 51379,
-      "tokensOutput": 2330,
-      "costUsd": 0.2923848,
-      "durationMs": 53094,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "feature-multiply",
-      "variant": "baseline",
-      "repetition": 3,
-      "success": false,
-      "tokensTotal": 139184,
-      "tokensInput": 28632,
-      "tokensOutput": 728,
-      "costUsd": 0.1510528,
-      "durationMs": 40326,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "feature-multiply",
-      "variant": "treatment",
-      "repetition": 3,
-      "success": false,
-      "tokensTotal": 226122,
-      "tokensInput": 41662,
-      "tokensOutput": 1420,
-      "costUsd": 0.231656,
-      "durationMs": 87555,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "refactor-greet",
-      "variant": "baseline",
-      "repetition": 1,
-      "success": true,
-      "tokensTotal": 363582,
-      "tokensInput": 59064,
-      "tokensOutput": 2502,
-      "costUsd": 0.34669919999999993,
-      "durationMs": 63916,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "refactor-greet",
-      "variant": "treatment",
-      "repetition": 1,
-      "success": true,
-      "tokensTotal": 299197,
-      "tokensInput": 53961,
-      "tokensOutput": 2708,
-      "costUsd": 0.31850960000000006,
-      "durationMs": 67945,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "review-seeded-bug",
-      "variant": "baseline",
-      "repetition": 1,
-      "success": false,
-      "tokensTotal": 59549,
-      "tokensInput": 3814,
-      "tokensOutput": 823,
-      "costUsd": 0.0426984,
-      "durationMs": 59068,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "review-seeded-bug",
-      "variant": "treatment",
-      "repetition": 1,
-      "success": false,
-      "tokensTotal": 59627,
-      "tokensInput": 22026,
-      "tokensOutput": 993,
-      "costUsd": 0.11528560000000002,
-      "durationMs": 20107,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "review-seeded-bug",
-      "variant": "baseline",
-      "repetition": 2,
-      "success": false,
-      "tokensTotal": 59418,
-      "tokensInput": 22010,
-      "tokensOutput": 800,
-      "costUsd": 0.1113616,
-      "durationMs": 30104,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "review-seeded-bug",
-      "variant": "treatment",
-      "repetition": 2,
-      "success": false,
-      "tokensTotal": 59241,
-      "tokensInput": 21936,
-      "tokensOutput": 697,
-      "costUsd": 0.1090056,
-      "durationMs": 19003,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "fix-add-off-by-one",
-      "variant": "baseline",
-      "repetition": 1,
-      "success": true,
-      "tokensTotal": 289920,
-      "tokensInput": 50199,
-      "tokensOutput": 1769,
-      "costUsd": 0.2837664,
-      "durationMs": 40583,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "fix-add-off-by-one",
-      "variant": "treatment",
-      "repetition": 1,
-      "success": true,
-      "tokensTotal": 242871,
-      "tokensInput": 40473,
-      "tokensOutput": 1054,
-      "costUsd": 0.2232408,
-      "durationMs": 28655,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "feature-multiply",
-      "variant": "baseline",
-      "repetition": 2,
-      "success": false,
-      "tokensTotal": 379797,
-      "tokensInput": 55622,
-      "tokensOutput": 3855,
-      "costUsd": 0.36365200000000003,
-      "durationMs": 111001,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "feature-multiply",
-      "variant": "treatment",
-      "repetition": 2,
-      "success": false,
-      "tokensTotal": 141497,
-      "tokensInput": 30519,
-      "tokensOutput": 1154,
-      "costUsd": 0.16712079999999999,
-      "durationMs": 34050,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "fix-add-off-by-one",
-      "variant": "baseline",
-      "repetition": 3,
-      "success": true,
-      "tokensTotal": 124242,
-      "tokensInput": 12699,
-      "tokensOutput": 1719,
-      "costUsd": 0.10714080000000001,
-      "durationMs": 34022,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "fix-add-off-by-one",
-      "variant": "treatment",
-      "repetition": 3,
-      "success": true,
-      "tokensTotal": 313387,
-      "tokensInput": 55252,
-      "tokensOutput": 1879,
-      "costUsd": 0.30983920000000004,
-      "durationMs": 57079,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "refactor-greet",
-      "variant": "baseline",
-      "repetition": 2,
-      "success": true,
-      "tokensTotal": 224427,
-      "tokensInput": 39738,
-      "tokensOutput": 1649,
-      "costUsd": 0.22854000000000002,
-      "durationMs": 40043,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "taskId": "refactor-greet",
-      "variant": "treatment",
-      "repetition": 2,
-      "success": true,
-      "tokensTotal": 267015,
-      "tokensInput": 45720,
-      "tokensOutput": 1647,
-      "costUsd": 0.2597496,
-      "durationMs": 50930,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
       "taskId": "fix-add-off-by-one",
       "variant": "baseline",
       "repetition": 2,
-      "success": true,
-      "tokensTotal": 248000,
-      "tokensInput": 45044,
-      "tokensOutput": 1612,
-      "costUsd": 0.2526848,
-      "durationMs": 39062,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
+      "success": false,
+      "tokensTotal": 145252,
+      "tokensInput": 143415,
+      "tokensOutput": 1837,
+      "costUsd": 0.7629999999999999,
+      "costBasis": "unknown",
+      "durationMs": 28404,
+      "modelId": "cohere/north-mini-code:free"
     },
     {
       "taskId": "fix-add-off-by-one",
       "variant": "treatment",
       "repetition": 2,
-      "success": true,
-      "tokensTotal": 245212,
-      "tokensInput": 42420,
-      "tokensOutput": 1448,
-      "costUsd": 0.2389088,
-      "durationMs": 40145,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
+      "success": false,
+      "tokensTotal": 469733,
+      "tokensInput": 464486,
+      "tokensOutput": 5247,
+      "costUsd": 2.453605,
+      "costBasis": "unknown",
+      "durationMs": 212167,
+      "modelId": "cohere/north-mini-code:free"
     },
     {
-      "taskId": "feature-multiply",
+      "taskId": "fix-add-off-by-one",
       "variant": "baseline",
-      "repetition": 1,
+      "repetition": 3,
       "success": false,
-      "tokensTotal": 227899,
-      "tokensInput": 57785,
-      "tokensOutput": 5378,
-      "costUsd": 0.3716472,
-      "durationMs": 96586,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
+      "tokensTotal": 15744,
+      "tokensInput": 15188,
+      "tokensOutput": 556,
+      "costUsd": 0.08984,
+      "costBasis": "unknown",
+      "durationMs": 27458,
+      "modelId": "cohere/north-mini-code:free"
     },
     {
-      "taskId": "feature-multiply",
+      "taskId": "fix-add-off-by-one",
       "variant": "treatment",
-      "repetition": 1,
+      "repetition": 3,
       "success": false,
-      "tokensTotal": 119805,
-      "tokensInput": 27625,
-      "tokensOutput": 660,
-      "costUsd": 0.14200400000000002,
-      "durationMs": 24725,
-      "modelId": "nvidia/nemotron-3-super-120b-a12b:free"
+      "tokensTotal": 22943,
+      "tokensInput": 22361,
+      "tokensOutput": 582,
+      "costUsd": 0.126355,
+      "costBasis": "unknown",
+      "durationMs": 6611,
+      "modelId": "cohere/north-mini-code:free"
     }
   ],
-  "pendingCells": [],
-  "invocations": [
+  "costBasisSummary": {
+    "default": "unknown",
+    "note": "Claude Code total_cost_usd/costUSD on :free OpenRouter routes is an Anthropic list-price estimate, not OpenRouter billed spend",
+    "byCell": {
+      "unknown": 4
+    }
+  },
+  "pendingCells": [
     {
-      "taskId": "out-of-scope-guard",
+      "taskId": "fix-add-off-by-one",
       "variant": "baseline",
       "repetition": 1,
-      "ok": true,
+      "reason": "request budget exhausted (proxy 429 request_budget_exhausted)",
       "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "out-of-scope-guard",
-      "variant": "treatment",
-      "repetition": 1,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "review-seeded-bug",
-      "variant": "baseline",
-      "repetition": 3,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "review-seeded-bug",
-      "variant": "treatment",
-      "repetition": 3,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "out-of-scope-guard",
-      "variant": "baseline",
-      "repetition": 3,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "out-of-scope-guard",
-      "variant": "treatment",
-      "repetition": 3,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "out-of-scope-guard",
-      "variant": "baseline",
-      "repetition": 2,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "out-of-scope-guard",
-      "variant": "treatment",
-      "repetition": 2,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "refactor-greet",
-      "variant": "baseline",
-      "repetition": 3,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "refactor-greet",
-      "variant": "treatment",
-      "repetition": 3,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "feature-multiply",
-      "variant": "baseline",
-      "repetition": 3,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "feature-multiply",
-      "variant": "treatment",
-      "repetition": 3,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "refactor-greet",
-      "variant": "baseline",
-      "repetition": 1,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "refactor-greet",
-      "variant": "treatment",
-      "repetition": 1,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "review-seeded-bug",
-      "variant": "baseline",
-      "repetition": 1,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
+        "exitCode": 1,
+        "stderrTruncated": "",
+        "resultTruncated": null,
+        "subtype": null,
+        "isError": null,
+        "timedOut": true,
+        "http429": true,
+        "requestBudgetExhausted": true,
         "attempt": 2
       }
     },
     {
-      "taskId": "review-seeded-bug",
+      "taskId": "fix-add-off-by-one",
       "variant": "treatment",
       "repetition": 1,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "review-seeded-bug",
-      "variant": "baseline",
-      "repetition": 2,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "review-seeded-bug",
-      "variant": "treatment",
-      "repetition": 2,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
+      "reason": "request budget exhausted (proxy 429 request_budget_exhausted)"
+    }
+  ],
+  "invocations": [
     {
       "taskId": "fix-add-off-by-one",
       "variant": "baseline",
-      "repetition": 1,
+      "repetition": 2,
       "ok": true,
       "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
+        "exitCode": 1,
+        "stderrTruncated": "",
+        "resultTruncated": null,
+        "subtype": "error_max_turns",
+        "isError": true,
         "timedOut": false,
         "http429": false,
+        "requestBudgetExhausted": false,
         "attempt": 1
       }
     },
     {
       "taskId": "fix-add-off-by-one",
       "variant": "treatment",
-      "repetition": 1,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "feature-multiply",
-      "variant": "baseline",
       "repetition": 2,
       "ok": true,
       "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
+        "exitCode": 1,
+        "stderrTruncated": "Ignoring 4 permissions.allow entries from .claude/settings.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects[\"[REDACTED_PATH]\"].hasTrustDialogAccepted: true in [REDACTED_PATH]\n",
+        "resultTruncated": null,
+        "subtype": "error_max_turns",
+        "isError": true,
         "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "feature-multiply",
-      "variant": "treatment",
-      "repetition": 2,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
+        "http429": true,
+        "requestBudgetExhausted": false,
+        "attempt": 2
       }
     },
     {
@@ -811,12 +918,14 @@
       "ok": true,
       "diagnostics": {
         "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
+        "stderrTruncated": "",
+        "resultTruncated": null,
         "subtype": "success",
         "isError": false,
         "timedOut": false,
-        "http429": false,
-        "attempt": 1
+        "http429": true,
+        "requestBudgetExhausted": false,
+        "attempt": 2
       }
     },
     {
@@ -826,102 +935,31 @@
       "ok": true,
       "diagnostics": {
         "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
+        "stderrTruncated": "Ignoring 4 permissions.allow entries from .claude/settings.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects[\"[REDACTED_PATH]\"].hasTrustDialogAccepted: true in [REDACTED_PATH]\n",
+        "resultTruncated": null,
         "subtype": "success",
         "isError": false,
         "timedOut": false,
         "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "refactor-greet",
-      "variant": "baseline",
-      "repetition": 2,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "refactor-greet",
-      "variant": "treatment",
-      "repetition": 2,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
+        "requestBudgetExhausted": false,
         "attempt": 1
       }
     },
     {
       "taskId": "fix-add-off-by-one",
       "variant": "baseline",
-      "repetition": 2,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "fix-add-off-by-one",
-      "variant": "treatment",
-      "repetition": 2,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "feature-multiply",
-      "variant": "baseline",
       "repetition": 1,
-      "ok": true,
+      "ok": false,
       "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
-      }
-    },
-    {
-      "taskId": "feature-multiply",
-      "variant": "treatment",
-      "repetition": 1,
-      "ok": true,
-      "diagnostics": {
-        "exitCode": 0,
-        "stderrTruncated": "[claude-code:unrecognized_model] {\"model\":\"nvidia/nemotron-3-super-120b-a12b:free\",\"query_source\":\"sdk\"}\n",
-        "subtype": "success",
-        "isError": false,
-        "timedOut": false,
-        "http429": false,
-        "attempt": 1
+        "exitCode": 1,
+        "stderrTruncated": "",
+        "resultTruncated": null,
+        "subtype": null,
+        "isError": null,
+        "timedOut": true,
+        "http429": true,
+        "requestBudgetExhausted": true,
+        "attempt": 2
       }
     }
   ]

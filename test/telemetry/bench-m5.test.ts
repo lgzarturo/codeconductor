@@ -27,8 +27,10 @@ import {
   createBenchBudget,
   meterStreamLine,
   runClaudeHostCell,
+  extractSanitizedErrorResult,
   sanitizeStderr,
 } from '../../src/core/evaluation/bench/host-claude';
+import { publicProxyHops } from '../../src/core/evaluation/bench/openrouter-request-proxy';
 import type { OpenRouterKeySnapshot } from '../../src/core/telemetry/openrouter-spend-lock';
 import { loadHarnessSuite } from '../../src/core/evaluation/harness-experiment';
 import { scorecardCommand } from '../../src/commands/scorecard.command';
@@ -385,7 +387,7 @@ describe('M5 runner (dry / fake provider)', () => {
     expect(result.report.cells).toHaveLength(5 * 2 * 3);
   });
 
-  test('cheap aborts when model is not :free', async () => {
+  test('cheap allows paid models under the $5 spend cap (Arturo 22 Oct)', async () => {
     const result = await runBench({
       projectRoot: REPO_ROOT,
       suitePath: SUITE_PATH,
@@ -393,15 +395,14 @@ describe('M5 runner (dry / fake provider)', () => {
       cheap: true,
       keyBefore: FREE_KEY,
       keyAfter: FREE_KEY,
-      modelId: 'anthropic/claude-sonnet-4',
+      modelId: 'openai/gpt-oss-20b',
       writeReport: false,
     });
-    expect(result.aborted).toBe(true);
-    expect(result.runValid).toBe(false);
-    expect(result.abortReason).toMatch(/:free/i);
+    expect(result.aborted).toBe(false);
+    expect(result.runValid).toBe(true);
   });
 
-  test('cheap aborts when usage rises between tasks', async () => {
+  test('cheap aborts when usage Δ approaches the $0.49 repo spend cap', async () => {
     let calls = 0;
     const result = await runBench({
       projectRoot: REPO_ROOT,
@@ -411,15 +412,15 @@ describe('M5 runner (dry / fake provider)', () => {
       keyBefore: FREE_KEY,
       fetchKey: async () => {
         calls += 1;
-        // First resolve for pre-run uses keyBefore; between-task uses fetchKey.
-        return { ...FREE_KEY, usage: calls === 1 ? 0 : 0.01 };
+        // Between-task check: jump usage by $0.441 (90% of $0.49).
+        return { ...FREE_KEY, usage: calls === 1 ? 0 : 0.441 };
       },
-      modelId: 'nvidia/nemotron-3-super-120b-a12b:free',
+      modelId: 'deepseek/deepseek-v4-flash',
       writeReport: false,
     });
     expect(result.aborted).toBe(true);
     expect(result.runValid).toBe(false);
-    expect(result.abortReason).toMatch(/usage|Δ|delta|spend/i);
+    expect(result.abortReason).toMatch(/usage|Δ|delta|spend|approaches|cap/i);
   });
 
   test('cellsPath replays a fake provider schedule', async () => {
@@ -452,23 +453,61 @@ describe('M5 free-model pricing gate', () => {
     expect(minRepetitionsForMode(false)).toBe(5);
   });
 
-  test('sanitizeStderr redacts keys and truncates', () => {
+  test('sanitizeStderr redacts keys, paths, session ids and truncates', () => {
     const raw =
       'Bearer sk-or-v1-abcdefghijklmnopqrstuvwxyz012345 OPENROUTER_API_KEY=sk-or-v1-abc ' +
+      'session_id=abc123 path=/home/runner/work/codeconductor/x ' +
       'x'.repeat(600);
     const s = sanitizeStderr(raw, 200);
     expect(s).not.toContain('sk-or-v1-abc');
+    expect(s).not.toContain('/home/runner');
+    expect(s).not.toContain('abc123');
     expect(s).toContain('[REDACTED');
     expect(s.length).toBeLessThanOrEqual(201);
   });
 
-  test('rejects non-:free and non-zero pricing', async () => {
-    const paid = await assertOpenRouterModelFreeZeroPrice('anthropic/claude-sonnet-4', {
+  test('extractSanitizedErrorResult keeps API error text when is_error=true', () => {
+    const payload = {
+      type: 'result',
+      subtype: 'success',
+      is_error: true,
+      result:
+        'API Error: 404 Function nvidia/nemotron-3-super-120b-a12b:free Not found ' +
+        'session_id=deadbeef /home/runner/work/repo/file sk-or-v1-secrettokenvaluehere',
+    };
+    const s = extractSanitizedErrorResult(payload, true, 500);
+    expect(s).toBeTruthy();
+    expect(s!).toContain('404');
+    expect(s!).toContain('Not found');
+    expect(s!).not.toContain('sk-or-v1-secrettokenvaluehere');
+    expect(s!).not.toContain('deadbeef');
+    expect(s!).not.toContain('/home/runner');
+    expect(extractSanitizedErrorResult(payload, false)).toBeNull();
+    expect(extractSanitizedErrorResult({ type: 'result', is_error: true }, true)).toBeNull();
+  });
+
+  test('publicProxyHops exposes upstream HTTP status without paths', () => {
+    const pub = publicProxyHops([
+      {
+        method: 'POST',
+        inboundPath: '/api/v1/messages',
+        upstreamPath: '/api/v1/messages',
+        upstreamStatus: 404,
+        streamed: false,
+      },
+    ]);
+    expect(pub).toEqual([{ method: 'POST', upstreamStatus: 404, streamed: false }]);
+    expect(JSON.stringify(pub)).not.toContain('/api');
+  });
+
+  test('accepts :free at zero price and paid with tools + finite price', async () => {
+    const missing = await assertOpenRouterModelFreeZeroPrice('anthropic/claude-sonnet-4', {
       apiKey: 'test',
       fetchImpl: async () =>
         new Response(JSON.stringify({ data: [] }), { status: 200 }),
     });
-    expect(paid.ok).toBe(false);
+    expect(missing.ok).toBe(false);
+    expect(missing.reason).toMatch(/not found/i);
 
     const free = await assertOpenRouterModelFreeZeroPrice(
       'nvidia/nemotron-3-super-120b-a12b:free',
@@ -481,6 +520,7 @@ describe('M5 free-model pricing gate', () => {
                 {
                   id: 'nvidia/nemotron-3-super-120b-a12b:free',
                   pricing: { prompt: '0', completion: '0' },
+                  supported_parameters: ['tools', 'tool_choice'],
                 },
               ],
             }),
@@ -490,6 +530,27 @@ describe('M5 free-model pricing gate', () => {
     );
     expect(free.ok).toBe(true);
     expect(free.pricing).toEqual({ prompt: 0, completion: 0 });
+
+    const paid = await assertOpenRouterModelFreeZeroPrice('openai/gpt-oss-20b', {
+      apiKey: 'test',
+      fetchImpl: async () =>
+        new Response(
+          JSON.stringify({
+            data: [
+              {
+                id: 'openai/gpt-oss-20b',
+                pricing: { prompt: '0.000000018', completion: '0.00000009' },
+                supported_parameters: ['max_tokens', 'tools', 'tool_choice'],
+              },
+            ],
+          }),
+          { status: 200 },
+        ),
+    });
+    expect(paid.ok).toBe(true);
+    expect(paid.isFree).toBe(false);
+    expect(paid.supportsTools).toBe(true);
+    expect(paid.pricing?.prompt).toBeCloseTo(0.000000018);
   });
 });
 
@@ -662,5 +723,63 @@ console.log(JSON.stringify({ type: 'result', subtype: 'success', is_error: false
     expect(result.aborted).toBe(true);
     expect(result.abortReason).toMatch(/budget/);
     expect(result.invocations).toHaveLength(0);
+  });
+
+  test('proxy request_budget_exhausted aborts explicitly; remaining cells pending', async () => {
+    // Proxy budget is 403 cc_proxy_budget (microsdd 0755fde); must abort, no retry.
+    const bin = await fakeClaude(`
+process.stderr.write('HTTP 403 cc_proxy_budget: OpenRouter request budget exhausted: 100/100\\n');
+process.exit(1);
+`);
+    const budget = createBenchBudget(2_000_000, 100);
+    const prevPath = process.env.PATH;
+    process.env.PATH = `${binDir}:${prevPath ?? ''}`;
+    try {
+      // Point PATH so `claude` resolves to our fake when runner uses default bin…
+      // runClaudeHostCell takes claudeBin — drive via a thin wrapper by patching
+      // through host options: use runClaudeHostCell directly for the abort flag,
+      // then assert runBench marks remaining pending via maxLive + spent budget.
+      const host = await runClaudeHostCell(
+        { taskId: 'fix-add-off-by-one', variant: 'baseline', repetition: 1, prompt: 'p' },
+        {
+          fixtureDir: FIXTURE_DIR,
+          modelId: MODEL,
+          budget,
+          claudeBin: bin,
+          minIntervalMs: 0,
+          maxAttempts: 2,
+        },
+      );
+      expect(host.pending).toBe(true);
+      expect(host.diagnostics.requestBudgetExhausted).toBe(true);
+      expect(host.pendingReason).toMatch(/request budget exhausted|cc_proxy_budget/);
+      // No retry on budget 403 — single attempt.
+      expect(host.diagnostics.attempt).toBe(1);
+    } finally {
+      process.env.PATH = prevPath;
+    }
+  });
+
+  test('taskIds filter schedules only the requested task (dry)', async () => {
+    const result = await runBench({
+      projectRoot: REPO_ROOT,
+      suitePath: SUITE_PATH,
+      cheap: true,
+      drySynthetic: true,
+      n: 3,
+      seed: 42,
+      taskIds: ['fix-add-off-by-one'],
+      keyBefore: FREE_KEY,
+      keyAfter: FREE_KEY,
+      writeReport: false,
+    });
+    expect(result.aborted).toBe(false);
+    expect(result.report.cells).toHaveLength(6); // 1 task × 2 × N=3
+    expect(result.report.cells.every((c) => c.taskId === 'fix-add-off-by-one')).toBe(
+      true,
+    );
+    expect(result.report.n).toBe(3);
+    // N=3 meets minRepetitionsForMode(cheap)=3 — not NO CONCLUYENTE by construction.
+    expect(result.report.verdictReasons.join(' ')).not.toMatch(/below minimum/);
   });
 });

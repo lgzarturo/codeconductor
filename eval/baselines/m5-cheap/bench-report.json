@@ -1,0 +1,218 @@
+{
+  "schema": "bench-report/v1",
+  "generatedAt": "2026-10-22T13:53:00.059Z",
+  "timezone": "UTC",
+  "suiteId": "harness-v1",
+  "n": 3,
+  "cheap": true,
+  "claim": "success-only",
+  "efficiencyThreshold": 0.1,
+  "qualityTokenCeiling": 0.15,
+  "verdict": "ACEPTA",
+  "verdictReasons": [
+    "success criterion met"
+  ],
+  "fingerprints": {
+    "harness": null,
+    "prompt": null,
+    "host": null,
+    "model": "cohere/north-mini-code:free",
+    "pricingVersion": null
+  },
+  "totalCostUsd": 3.4328000000000003,
+  "tasks": [
+    {
+      "taskId": "fix-add-off-by-one",
+      "baseline": {
+        "n": 2,
+        "median": 80498,
+        "q1": 48121,
+        "q3": 112875,
+        "iqr": 64754,
+        "mean": 80498
+      },
+      "treatment": {
+        "n": 2,
+        "median": 246338,
+        "q1": 134640.5,
+        "q3": 358035.5,
+        "iqr": 223395,
+        "mean": 246338
+      },
+      "deltaMedian": 165840,
+      "bootstrap": {
+        "deltaMedian": 165840,
+        "ciLow": -122309,
+        "ciHigh": 453989,
+        "entirelyBelowZero": false,
+        "crossesZero": true,
+        "samples": 10000,
+        "seed": 42
+      },
+      "baselineSuccess": {
+        "k": 0,
+        "n": 2,
+        "p": 0,
+        "low": 0,
+        "high": 0.6576280471103807
+      },
+      "treatmentSuccess": {
+        "k": 0,
+        "n": 2,
+        "p": 0,
+        "low": 0,
+        "high": 0.6576280471103807
+      },
+      "nonInferiorityOk": true,
+      "metric": "tokensTotal"
+    }
+  ],
+  "overall": {
+    "baselineSuccess": {
+      "k": 0,
+      "n": 2,
+      "p": 0,
+      "low": 0,
+      "high": 0.6576280471103807
+    },
+    "treatmentSuccess": {
+      "k": 0,
+      "n": 2,
+      "p": 0,
+      "low": 0,
+      "high": 0.6576280471103807
+    },
+    "tokens": {
+      "taskId": "_overall",
+      "baseline": {
+        "n": 2,
+        "median": 80498,
+        "q1": 48121,
+        "q3": 112875,
+        "iqr": 64754,
+        "mean": 80498
+      },
+      "treatment": {
+        "n": 2,
+        "median": 246338,
+        "q1": 134640.5,
+        "q3": 358035.5,
+        "iqr": 223395,
+        "mean": 246338
+      },
+      "deltaMedian": 165840,
+      "bootstrap": {
+        "deltaMedian": 165840,
+        "ciLow": -122309,
+        "ciHigh": 453989,
+        "entirelyBelowZero": false,
+        "crossesZero": true,
+        "samples": 10000,
+        "seed": 42
+      },
+      "baselineSuccess": {
+        "k": 0,
+        "n": 2,
+        "p": 0,
+        "low": 0,
+        "high": 0.6576280471103807
+      },
+      "treatmentSuccess": {
+        "k": 0,
+        "n": 2,
+        "p": 0,
+        "low": 0,
+        "high": 0.6576280471103807
+      },
+      "nonInferiorityOk": true,
+      "metric": "tokensTotal"
+    }
+  },
+  "cells": [
+    {
+      "taskId": "fix-add-off-by-one",
+      "variant": "baseline",
+      "repetition": 2,
+      "success": false,
+      "iterations": 1,
+      "retries": 0,
+      "calls": 12,
+      "tokensTotal": 145252,
+      "tokensInput": 143415,
+      "tokensOutput": 1837,
+      "tokensCacheRead": 0,
+      "tokensCacheWrite": 0,
+      "costUsd": 0.7629999999999999,
+      "costBasis": "unknown",
+      "durationMs": 28404,
+      "cacheHitRate": null,
+      "firstTry": false,
+      "modelId": "cohere/north-mini-code:free",
+      "hostVersion": "2.1.197 (Claude Code)"
+    },
+    {
+      "taskId": "fix-add-off-by-one",
+      "variant": "treatment",
+      "repetition": 2,
+      "success": false,
+      "iterations": 1,
+      "retries": 1,
+      "calls": 46,
+      "tokensTotal": 469733,
+      "tokensInput": 464486,
+      "tokensOutput": 5247,
+      "tokensCacheRead": 0,
+      "tokensCacheWrite": 0,
+      "costUsd": 2.453605,
+      "costBasis": "unknown",
+      "durationMs": 212167,
+      "cacheHitRate": null,
+      "firstTry": false,
+      "modelId": "cohere/north-mini-code:free",
+      "hostVersion": "2.1.197 (Claude Code)"
+    },
+    {
+      "taskId": "fix-add-off-by-one",
+      "variant": "baseline",
+      "repetition": 3,
+      "success": false,
+      "iterations": 1,
+      "retries": 1,
+      "calls": 2,
+      "tokensTotal": 15744,
+      "tokensInput": 15188,
+      "tokensOutput": 556,
+      "tokensCacheRead": 0,
+      "tokensCacheWrite": 0,
+      "costUsd": 0.08984,
+      "costBasis": "unknown",
+      "durationMs": 27458,
+      "cacheHitRate": null,
+      "firstTry": false,
+      "modelId": "cohere/north-mini-code:free",
+      "hostVersion": "2.1.197 (Claude Code)"
+    },
+    {
+      "taskId": "fix-add-off-by-one",
+      "variant": "treatment",
+      "repetition": 3,
+      "success": false,
+      "iterations": 1,
+      "retries": 0,
+      "calls": 1,
+      "tokensTotal": 22943,
+      "tokensInput": 22361,
+      "tokensOutput": 582,
+      "tokensCacheRead": 0,
+      "tokensCacheWrite": 0,
+      "costUsd": 0.126355,
+      "costBasis": "unknown",
+      "durationMs": 6611,
+      "cacheHitRate": null,
+      "firstTry": false,
+      "modelId": "cohere/north-mini-code:free",
+      "hostVersion": "2.1.197 (Claude Code)"
+    }
+  ],
+  "contentHash": "8e8077dd6a148c018a9b4cd2597d79a6cda7d0dd76193d8fde1230a7ee77b22a"
+}

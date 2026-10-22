@@ -1,6 +1,7 @@
 /**
- * Verify an OpenRouter model is `:free` with list price 0 (prompt + completion).
- * Used by the cheap baseline before any host call.
+ * Verify OpenRouter model pricing for the cheap baseline.
+ * `:free` must list prompt+completion at 0; paid models must be listed with
+ * finite prices and advertise tools / tool_choice (Arturo 22 Oct).
  */
 
 export interface OpenRouterModelPricing {
@@ -13,6 +14,10 @@ export interface FreeModelCheck {
   reason: string | null;
   modelId: string;
   pricing: OpenRouterModelPricing | null;
+  /** True when the catalog advertises tools / tool_choice. */
+  supportsTools?: boolean;
+  /** True when modelId ends with `:free`. */
+  isFree?: boolean;
 }
 
 function asNumber(value: unknown): number | null {
@@ -24,8 +29,16 @@ function asNumber(value: unknown): number | null {
   return null;
 }
 
+function modelSupportsTools(match: Record<string, unknown>): boolean {
+  const params = match.supported_parameters;
+  if (!Array.isArray(params)) return false;
+  return params.some((p) => /tool/i.test(String(p)));
+}
+
 /**
- * Confirm modelId ends with `:free` and OpenRouter lists prompt+completion at 0.
+ * Confirm the model is listed on OpenRouter with usable pricing.
+ * - `:free` → prompt+completion must be 0
+ * - paid → finite ≥ 0 prices + tools/tool_choice required
  * Never logs the API key.
  */
 export async function assertOpenRouterModelFreeZeroPrice(
@@ -33,17 +46,13 @@ export async function assertOpenRouterModelFreeZeroPrice(
   options: {
     apiKey?: string | null;
     fetchImpl?: typeof fetch;
+    /** When true (default for paid), require tools / tool_choice. */
+    requireTools?: boolean;
   } = {},
 ): Promise<FreeModelCheck> {
   const trimmed = modelId.trim();
-  if (!trimmed.endsWith(':free')) {
-    return {
-      ok: false,
-      reason: `model ${trimmed} is not a :free OpenRouter model`,
-      modelId: trimmed,
-      pricing: null,
-    };
-  }
+  const isFree = trimmed.endsWith(':free');
+  const requireTools = options.requireTools ?? !isFree;
 
   const apiKey = options.apiKey ?? process.env.OPENROUTER_API_KEY ?? null;
   if (!apiKey) {
@@ -52,6 +61,7 @@ export async function assertOpenRouterModelFreeZeroPrice(
       reason: 'OPENROUTER_API_KEY missing — cannot verify model pricing',
       modelId: trimmed,
       pricing: null,
+      isFree,
     };
   }
 
@@ -69,6 +79,7 @@ export async function assertOpenRouterModelFreeZeroPrice(
       reason: `OpenRouter /api/v1/models failed: HTTP ${res.status}`,
       modelId: trimmed,
       pricing: null,
+      isFree,
     };
   }
 
@@ -81,6 +92,7 @@ export async function assertOpenRouterModelFreeZeroPrice(
       reason: `model ${trimmed} not found in /api/v1/models`,
       modelId: trimmed,
       pricing: null,
+      isFree,
     };
   }
 
@@ -88,14 +100,103 @@ export async function assertOpenRouterModelFreeZeroPrice(
   const prompt = asNumber(pricingRaw?.prompt);
   const completion = asNumber(pricingRaw?.completion);
   const pricing = { prompt, completion };
-  if (prompt !== 0 || completion !== 0) {
-    return {
-      ok: false,
-      reason: `model ${trimmed} pricing not zero (prompt=${prompt}, completion=${completion})`,
-      modelId: trimmed,
-      pricing,
-    };
+  const supportsTools = modelSupportsTools(match);
+
+  if (isFree) {
+    if (prompt !== 0 || completion !== 0) {
+      return {
+        ok: false,
+        reason: `model ${trimmed} pricing not zero (prompt=${prompt}, completion=${completion})`,
+        modelId: trimmed,
+        pricing,
+        supportsTools,
+        isFree,
+      };
+    }
+  } else {
+    if (prompt === null || completion === null || prompt < 0 || completion < 0) {
+      return {
+        ok: false,
+        reason: `model ${trimmed} pricing incomplete (prompt=${prompt}, completion=${completion})`,
+        modelId: trimmed,
+        pricing,
+        supportsTools,
+        isFree,
+      };
+    }
+    if (requireTools && !supportsTools) {
+      return {
+        ok: false,
+        reason: `model ${trimmed} does not advertise tools/tool_choice in supported_parameters`,
+        modelId: trimmed,
+        pricing,
+        supportsTools,
+        isFree,
+      };
+    }
   }
 
-  return { ok: true, reason: null, modelId: trimmed, pricing };
+  return {
+    ok: true,
+    reason: null,
+    modelId: trimmed,
+    pricing,
+    supportsTools,
+    isFree,
+  };
+}
+
+/**
+ * Public catalog check (no API key, outside the request proxy).
+ * Used when Claude Code rejects a model id — confirm whether OpenRouter still
+ * lists it as `:free` before stopping. Does not pick a replacement model.
+ */
+export async function openRouterFreeModelStillListed(
+  modelId: string,
+  options: { fetchImpl?: typeof fetch } = {},
+): Promise<{ listed: boolean; freeListed: boolean; httpStatus: number | null; reason: string }> {
+  const trimmed = modelId.trim();
+  const fetchImpl = options.fetchImpl ?? fetch;
+  let res: Response;
+  try {
+    res = await fetchImpl('https://openrouter.ai/api/v1/models', {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    });
+  } catch (err) {
+    return {
+      listed: false,
+      freeListed: false,
+      httpStatus: null,
+      reason: `OpenRouter /api/v1/models unreachable: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+  if (!res.ok) {
+    return {
+      listed: false,
+      freeListed: false,
+      httpStatus: res.status,
+      reason: `OpenRouter /api/v1/models failed: HTTP ${res.status}`,
+    };
+  }
+  const body = (await res.json()) as { data?: Array<{ id?: unknown }> };
+  const models = Array.isArray(body.data) ? body.data : [];
+  const match = models.find((m) => m.id === trimmed);
+  if (!match) {
+    return {
+      listed: false,
+      freeListed: false,
+      httpStatus: res.status,
+      reason: `model ${trimmed} not in OpenRouter public /api/v1/models`,
+    };
+  }
+  const freeListed = trimmed.endsWith(':free');
+  return {
+    listed: true,
+    freeListed,
+    httpStatus: res.status,
+    reason: freeListed
+      ? `model ${trimmed} still listed as :free on OpenRouter`
+      : `model ${trimmed} listed but is not a :free id`,
+  };
 }

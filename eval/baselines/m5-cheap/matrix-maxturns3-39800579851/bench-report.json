@@ -1,0 +1,260 @@
+{
+  "schema": "bench-report/v1",
+  "generatedAt": "2026-10-22T15:06:12.638Z",
+  "timezone": "UTC",
+  "suiteId": "harness-v1",
+  "n": 3,
+  "cheap": true,
+  "claim": "success-only",
+  "efficiencyThreshold": 0.1,
+  "qualityTokenCeiling": 0.15,
+  "verdict": "RECHAZA",
+  "verdictReasons": [
+    "success criterion failed (rate or per-task non-inferiority)"
+  ],
+  "fingerprints": {
+    "harness": null,
+    "prompt": null,
+    "host": null,
+    "model": "deepseek/deepseek-v4-flash",
+    "pricingVersion": null
+  },
+  "totalCostUsd": 0.9374375,
+  "tasks": [
+    {
+      "taskId": "fix-add-off-by-one",
+      "baseline": {
+        "n": 3,
+        "median": 58465,
+        "q1": 48506.5,
+        "q3": 81291,
+        "iqr": 32784.5,
+        "mean": 67043.33333333333
+      },
+      "treatment": {
+        "n": 3,
+        "median": 85374,
+        "q1": 84832.5,
+        "q3": 97261,
+        "iqr": 12428.5,
+        "mean": 92937.66666666667
+      },
+      "deltaMedian": 26909,
+      "bootstrap": {
+        "deltaMedian": 26909,
+        "ciLow": -19826,
+        "ciHigh": 70600,
+        "entirelyBelowZero": false,
+        "crossesZero": true,
+        "samples": 10000,
+        "seed": 42
+      },
+      "baselineSuccess": {
+        "k": 3,
+        "n": 3,
+        "p": 1,
+        "low": 0.4384939195509822,
+        "high": 1
+      },
+      "treatmentSuccess": {
+        "k": 0,
+        "n": 3,
+        "p": 0,
+        "low": 0,
+        "high": 0.5615060804490177
+      },
+      "nonInferiorityOk": false,
+      "metric": "tokensTotal"
+    }
+  ],
+  "overall": {
+    "baselineSuccess": {
+      "k": 3,
+      "n": 3,
+      "p": 1,
+      "low": 0.4384939195509822,
+      "high": 1
+    },
+    "treatmentSuccess": {
+      "k": 0,
+      "n": 3,
+      "p": 0,
+      "low": 0,
+      "high": 0.5615060804490177
+    },
+    "tokens": {
+      "taskId": "_overall",
+      "baseline": {
+        "n": 3,
+        "median": 58465,
+        "q1": 48506.5,
+        "q3": 81291,
+        "iqr": 32784.5,
+        "mean": 67043.33333333333
+      },
+      "treatment": {
+        "n": 3,
+        "median": 85374,
+        "q1": 84832.5,
+        "q3": 97261,
+        "iqr": 12428.5,
+        "mean": 92937.66666666667
+      },
+      "deltaMedian": 26909,
+      "bootstrap": {
+        "deltaMedian": 26909,
+        "ciLow": -19826,
+        "ciHigh": 70600,
+        "entirelyBelowZero": false,
+        "crossesZero": true,
+        "samples": 10000,
+        "seed": 42
+      },
+      "baselineSuccess": {
+        "k": 3,
+        "n": 3,
+        "p": 1,
+        "low": 0.4384939195509822,
+        "high": 1
+      },
+      "treatmentSuccess": {
+        "k": 0,
+        "n": 3,
+        "p": 0,
+        "low": 0,
+        "high": 0.5615060804490177
+      },
+      "nonInferiorityOk": true,
+      "metric": "tokensTotal"
+    }
+  },
+  "cells": [
+    {
+      "taskId": "fix-add-off-by-one",
+      "variant": "baseline",
+      "repetition": 2,
+      "success": true,
+      "iterations": 1,
+      "retries": 0,
+      "calls": 3,
+      "tokensTotal": 58465,
+      "tokensInput": 9309,
+      "tokensOutput": 432,
+      "tokensCacheRead": 48724,
+      "tokensCacheWrite": 0,
+      "costUsd": 0.081707,
+      "costBasis": "unknown",
+      "durationMs": 8337,
+      "cacheHitRate": 0.8395912670377199,
+      "firstTry": true,
+      "modelId": "deepseek/deepseek-v4-flash",
+      "hostVersion": "2.1.197 (Claude Code)"
+    },
+    {
+      "taskId": "fix-add-off-by-one",
+      "variant": "treatment",
+      "repetition": 2,
+      "success": false,
+      "iterations": 1,
+      "retries": 1,
+      "calls": 8,
+      "tokensTotal": 84291,
+      "tokensInput": 14898,
+      "tokensOutput": 426,
+      "tokensCacheRead": 68967,
+      "tokensCacheWrite": 0,
+      "costUsd": 0.1196235,
+      "costBasis": "unknown",
+      "durationMs": 48796,
+      "cacheHitRate": 0.8223573600429261,
+      "firstTry": false,
+      "modelId": "deepseek/deepseek-v4-flash",
+      "hostVersion": "2.1.197 (Claude Code)"
+    },
+    {
+      "taskId": "fix-add-off-by-one",
+      "variant": "baseline",
+      "repetition": 3,
+      "success": true,
+      "iterations": 1,
+      "retries": 1,
+      "calls": 5,
+      "tokensTotal": 38548,
+      "tokensInput": 21640,
+      "tokensOutput": 524,
+      "tokensCacheRead": 16384,
+      "tokensCacheWrite": 0,
+      "costUsd": 0.129492,
+      "costBasis": "unknown",
+      "durationMs": 69519,
+      "cacheHitRate": 0.4308857563644014,
+      "firstTry": false,
+      "modelId": "deepseek/deepseek-v4-flash",
+      "hostVersion": "2.1.197 (Claude Code)"
+    },
+    {
+      "taskId": "fix-add-off-by-one",
+      "variant": "treatment",
+      "repetition": 3,
+      "success": false,
+      "iterations": 1,
+      "retries": 1,
+      "calls": 7,
+      "tokensTotal": 85374,
+      "tokensInput": 425,
+      "tokensOutput": 1749,
+      "tokensCacheRead": 83200,
+      "tokensCacheWrite": 0,
+      "costUsd": 0.08745,
+      "costBasis": "unknown",
+      "durationMs": 80424,
+      "cacheHitRate": 0.9949177877428999,
+      "firstTry": false,
+      "modelId": "deepseek/deepseek-v4-flash",
+      "hostVersion": "2.1.197 (Claude Code)"
+    },
+    {
+      "taskId": "fix-add-off-by-one",
+      "variant": "baseline",
+      "repetition": 1,
+      "success": true,
+      "iterations": 1,
+      "retries": 1,
+      "calls": 12,
+      "tokensTotal": 104117,
+      "tokensInput": 36131,
+      "tokensOutput": 2450,
+      "tokensCacheRead": 65536,
+      "tokensCacheWrite": 0,
+      "costUsd": 0.274673,
+      "costBasis": "unknown",
+      "durationMs": 138833,
+      "cacheHitRate": 0.6446142799531804,
+      "firstTry": false,
+      "modelId": "deepseek/deepseek-v4-flash",
+      "hostVersion": "2.1.197 (Claude Code)"
+    },
+    {
+      "taskId": "fix-add-off-by-one",
+      "variant": "treatment",
+      "repetition": 1,
+      "success": false,
+      "iterations": 1,
+      "retries": 0,
+      "calls": 4,
+      "tokensTotal": 109148,
+      "tokensInput": 38284,
+      "tokensOutput": 720,
+      "tokensCacheRead": 70144,
+      "tokensCacheWrite": 0,
+      "costUsd": 0.24449200000000001,
+      "costBasis": "unknown",
+      "durationMs": 37027,
+      "cacheHitRate": 0.6469177703176301,
+      "firstTry": false,
+      "modelId": "deepseek/deepseek-v4-flash",
+      "hostVersion": "2.1.197 (Claude Code)"
+    }
+  ],
+  "contentHash": "ac549c2666be995f372f4afcbfd8ff49648204f4b8effb754e8dcb1b41d3688d"
+}

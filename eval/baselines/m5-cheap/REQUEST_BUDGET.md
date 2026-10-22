@@ -31,3 +31,11 @@ BENCH_MAX_TURNS=6
 BENCH_SONDA=1   # or 0 for matrix
 BENCH_N=1       # sonda; matrix uses 3
 ```
+
+## Accumulated spend log
+
+| Run | maxTurns | Countable POSTs (proxy) | Usage Δ |
+| --- | ---: | ---: | ---: |
+| Sonda 39800247302 | 3 | 9 | $0 |
+| Matrix 39800579851 (accidental, before turns=6) | 3 | 55 absolute | +$0.056 |
+| **Seed for next** | | **55** | |

@@ -28,3 +28,7 @@
 
 - Sonda maxTurns=3 [39800247302](https://github.com/lgzarturo/codeconductor/actions/runs/39800247302): success=true (9 req)
 - Accidental matrix maxTurns=3 [39800579851](https://github.com/lgzarturo/codeconductor/actions/runs/39800579851): B 3/3 T 0/3 **RECHAZA**, 55 req, Δ+$0.056
+
+## Treatment Invalid (root cause)
+
+Matrix treatment stderr: `Ignoring N permissions.allow … workspace has not been trusted` — preset on disk but not applied. Fixed in T-034 (`trustClaudeWorkspace` + `bun run ab:run -- --dry-run`). See `eval/ab/README.md`.

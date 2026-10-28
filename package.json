@@ -47,6 +47,7 @@
   },
   "scripts": {
     "dev": "bun run src/cli/main.ts",
+    "ab:run": "bun run scripts/ab-run.ts",
     "build": "bun run scripts/build.ts",
     "build:cli": "bun build src/cli/main.ts --target=node --outfile=dist/index.js",
     "build:lib": "bun build src/index.ts --target=node --outfile=dist/library.js --packages=external",

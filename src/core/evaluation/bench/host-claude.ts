@@ -9,9 +9,10 @@
  * subtype / is_error — never session ids, prompts, or raw host JSON blobs.
  */
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { cp, mkdtemp, rm, writeFile, readFile, access, mkdir } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import {
   collectClaudeJson,
   resolveClaudeJsonCostBasis,
@@ -22,6 +23,23 @@ import {
   isProxyLocalToken,
 } from './openrouter-request-proxy';
 import type { BenchCostBasis, BenchRunCell } from './report';
+
+/** Marker files that prove the CodeConductor Claude preset is present. */
+export const HARNESS_MARKER_PATHS = [
+  '.claude/CLAUDE.md',
+  '.claude/settings.json',
+  '.claude/hooks/invoke-hook.cjs',
+] as const;
+
+export interface HarnessPresence {
+  loaded: boolean;
+  files: string[];
+  missing: string[];
+  /** sha256 of concatenated marker file contents (empty when none present). */
+  fingerprint: string | null;
+  /** True when Claude would apply project permissions.allow for this cwd. */
+  workspaceTrusted: boolean;
+}
 
 export interface ClaudeHostSlot {
   taskId: string;
@@ -330,6 +348,125 @@ export async function ensureClaudeCiConfig(): Promise<void> {
 }
 
 /**
+ * Mark `projectPath` as trusted so Claude Code applies `.claude/settings.json`
+ * `permissions.allow` (Claude Code ≥2.1.193). Without this, treatment cells
+ * install the preset but Claude ignores it — stderr:
+ * "Ignoring N permissions.allow entries … workspace has not been trusted".
+ *
+ * Writes `projects[<abs>].hasTrustDialogAccepted: true` to both
+ * `~/.claude.json` (primary) and `~/.claude/settings.json` (message fallback).
+ * Does not write secrets.
+ */
+export async function trustClaudeWorkspace(projectPath: string): Promise<string> {
+  const abs = resolve(projectPath);
+  const home = homedir();
+  await mkdir(join(home, '.claude'), { recursive: true });
+
+  for (const file of [join(home, '.claude.json'), join(home, '.claude', 'settings.json')]) {
+    let root: Record<string, unknown> = {};
+    try {
+      const raw = await readFile(file, 'utf-8');
+      const parsed = JSON.parse(raw) as unknown;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        root = parsed as Record<string, unknown>;
+      }
+    } catch {
+      root = {};
+    }
+    const projects =
+      root.projects && typeof root.projects === 'object' && !Array.isArray(root.projects)
+        ? ({ ...(root.projects as Record<string, unknown>) } as Record<string, unknown>)
+        : {};
+    const prev =
+      projects[abs] && typeof projects[abs] === 'object' && !Array.isArray(projects[abs])
+        ? ({ ...(projects[abs] as Record<string, unknown>) } as Record<string, unknown>)
+        : {};
+    projects[abs] = {
+      ...prev,
+      hasTrustDialogAccepted: true,
+      hasCompletedProjectOnboarding: true,
+    };
+    root.projects = projects;
+    // Keep global flags for CI onboarding when writing settings.json.
+    if (file.endsWith('settings.json')) {
+      if (root.hasTrustDialogAccepted !== true) root.hasTrustDialogAccepted = true;
+      if (root.hasCompletedProjectOnboarding !== true) {
+        root.hasCompletedProjectOnboarding = true;
+      }
+    }
+    await writeFile(file, `${JSON.stringify(root, null, 2)}\n`, 'utf-8');
+  }
+  return abs;
+}
+
+/** Read whether `projectPath` is marked trusted in ~/.claude.json. */
+export async function isClaudeWorkspaceTrusted(projectPath: string): Promise<boolean> {
+  const abs = resolve(projectPath);
+  try {
+    const raw = await readFile(join(homedir(), '.claude.json'), 'utf-8');
+    const parsed = JSON.parse(raw) as { projects?: Record<string, { hasTrustDialogAccepted?: boolean }> };
+    return parsed.projects?.[abs]?.hasTrustDialogAccepted === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Inspect whether the CodeConductor Claude preset (harness) is present on disk
+ * and whether the workspace is trusted so Claude would apply it.
+ */
+export async function inspectHarnessPresence(cwd: string): Promise<HarnessPresence> {
+  const files: string[] = [];
+  const missing: string[] = [];
+  const chunks: string[] = [];
+  for (const rel of HARNESS_MARKER_PATHS) {
+    const full = join(cwd, rel);
+    try {
+      const body = await readFile(full, 'utf-8');
+      files.push(rel);
+      chunks.push(`${rel}\n${body}`);
+    } catch {
+      missing.push(rel);
+    }
+  }
+  const workspaceTrusted = await isClaudeWorkspaceTrusted(cwd);
+  const loaded = missing.length === 0 && workspaceTrusted;
+  const fingerprint =
+    chunks.length > 0
+      ? createHash('sha256').update(chunks.join('\n---\n')).digest('hex')
+      : null;
+  return { loaded, files, missing, fingerprint, workspaceTrusted };
+}
+
+/**
+ * Install the Claude preset into `cwd` and mark the workspace trusted.
+ * Returns presence evidence for dry-run / validity checks.
+ */
+export async function installHarnessPreset(cwd: string): Promise<HarnessPresence> {
+  const install = await installPresetCommand({
+    target: 'claude',
+    dryRun: false,
+    force: true,
+    global: false,
+    output: 'json',
+    projectRoot: cwd,
+    locale: 'en',
+  });
+  if (install.code !== 0) {
+    throw new Error(`harness install failed (code ${install.code})`);
+  }
+  await trustClaudeWorkspace(cwd);
+  const presence = await inspectHarnessPresence(cwd);
+  if (!presence.loaded) {
+    throw new Error(
+      `harness install incomplete: missing=${presence.missing.join(',') || 'none'} ` +
+        `trusted=${presence.workspaceTrusted}`,
+    );
+  }
+  return presence;
+}
+
+/**
  * Route every model alias Claude Code may pick (main loop, haiku background
  * calls, harness agents declaring sonnet/opus, subagents) to the :free model,
  * so no request can land on a paid OpenRouter model.
@@ -608,21 +745,14 @@ export async function runClaudeHostCell(
     workDir = await mkdtemp(join(tmpdir(), 'cc-bench-live-'));
     await cp(options.fixtureDir, join(workDir, 'fixture'), { recursive: true });
     const cwd = join(workDir, 'fixture');
+    // Temp workdirs are never interactively trusted. Without this, Claude Code
+    // ≥2.1.193 ignores permissions.allow from the installed preset (treatment
+    // arm Invalid — harness files on disk but not applied).
+    await trustClaudeWorkspace(cwd);
 
     if (slot.variant === 'treatment') {
-      // The harness under evaluation: same installer users run.
-      const install = await installPresetCommand({
-        target: 'claude',
-        dryRun: false,
-        force: true,
-        global: false,
-        output: 'json',
-        projectRoot: cwd,
-        locale: 'en',
-      });
-      if (install.code !== 0) {
-        throw new Error(`harness install failed (code ${install.code})`);
-      }
+      // The harness under evaluation: same installer users run + trust gate.
+      await installHarnessPreset(cwd);
     }
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {

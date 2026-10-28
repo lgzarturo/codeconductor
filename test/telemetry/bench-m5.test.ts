@@ -669,9 +669,18 @@ describe('M5 live host budget (fake claude binary)', () => {
   // Fake claude records what it saw (harness present, model routing, turn cap).
   const RECORDER = `
 const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
 const args = process.argv.slice(2);
+let trusted = false;
+try {
+  const cfg = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.claude.json'), 'utf8'));
+  trusted = cfg.projects && cfg.projects[process.cwd()] && cfg.projects[process.cwd()].hasTrustDialogAccepted === true;
+} catch {}
 fs.writeFileSync('seen.json', JSON.stringify({
   harness: fs.existsSync('.claude/CLAUDE.md'),
+  settings: fs.existsSync('.claude/settings.json'),
+  trusted,
   sonnet: process.env.ANTHROPIC_DEFAULT_SONNET_MODEL,
   subagent: process.env.CLAUDE_CODE_SUBAGENT_MODEL,
   maxTurns: args[args.indexOf('--max-turns') + 1],
@@ -699,8 +708,14 @@ console.log(JSON.stringify({ type: 'result', subtype: 'success', is_error: false
   }
 
   test('treatment installs the CodeConductor harness; baseline does not', async () => {
-    expect((await recordSlot('treatment')).harness).toBe(true);
-    expect((await recordSlot('baseline')).harness).toBe(false);
+    const treatment = await recordSlot('treatment');
+    expect(treatment.harness).toBe(true);
+    expect(treatment.settings).toBe(true);
+    expect(treatment.trusted).toBe(true);
+    const baseline = await recordSlot('baseline');
+    expect(baseline.harness).toBe(false);
+    // Baseline workdir is still trusted so Claude can apply tools; no preset files.
+    expect(baseline.trusted).toBe(true);
   }, 60_000);
 
   test('every model alias routes to the :free model and turns are capped', async () => {

@@ -188,12 +188,17 @@ async function rateLimit(minIntervalMs: number): Promise<void> {
 /** Scrub secrets, session ids, and filesystem paths; truncate for artifacts. */
 export function sanitizeStderr(stderr: string, maxLen = 500): string {
   let s = stderr
+    // Named API keys first (values may not look like sk-*).
+    .replace(/OPENROUTER_API_KEY=\S+/g, 'OPENROUTER_API_KEY=[REDACTED]')
+    .replace(/DEEPSEEK_API_KEY=\S+/g, 'DEEPSEEK_API_KEY=[REDACTED]')
+    .replace(/ANTHROPIC_AUTH_TOKEN=\S+/g, 'ANTHROPIC_AUTH_TOKEN=[REDACTED]')
+    .replace(/ANTHROPIC_API_KEY=\S+/g, 'ANTHROPIC_API_KEY=[REDACTED]')
+    // Token-shaped secrets (OpenRouter, Anthropic, DeepSeek, generic sk-*).
     .replace(/sk-or-v1-[A-Za-z0-9_-]+/g, '[REDACTED_OR_KEY]')
     .replace(/sk-ant-[A-Za-z0-9_-]+/g, '[REDACTED_ANT_KEY]')
+    .replace(/\bsk-[A-Za-z0-9_-]{8,}\b/g, '[REDACTED_SK_TOKEN]')
     .replace(/cc-proxy-local-[A-Za-z0-9_-]+/g, '[REDACTED_PROXY_LOCAL]')
     .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [REDACTED]')
-    .replace(/ANTHROPIC_AUTH_TOKEN=\S+/g, 'ANTHROPIC_AUTH_TOKEN=[REDACTED]')
-    .replace(/OPENROUTER_API_KEY=\S+/g, 'OPENROUTER_API_KEY=[REDACTED]')
     .replace(/session[_-]?id["\s:=]+[A-Za-z0-9_-]+/gi, 'session_id=[REDACTED]')
     // Absolute and home-relative paths (Unix + Windows).
     .replace(/\/(?:home|Users|tmp|var|opt|workspace|runner)\/[^\s"'\\]+/gi, '[REDACTED_PATH]')

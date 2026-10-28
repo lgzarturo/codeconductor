@@ -16,9 +16,13 @@ Options:
   --model <id>               Override model id
   --out <dir>                Report dir (default ~/.cache/codeconductor-ab/)
   --dry-run                  No network: prove harness loads on con-arnés only
+  --reset-counter            Reset durable campaign counter for this provider to 0
   --n <int>                  Repetitions per task × arm (default 5)
   --max-turns <int>          Claude maxTurns (minimum 6)
   --seed <int>               Schedule seed (default 42)
+
+Tope: total across ab:run invocations. Counter:
+  ~/.cache/codeconductor-ab/counter-<provider>.json
 
 Keys: OPENROUTER_API_KEY (required for live). Never printed.
 `);
@@ -43,6 +47,7 @@ async function main(): Promise<void> {
     model: flagValue(args, '--model'),
     out: flagValue(args, '--out'),
     dryRun: args.includes('--dry-run'),
+    resetCounter: args.includes('--reset-counter'),
     n: flagValue(args, '--n') ? Number(flagValue(args, '--n')) : undefined,
     maxTurns: flagValue(args, '--max-turns')
       ? Number(flagValue(args, '--max-turns'))
@@ -54,12 +59,16 @@ async function main(): Promise<void> {
   for (const line of result.dryRunMessages) {
     console.log(line);
   }
+  if (result.counterPath) {
+    console.log(`counter=${result.counterPath}`);
+  }
   if (result.reportPaths) {
     console.log(`report_json=${result.reportPaths.jsonPath}`);
     console.log(`report_md=${result.reportPaths.mdPath}`);
   }
   if (result.report) {
     console.log(`verdict=${result.report.verdict}`);
+    console.log(`cost=${result.report.cost.label}:${result.report.cost.usageDeltaUsd}`);
     if (result.report.capReached) console.log('tope alcanzado');
   }
   if (result.error) {

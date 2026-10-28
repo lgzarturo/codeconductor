@@ -20,6 +20,8 @@ export interface AbRunCell {
   iterations: number | null;
   retries: number | null;
   durationMs: number | null;
+  /** Host-reported cost when present (Claude estimate — not OpenRouter billed). */
+  costUsd: number | null;
   error: string | null;
 }
 
@@ -126,6 +128,29 @@ export function decideAbVerdict(
   return { verdict: 'no concluyente', harnessHelped: null, rule };
 }
 
+/**
+ * Prefer OpenRouter key usage Δ (real). Else sum host `costUsd` as estimado.
+ * Missing data stays null — never invent 0.
+ */
+export function resolveAbCost(input: {
+  usageDeltaUsd: number | null;
+  cells: AbRunCell[];
+}): { label: 'real' | 'estimado' | 'desconocido'; usageDeltaUsd: number | null } {
+  if (typeof input.usageDeltaUsd === 'number' && Number.isFinite(input.usageDeltaUsd)) {
+    return { label: 'real', usageDeltaUsd: input.usageDeltaUsd };
+  }
+  const costs = input.cells
+    .map((c) => c.costUsd)
+    .filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
+  if (costs.length > 0) {
+    return {
+      label: 'estimado',
+      usageDeltaUsd: costs.reduce((a, b) => a + b, 0),
+    };
+  }
+  return { label: 'desconocido', usageDeltaUsd: null };
+}
+
 export function buildAbReport(input: {
   provider: string;
   modelId: string;
@@ -134,7 +159,8 @@ export function buildAbReport(input: {
   requestCount: number | null;
   capReached: boolean;
   usageDeltaUsd: number | null;
-  costLabel: 'real' | 'estimado' | 'desconocido';
+  /** When omitted, derived via {@link resolveAbCost}. */
+  costLabel?: 'real' | 'estimado' | 'desconocido';
   cells: AbRunCell[];
   notes?: string[];
 }): AbFinalReport {
@@ -142,7 +168,16 @@ export function buildAbReport(input: {
   const con = summarizeArm(input.cells, 'con-arnes');
   const { verdict, harnessHelped, rule } = decideAbVerdict(sin, con);
   const notes = [...(input.notes ?? [])];
-  if (input.capReached) notes.push('tope alcanzado');
+  if (input.capReached && !notes.includes('tope alcanzado')) {
+    notes.push('tope alcanzado');
+  }
+  const cost =
+    input.costLabel !== undefined
+      ? { label: input.costLabel, usageDeltaUsd: input.usageDeltaUsd }
+      : resolveAbCost({
+          usageDeltaUsd: input.usageDeltaUsd,
+          cells: input.cells,
+        });
   return {
     schema: 'codeconductor-ab/v1',
     generatedAt: new Date().toISOString(),
@@ -152,10 +187,7 @@ export function buildAbReport(input: {
     requestCap: input.requestCap,
     requestCount: input.requestCount,
     capReached: input.capReached,
-    cost: {
-      label: input.costLabel,
-      usageDeltaUsd: input.usageDeltaUsd,
-    },
+    cost,
     arms: [sin, con],
     cells: input.cells,
     verdict,

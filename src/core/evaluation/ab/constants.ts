@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 /** T-034 A/B harness ablation — hard request caps (fail-closed). */
 export const AB_REQUEST_CAP = {
   free: 500,
@@ -29,4 +31,15 @@ export function defaultAbOutDir(): string {
   const xdg = process.env.XDG_CACHE_HOME?.trim();
   const base = xdg && xdg.length > 0 ? xdg : `${home}/.cache`;
   return `${base}/codeconductor-ab`;
+}
+
+/**
+ * Durable request counter for the campaign tope (total across `ab:run` invocations).
+ * Stable path — never Date.now(). Example: `~/.cache/codeconductor-ab/counter-free.json`.
+ */
+export function defaultAbCounterPath(
+  provider: AbProvider,
+  outDir: string = defaultAbOutDir(),
+): string {
+  return join(outDir, `counter-${provider}.json`);
 }

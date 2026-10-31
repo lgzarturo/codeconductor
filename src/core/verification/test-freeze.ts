@@ -1,6 +1,16 @@
 import { createHash } from 'node:crypto';
-import { readdir, readFile, writeFile, stat } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { readdir, readFile, open, lstat } from 'node:fs/promises';
 import { join, relative, isAbsolute } from 'node:path';
+import { z } from 'zod';
+
+export const FREEZE_LOCK_FILE = 'test-freeze.lock';
+
+const FreezeManifestSchema = z.object({
+  hash: z.string(),
+  files: z.array(z.object({ path: z.string(), hash: z.string() })),
+  frozenAt: z.string(),
+});
 
 export interface FreezeManifest {
   hash: string;
@@ -20,7 +30,10 @@ async function collectFiles(dirs: string[], basePath: string): Promise<string[]>
 
   async function walk(currentPath: string) {
     try {
-      const s = await stat(currentPath);
+      const s = await lstat(currentPath);
+      if (s.isSymbolicLink()) {
+        throw new Error(`Symlink in sealed set: ${relative(basePath, currentPath)}`);
+      }
       if (s.isDirectory()) {
         const entries = await readdir(currentPath, { withFileTypes: true });
         for (const entry of entries) {
@@ -50,17 +63,18 @@ async function hashFile(filePath: string): Promise<string> {
   return createHash('sha256').update(content).digest('hex');
 }
 
-export async function freezeTestSuite(dirs: string[], lockDir: string): Promise<FreezeManifest> {
-  // Only consumer today is runWorkflowPipeline() (src/core/pipeline/workflow-loop.ts),
-  // which src/cli/router.ts marks as an "experimental library-only 8-phase
-  // loop — not a shipped CLI runtime." The active production gate is
-  // rdd-receipt.ts + verification-runner.ts, not this module.
-  const basePath = process.cwd();
-  const files = await collectFiles(dirs, process.cwd());
+export async function freezeTestSuite(
+  dirs: string[],
+  lockDir: string,
+  basePath: string = process.cwd(),
+): Promise<FreezeManifest> {
+  // Consumers: runWorkflowPipeline() (experimental, library-only) and the harness
+  // (src/core/verification/harness). The production gate is rdd-receipt.ts.
+  const files = await collectFiles(dirs, basePath);
   
   const fileInfos = [];
   for (const file of files) {
-    const hash = await hashFile(join(process.cwd(), file));
+    const hash = await hashFile(join(basePath, file));
     fileInfos.push({ path: file, hash });
   }
 
@@ -73,7 +87,14 @@ export async function freezeTestSuite(dirs: string[], lockDir: string): Promise<
     frozenAt: new Date().toISOString()
   };
 
-  await writeFile(join(lockDir, 'test-freeze.lock'), JSON.stringify(manifest, null, 2), 'utf-8');
+  // O_NOFOLLOW: a lock path that is a symlink must fail, not be written through.
+  const flags = constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | (constants.O_NOFOLLOW ?? 0);
+  const handle = await open(join(lockDir, FREEZE_LOCK_FILE), flags, 0o644);
+  try {
+    await handle.writeFile(JSON.stringify(manifest, null, 2), 'utf-8');
+  } finally {
+    await handle.close();
+  }
   return manifest;
 }
 
@@ -124,7 +145,7 @@ export async function verifyTestFreeze(lockPath: string, dirs: string[], basePat
 export async function readFreezeLock(lockPath: string): Promise<FreezeManifest | null> {
   try {
     const content = await readFile(lockPath, 'utf-8');
-    return JSON.parse(content) as FreezeManifest;
+    return FreezeManifestSchema.parse(JSON.parse(content));
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
       return null;

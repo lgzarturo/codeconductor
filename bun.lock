@@ -6,12 +6,12 @@
       "name": "cc-codeconductor",
       "dependencies": {
         "smol-toml": "^1.9.1",
+        "typescript": "^5.5.3",
         "yaml": "^2.4.5",
         "zod": "^3.23.8",
       },
       "devDependencies": {
         "@types/bun": "^1.1.8",
-        "typescript": "^5.5.3",
       },
     },
   },

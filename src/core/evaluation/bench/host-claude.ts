@@ -9,6 +9,7 @@
  * subtype / is_error — never session ids, prompts, or raw host JSON blobs.
  */
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { cp, mkdtemp, rm, writeFile, readFile, access, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -25,6 +26,23 @@ import type { BenchCostBasis, BenchRunCell } from './report';
 
 /** `openrouter` = CI via local request proxy; `anthropic` = local Claude Code auth. */
 export type BenchProvider = 'openrouter' | 'anthropic';
+
+/** Marker files that prove the CodeConductor Claude preset is present. */
+export const HARNESS_MARKER_PATHS = [
+  '.claude/CLAUDE.md',
+  '.claude/settings.json',
+  '.claude/hooks/invoke-hook.cjs',
+] as const;
+
+export interface HarnessPresence {
+  loaded: boolean;
+  files: string[];
+  missing: string[];
+  /** sha256 of concatenated marker file contents (empty when none present). */
+  fingerprint: string | null;
+  /** True when Claude would apply project permissions.allow for this cwd. */
+  workspaceTrusted: boolean;
+}
 
 export interface ClaudeHostSlot {
   taskId: string;
@@ -179,12 +197,17 @@ async function rateLimit(minIntervalMs: number): Promise<void> {
 /** Scrub secrets, session ids, and filesystem paths; truncate for artifacts. */
 export function sanitizeStderr(stderr: string, maxLen = 500): string {
   let s = stderr
+    // Named API keys first (values may not look like sk-*).
+    .replace(/OPENROUTER_API_KEY=\S+/g, 'OPENROUTER_API_KEY=[REDACTED]')
+    .replace(/DEEPSEEK_API_KEY=\S+/g, 'DEEPSEEK_API_KEY=[REDACTED]')
+    .replace(/ANTHROPIC_AUTH_TOKEN=\S+/g, 'ANTHROPIC_AUTH_TOKEN=[REDACTED]')
+    .replace(/ANTHROPIC_API_KEY=\S+/g, 'ANTHROPIC_API_KEY=[REDACTED]')
+    // Token-shaped secrets (OpenRouter, Anthropic, DeepSeek, generic sk-*).
     .replace(/sk-or-v1-[A-Za-z0-9_-]+/g, '[REDACTED_OR_KEY]')
     .replace(/sk-ant-[A-Za-z0-9_-]+/g, '[REDACTED_ANT_KEY]')
+    .replace(/\bsk-[A-Za-z0-9_-]{8,}\b/g, '[REDACTED_SK_TOKEN]')
     .replace(/cc-proxy-local-[A-Za-z0-9_-]+/g, '[REDACTED_PROXY_LOCAL]')
     .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [REDACTED]')
-    .replace(/ANTHROPIC_AUTH_TOKEN=\S+/g, 'ANTHROPIC_AUTH_TOKEN=[REDACTED]')
-    .replace(/OPENROUTER_API_KEY=\S+/g, 'OPENROUTER_API_KEY=[REDACTED]')
     .replace(/session[_-]?id["\s:=]+[A-Za-z0-9_-]+/gi, 'session_id=[REDACTED]')
     // Absolute and home-relative paths (Unix + Windows).
     .replace(/\/(?:home|Users|tmp|var|opt|workspace|runner)\/[^\s"'\\]+/gi, '[REDACTED_PATH]')
@@ -349,6 +372,78 @@ const ANTHROPIC_MODEL_ALIASES: Record<string, string> = {
 /** `opus|sonnet|haiku` → full Claude model id; full ids pass through. */
 export function resolveAnthropicModel(alias: string): string {
   return ANTHROPIC_MODEL_ALIASES[alias.trim().toLowerCase()] ?? alias.trim();
+}
+
+/** Read whether `<configDir>/.claude.json` trusts `cwd`, as Claude Code would. */
+export async function isClaudeWorkspaceTrusted(cwd: string, configDir: string): Promise<boolean> {
+  try {
+    const raw = await readFile(join(configDir, '.claude.json'), 'utf-8');
+    const parsed = JSON.parse(raw) as { projects?: Record<string, { hasTrustDialogAccepted?: boolean }> };
+    return parsed.projects?.[await realpath(cwd)]?.hasTrustDialogAccepted === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Inspect whether the CodeConductor Claude preset (harness) is present on disk
+ * and whether `configDir` trusts the workspace so Claude would apply it.
+ */
+export async function inspectHarnessPresence(
+  cwd: string,
+  configDir: string,
+): Promise<HarnessPresence> {
+  const files: string[] = [];
+  const missing: string[] = [];
+  const chunks: string[] = [];
+  for (const rel of HARNESS_MARKER_PATHS) {
+    const full = join(cwd, rel);
+    try {
+      const body = await readFile(full, 'utf-8');
+      files.push(rel);
+      chunks.push(`${rel}\n${body}`);
+    } catch {
+      missing.push(rel);
+    }
+  }
+  const workspaceTrusted = await isClaudeWorkspaceTrusted(cwd, configDir);
+  const loaded = missing.length === 0 && workspaceTrusted;
+  const fingerprint =
+    chunks.length > 0
+      ? createHash('sha256').update(chunks.join('\n---\n')).digest('hex')
+      : null;
+  return { loaded, files, missing, fingerprint, workspaceTrusted };
+}
+
+/**
+ * Install the Claude preset into `cwd` and verify `configDir` trusts it
+ * (see {@link prepareIsolatedClaudeConfig}).
+ * Returns presence evidence for dry-run / validity checks.
+ */
+export async function installHarnessPreset(
+  cwd: string,
+  configDir: string,
+): Promise<HarnessPresence> {
+  const install = await installPresetCommand({
+    target: 'claude',
+    dryRun: false,
+    force: true,
+    global: false,
+    output: 'json',
+    projectRoot: cwd,
+    locale: 'en',
+  });
+  if (install.code !== 0) {
+    throw new Error(`harness install failed (code ${install.code})`);
+  }
+  const presence = await inspectHarnessPresence(cwd, configDir);
+  if (!presence.loaded) {
+    throw new Error(
+      `harness install incomplete: missing=${presence.missing.join(',') || 'none'} ` +
+        `trusted=${presence.workspaceTrusted}`,
+    );
+  }
+  return presence;
 }
 
 /**
@@ -698,19 +793,8 @@ export async function runClaudeHostCell(
     configDir = await prepareIsolatedClaudeConfig(cwd);
 
     if (slot.variant === 'treatment') {
-      // The harness under evaluation: same installer users run.
-      const install = await installPresetCommand({
-        target: 'claude',
-        dryRun: false,
-        force: true,
-        global: false,
-        output: 'json',
-        projectRoot: cwd,
-        locale: 'en',
-      });
-      if (install.code !== 0) {
-        throw new Error(`harness install failed (code ${install.code})`);
-      }
+      // The harness under evaluation: same installer users run + trust gate.
+      await installHarnessPreset(cwd, configDir);
     }
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {

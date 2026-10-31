@@ -32,3 +32,7 @@
 
 - Sonda maxTurns=3 [39800247302](https://github.com/lgzarturo/codeconductor/actions/runs/39800247302): success=true (9 req)
 - Accidental matrix maxTurns=3 [39800579851](https://github.com/lgzarturo/codeconductor/actions/runs/39800579851): B 3/3 T 0/3 **RECHAZA**, 55 req, Δ+$0.056
+
+## Treatment Invalid (root cause)
+
+Matrix treatment stderr: `Ignoring N permissions.allow … workspace has not been trusted` — preset on disk but not applied. Fixed by the isolated `CLAUDE_CONFIG_DIR` that trusts the cell cwd (`prepareIsolatedClaudeConfig`); T-034 adds `bun run ab:run -- --dry-run` to prove it. See `eval/ab/README.md`.

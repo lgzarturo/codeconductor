@@ -26,8 +26,8 @@
 
 | File | Line | Reason |
 | ---- | ---- | ------ |
+| src/utils.ts | 4 | handle nested config objects |
 | src/sample.ts | 10 | add retry logic for transient failures |
 | src/sample.ts | 20 | add caching layer |
-| src/utils.ts | 4 | handle nested config objects |
 
 <!-- CODECONDUCTOR:END managed -->

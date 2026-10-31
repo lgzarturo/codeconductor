@@ -677,6 +677,7 @@ const args = process.argv.slice(2);
 const cfg = JSON.parse(fs.readFileSync(require('node:path').join(process.env.CLAUDE_CONFIG_DIR, '.claude.json'), 'utf-8'));
 fs.writeFileSync('seen.json', JSON.stringify({
   harness: fs.existsSync('.claude/CLAUDE.md'),
+  settings: fs.existsSync('.claude/settings.json'),
   trusted: cfg.projects[process.cwd()]?.hasTrustDialogAccepted === true,
   sonnet: process.env.ANTHROPIC_DEFAULT_SONNET_MODEL,
   subagent: process.env.CLAUDE_CODE_SUBAGENT_MODEL,
@@ -705,7 +706,9 @@ console.log(JSON.stringify({ type: 'result', subtype: 'success', is_error: false
   }
 
   test('treatment installs the CodeConductor harness; baseline does not', async () => {
-    expect((await recordSlot('treatment')).harness).toBe(true);
+    const treatment = await recordSlot('treatment');
+    expect(treatment.harness).toBe(true);
+    expect(treatment.settings).toBe(true);
     expect((await recordSlot('baseline')).harness).toBe(false);
   }, 60_000);
 

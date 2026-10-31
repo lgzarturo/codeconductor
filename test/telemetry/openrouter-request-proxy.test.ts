@@ -4,7 +4,7 @@
  */
 import { afterEach, describe, expect, test } from 'bun:test';
 import { createServer, type IncomingMessage } from 'node:http';
-import { mkdtemp, readFile, rm, writeFile, chmod, mkdir } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -121,22 +121,13 @@ describe('request counter file', () => {
 
   test('unwritable counter fails closed', async () => {
     const dir = await tmpDir();
+    // Parent is a regular file: writes fail with ENOTDIR even as root,
+    // where chmod 0o555 would not block them.
+    await writeFile(join(dir, 'ro'), '', 'utf-8');
     const path = join(dir, 'ro', 'counter.json');
-    await mkdir(join(dir, 'ro'), { recursive: true });
-    await writeRequestCounter(path, {
-      schema: 'openrouter-request-counter/v1',
-      count: 0,
-      max: 5,
-      updatedAt: 't0',
-    });
-    await chmod(join(dir, 'ro'), 0o555);
-    try {
-      await expect(reserveRequestSlot(path, 5)).rejects.toBeInstanceOf(
-        RequestCounterError,
-      );
-    } finally {
-      await chmod(join(dir, 'ro'), 0o755);
-    }
+    await expect(reserveRequestSlot(path, 5)).rejects.toBeInstanceOf(
+      RequestCounterError,
+    );
   });
 });
 

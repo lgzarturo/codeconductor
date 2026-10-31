@@ -29,6 +29,7 @@ import {
   isRequestBudgetAbortReason,
   runClaudeHostCell,
   type BenchBudget,
+  type BenchProvider,
   type ClaudeHostDiagnostics,
 } from './host-claude';
 import { PACKAGE_ROOT } from '../../presets/package-paths';
@@ -101,6 +102,12 @@ export interface BenchRunOptions {
   variants?: Array<'baseline' | 'treatment'>;
   /** Main-loop turn cap passed to Claude host (default 5). */
   maxTurns?: number;
+  /**
+   * `openrouter` (default): live requires `cheap` + OpenRouter lock.
+   * `anthropic`: local Claude Code auth; aborts once summed cell
+   * `total_cost_usd` reaches `maxSpendUsd`.
+   */
+  provider?: BenchProvider;
 }
 
 export interface BenchRunResult {
@@ -150,6 +157,25 @@ function interleaveSchedule(
     pairs[j] = tmp;
   }
   return pairs.flat();
+}
+
+type SuiteTask = { prompt: string; scope: string; acceptanceCriteria: string[] };
+
+/**
+ * Prompt sent to both arms: task prompt + scope + acceptance criteria, so the
+ * model knows it must edit files (not answer in prose).
+ */
+export function buildTaskPrompt(task: SuiteTask): string {
+  return [
+    task.prompt.trim(),
+    '',
+    `Files in scope: ${task.scope}`,
+    '',
+    'Acceptance criteria:',
+    ...task.acceptanceCriteria.map((c) => `- ${c}`),
+    '',
+    'Apply the change by editing the files.',
+  ].join('\n');
 }
 
 /** Deterministic synthetic cells for structural baseline freeze (no models). */
@@ -258,6 +284,8 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
   const variantAllow = options.variants
     ? new Set(options.variants)
     : null;
+  const provider = options.provider ?? 'openrouter';
+  let spentUsd = 0;
 
   if (cheap) {
     const lock = await assertOpenRouterZeroSpend({
@@ -283,7 +311,7 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
   let cells = await loadCells(options);
   if (!cells) {
     if (options.live === true) {
-      if (!cheap) {
+      if (provider === 'openrouter' && !cheap) {
         aborted = true;
         abortReason = 'live bench requires --cheap (OpenRouter $5 spend lock)';
         runValid = false;
@@ -357,14 +385,14 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
             }
             lastTaskId = slot.taskId;
 
-            const task = taskById.get(slot.taskId);
+            const task = taskById.get(slot.taskId)!;
             const hostResult = await runClaudeHostCell(
               {
                 taskId: slot.taskId,
                 variant: slot.variant,
                 repetition: slot.repetition,
-                prompt: task?.prompt ?? slot.taskId,
-                testCommand: task?.testCommand,
+                prompt: buildTaskPrompt(task),
+                testCommand: task.testCommand,
               },
               {
                 fixtureDir,
@@ -373,15 +401,25 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
                 hostVersion: process.env.CLAUDE_CODE_VERSION ?? null,
                 maxAttempts: 2,
                 maxTurns: options.maxTurns,
+                provider,
+                maxBudgetUsd:
+                  provider === 'anthropic' ? maxSpendUsd - spentUsd : undefined,
               },
             );
+            spentUsd += hostResult.spentUsd;
+            if (provider === 'anthropic' && spentUsd >= maxSpendUsd) {
+              aborted = true;
+              abortReason = `spend budget exhausted: $${spentUsd.toFixed(4)}/$${maxSpendUsd}`;
+              runValid = false;
+            }
             const spent = budgetExhausted(options.budget);
             // Explicit abort on stream/proxy request budget — not only via
             // consecutive host failures (review #24).
             if (
               spent ||
               hostResult.diagnostics.requestBudgetExhausted ||
-              isRequestBudgetAbortReason(hostResult.pendingReason)
+              isRequestBudgetAbortReason(hostResult.pendingReason) ||
+              hostResult.diagnostics.subtype === 'error_max_budget_usd'
             ) {
               aborted = true;
               abortReason =
@@ -489,7 +527,7 @@ export async function runBench(options: BenchRunOptions): Promise<BenchRunResult
     fingerprints: options.fingerprints ?? {
       harness: null,
       prompt: null,
-      host: null,
+      host: process.env.CLAUDE_CODE_VERSION ?? null,
       model: options.modelId ?? (cheap ? 'openrouter:cheap' : 'dry-synthetic'),
       pricingVersion: null,
     },

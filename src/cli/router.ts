@@ -622,6 +622,28 @@ export async function routeCommand(
       });
     }
 
+    case 'harness': {
+      const validSubs = ['seal', 'verify-seal', 'check-code', 'check-tests', 'index', 'collisions'] as const;
+      if (!subcommand || !validSubs.includes(subcommand as (typeof validSubs)[number])) {
+        return unknownSubcommand('harness', subcommand ?? '', [...validSubs]);
+      }
+      const { harnessCommand } = await import('../commands/harness.command');
+      const list = (value: unknown): string[] | undefined =>
+        typeof value === 'string' ? value.split(',').map((item) => item.trim()).filter(Boolean) : undefined;
+      return harnessCommand({
+        subcommand,
+        projectRoot,
+        output: flags.output,
+        paths: list(options.paths),
+        lockDir: options['lock-dir'] as string | undefined,
+        domain: list(options.domain),
+        outFile: options.out as string | undefined,
+        mapFile: options.map as string | undefined,
+        force: flags.force === true,
+        expectedHash: options['expected-hash'] as string | undefined,
+      });
+    }
+
     case 'rdd': {
       const validSubs = ['capture', 'verify', 'status', 'git-check', 'install-hooks'] as const;
       if (!subcommand || !validSubs.includes(subcommand as (typeof validSubs)[number])) {

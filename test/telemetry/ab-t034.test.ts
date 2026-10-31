@@ -10,8 +10,8 @@ import { join, resolve } from 'node:path';
 import {
   inspectHarnessPresence,
   isClaudeWorkspaceTrusted,
+  prepareIsolatedClaudeConfig,
   sanitizeStderr,
-  trustClaudeWorkspace,
 } from '../../src/core/evaluation/bench/host-claude';
 import {
   mintProxyLocalToken,
@@ -71,15 +71,12 @@ function cell(partial: Partial<AbRunCell> & Pick<AbRunCell, 'arm' | 'repetition'
 }
 
 describe('T-034 trust gate (root cause of Invalid treatment)', () => {
-  test('trustClaudeWorkspace marks projects[abs].hasTrustDialogAccepted', async () => {
+  test('isolated config trusts the workdir; another config does not', async () => {
     const cwd = await tmp();
-    const abs = await trustClaudeWorkspace(cwd);
-    expect(await isClaudeWorkspaceTrusted(cwd)).toBe(true);
-    const raw = await readFile(join(process.env.HOME!, '.claude.json'), 'utf-8');
-    const json = JSON.parse(raw) as {
-      projects: Record<string, { hasTrustDialogAccepted?: boolean }>;
-    };
-    expect(json.projects[abs]?.hasTrustDialogAccepted).toBe(true);
+    const configDir = await prepareIsolatedClaudeConfig(cwd);
+    dirs.push(configDir);
+    expect(await isClaudeWorkspaceTrusted(cwd, configDir)).toBe(true);
+    expect(await isClaudeWorkspaceTrusted(cwd, await tmp())).toBe(false);
   });
 });
 
@@ -379,7 +376,7 @@ describe('T-034 inspectHarnessPresence without install', () => {
   test('empty fixture is not loaded', async () => {
     const cwd = await tmp();
     await writeFile(join(cwd, 'noop.txt'), 'x');
-    const p = await inspectHarnessPresence(cwd);
+    const p = await inspectHarnessPresence(cwd, await tmp());
     expect(p.loaded).toBe(false);
     expect(p.missing.length).toBe(3);
   });

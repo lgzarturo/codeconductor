@@ -2,6 +2,10 @@
 
 > Arturo **22 Oct 9:51** + maxTurns=6 (microsdd). Claude Code **2.1.197**.
 
+> **No comparables con corridas nuevas.** Estas baselines usan el prompt sin
+> enriquecer (sin scope ni criterios) y un treatment sin workspace confiable
+> (permisos del arnés ignorados). Ver `docs/post-v1.8.0.md` §7.
+
 ## Model
 
 - **`deepseek/deepseek-v4-flash`** — **$0.091 / MTok prompt**, **$0.182 / MTok completion**
@@ -31,4 +35,4 @@
 
 ## Treatment Invalid (root cause)
 
-Matrix treatment stderr: `Ignoring N permissions.allow … workspace has not been trusted` — preset on disk but not applied. Fixed in T-034 (`trustClaudeWorkspace` + `bun run ab:run -- --dry-run`). See `eval/ab/README.md`.
+Matrix treatment stderr: `Ignoring N permissions.allow … workspace has not been trusted` — preset on disk but not applied. Fixed by the isolated `CLAUDE_CONFIG_DIR` that trusts the cell cwd (`prepareIsolatedClaudeConfig`); T-034 adds `bun run ab:run -- --dry-run` to prove it. See `eval/ab/README.md`.

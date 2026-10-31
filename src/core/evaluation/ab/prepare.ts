@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import {
   inspectHarnessPresence,
   installHarnessPreset,
-  trustClaudeWorkspace,
+  prepareIsolatedClaudeConfig,
   type HarnessPresence,
 } from '../bench/host-claude';
 
@@ -28,7 +28,8 @@ export interface AbDryRunResult {
 }
 
 /**
- * Copy fixture, optionally install harness, trust workspace, inspect presence.
+ * Copy fixture, optionally install harness, inspect presence against an
+ * isolated Claude config that trusts the workdir (same as live cells).
  * Caller must dispose `workRoot` (or use {@link withAbDryRun}).
  */
 export async function prepareAbArm(options: {
@@ -41,13 +42,17 @@ export async function prepareAbArm(options: {
   const label = options.withHarness ? 'con-arnes' : 'sin-arnes';
   const cwd = join(workRoot, label);
   await cp(options.fixtureDir, cwd, { recursive: true });
-  await trustClaudeWorkspace(cwd);
+  const configDir = await prepareIsolatedClaudeConfig(cwd);
 
   let presence: HarnessPresence;
-  if (options.withHarness) {
-    presence = await installHarnessPreset(cwd);
-  } else {
-    presence = await inspectHarnessPresence(cwd);
+  try {
+    if (options.withHarness) {
+      presence = await installHarnessPreset(cwd, configDir);
+    } else {
+      presence = await inspectHarnessPresence(cwd, configDir);
+    }
+  } finally {
+    await rm(configDir, { recursive: true, force: true }).catch(() => undefined);
   }
 
   const expectedLoaded = options.withHarness;

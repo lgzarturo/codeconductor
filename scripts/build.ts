@@ -15,6 +15,7 @@ run('cli bundle', [
   'build',
   'src/cli/main.ts',
   '--target=node',
+  '--external=typescript',
   '--outfile=dist/index.js',
 ]);
 

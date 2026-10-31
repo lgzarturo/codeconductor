@@ -18,6 +18,38 @@ problemas son el contexto original, no una afirmación de que sigan vigentes.
 
 ## Items
 
+### BC-029 | Tests de hook-runner independientes del stdin heredado
+
+- Priority: P3
+- Status: TODO
+- Type: tech-debt
+- Depends on: none
+- Description: readStdinText() lee process.stdin hasta EOF cuando no es TTY, así que los tests que invocan routeCommand con 'hook pre-tool' (hook-dispatch.test.ts: dispatch modes y scope-deny) se cuelgan hasta el timeout de 5 s si el proceso hereda un pipe abierto. Con `< /dev/null` pasan. Reproducido en main sin cambios del arnés. Provoca fallos intermitentes en CI y en ejecuciones desde herramientas que dejan el stdin abierto.
+- Scope: src/commands/hook.command.ts (readStdinText) o los tests de test/unit/core/hooks/hook-dispatch.test.ts, y su test de regresión.
+- Out of scope: cambiar el formato de los payloads de hook ni el contrato de salida de `hook pre-tool`.
+- Progress: 0%
+- Reviewer: reviewer
+- Acceptance:
+  - [ ] Un test reproduce el cuelgue: `hook pre-tool --file <f> --dispatch test-add` con stdin como pipe abierto sin datos termina sin esperar 5 s; sin la corrección ese test falla.
+  - [ ] Los tests de hook-dispatch pasan con stdin heredado como pipe abierto, como TTY y como /dev/null.
+  - [ ] Un payload JSON válido enviado por stdin sigue procesándose igual.
+
+### BC-030 | SYMBOL_MAP.json validado con esquema al leerlo
+
+- Priority: P3
+- Status: TODO
+- Type: tech-debt
+- Depends on: none
+- Description: readExistingMap() en src/core/verification/harness/symbol-map.ts hace JSON.parse(...) as SymbolMap sin validar. Un SYMBOL_MAP.json manipulado o corrupto puede ocultar colisiones en findCollisions o contaminar la caché incremental de buildSymbolMap. Quedó diferido en la revisión del council del arnés (sugerencia G2 del security-reviewer).
+- Scope: src/core/verification/harness/symbol-map.ts con un esquema zod (ya es dependencia) y sus tests en test/unit/core/verification/harness-symbol-map.test.ts.
+- Out of scope: cambiar la forma de SymbolMap, la regla de colisiones o añadir firmas criptográficas al mapa.
+- Progress: 0%
+- Reviewer: reviewer
+- Acceptance:
+  - [ ] findCollisions falla con un error claro cuando el mapa tiene una forma inválida, en vez de devolver una lista vacía.
+  - [ ] buildSymbolMap descarta una caché inválida y reconstruye el mapa completo.
+  - [ ] Un mapa válido generado por buildSymbolMap sigue leyéndose sin cambios; los tests existentes pasan.
+
 ## Archive
 ### BC-028 | Scorecard sin PASS vacío cuando el trabajo ya está commiteado
 

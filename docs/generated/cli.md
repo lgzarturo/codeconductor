@@ -230,6 +230,19 @@ cc-codeconductor rdd git-check
 cc-codeconductor rdd install-hooks
 ```
 
+## harness
+
+Seal tests and gate code for the SDD/TDD harness.
+
+```text
+cc-codeconductor harness seal --paths <dirs|files> [--force]
+cc-codeconductor harness verify-seal --paths <dirs|files> [--expected-hash <sha256>]
+cc-codeconductor harness check-code --paths <files>
+cc-codeconductor harness check-tests --paths <files>
+cc-codeconductor harness index [--out <file>]
+cc-codeconductor harness collisions --paths <files>
+```
+
 ## seo
 
 Audit SEO and generate llms.txt.

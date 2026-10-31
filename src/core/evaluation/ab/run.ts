@@ -7,7 +7,6 @@ import { dirname, resolve } from 'node:path';
 import { loadHarnessSuite } from '../harness-experiment';
 import {
   createBenchBudget,
-  ensureClaudeCiConfig,
   runClaudeHostCell,
   type BenchBudget,
 } from '../bench/host-claude';
@@ -217,7 +216,6 @@ async function runLiveAb(options: {
     };
   }
 
-  await ensureClaudeCiConfig();
   const localAuthToken = mintProxyLocalToken();
   process.env.ANTHROPIC_API_KEY = '';
   process.env.ANTHROPIC_AUTH_TOKEN = localAuthToken;

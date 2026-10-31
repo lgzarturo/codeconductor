@@ -10,4 +10,4 @@ bun run ab:run -- --provider free --reset-counter   # reinicia el tope de campa�
 
 Costo live: usage Δ de OpenRouter `/api/v1/key` → `real`; si falla, suma `costUsd` del host → `estimado`; si no hay datos → `desconocido` (dry-run siempre desconocido).
 
-Claves: solo `OPENROUTER_API_KEY`. Causa raíz M5 Invalid: workdir sin trust; ahora `trustClaudeWorkspace` + fingerprint en dry-run.
+Claves: solo `OPENROUTER_API_KEY`. Causa raíz M5 Invalid: workdir sin trust; ahora cada celda usa un `CLAUDE_CONFIG_DIR` aislado que confía en su workdir (`prepareIsolatedClaudeConfig`) + fingerprint en dry-run.

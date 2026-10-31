@@ -27,8 +27,9 @@ async function readPackageJson(): Promise<PackageJsonShape> {
 }
 
 // smol-toml: approved for Cargo manifest parsing (Bun.TOML is unavailable under the Node-targeted CLI bundle).
-const BASELINE_DEPENDENCIES = Object.freeze(['zod', 'yaml', 'smol-toml']);
-const BASELINE_DEV_DEPENDENCIES = Object.freeze(['@types/bun', 'typescript']);
+// typescript: approved as a runtime dependency for the harness AST gatekeeper and symbol indexer.
+const BASELINE_DEPENDENCIES = Object.freeze(['zod', 'yaml', 'smol-toml', 'typescript']);
+const BASELINE_DEV_DEPENDENCIES = Object.freeze(['@types/bun']);
 
 describe('Phase 1 AC6 — no new external dependencies', () => {
   test('production dependencies match the Phase 1 baseline', async () => {

@@ -50,6 +50,7 @@ export const COMMANDS: readonly CommandDefinition[] = [
   { name: 'verify', group: 'workflow', summary: 'Verify task completion with evidence.', usage: ['cc-codeconductor verify --task <id>'] },
   { name: 'tdd', group: 'workflow', summary: 'Capture runner-verified RED/GREEN TDD evidence.', usage: ['cc-codeconductor tdd capture --task <cardId> --phase red|green --command "<test command>"'] },
   { name: 'rdd', group: 'workflow', summary: 'Capture and validate Receipt-Driven Development evidence.', usage: ['cc-codeconductor rdd capture --task <id> [--phase red|green|review]', 'cc-codeconductor rdd verify --receipt <id>', 'cc-codeconductor rdd status [--task <id>]', 'cc-codeconductor rdd git-check', 'cc-codeconductor rdd install-hooks'] },
+  { name: 'harness', group: 'workflow', summary: 'Seal tests and gate code for the SDD/TDD harness.', usage: ['cc-codeconductor harness seal --paths <dirs|files> [--force]', 'cc-codeconductor harness verify-seal --paths <dirs|files> [--expected-hash <sha256>]', 'cc-codeconductor harness check-code --paths <files>', 'cc-codeconductor harness check-tests --paths <files>', 'cc-codeconductor harness index [--out <file>]', 'cc-codeconductor harness collisions --paths <files>'] },
   { name: 'seo', group: 'tool', summary: 'Audit SEO and generate llms.txt.', usage: ['cc-codeconductor seo audit --url <url>'] },
   { name: 'debt-harvest', aliases: ['harvest'], group: 'tool', summary: 'Scan source files for deferred debt.', usage: ['cc-codeconductor debt-harvest'] },
 ];

@@ -9,8 +9,8 @@
  * subtype / is_error — never session ids, prompts, or raw host JSON blobs.
  */
 import { spawn } from 'node:child_process';
-import { cp, mkdtemp, rm, writeFile, readFile, access, mkdir } from 'node:fs/promises';
-import { homedir, tmpdir } from 'node:os';
+import { cp, mkdtemp, rm, writeFile, readFile, access, realpath } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   collectClaudeJson,
@@ -22,6 +22,9 @@ import {
   isProxyLocalToken,
 } from './openrouter-request-proxy';
 import type { BenchCostBasis, BenchRunCell } from './report';
+
+/** `openrouter` = CI via local request proxy; `anthropic` = local Claude Code auth. */
+export type BenchProvider = 'openrouter' | 'anthropic';
 
 export interface ClaudeHostSlot {
   taskId: string;
@@ -119,6 +122,10 @@ export interface ClaudeHostOptions {
   maxTurns?: number;
   /** Called before each spawn (rate-limit / abort hooks). */
   beforeCall?: () => Promise<void> | void;
+  /** Default `openrouter`. */
+  provider?: BenchProvider;
+  /** Remaining USD for this cell; passed as `--max-budget-usd` (anthropic only). */
+  maxBudgetUsd?: number;
 }
 
   /** Sanitized per-invocation diagnostics (safe for artifacts). */
@@ -146,6 +153,8 @@ export interface ClaudeHostCellResult {
   pendingReason: string | null;
   durationMs: number;
   diagnostics: ClaudeHostDiagnostics;
+  /** Host-reported `total_cost_usd` summed over every attempt (pending included). */
+  spentUsd: number;
   /** Sanitized totals only — never raw host JSON / session ids. */
   totals: {
     input: number | null;
@@ -310,23 +319,36 @@ function runShell(
 }
 
 /**
- * Ensure Claude Code has a minimal non-interactive config (no onboarding login).
- * Does not write secrets.
+ * Private Claude Code config dir (CLAUDE_CONFIG_DIR) that trusts exactly `cwd`.
+ * Trust lives in `.claude.json → projects[cwd]`; without it the treatment's
+ * `.claude/settings.json` permissions are ignored. Also keeps the user's
+ * `~/.claude` (plugins, hooks, global CLAUDE.md) out of both arms.
+ * Caller removes the dir. Writes no secrets.
  */
-export async function ensureClaudeCiConfig(): Promise<void> {
-  const dir = join(homedir(), '.claude');
-  await mkdir(dir, { recursive: true });
-  const settingsPath = join(dir, 'settings.json');
-  const settings = {
-    // Skip first-run / trust prompts in CI.
-    hasTrustDialogAccepted: true,
-    hasCompletedProjectOnboarding: true,
-  };
-  try {
-    await access(settingsPath);
-  } catch {
-    await writeFile(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
-  }
+export async function prepareIsolatedClaudeConfig(cwd: string): Promise<string> {
+  const dir = await mkdtemp(join(tmpdir(), 'cc-bench-claude-config-'));
+  const project = { hasTrustDialogAccepted: true, hasCompletedProjectOnboarding: true };
+  const projects: Record<string, typeof project> = { [cwd]: project };
+  // Claude Code keys projects by the resolved cwd (symlinked tmpdirs differ).
+  projects[await realpath(cwd)] = project;
+  await writeFile(
+    join(dir, '.claude.json'),
+    JSON.stringify({ hasCompletedOnboarding: true, projects }, null, 2),
+    'utf-8',
+  );
+  await writeFile(join(dir, 'settings.json'), '{}\n', 'utf-8');
+  return dir;
+}
+
+const ANTHROPIC_MODEL_ALIASES: Record<string, string> = {
+  opus: 'claude-opus-5-5',
+  sonnet: 'claude-sonnet-5-5',
+  haiku: 'claude-haiku-5-5',
+};
+
+/** `opus|sonnet|haiku` → full Claude model id; full ids pass through. */
+export function resolveAnthropicModel(alias: string): string {
+  return ANTHROPIC_MODEL_ALIASES[alias.trim().toLowerCase()] ?? alias.trim();
 }
 
 /**
@@ -338,7 +360,11 @@ export async function ensureClaudeCiConfig(): Promise<void> {
  * `cc-proxy-local-*` token (ANTHROPIC_AUTH_TOKEN) and point ANTHROPIC_BASE_URL
  * at the local request proxy — no direct openrouter.ai fallback.
  */
-export function buildClaudeEnv(modelId: string): NodeJS.ProcessEnv {
+export function buildClaudeEnv(
+  modelId: string,
+  provider: BenchProvider = 'openrouter',
+): NodeJS.ProcessEnv {
+  if (provider === 'anthropic') return buildAnthropicEnv(modelId);
   const localToken = process.env.ANTHROPIC_AUTH_TOKEN;
   const baseUrl = process.env.ANTHROPIC_BASE_URL?.trim();
   if (isProxyLocalToken(localToken) && baseUrl) {
@@ -378,6 +404,38 @@ export function buildClaudeEnv(modelId: string): NodeJS.ProcessEnv {
 }
 
 /**
+ * Local Claude Code auth: OAuth token (preferred) or API key from the parent.
+ * No base URL override, no OpenRouter key. Every alias and subagent is pinned
+ * to `modelId` so both arms compare a single model. Fail-closed without auth.
+ */
+function buildAnthropicEnv(modelId: string): NodeJS.ProcessEnv {
+  const oauthToken = process.env.CLAUDE_CODE_OAUTH_TOKEN?.trim();
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!oauthToken && !apiKey) {
+    throw new Error(
+      'anthropic provider requires CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY',
+    );
+  }
+  const env: NodeJS.ProcessEnv = {
+    PATH: process.env.PATH,
+    HOME: process.env.HOME,
+    USER: process.env.USER,
+    LANG: process.env.LANG,
+    TMPDIR: process.env.TMPDIR,
+    CI: 'true',
+    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1',
+    CLAUDE_CODE_VERSION: process.env.CLAUDE_CODE_VERSION,
+    ANTHROPIC_DEFAULT_HAIKU_MODEL: modelId,
+    ANTHROPIC_DEFAULT_SONNET_MODEL: modelId,
+    ANTHROPIC_DEFAULT_OPUS_MODEL: modelId,
+    CLAUDE_CODE_SUBAGENT_MODEL: modelId,
+  };
+  if (oauthToken) env.CLAUDE_CODE_OAUTH_TOKEN = oauthToken;
+  else env.ANTHROPIC_API_KEY = apiKey;
+  return env;
+}
+
+/**
  * Spawn Claude Code directly (no shell, so a kill reaches the process that
  * makes API calls) and meter its stream-json output against `budget`.
  * Kills Claude the moment the budget is spent.
@@ -390,6 +448,9 @@ function runClaude(
   cwd: string,
   timeoutMs: number,
   budget: BenchBudget,
+  configDir: string,
+  provider: BenchProvider,
+  maxBudgetUsd?: number,
 ): Promise<{
   code: number;
   stdout: string;
@@ -399,6 +460,12 @@ function runClaude(
   requests: number;
   budgetStop: string | null;
 }> {
+  // Throws before spawning when anthropic auth is missing.
+  const env = { ...buildClaudeEnv(modelId, provider), CLAUDE_CONFIG_DIR: configDir };
+  const budgetArgs =
+    provider === 'anthropic' && maxBudgetUsd !== undefined
+      ? ['--max-budget-usd', String(maxBudgetUsd)]
+      : [];
   return new Promise((resolve) => {
     let timedOut = false;
     let budgetStop: string | null = null;
@@ -420,8 +487,9 @@ function runClaude(
         '--dangerously-skip-permissions',
         '--model',
         modelId,
+        ...budgetArgs,
       ],
-      { cwd, env: buildClaudeEnv(modelId), stdio: ['ignore', 'pipe', 'pipe'] },
+      { cwd, env, stdio: ['ignore', 'pipe', 'pipe'] },
     );
     const timer = setTimeout(() => {
       timedOut = true;
@@ -483,13 +551,29 @@ export async function runClaudeSmoke(
     claudeBin?: string;
     timeoutMs?: number;
     maxAttempts?: number;
+    provider?: BenchProvider;
   },
 ): Promise<{
   ok: boolean;
   attempts: ClaudeHostDiagnostics[];
   reason: string | null;
 }> {
-  await ensureClaudeCiConfig();
+  const configDir = await prepareIsolatedClaudeConfig(process.cwd());
+  try {
+    return await smokeAttempts(options, configDir);
+  } finally {
+    await rm(configDir, { recursive: true, force: true }).catch(() => undefined);
+  }
+}
+
+async function smokeAttempts(
+  options: Parameters<typeof runClaudeSmoke>[0],
+  configDir: string,
+): Promise<{
+  ok: boolean;
+  attempts: ClaudeHostDiagnostics[];
+  reason: string | null;
+}> {
   const maxAttempts = options.maxAttempts ?? 2;
   const timeoutMs = options.timeoutMs ?? 120_000;
   const claudeBin = options.claudeBin ?? 'claude';
@@ -507,6 +591,8 @@ export async function runClaudeSmoke(
       process.cwd(),
       timeoutMs,
       options.budget,
+      configDir,
+      options.provider ?? 'openrouter',
     );
     const http429 = looksLike429(result.stderr, result.stdout);
     const requestBudgetExhausted =
@@ -596,18 +682,20 @@ export async function runClaudeHostCell(
   const claudeBin = options.claudeBin ?? 'claude';
   const maxAttempts = options.maxAttempts ?? 2;
   const maxTurns = options.maxTurns ?? 5;
+  const provider = options.provider ?? 'openrouter';
   const started = Date.now();
 
-  await ensureClaudeCiConfig();
-
   let workDir: string | null = null;
+  let configDir: string | null = null;
   let lastDiag = emptyDiagnostics(0);
   let requests = 0;
+  let spentUsd = 0;
 
   try {
     workDir = await mkdtemp(join(tmpdir(), 'cc-bench-live-'));
     await cp(options.fixtureDir, join(workDir, 'fixture'), { recursive: true });
     const cwd = join(workDir, 'fixture');
+    configDir = await prepareIsolatedClaudeConfig(cwd);
 
     if (slot.variant === 'treatment') {
       // The harness under evaluation: same installer users run.
@@ -634,6 +722,7 @@ export async function runClaudeHostCell(
           pendingReason: spent,
           durationMs: Date.now() - started,
           diagnostics: lastDiag,
+          spentUsd,
           totals: null,
         };
       }
@@ -648,6 +737,9 @@ export async function runClaudeHostCell(
         cwd,
         timeoutMs,
         options.budget,
+        configDir,
+        provider,
+        options.maxBudgetUsd,
       );
       requests += result.requests;
       const http429 = looksLike429(result.stderr, result.stdout);
@@ -661,6 +753,8 @@ export async function runClaudeHostCell(
         const meta = extractMeta(payload);
         subtype = meta.subtype;
         isError = meta.isError;
+        const cost = (payload as { total_cost_usd?: unknown }).total_cost_usd;
+        if (typeof cost === 'number') spentUsd += cost;
       }
 
       lastDiag = {
@@ -684,6 +778,20 @@ export async function runClaudeHostCell(
             'request budget exhausted (proxy 403 cc_proxy_budget)',
           durationMs: Date.now() - started,
           diagnostics: lastDiag,
+          spentUsd,
+          totals: null,
+        };
+      }
+
+      // --max-budget-usd hit: retrying would only spend more.
+      if (subtype === 'error_max_budget_usd') {
+        return {
+          cell: null,
+          pending: true,
+          pendingReason: 'spend budget exhausted (--max-budget-usd)',
+          durationMs: Date.now() - started,
+          diagnostics: lastDiag,
+          spentUsd,
           totals: null,
         };
       }
@@ -706,6 +814,7 @@ export async function runClaudeHostCell(
           pendingReason: `claude no valid cell: exit=${result.code} subtype=${subtype} is_error=${isError} timedOut=${result.timedOut}`,
           durationMs: Date.now() - started,
           diagnostics: lastDiag,
+          spentUsd,
           totals: null,
         };
       }
@@ -737,7 +846,12 @@ export async function runClaudeHostCell(
             // Review oracles may ship the .test.ts already (no .example).
           }
         }
-        const test = await runShell(slot.testCommand, cwd, 60_000, buildClaudeEnv(options.modelId));
+        const test = await runShell(
+          slot.testCommand,
+          cwd,
+          60_000,
+          buildClaudeEnv(options.modelId, provider),
+        );
         success = test.code === 0;
       } else {
         success = result.code === 0 && isError !== true;
@@ -788,6 +902,7 @@ export async function runClaudeHostCell(
         pendingReason: null,
         durationMs: Date.now() - started,
         diagnostics: lastDiag,
+        spentUsd,
         totals: {
           input,
           output,
@@ -804,6 +919,7 @@ export async function runClaudeHostCell(
       pendingReason: 'exhausted attempts without valid cell',
       durationMs: Date.now() - started,
       diagnostics: lastDiag,
+      spentUsd,
       totals: null,
     };
   } catch (err) {
@@ -818,11 +934,12 @@ export async function runClaudeHostCell(
           err instanceof Error ? err.message : String(err),
         ),
       },
+      spentUsd,
       totals: null,
     };
   } finally {
-    if (workDir) {
-      await rm(workDir, { recursive: true, force: true }).catch(() => undefined);
+    for (const dir of [workDir, configDir]) {
+      if (dir) await rm(dir, { recursive: true, force: true }).catch(() => undefined);
     }
   }
 }

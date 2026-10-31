@@ -23,7 +23,6 @@ import {
 } from '../src/core/evaluation/bench/openrouter-free-model';
 import {
   createBenchBudget,
-  ensureClaudeCiConfig,
   runClaudeSmoke,
 } from '../src/core/evaluation/bench/host-claude';
 import {
@@ -58,8 +57,8 @@ const SMOKE_ONLY = process.env.BENCH_SMOKE_ONLY === '1';
 /** One baseline cell only — stop if not success before full matrix. */
 const SONDA = process.env.BENCH_SONDA === '1';
 const N = Number(process.env.BENCH_N ?? (SONDA ? '1' : '3'));
-/** Default 6 — maxTurns=3 caused near-total error_max_turns (microsdd / Arturo). */
-const MAX_TURNS = Number(process.env.BENCH_MAX_TURNS ?? '6');
+/** Default 12 — the harness's multi-role flow died at 3–6 turns (error_max_turns). */
+const MAX_TURNS = Number(process.env.BENCH_MAX_TURNS ?? '12');
 const TASK_IDS = (process.env.BENCH_TASK_IDS ?? 'fix-add-off-by-one')
   .split(',')
   .map((s) => s.trim())
@@ -155,7 +154,6 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  await ensureClaudeCiConfig();
   // Stream meter only counts this run's hops; proxy enforces the absolute cap.
   const budget = createBenchBudget(MAX_TOKENS, STREAM_MAX_REQUESTS);
 

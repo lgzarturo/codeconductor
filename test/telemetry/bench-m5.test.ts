@@ -18,14 +18,18 @@ import {
   type BenchRunCell,
 } from '../../src/core/evaluation/bench/report';
 import {
+  buildTaskPrompt,
   runBench,
   synthesizeDryCells,
 } from '../../src/core/evaluation/bench/runner';
 import { assertOpenRouterModelFreeZeroPrice } from '../../src/core/evaluation/bench/openrouter-free-model';
 import {
   budgetExhausted,
+  buildClaudeEnv,
   createBenchBudget,
   meterStreamLine,
+  prepareIsolatedClaudeConfig,
+  resolveAnthropicModel,
   runClaudeHostCell,
   extractSanitizedErrorResult,
   sanitizeStderr,
@@ -670,8 +674,10 @@ describe('M5 live host budget (fake claude binary)', () => {
   const RECORDER = `
 const fs = require('node:fs');
 const args = process.argv.slice(2);
+const cfg = JSON.parse(fs.readFileSync(require('node:path').join(process.env.CLAUDE_CONFIG_DIR, '.claude.json'), 'utf-8'));
 fs.writeFileSync('seen.json', JSON.stringify({
   harness: fs.existsSync('.claude/CLAUDE.md'),
+  trusted: cfg.projects[process.cwd()]?.hasTrustDialogAccepted === true,
   sonnet: process.env.ANTHROPIC_DEFAULT_SONNET_MODEL,
   subagent: process.env.CLAUDE_CODE_SUBAGENT_MODEL,
   maxTurns: args[args.indexOf('--max-turns') + 1],
@@ -701,6 +707,11 @@ console.log(JSON.stringify({ type: 'result', subtype: 'success', is_error: false
   test('treatment installs the CodeConductor harness; baseline does not', async () => {
     expect((await recordSlot('treatment')).harness).toBe(true);
     expect((await recordSlot('baseline')).harness).toBe(false);
+  }, 60_000);
+
+  test('each cell runs with an isolated CLAUDE_CONFIG_DIR that trusts its cwd', async () => {
+    expect((await recordSlot('treatment')).trusted).toBe(true);
+    expect((await recordSlot('baseline')).trusted).toBe(true);
   }, 60_000);
 
   test('every model alias routes to the :free model and turns are capped', async () => {
@@ -781,5 +792,147 @@ process.exit(1);
     expect(result.report.n).toBe(3);
     // N=3 meets minRepetitionsForMode(cheap)=3 — not NO CONCLUYENTE by construction.
     expect(result.report.verdictReasons.join(' ')).not.toMatch(/below minimum/);
+  });
+
+  test('anthropic runBench aborts once summed total_cost_usd reaches maxSpendUsd', async () => {
+    await fakeClaude('');
+    const logPath = join(binDir!, 'calls.jsonl');
+    await writeFile(
+      join(binDir!, 'claude'),
+      `#!/usr/bin/env node
+const fs = require('node:fs');
+const args = process.argv.slice(2);
+fs.appendFileSync(${JSON.stringify(logPath)}, JSON.stringify({
+  prompt: args[args.indexOf('-p') + 1],
+  maxBudget: args[args.indexOf('--max-budget-usd') + 1],
+  configDir: process.env.CLAUDE_CONFIG_DIR,
+}) + '\\n');
+console.log(JSON.stringify({ type: 'assistant', message: { id: 'm1', usage: { input_tokens: 10, output_tokens: 5 } } }));
+console.log(JSON.stringify({ type: 'result', subtype: 'success', is_error: false, total_cost_usd: 0.3, usage: { input_tokens: 10, output_tokens: 5 } }));
+`,
+      'utf-8',
+    );
+    const prev = { PATH: process.env.PATH, KEY: process.env.ANTHROPIC_API_KEY };
+    process.env.PATH = `${binDir}:${prev.PATH ?? ''}`;
+    process.env.ANTHROPIC_API_KEY = 'sk-ant-test';
+    try {
+      const result = await runBench({
+        projectRoot: REPO_ROOT,
+        suitePath: SUITE_PATH,
+        live: true,
+        provider: 'anthropic',
+        modelId: 'claude-haiku-5-5',
+        n: 3,
+        taskIds: ['fix-add-off-by-one'],
+        budget: createBenchBudget(2_000_000, 100),
+        maxSpendUsd: 0.5,
+        writeReport: false,
+      });
+      expect(result.aborted).toBe(true);
+      expect(result.runValid).toBe(false);
+      expect(result.abortReason).toMatch(/spend budget exhausted/);
+      expect(result.invocations).toHaveLength(2);
+      expect(result.pendingCells).toHaveLength(4);
+
+      const calls = (await readFile(logPath, 'utf-8'))
+        .trim()
+        .split('\n')
+        .map((l) => JSON.parse(l) as { prompt: string; maxBudget: string; configDir: string });
+      expect(calls.map((c) => Number(c.maxBudget))).toEqual([0.5, expect.closeTo(0.2, 6)]);
+      // Baseline and treatment receive the same enriched prompt.
+      expect(new Set(calls.map((c) => c.prompt)).size).toBe(1);
+      expect(calls[0]!.prompt).toContain('Files in scope: src/math.ts');
+      expect(calls.every((c) => c.configDir)).toBe(true);
+    } finally {
+      process.env.PATH = prev.PATH;
+      if (prev.KEY === undefined) delete process.env.ANTHROPIC_API_KEY;
+      else process.env.ANTHROPIC_API_KEY = prev.KEY;
+    }
+  }, 60_000);
+});
+
+describe('M5 isolated config + anthropic provider', () => {
+  const ENV_KEYS = [
+    'ANTHROPIC_API_KEY',
+    'CLAUDE_CODE_OAUTH_TOKEN',
+    'ANTHROPIC_BASE_URL',
+    'OPENROUTER_API_KEY',
+  ] as const;
+  const saved: Record<string, string | undefined> = {};
+  const dirs: string[] = [];
+
+  afterEach(async () => {
+    for (const k of Object.keys(saved)) {
+      if (saved[k] === undefined) delete process.env[k];
+      else process.env[k] = saved[k];
+      delete saved[k];
+    }
+    for (const d of dirs.splice(0)) await rm(d, { recursive: true, force: true });
+  });
+
+  function setEnv(values: Partial<Record<(typeof ENV_KEYS)[number], string>>): void {
+    for (const k of ENV_KEYS) {
+      saved[k] = process.env[k];
+      delete process.env[k];
+    }
+    Object.assign(process.env, values);
+  }
+
+  test('prepareIsolatedClaudeConfig trusts exactly the given cwd', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'cc-bench-cwd-'));
+    const dir = await prepareIsolatedClaudeConfig(cwd);
+    dirs.push(cwd, dir);
+    const cfg = JSON.parse(await readFile(join(dir, '.claude.json'), 'utf-8'));
+    expect(cfg.hasCompletedOnboarding).toBe(true);
+    expect(cfg.projects[cwd].hasTrustDialogAccepted).toBe(true);
+    expect(Object.keys(cfg.projects).every((p) => p === cwd)).toBe(true);
+    expect(JSON.parse(await readFile(join(dir, 'settings.json'), 'utf-8'))).toEqual({});
+  });
+
+  test('anthropic env passes the API key, no base URL or OpenRouter key', () => {
+    setEnv({
+      ANTHROPIC_API_KEY: 'sk-ant-x',
+      ANTHROPIC_BASE_URL: 'http://127.0.0.1:1/api',
+      OPENROUTER_API_KEY: 'sk-or-v1-x',
+    });
+    const env = buildClaudeEnv('claude-opus-5-5', 'anthropic');
+    expect(env.ANTHROPIC_API_KEY).toBe('sk-ant-x');
+    expect(env.ANTHROPIC_BASE_URL).toBeUndefined();
+    expect(env.OPENROUTER_API_KEY).toBeUndefined();
+    expect(env.ANTHROPIC_DEFAULT_HAIKU_MODEL).toBe('claude-opus-5-5');
+    expect(env.CLAUDE_CODE_SUBAGENT_MODEL).toBe('claude-opus-5-5');
+  });
+
+  test('anthropic env passes the OAuth token when no API key is set', () => {
+    setEnv({ CLAUDE_CODE_OAUTH_TOKEN: 'oauth-x' });
+    const env = buildClaudeEnv('claude-haiku-5-5', 'anthropic');
+    expect(env.CLAUDE_CODE_OAUTH_TOKEN).toBe('oauth-x');
+    expect(env.ANTHROPIC_API_KEY).toBeUndefined();
+  });
+
+  test('anthropic env without credentials throws', () => {
+    setEnv({});
+    expect(() => buildClaudeEnv('claude-haiku-5-5', 'anthropic')).toThrow(
+      /CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY/,
+    );
+  });
+
+  test('resolveAnthropicModel maps aliases and passes full ids through', () => {
+    expect(resolveAnthropicModel('opus')).toBe('claude-opus-5-5');
+    expect(resolveAnthropicModel('sonnet')).toBe('claude-sonnet-5-5');
+    expect(resolveAnthropicModel('haiku')).toBe('claude-haiku-5-5');
+    expect(resolveAnthropicModel('claude-sonnet-5-5')).toBe('claude-sonnet-5-5');
+  });
+
+  test('buildTaskPrompt appends scope, acceptance criteria and an edit instruction', () => {
+    const prompt = buildTaskPrompt({
+      prompt: 'add(a, b) returns a + b + 1.',
+      scope: 'src/math.ts',
+      acceptanceCriteria: ['add(2, 3) returns 5', 'tests pass'],
+    });
+    expect(prompt).toContain('add(a, b) returns a + b + 1.');
+    expect(prompt).toContain('Files in scope: src/math.ts');
+    expect(prompt).toContain('- add(2, 3) returns 5\n- tests pass');
+    expect(prompt).toContain('Apply the change by editing the files.');
   });
 });

@@ -45,6 +45,21 @@ Those additions shipped in **1.7.0** (npm `cc-codeconductor@1.7.0`).
 | Named requirements and RENAMED delta specs | shipped | yes |
 | Item base commits and unmeasured scorecard criteria | shipped | yes |
 
+## Changes after v1.8.0
+
+The [post-v1.8.0 guide](post-v1.8.0.md) covers `v1.8.0..e3a2950` (Merge #24).
+These additions are **implemented, unreleased** on `main`.
+
+| Capability or adjustment | Repository status | Available in published 1.8.0 |
+| --- | --- | --- |
+| Fail-closed local OpenRouter proxy (100-request durable hard cap, atomic counter) | implemented, unreleased | no (on `main`) |
+| Ephemeral local auth tokens (`cc-proxy-local-*`) & credentials isolation | implemented, unreleased | no (on `main`) |
+| Sliding-window rate limiting (20 req/min wait queue, avoiding 429 retries) | implemented, unreleased | no (on `main`) |
+| OpenRouter spend lock ($0.49 limit per repo, pre/post `/api/v1/key` checks, 90% abort threshold) | implemented, unreleased | no (on `main`) |
+| Pinned Claude Code 2.1.197 host isolation, zero retries, sanitized error logs | implemented, unreleased | no (on `main`) |
+| Sonda gating in `bench-baseline.yml` (`BENCH_SONDA=1` stop rule, `BENCH_MAX_TURNS=6`) | implemented, unreleased | no (on `main`) |
+| Detailed M5 benchmarking audit and test runs in GitHub Actions | documented | [Audit Report](reports/2026-10-m5-bench-baseline-telemetry.md) |
+
 ## Harness standard
 
 Skill and command frontmatter, cross-target invocation syntax, and how to add a
@@ -67,9 +82,9 @@ removes an older version's directory).
 
 ## Release documentation
 
-The package and operational documentation are synchronized at **v1.8.0**.
-Historical release notes remain available alongside the
-[CHANGELOG.md](../CHANGELOG.md) release history.
+The package published version is **v1.8.0**. Development on `main` past v1.8.0 is
+documented in [docs/post-v1.8.0.md](post-v1.8.0.md). Historical release notes remain
+available alongside the [CHANGELOG.md](../CHANGELOG.md) release history.
 
 ## TaskCard shapes
 

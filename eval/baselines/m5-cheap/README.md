@@ -2,6 +2,10 @@
 
 > Arturo **22 Oct 9:51** + maxTurns=6 (microsdd). Claude Code **2.1.197**.
 
+> **No comparables con corridas nuevas.** Estas baselines usan el prompt sin
+> enriquecer (sin scope ni criterios) y un treatment sin workspace confiable
+> (permisos del arnés ignorados). Ver `docs/post-v1.8.0.md` §7.
+
 ## Model
 
 - **`deepseek/deepseek-v4-flash`** — **$0.091 / MTok prompt**, **$0.182 / MTok completion**

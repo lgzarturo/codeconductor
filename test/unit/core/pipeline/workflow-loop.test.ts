@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -202,6 +203,19 @@ describe('core/pipeline/workflow-loop', () => {
       )
       .join('\n') + '\n';
     await writeFile(join(dir, '.codeconductor', 'history.jsonl'), seed, 'utf-8');
+    // The scope guard fails closed without a git diff, so give it a real HEAD~1
+    // whose only change is the planned file.
+    const git = (...args: string[]) =>
+      execFileSync(
+        'git',
+        ['-c', 'user.name=test', '-c', 'user.email=test@example.com', '-c', 'commit.gpgsign=false', ...args],
+        { cwd: dir, stdio: 'ignore' },
+      );
+    git('init');
+    git('commit', '--allow-empty', '-m', 'base');
+    await writeFile(join(dir, 'a.ts'), 'export {};\n', 'utf-8');
+    git('add', 'a.ts');
+    git('commit', '-m', 'change');
     const { runCompact: _omitted, ...rest } = makeCallbacks({
       runIntake: async () => ({ ...CARD, id: taskId }),
     });

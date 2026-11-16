@@ -1,0 +1,14 @@
+{
+  "id": "fix-release-blocking-tests",
+  "source": "cc:fix reproduction",
+  "type": "test",
+  "timestamp": "2026-11-16T00:00:00.000Z",
+  "relatedTask": "fix-release-blocking-tests",
+  "confidence": 1,
+  "summary": "The 3 release-blocking tests pass with and without a TTY after test-only fixes (pin stdin.isTTY, exempt recommend-correction.ts, give the COMPACT test a real git HEAD~1); full suite 4308 pass, 0 fail",
+  "data": {
+    "runner": "python3 -c \"import pty,sys; sys.exit(pty.spawn(['bun','test','test/goal-tracker.test.ts','test/unit/core/pipeline/workflow-loop.test.ts','test/unit/presets/consumer-cli-invocation.test.ts'])>>8)\"",
+    "result": "passed",
+    "failedTests": []
+  }
+}

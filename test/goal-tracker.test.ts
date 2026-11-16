@@ -230,7 +230,15 @@ describe('goal tracker watch', () => {
   });
 
   test('goal --tracker --watch needs rounds without a TTY', async () => {
-    const result = await routeCommand(parseArgs(['goal', '--tracker', '--watch']), dir);
-    expect(result.code).toBe(1);
+    // The suite may run from a real terminal; pin stdin to non-interactive.
+    const original = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY');
+    Object.defineProperty(process.stdin, 'isTTY', { value: false, configurable: true });
+    try {
+      const result = await routeCommand(parseArgs(['goal', '--tracker', '--watch']), dir);
+      expect(result.code).toBe(1);
+    } finally {
+      if (original) Object.defineProperty(process.stdin, 'isTTY', original);
+      else delete (process.stdin as { isTTY?: boolean }).isTTY;
+    }
   });
 });

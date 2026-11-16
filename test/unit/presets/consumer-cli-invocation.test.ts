@@ -17,6 +17,8 @@ const repoRoot = dirname(fileURLToPath(new URL('../../../package.json', import.m
 /** Maintainer-only material that legitimately documents the local dev loop. */
 const MAINTAINER_ONLY = [
   'src/utils/cli-bin.ts',
+  // Matches the phrase as a mistake signal; it tells agents not to run it.
+  'src/core/ask/recommend-correction.ts',
   'skills/cc-self-review/',
   'skills/cc-update-preset-models/',
 ];

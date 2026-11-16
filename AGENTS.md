@@ -96,6 +96,28 @@ to test all current flow before publishing version v1.0.0 to npm.
 This section is manually maintained. Add project-specific conventions,
 exceptions, or context here.
 
+### Correction pyramid — rule → enforcer
+
+When an agent mistake repeats, push the fix to the lowest layer that can own
+it. Run `bun run dev correct "<signal>"` (or `npx cc-codeconductor correct` in
+consumer repos) before adding prose. Do not invent a new workflow from that
+recommendation (`executed: false`).
+
+| Rule | Enforcer | Layer |
+| ---- | -------- | ----- |
+| Consumer artifacts must not say `bun run dev` | `test/unit/presets/consumer-cli-invocation.test.ts` | static-analysis |
+| Council copies stay generated redirect stubs | `bun run check:council-redirect` | static-analysis |
+| Presets / synced skills match generators | `bun run check:drift` | static-analysis |
+| No `any`, `as unknown as`, or nested imports in `src/` | `bun run lint` (`scripts/lint.ts`) | static-analysis |
+| Maintainer-only skills stay out of presets | `isMaintainerReservedDest` in `src/core/presets/file-copier.ts` | architecture |
+| Global Claude hooks use absolute, shell-safe paths | `src/core/presets/hook-command-paths.ts` + `doctor` | architecture |
+| Diff must stay inside Technical Plan scope | `checkScopeCompliance` (fails closed if git evidence missing) | verification |
+| OpenSpec delivery gates before implementer | `openspec analyze` / OpenSpec CLI | verification |
+| Receipts match the current candidate | `rdd verify` | verification |
+| Judgment calls that cannot be typed or tested | Manual section of this file only | prose |
+
+Measure repeated fix themes with `bun run rework:rate` (not a CI gate).
+
 ## Agent Routing Table
 
 | Task Type            | Risk        | Route                                               |

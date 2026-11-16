@@ -22,6 +22,7 @@ import type { CodeIndexOptions } from '../commands/code-index.command';
 import type { VerifyOptions } from '../commands/verify.command';
 import type { RddOptions } from '../commands/rdd.command';
 import type { AskOptions } from '../commands/ask.command';
+import type { CorrectOptions } from '../commands/correct.command';
 import type { SetupOptions } from '../commands/setup.command';
 import type { StatusOptions } from '../commands/status.command';
 import type { VersionOptions } from '../commands/version.command';
@@ -432,6 +433,18 @@ export async function routeCommand(
         problem,
         output: flags.output,
       } as AskOptions);
+    }
+
+    case 'correct': {
+      const { correctCommand } = await import('../commands/correct.command');
+      const signal =
+        subcommand && !subcommand.startsWith('-')
+          ? [subcommand, ...(args.rest ?? [])].join(' ').trim()
+          : (args.rest ?? []).join(' ').trim() || String(options.signal ?? options.problem ?? '');
+      return correctCommand({
+        signal,
+        output: flags.output,
+      } as CorrectOptions);
     }
 
     case 'cc-help': {

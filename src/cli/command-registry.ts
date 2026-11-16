@@ -38,6 +38,7 @@ export const COMMANDS: readonly CommandDefinition[] = [
   ] },
   { name: 'cc-help', group: 'maintenance', summary: 'Show a target preset inventory.', usage: ['cc-codeconductor cc-help --target <target>'] },
   { name: 'ask', group: 'workflow', summary: 'Recommend a slash-command workflow.', usage: ['cc-codeconductor ask "problem"'] },
+  { name: 'correct', group: 'workflow', summary: 'Recommend a correction layer and existing owner command.', usage: ['cc-codeconductor correct "mistake signal"'] },
   { name: 'goal', aliases: ['cc-goal'], group: 'workflow', summary: 'Plan a goal into dependent tasks.', usage: ['cc-codeconductor goal "objective"'] },
   { name: 'ingest', group: 'workflow', summary: 'Ingest repository knowledge into the product graph.', usage: ['cc-codeconductor ingest'] },
   { name: 'product', group: 'workflow', summary: 'Explore the product graph and memory.', usage: ['cc-codeconductor product <subcommand>'] },

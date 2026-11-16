@@ -130,6 +130,14 @@ Recommend a slash-command workflow.
 cc-codeconductor ask "problem"
 ```
 
+## correct
+
+Recommend a correction layer and existing owner command.
+
+```text
+cc-codeconductor correct "mistake signal"
+```
+
 ## goal
 
 Plan a goal into dependent tasks.

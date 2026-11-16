@@ -57,6 +57,7 @@
     "test:fast": "bun run scripts/test-fast.ts",
     "typecheck": "tsc --noEmit",
     "lint": "bun run scripts/lint.ts",
+    "rework:rate": "bun run scripts/rework-rate.ts",
     "bench:local": "bun run scripts/bench-local.ts",
     "check:council-redirect": "bun run scripts/check-council-redirect.ts",
     "check:coverage": "bun run scripts/check-coverage.ts",

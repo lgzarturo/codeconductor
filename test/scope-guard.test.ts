@@ -104,14 +104,18 @@ describe('scope-guard', () => {
     expect(violationFiles).toEqual(['untracked1.ts', 'untracked2.ts'].sort());
   });
 
-  test('Git failure is handled gracefully', async () => {
+  test('Git failure fails closed and names the missing evidence', async () => {
     const result = await checkScopeCompliance({
       cwd: '/path/does/not/exist/or/no/git',
       allowedFiles: [],
       baseBranch: 'HEAD~1'
     });
-    
-    expect(result.passed).toBe(true); // Returns empty changes
+
+    expect(result.passed).toBe(false);
     expect(result.checkedFiles).toHaveLength(0);
+    expect(result.error).toContain('fails closed when evidence is missing');
+    expect(result.violations).toHaveLength(1);
+    expect(result.violations[0]?.file).toBe('(git)');
+    expect(result.violations[0]?.reason).toContain("Could not read git diff against 'HEAD~1'");
   });
 });

@@ -17,6 +17,8 @@ export interface ScopeGuardResult {
   checkedFiles: string[];
   allowedFiles: string[];
   affectedSymbols: ChangedSymbol[];
+  /** Set when the guard could not read a git diff; passed is always false. */
+  error?: string;
 }
 
 export interface ScopeGuardOptions {
@@ -31,13 +33,20 @@ export interface ScopeGuardOptions {
   allowedSymbols?: Record<string, string[]>;
 }
 
-async function getChangedFiles(cwd: string, base: string): Promise<string[]> {
+type ChangedFilesResult =
+  | { readonly ok: true; readonly files: string[] }
+  | { readonly ok: false; readonly error: string };
+
+async function getChangedFiles(cwd: string, base: string): Promise<ChangedFilesResult> {
   try {
     const { stdout } = await execFileAsync('git', ['diff', '--name-only', base], { cwd, encoding: 'utf8' });
-    return stdout.trim().split('\n').filter(Boolean);
+    return { ok: true, files: stdout.trim().split('\n').filter(Boolean) };
   } catch (e) {
-    // Graceful handling of git failure (e.g. no git repo)
-    return [];
+    const message = e instanceof Error ? e.message : String(e);
+    return {
+      ok: false,
+      error: `Could not read git diff against '${base}': ${message}. Scope guard fails closed when evidence is missing.`,
+    };
   }
 }
 
@@ -66,7 +75,19 @@ function isAllowlisted(file: string, allowlist: string[]): boolean {
 
 export async function checkScopeCompliance(options: ScopeGuardOptions): Promise<ScopeGuardResult> {
   const { cwd, allowedFiles, allowlist = [], baseBranch = 'HEAD~1', allowedSymbols = {} } = options;
-  const changedFiles = await getChangedFiles(cwd, baseBranch);
+  const changed = await getChangedFiles(cwd, baseBranch);
+  if (!changed.ok) {
+    return {
+      passed: false,
+      violations: [{ file: '(git)', reason: changed.error }],
+      checkedFiles: [],
+      allowedFiles,
+      affectedSymbols: [],
+      error: changed.error,
+    };
+  }
+
+  const changedFiles = changed.files;
   const impact = await detectChanges(cwd, baseBranch);
   const touchedByFile = new Map<string, string[]>();
   for (const symbol of impact.affectedSymbols) {

@@ -238,6 +238,14 @@ cc-codeconductor rdd git-check
 cc-codeconductor rdd install-hooks
 ```
 
+## code-secure
+
+Advisory scan of a diff for dangerous patterns. Does not block.
+
+```text
+cc-codeconductor code-secure scan [--json]
+```
+
 ## harness
 
 Seal tests and gate code for the SDD/TDD harness.

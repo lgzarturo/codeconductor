@@ -55,6 +55,11 @@ export const ASK_FLOW_CATALOG: readonly AskFlow[] = [
     slash: '/cc:security',
     blurb: 'authorized defensive security work with an authorization gate',
   },
+  {
+    command: 'code-secure',
+    slash: '/cc:code-secure',
+    blurb: 'scan a diff for dangerous patterns and prepare context for review',
+  },
 ];
 
 export interface AskRecommendation {
@@ -134,6 +139,34 @@ export function recommendAskFlow(problem: string): AskRecommendation {
     return pick(
       'security',
       'The request is authorized defensive security work, so /cc:security is the fit.',
+    );
+  }
+
+  if (
+    includesAny(text, [
+      '/cc-code-secure',
+      '/cc:code-secure',
+      'code-secure',
+      'sql injection',
+      'inyección sql',
+      'inyeccion sql',
+      'cross-site scripting',
+      'xss',
+      'dangerous pattern',
+      'patrones peligrosos',
+      'secret scan',
+      'gitleaks',
+      'betterleaks',
+      'semgrep',
+      'command injection',
+      'inyección de comandos',
+      'inyeccion de comandos',
+      'csrf',
+    ])
+  ) {
+    return pick(
+      'code-secure',
+      'The request is to scan a diff for injection, XSS, or secrets before review, so /cc:code-secure is the preflight.',
     );
   }
 

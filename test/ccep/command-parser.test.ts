@@ -11,8 +11,8 @@ import {
 const PROJECT_ROOT = resolve(import.meta.dir, '../..');
 
 describe('ccep command-parser', () => {
-  test('exports all 22 supported workflow commands', () => {
-    expect(CCEP_COMMANDS).toHaveLength(22);
+  test('exports all 23 supported workflow commands', () => {
+    expect(CCEP_COMMANDS).toHaveLength(23);
     expect(CCEP_COMMANDS).toContain('feature');
     expect(CCEP_COMMANDS).toContain('fix');
     expect(CCEP_COMMANDS).toContain('council');
@@ -23,6 +23,7 @@ describe('ccep command-parser', () => {
     expect(CCEP_COMMANDS).toContain('backlog');
     expect(CCEP_COMMANDS).toContain('pagespeed');
     expect(CCEP_COMMANDS).toContain('security');
+    expect(CCEP_COMMANDS).toContain('code-secure');
   });
 
   test('uses explicit command from slash — not inferred from user text', () => {

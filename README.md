@@ -161,14 +161,14 @@ engineering skill. Re-install presets after upgrading.
 
 ### Slash commands
 
-After `install preset`, 21 CCEP workflows plus `/cc-ask` (22 total), tiered by
+After `install preset`, 23 CCEP workflows plus `/cc-ask` (24 total), tiered by
 what they do rather than which subsystem they touch:
 
 | Tier          | Commands                                                                                                    | Purpose                                        |
 | ------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | Entry         | `/cc-ask`, `/cc-triage`, `/cc-explore`                                                                          | Recommend a next command and stop — no writes.  |
 | Delivery      | `/cc-feature`, `/cc-fix`, `/cc-refactor`, `/cc-tdd-cycle`, `/cc-api-contract`, `/cc-db-migration`, `/cc-spec-mutation` | Implement, test-before-implement where both apply. |
-| Verification  | `/cc-review`, `/cc-council`, `/cc-scorecard`, `/cc-test-plan`, `/cc-security`                                    | Gate a diff or a decision before merge.         |
+| Verification  | `/cc-review`, `/cc-council`, `/cc-scorecard`, `/cc-test-plan`, `/cc-security`, `/cc-code-secure`                  | Gate a diff or a decision before merge.         |
 | Management    | `/cc-backlog`, `/cc-openspec`, `/cc-handoff`, `/cc-clarify`, `/cc-prototype`, `/cc-pagespeed`, `/cc-iterative`, `/cc-odd`   | Author BACKLOG.md, deliver it, or one-off ops.  |
 
 Prefer `/cc-iterative`, `/cc-triage`, and `/cc-handoff` for wayfinding.

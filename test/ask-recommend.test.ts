@@ -53,6 +53,17 @@ describe('recommendAskFlow', () => {
     expect(rec.slash).toBe('/cc:backlog');
   });
 
+  test('maps an investigation that must not be implemented to /cc:plan', () => {
+    const rec = recommendAskFlow('investiga cómo cambiar el parser, no implementes');
+    expect(rec.command).toBe('plan');
+    expect(rec.slash).toBe('/cc:plan');
+  });
+
+  test('keeps a test-plan request off /cc:plan', () => {
+    const rec = recommendAskFlow('write a test plan for the parser');
+    expect(rec.command).not.toBe('plan');
+  });
+
   test('maps authorized security work to /cc:security', () => {
     const rec = recommendAskFlow('authorized security hardening of the login API');
     expect(rec.command).toBe('security');
@@ -79,6 +90,7 @@ describe('ASK_FLOW_CATALOG stays aligned with shipped slash commands', () => {
       'backlog',
       'openspec',
       'security',
+      'plan',
     ]);
     for (const flow of ASK_FLOW_CATALOG) {
       expect(

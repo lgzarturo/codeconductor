@@ -54,7 +54,7 @@ contracts, task cards, and risk-based routing.
 > - `npx cc-codeconductor goal` / `ingest` / `product` / `orchestrate` /
 >   `impact` / `verify` — Product OS (see
 >   [docs/product-os.md](docs/product-os.md))
-> - Slash commands after `install preset` — 21 CCEP workflows plus `/cc-ask`;
+> - Slash commands after `install preset` — 22 CCEP workflows plus `/cc-ask`;
 >   prefer `/cc-iterative`, `/cc-triage`, `/cc-handoff` for wayfinding;
 >   `/cc-backlog` authors `BACKLOG.md`; `/cc-openspec` and `/cc-tdd-cycle`
 >   for delivery and TDD
@@ -161,12 +161,12 @@ engineering skill. Re-install presets after upgrading.
 
 ### Slash commands
 
-After `install preset`, 21 CCEP workflows plus `/cc-ask` (22 total), tiered by
+After `install preset`, 22 CCEP workflows plus `/cc-ask` (23 total), tiered by
 what they do rather than which subsystem they touch:
 
 | Tier          | Commands                                                                                                    | Purpose                                        |
 | ------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| Entry         | `/cc-ask`, `/cc-triage`, `/cc-explore`                                                                          | Recommend a next command and stop — no writes.  |
+| Entry         | `/cc-ask`, `/cc-triage`, `/cc-explore`, `/cc-plan`                                                              | Recommend a next command, or record a plan memo, and stop. No source edits. |
 | Delivery      | `/cc-feature`, `/cc-fix`, `/cc-refactor`, `/cc-tdd-cycle`, `/cc-api-contract`, `/cc-db-migration`, `/cc-spec-mutation` | Implement, test-before-implement where both apply. |
 | Verification  | `/cc-review`, `/cc-council`, `/cc-scorecard`, `/cc-test-plan`, `/cc-security`                                    | Gate a diff or a decision before merge.         |
 | Management    | `/cc-backlog`, `/cc-openspec`, `/cc-handoff`, `/cc-clarify`, `/cc-prototype`, `/cc-pagespeed`, `/cc-iterative`, `/cc-odd`   | Author BACKLOG.md, deliver it, or one-off ops.  |
@@ -306,7 +306,7 @@ Task Card → Risk Classification → Routing Policy → Conductor Agent → Del
 - **15 Conductor Agents** — including `reviewer`, `security-reviewer`,
   `complexity-auditor`, `business-agent`, `continuous-architect`, and
   `impact-analyst`
-- 21 CCEP slash-command workflows plus `/cc-ask` after `install preset`
+- 22 CCEP slash-command workflows plus `/cc-ask` after `install preset`
 - OpenSpec delivery loop (`validate` … `archive`) with test-before-implement
 - Deterministic CCEP validation (Zod schemas per agent role)
 - Task Card template

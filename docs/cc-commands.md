@@ -728,6 +728,7 @@ Other installed commands:
 | `/cc-scorecard` | Agent scorecard evaluation |
 | `/cc-council` | Council-driven SDD/TDD/review |
 | `/cc-explore` / `/cc:explore` | Repo map and next-command suggestion |
+| `/cc-plan` / `/cc:plan` | Investigate the code and write a gitignored `.codeconductor/plans/<slug>.md` memo. No Task Card, no implementation |
 | `/cc-prototype` / `/cc:prototype` | Disposable spike (isolated worktree) |
 | `/cc-clarify` / `/cc:clarify` | Re-explain last deliverable |
 | `/cc-security` / `/cc:security` | Authorized defensive security review |

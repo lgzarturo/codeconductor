@@ -136,6 +136,7 @@ Source of truth: `src/core/presets/workflow-commands.ts` (names/schemas) and
 | `cc-council`     | Council-driven SDD + TDD loop                  | deliberation, council verdict     |
 | `cc-iterative`   | Full iterative pipeline incl. council + docs   | grilling, plan approval, council  |
 | `cc-explore`     | Map repo, recommend next command (read-only)   | none                              |
+| `cc-plan`        | Investigate code and write a gitignored plan memo | clarify questions              |
 | `cc-triage`      | Classify type/risk, pick destination workflow  | confirmation                      |
 | `cc-prototype`   | Disposable spike in isolated worktree          | spike bounds approval             |
 | `cc-handoff`     | Compact session into gitignored handoff file   | secret redaction                  |
@@ -234,6 +235,12 @@ the matching `security-*` domain skill. Risk routes: `low` → task-coach →
 tester → implementer; `medium`/`high` → + `architect` (STOP for plan
 approval) and `reviewer` applying the OWASP `security` skill.
 
+**`/cc-plan`** — Investigate the code and write one gitignored memo at
+`.codeconductor/plans/<slug>.md`: current behavior, the decision already in
+the code, and a suggested change. It does not create a Task Card, choose a
+model or effort, edit source, or start another workflow. The same question
+overwrites that slug.
+
 **`/cc-explore`, `/cc-triage`, `/cc-prototype`, `/cc-handoff`,
 `/cc-clarify`, `/cc-ask`** — Read-only mapping + next-command suggestion;
 risk classification into a destination command; disposable worktree spike
@@ -269,6 +276,7 @@ orchestrator-run CLI step; the `council` entry is a **skill**, not an agent.
 | `council`         | repo-explorer → council skill[task-coach + architect + devil](gate) → tester(red) → implementer → council skill(verdict)    |
 | `iterative`       | repo-explorer → task-coach(gate) → contract-builder → architect(approval) → tester → implementer → council skill → docs      |
 | `explore`         | repo-explorer(map) → orchestrator(suggest-next)                                                                               |
+| `plan`            | repo-explorer(investigate) → task-coach(clarify, questions) → architect(draft)                                               |
 | `triage`          | task-coach(classify, gate)                                                                                                    |
 | `prototype`       | architect(bounds, approval) → implementer(spike)                                                                                |
 | `handoff`         | docs(compact)                                                                                                                  |

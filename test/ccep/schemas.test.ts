@@ -32,6 +32,7 @@ describe('ccep schemas', () => {
       'handoff',
       'clarify',
       'security',
+      'code-secure',
       'odd',
     ];
 

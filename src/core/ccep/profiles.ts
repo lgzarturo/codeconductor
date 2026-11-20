@@ -407,4 +407,17 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     },
     confirmationGate: baseGate,
   },
+  'code-secure': {
+    id: 'code-secure',
+    version: 1,
+    command: 'code-secure',
+    intakeSchema: 'review-target',
+    phases: [
+      { id: 'patterns', agent: 'repo-explorer', outputSchema: 'agent-output' },
+      { id: 'diff-review', agent: 'security-reviewer', outputSchema: 'review-report' },
+      { id: 'flow-tests', agent: 'tester', outputSchema: 'test-plan' },
+    ],
+    routing: { default: ['patterns', 'diff-review', 'flow-tests'] },
+    confirmationGate: { stopOnHighRisk: false, stopOnQuestions: false },
+  },
 };

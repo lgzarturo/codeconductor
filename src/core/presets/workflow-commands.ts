@@ -22,6 +22,7 @@ export const WORKFLOW_COMMANDS = [
   'handoff',
   'clarify',
   'security',
+  'code-secure',
   'odd',
 ] as const;
 

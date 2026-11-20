@@ -930,6 +930,7 @@ export const WorkflowCommandSchema = z.enum([
   'handoff',
   'clarify',
   'security',
+  'code-secure',
   'odd',
 ]);
 

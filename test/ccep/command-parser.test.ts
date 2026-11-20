@@ -24,6 +24,7 @@ describe('ccep command-parser', () => {
     expect(CCEP_COMMANDS).toContain('backlog');
     expect(CCEP_COMMANDS).toContain('pagespeed');
     expect(CCEP_COMMANDS).toContain('security');
+    expect(CCEP_COMMANDS).toContain('code-secure');
   });
 
   test('uses explicit command from slash — not inferred from user text', () => {

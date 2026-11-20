@@ -70,6 +70,18 @@ describe('recommendAskFlow', () => {
     expect(rec.slash).toBe('/cc:security');
   });
 
+  test('maps a diff scan for injection to /cc:code-secure', () => {
+    const rec = recommendAskFlow('scan this diff for SQL injection before review');
+    expect(rec.command).toBe('code-secure');
+    expect(rec.slash).toBe('/cc:code-secure');
+  });
+
+  test('keeps incident response on /cc:security', () => {
+    const rec = recommendAskFlow('incident response for the leaked token');
+    expect(rec.command).toBe('security');
+    expect(rec.slash).toBe('/cc:security');
+  });
+
 
   test('does not execute a workflow — only returns a recommendation', () => {
     const rec = recommendAskFlow('the build is broken');
@@ -90,6 +102,7 @@ describe('ASK_FLOW_CATALOG stays aligned with shipped slash commands', () => {
       'backlog',
       'openspec',
       'security',
+      'code-secure',
       'plan',
     ]);
     for (const flow of ASK_FLOW_CATALOG) {

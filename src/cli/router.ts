@@ -783,6 +783,19 @@ export async function routeCommand(
       });
     }
 
+    case 'code-secure': {
+      const validSubs = ['scan'] as const;
+      if (subcommand !== 'scan') {
+        return unknownSubcommand('code-secure', subcommand ?? '', [...validSubs]);
+      }
+      const { codeSecureCommand } = await import('../commands/code-secure.command');
+      return codeSecureCommand({
+        projectRoot,
+        output: flags.output,
+        paths: args.rest,
+      });
+    }
+
     case 'hook': {
       const validHookEvents = [
         'pre-tool',

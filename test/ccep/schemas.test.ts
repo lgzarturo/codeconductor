@@ -26,6 +26,7 @@ describe('ccep schemas', () => {
       'council',
       'iterative',
       'explore',
+      'plan',
       'triage',
       'prototype',
       'handoff',

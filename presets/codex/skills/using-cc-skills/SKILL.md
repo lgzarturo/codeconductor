@@ -20,6 +20,7 @@ a parallel process.
 
 | Intent | Command | Skill |
 | --- | --- | --- |
+| Investigate a change without implementing | `/cc-plan` | command only |
 | New backlog item | `/cc-backlog` | `backlog` |
 | Deliver a BC-xxx item | `/cc-openspec` | `openspec` |
 | New feature | `/cc-feature` | `openspec` + `testing-tdd` |

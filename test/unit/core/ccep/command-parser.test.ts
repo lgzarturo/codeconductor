@@ -34,7 +34,8 @@ describe('core/ccep/command-parser', () => {
     expect(CCEP_COMMANDS).toContain('backlog');
     expect(CCEP_COMMANDS).toContain('security');
     expect(CCEP_COMMANDS).toContain('code-secure');
-    expect(CCEP_COMMANDS).toHaveLength(23);
+    expect(CCEP_COMMANDS).toContain('plan');
+    expect(CCEP_COMMANDS).toHaveLength(24);
   });
 
   describe('parseCommand', () => {

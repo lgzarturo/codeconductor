@@ -315,6 +315,19 @@ export const WORKFLOW_PROFILES: Record<WorkflowCommandInput, WorkflowProfileInpu
     routing: { default: ['map', 'suggest-next'] },
     confirmationGate: { stopOnHighRisk: false, stopOnQuestions: false },
   },
+  plan: {
+    id: 'plan',
+    version: 1,
+    command: 'plan',
+    intakeSchema: 'plan-query',
+    phases: [
+      { id: 'investigate', agent: 'repo-explorer', outputSchema: 'agent-output' },
+      { id: 'clarify', agent: 'task-coach', outputSchema: 'planner-output' },
+      { id: 'draft', agent: 'architect', outputSchema: 'agent-output' },
+    ],
+    routing: { default: ['investigate', 'clarify', 'draft'] },
+    confirmationGate: { stopOnHighRisk: false, stopOnQuestions: true },
+  },
   triage: {
     id: 'triage',
     version: 1,

@@ -32,6 +32,7 @@ const COMMAND_DEFAULTS: Record<
   council: { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'medium' },
   iterative: { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'medium' },
   explore: { outputFormat: 'plan', needConfirmation: false, riskThreshold: 'low' },
+  plan: { outputFormat: 'plan', needConfirmation: false, riskThreshold: 'high' },
   triage: { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'medium' },
   prototype: { outputFormat: 'taskcard', needConfirmation: true, riskThreshold: 'medium' },
   handoff: { outputFormat: 'plan', needConfirmation: false, riskThreshold: 'low' },

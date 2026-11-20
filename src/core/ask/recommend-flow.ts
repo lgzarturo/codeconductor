@@ -60,6 +60,11 @@ export const ASK_FLOW_CATALOG: readonly AskFlow[] = [
     slash: '/cc:code-secure',
     blurb: 'scan a diff for dangerous patterns and prepare context for review',
   },
+  {
+    command: 'plan',
+    slash: '/cc:plan',
+    blurb: 'investigate a change and write a consultable plan; do not implement',
+  },
 ];
 
 export interface AskRecommendation {
@@ -248,6 +253,38 @@ export function recommendAskFlow(problem: string): AskRecommendation {
     return pick(
       'fix',
       'The request describes a failure or regression, so /cc:fix is the repair workflow.',
+    );
+  }
+
+  if (
+    !includesAny(text, ['test plan', 'test-plan']) &&
+    includesAny(text, [
+      '/cc:plan',
+      '/cc-plan',
+      'plan this',
+      'plan how',
+      'plan the change',
+      'implementation plan',
+      'a plan',
+      'un plan',
+      'investigate',
+      'investiga',
+      'investigación',
+      'investigacion',
+      'planifica',
+      'sin implementar',
+      'no implementes',
+      "don't implement",
+      'do not implement',
+      'without implementing',
+      'how would we change',
+      'qué habría que cambiar',
+      'que habria que cambiar',
+    ])
+  ) {
+    return pick(
+      'plan',
+      'The request asks to investigate or plan a change without implementing it, so /cc:plan records that context and stops.',
     );
   }
 

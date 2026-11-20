@@ -22,6 +22,7 @@ const CURSOR_COMMAND_FILES: Record<string, string> = {
   council: 'council.md',
   iterative: 'iterative.md',
   explore: 'explore.md',
+  plan: 'plan.md',
   triage: 'triage.md',
   prototype: 'prototype.md',
   handoff: 'handoff.md',

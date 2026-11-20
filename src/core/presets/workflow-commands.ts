@@ -16,6 +16,7 @@ export const WORKFLOW_COMMANDS = [
   'council',
   'iterative',
   'explore',
+  'plan',
   'triage',
   'prototype',
   'handoff',

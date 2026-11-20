@@ -18,6 +18,7 @@ describe('ccep command-parser', () => {
     expect(CCEP_COMMANDS).toContain('council');
     expect(CCEP_COMMANDS).toContain('iterative');
     expect(CCEP_COMMANDS).toContain('explore');
+    expect(CCEP_COMMANDS).toContain('plan');
     expect(CCEP_COMMANDS).toContain('triage');
     expect(CCEP_COMMANDS).toContain('openspec');
     expect(CCEP_COMMANDS).toContain('backlog');
@@ -54,9 +55,15 @@ describe('ccep command-parser', () => {
   test('applies command-specific default constraints', () => {
     const review = parseCommand('review', 'PR #42', PROJECT_ROOT);
     const council = parseCommand('council', 'Add auth module', PROJECT_ROOT);
+    const plan = parseCommand('plan', 'how does billing decide proration', PROJECT_ROOT);
 
     expect(review.constraints.outputFormat).toBe('verdict');
     expect(council.constraints.needConfirmation).toBe(true);
+    expect(plan.constraints).toEqual({
+      outputFormat: 'plan',
+      needConfirmation: false,
+      riskThreshold: 'high',
+    });
   });
 
   test('rejects invalid workflow command', () => {

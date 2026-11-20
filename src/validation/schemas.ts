@@ -924,6 +924,7 @@ export const WorkflowCommandSchema = z.enum([
   'council',
   'iterative',
   'explore',
+  'plan',
   'triage',
   'prototype',
   'handoff',

@@ -8,10 +8,10 @@ import {
 import { validateWorkflowProfile } from '../../src/validation/schemas';
 
 describe('ccep workflow profiles', () => {
-  test('registry contains a valid profile for each of the 22 commands', () => {
+  test('registry contains a valid profile for each of the 23 commands', () => {
     const profiles = loadAllWorkflowProfiles();
 
-    expect(profiles.size).toBe(22);
+    expect(profiles.size).toBe(23);
     for (const command of CCEP_COMMANDS) {
       expect(profiles.has(command)).toBe(true);
       const profile = profiles.get(command)!;
@@ -157,6 +157,23 @@ describe('ccep workflow profiles', () => {
     const profile = loadWorkflowProfile('explore');
     expect(profile.phases.map((p) => p.id)).toEqual(['map', 'suggest-next']);
     expect(profile.phases[0]?.agent).toBe('repo-explorer');
+  });
+
+  test('plan profile investigates and drafts without a task card or implementer', () => {
+    const profile = loadWorkflowProfile('plan');
+
+    expect(profile.intakeSchema).toBe('plan-query');
+    expect(profile.taskCard).toBeUndefined();
+    expect(profile.phases.map((p) => p.id)).toEqual(['investigate', 'clarify', 'draft']);
+    expect(profile.phases.map((p) => p.agent)).toEqual([
+      'repo-explorer',
+      'task-coach',
+      'architect',
+    ]);
+    expect(profile.routing.default).toEqual(['investigate', 'clarify', 'draft']);
+    expect(profile.routing.riskRules).toBeUndefined();
+    expect(profile.confirmationGate).toEqual({ stopOnHighRisk: false, stopOnQuestions: true });
+    expect(profile.phases.some((p) => p.agent === 'implementer')).toBe(false);
   });
 
   test('triage, prototype, handoff, and clarify profiles load', () => {

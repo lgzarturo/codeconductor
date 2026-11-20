@@ -27,13 +27,14 @@ afterAll(async () => {
 });
 
 describe('core/ccep/command-parser', () => {
-  test('CCEP_COMMANDS lists all twenty-two workflow commands', () => {
+  test('CCEP_COMMANDS lists all twenty-three workflow commands', () => {
     expect(CCEP_COMMANDS).toContain('feature');
     expect(CCEP_COMMANDS).toContain('council');
     expect(CCEP_COMMANDS).toContain('iterative');
     expect(CCEP_COMMANDS).toContain('backlog');
     expect(CCEP_COMMANDS).toContain('security');
-    expect(CCEP_COMMANDS).toHaveLength(22);
+    expect(CCEP_COMMANDS).toContain('plan');
+    expect(CCEP_COMMANDS).toHaveLength(23);
   });
 
   describe('parseCommand', () => {

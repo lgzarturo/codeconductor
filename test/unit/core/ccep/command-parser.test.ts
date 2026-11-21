@@ -27,7 +27,7 @@ afterAll(async () => {
 });
 
 describe('core/ccep/command-parser', () => {
-  test('CCEP_COMMANDS lists all twenty-three workflow commands', () => {
+  test('CCEP_COMMANDS lists all twenty-four workflow commands', () => {
     expect(CCEP_COMMANDS).toContain('feature');
     expect(CCEP_COMMANDS).toContain('council');
     expect(CCEP_COMMANDS).toContain('iterative');

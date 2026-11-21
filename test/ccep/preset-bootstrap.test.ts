@@ -28,6 +28,7 @@ const CURSOR_COMMAND_FILES: Record<string, string> = {
   handoff: 'handoff.md',
   clarify: 'clarify.md',
   security: 'security.md',
+  'code-secure': 'code-secure.md',
   odd: 'odd.md',
 };
 

@@ -2,7 +2,7 @@
 
 This file is the canonical shipped/planned matrix for the repository.
 
-**Published package version:** `1.9.0` — current stable line: `1.9.x` (from
+**Published package version:** `1.9.1` — current stable line: `1.9.x` (from
 `package.json`)
 
 Code present in the repository but assigned to a later release is

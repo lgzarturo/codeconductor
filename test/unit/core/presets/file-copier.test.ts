@@ -286,6 +286,21 @@ describe('core/presets/file-copier', () => {
       expect(JSON.parse(await readFile(dest, 'utf-8'))).toEqual({ a: 1, b: 2 });
     });
 
+    test('merge-json upgrades cwd-relative project Claude hooks without duplicating entries', async () => {
+      const hook = (command: string) => ({
+        hooks: { PreToolUse: [{ matcher: 'Bash', hooks: [{ type: 'command', command }] }] },
+      });
+      const anchored = 'node "${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs" pre-tool';
+      const src = await srcFile(JSON.stringify(hook(anchored)));
+      const dir = await tmp('dst-');
+      await mkdir(join(dir, '.claude'), { recursive: true });
+      const dest = join(dir, '.claude', 'settings.json');
+      await writeFile(dest, JSON.stringify(hook('node .claude/hooks/invoke-hook.cjs pre-tool')));
+      const result = await applySingleFile(src, dest, 'merge-json', false, false, false, null, 'en', dir);
+      expect(result.action).toBe('merged');
+      expect(JSON.parse(await readFile(dest, 'utf-8'))).toEqual(hook(anchored));
+    });
+
     test('merge-managed writes the managed block when no file exists', async () => {
       const src = await srcFile(`${MANAGED_BEGIN_MARKER}\nbody\n${MANAGED_END_MARKER}`);
       const dir = await tmp('dst-');

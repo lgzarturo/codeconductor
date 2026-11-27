@@ -22,7 +22,7 @@ import {
 } from '../filesystem/safe-merger';
 import { writeContainedFile } from '../filesystem/path-containment';
 import { detectComplementaryTools } from './complementary-detector';
-import { rewriteClaudeHookCommandsForGlobal } from './hook-command-paths';
+import { rewriteClaudeHookCommandsForGlobal, rewriteClaudeHookCommandsForProject } from './hook-command-paths';
 
 export type FileAction = 'written' | 'appended' | 'merged' | 'skipped' | 'error';
 
@@ -462,18 +462,29 @@ function isClaudeSettingsDest(destPath: string): boolean {
 }
 
 /**
- * Global Claude installs must not keep project-relative hook commands
+ * Claude settings must not keep cwd-relative hook commands
  * (`node .claude/hooks/...`): they resolve against the process cwd and throw
- * MODULE_NOT_FOUND from other directories. Rewrite to an absolute path under
- * `baseDir` (the install home) after merge/render.
+ * MODULE_NOT_FOUND from other directories. Global installs get an absolute
+ * path under `baseDir` (the install home); project installs get the
+ * `${CLAUDE_PROJECT_DIR}` placeholder.
  */
-function maybeRewriteGlobalClaudeHookCommands(
+function normalizeClaudeHookCommands(
+  settings: Record<string, unknown>,
+  baseDir: string | undefined,
+  isGlobal: boolean
+): ReturnType<typeof rewriteClaudeHookCommandsForProject> {
+  return isGlobal && baseDir !== undefined
+    ? rewriteClaudeHookCommandsForGlobal(settings, baseDir)
+    : rewriteClaudeHookCommandsForProject(settings);
+}
+
+function maybeRewriteClaudeHookCommands(
   content: string,
   destPath: string,
   baseDir: string | undefined,
   isGlobal: boolean
 ): string {
-  if (!isGlobal || baseDir === undefined || !isClaudeSettingsDest(destPath)) {
+  if (!isClaudeSettingsDest(destPath) || (isGlobal && baseDir === undefined)) {
     return content;
   }
   try {
@@ -481,7 +492,7 @@ function maybeRewriteGlobalClaudeHookCommands(
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
       return content;
     }
-    const { settings, changes } = rewriteClaudeHookCommandsForGlobal(parsed, baseDir);
+    const { settings, changes } = normalizeClaudeHookCommands(parsed, baseDir, isGlobal);
     if (changes.length === 0) return content;
     return JSON.stringify(settings, null, 2);
   } catch {
@@ -593,11 +604,12 @@ export async function applySingleFile(
           }
         }
       }
-      // Normalize both sides before array-union merge so a relative preset
-      // command does not duplicate an already-absolute global hook entry.
-      if (isGlobal && baseDir !== undefined && isClaudeSettingsDest(destPath)) {
-        existing = rewriteClaudeHookCommandsForGlobal(existing, baseDir).settings;
-        incoming = rewriteClaudeHookCommandsForGlobal(incoming, baseDir).settings;
+      // Normalize both sides before array-union merge so the preset command
+      // does not duplicate a hook entry already on disk under an older spelling
+      // (cwd-relative in projects, relative or absolute in global installs).
+      if (isClaudeSettingsDest(destPath) && !(isGlobal && baseDir === undefined)) {
+        existing = normalizeClaudeHookCommands(existing, baseDir, isGlobal).settings;
+        incoming = normalizeClaudeHookCommands(incoming, baseDir, isGlobal).settings;
       }
       finalContent = JSON.stringify(mergeDeep(existing, incoming), null, 2);
     } catch (e) {
@@ -629,7 +641,7 @@ export async function applySingleFile(
     }
   }
 
-  finalContent = maybeRewriteGlobalClaudeHookCommands(finalContent, destPath, baseDir, isGlobal);
+  finalContent = maybeRewriteClaudeHookCommands(finalContent, destPath, baseDir, isGlobal);
 
   if (dryRun) {
     return { src: srcPath, dest: destPath, action, dryRun: true, renderedContent: finalContent, ...(warnings.length ? { warnings } : {}) };

@@ -4,8 +4,20 @@ import { isAbsolute, resolve } from 'node:path';
 /** Relative hook script path written into project-local Claude settings. */
 export const CLAUDE_HOOK_SCRIPT_RELATIVE = '.claude/hooks/invoke-hook.cjs';
 
-const RELATIVE_CLAUDE_HOOK_RE =
-  /^(?<runner>node|bun)\s+(?<quote>["']?)(?:\.\/)?\.claude\/hooks\/invoke-hook\.cjs\k<quote>(?<rest>.*)$/i;
+/**
+ * Hook command written into project-local Claude settings. Claude Code runs
+ * hooks from the session's current directory, so a bare relative path throws
+ * MODULE_NOT_FOUND after any `cd`. The braced placeholder is expanded by Bash
+ * and rewritten by Claude Code for PowerShell; the unbraced spelling is not.
+ */
+const CLAUDE_PROJECT_HOOK_SCRIPT = '"${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs"';
+
+/**
+ * Matches a hook command scoped to the project: cwd-relative, or anchored to
+ * `$CLAUDE_PROJECT_DIR` / `${CLAUDE_PROJECT_DIR}`.
+ */
+const PROJECT_SCOPED_CLAUDE_HOOK_RE =
+  /^(?<runner>node|bun)\s+(?<quote>["']?)(?<anchor>\.\/|\$CLAUDE_PROJECT_DIR\/|\$\{CLAUDE_PROJECT_DIR\}\/)?\.claude\/hooks\/invoke-hook\.cjs\k<quote>(?<rest>.*)$/i;
 
 /**
  * Matches `node|bun` + optional quotes + a script ending in `hooks/invoke-hook.cjs`
@@ -74,8 +86,21 @@ export function buildAbsoluteClaudeHookCommand(absoluteScriptPath: string, rest 
   return `node ${quoteHookPath(absoluteScriptPath)}${suffix}`;
 }
 
+/** Build `node "${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs" <args…>`. */
+export function buildProjectClaudeHookCommand(rest = ''): string {
+  const suffix = rest.trim().length > 0 ? ` ${rest.trim()}` : '';
+  return `node ${CLAUDE_PROJECT_HOOK_SCRIPT}${suffix}`;
+}
+
+/** True when the hook script path resolves against the process cwd. */
 export function isRelativeClaudeHookCommand(command: string): boolean {
-  return RELATIVE_CLAUDE_HOOK_RE.test(command.trim());
+  const match = command.trim().match(PROJECT_SCOPED_CLAUDE_HOOK_RE);
+  return match?.groups !== undefined && !match.groups.anchor?.startsWith('$');
+}
+
+/** True when the hook script path is cwd-relative or anchored to the project dir. */
+export function isProjectScopedClaudeHookCommand(command: string): boolean {
+  return PROJECT_SCOPED_CLAUDE_HOOK_RE.test(command.trim());
 }
 
 /** True when the command targets CodeConductor's Claude invoke-hook script. */
@@ -144,7 +169,32 @@ function mapHookCommands(
 }
 
 /**
- * Rewrite relative Claude CodeConductor hook commands to an absolute script
+ * Rewrite project-scoped Claude CodeConductor hook commands (cwd-relative or
+ * unbraced `$CLAUDE_PROJECT_DIR`) to the `${CLAUDE_PROJECT_DIR}` form so they
+ * run from any cwd inside the project. Leaves non-matching commands untouched.
+ * Safe to run repeatedly.
+ */
+export function rewriteClaudeHookCommandsForProject(
+  settings: Record<string, unknown>
+): { settings: Record<string, unknown>; changes: readonly HookCommandChange[] } {
+  const hooks = settings.hooks;
+  if (hooks === undefined) {
+    return { settings, changes: [] };
+  }
+
+  const { value, changes } = mapHookCommands(hooks, (command) => {
+    const match = command.trim().match(PROJECT_SCOPED_CLAUDE_HOOK_RE);
+    return match?.groups ? buildProjectClaudeHookCommand(match.groups.rest ?? '') : null;
+  });
+
+  return {
+    settings: { ...settings, hooks: value },
+    changes,
+  };
+}
+
+/**
+ * Rewrite project-scoped Claude CodeConductor hook commands to an absolute script
  * path under `globalBaseDir` (typically the user home for `--global` installs).
  * Leaves non-matching commands untouched. Safe to run repeatedly.
  */
@@ -160,7 +210,7 @@ export function rewriteClaudeHookCommandsForGlobal(
 
   const { value, changes } = mapHookCommands(hooks, (command) => {
     const trimmed = command.trim();
-    const relativeMatch = trimmed.match(RELATIVE_CLAUDE_HOOK_RE);
+    const relativeMatch = trimmed.match(PROJECT_SCOPED_CLAUDE_HOOK_RE);
     if (relativeMatch?.groups) {
       return buildAbsoluteClaudeHookCommand(absoluteScript, relativeMatch.groups.rest ?? '');
     }
@@ -189,7 +239,7 @@ export function inspectClaudeHookCommandPaths(
     const parsed = parseClaudeHookCommand(command);
     if (!parsed) return null;
 
-    if (options.requireAbsolute !== false && isRelativeClaudeHookCommand(command)) {
+    if (options.requireAbsolute !== false && isProjectScopedClaudeHookCommand(command)) {
       issues.push({ command, reason: 'relative' });
       return null;
     }

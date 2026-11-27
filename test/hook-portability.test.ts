@@ -8,6 +8,7 @@ import { evaluateCommand, evaluateRoleAccess, formatHookOutput, parseAgyPayload 
 import { loadManifest, loadModelConfig } from '../src/core/presets/manifest-loader';
 import { copyFromManifest, renderTemplate } from '../src/core/presets/file-copier';
 import {
+  isProjectScopedClaudeHookCommand,
   isRelativeClaudeHookCommand,
   parseClaudeHookCommand,
 } from '../src/core/presets/hook-command-paths';
@@ -136,7 +137,7 @@ describe('global Claude hook path portability', () => {
     }
   });
 
-  test('global install writes absolute hook commands that run from another cwd; local stays relative', async () => {
+  test('global install writes absolute hook commands that run from another cwd; local anchors to CLAUDE_PROJECT_DIR', async () => {
     const home = mkdtempSync(join(tmpdir(), 'cc-hook-global-home-'));
     const project = mkdtempSync(join(tmpdir(), 'cc-hook-local-proj-'));
     const otherCwd = mkdtempSync(join(tmpdir(), 'cc-hook-other-cwd-'));
@@ -183,9 +184,20 @@ describe('global Claude hook path portability', () => {
         // doubling backslashes inside quoted paths.
         expect(parsed!.script.includes('\\')).toBe(false);
       }
+      expect(localCommands.length).toBeGreaterThan(0);
       for (const command of localCommands) {
-        expect(isRelativeClaudeHookCommand(command)).toBe(true);
+        expect(isRelativeClaudeHookCommand(command)).toBe(false);
+        expect(command).toContain('"${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs"');
       }
+
+      // A shell expands the placeholder, so the project hook loads from a foreign cwd.
+      const localCheck = spawnSync('bash', ['-c', localCommands[0]!.replace(/\s+\S+$/, ' --check')], {
+        cwd: otherCwd,
+        encoding: 'utf8',
+        env: { ...process.env, CLAUDE_PROJECT_DIR: project, PROJECT_ROOT: project },
+      });
+      expect(`${localCheck.stderr}${localCheck.stdout}`).not.toMatch(/MODULE_NOT_FOUND|Cannot find module|Module not found/i);
+      expect(JSON.parse(localCheck.stdout).operational).toBeDefined();
 
       // Absolute script from the global install must load from a foreign cwd
       // (guard may report operational:false without a local package — that is OK).
@@ -212,7 +224,7 @@ describe('global Claude hook path portability', () => {
     }
   });
 
-  test('preset source keeps relative hook commands for project installs', () => {
+  test('preset source anchors hook commands to CLAUDE_PROJECT_DIR for project installs', () => {
     const settings = JSON.parse(readFileSync(join(ROOT, 'presets/claude/settings.json'), 'utf8'));
     const commands: string[] = [];
     JSON.stringify(settings.hooks, (_key, value) => {
@@ -220,7 +232,7 @@ describe('global Claude hook path portability', () => {
       return value;
     });
     expect(commands.length).toBeGreaterThan(0);
-    expect(commands.every((c) => isRelativeClaudeHookCommand(c))).toBe(true);
+    expect(commands.every((c) => isProjectScopedClaudeHookCommand(c) && !isRelativeClaudeHookCommand(c))).toBe(true);
   });
 });
 

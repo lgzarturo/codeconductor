@@ -4,7 +4,7 @@ Agent PreToolUse / PostToolUse / SessionStart hooks call Node, not bash.
 
 | OS | How it runs |
 | --- | --- |
-| Linux / macOS / Windows (project) | `node .claude/hooks/invoke-hook.cjs <event>` or `node .agents/scripts/invoke-hook.cjs <event> --format=agy` |
+| Linux / macOS / Windows (project) | `node "${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs" <event>` (hooks run from the session cwd, so cwd-relative paths break after `cd`; install rewrites older relative entries) or `node .agents/scripts/invoke-hook.cjs <event> --format=agy` |
 | Linux / macOS / Windows (`--global` Claude) | `node <absolute-home>/.claude/hooks/invoke-hook.cjs <event>` (install-time rewrite; relative paths break from other cwds) |
 | This repo (unreleased behavior) | With `CC_DEV=1`, invoke-hook finds `bun` and runs `src/cli/main.ts hook` after checking the package name |
 | Installed package | `node node_modules/cc-codeconductor/dist/index.js hook` |

@@ -70,7 +70,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/invoke-hook.cjs post-tool"
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs\" post-tool"
           }
         ]
       }
@@ -81,7 +81,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/invoke-hook.cjs pre-tool"
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs\" pre-tool"
           }
         ]
       }
@@ -91,7 +91,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/invoke-hook.cjs session-start"
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs\" session-start"
           }
         ]
       }
@@ -101,7 +101,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/invoke-hook.cjs session-end",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs\" session-end",
             "async": true
           }
         ]
@@ -112,7 +112,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/invoke-hook.cjs subagent-stop",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs\" subagent-stop",
             "async": true
           }
         ]
@@ -123,7 +123,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/invoke-hook.cjs stop",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs\" stop",
             "async": true
           }
         ]

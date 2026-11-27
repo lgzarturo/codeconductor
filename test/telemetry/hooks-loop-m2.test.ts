@@ -133,7 +133,7 @@ describe('M2 hooks — simulated session with 2 subagents', () => {
       expect(group).toBeDefined();
       const cmd = group![0]!.hooks[0]!;
       expect(cmd.async).toBe(true);
-      expect(cmd.command).toContain(`invoke-hook.cjs ${name === 'SessionEnd' ? 'session-end' : name === 'SubagentStop' ? 'subagent-stop' : 'stop'}`);
+      expect(cmd.command).toContain(`invoke-hook.cjs" ${name === 'SessionEnd' ? 'session-end' : name === 'SubagentStop' ? 'subagent-stop' : 'stop'}`);
     }
   });
 });

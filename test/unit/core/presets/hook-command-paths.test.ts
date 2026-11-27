@@ -6,11 +6,13 @@ import {
   buildAbsoluteClaudeHookCommand,
   escapeHookPathForDoubleQuotes,
   inspectClaudeHookCommandPaths,
+  isProjectScopedClaudeHookCommand,
   isRelativeClaudeHookCommand,
   normalizeHookScriptPath,
   parseClaudeHookCommand,
   quoteHookPath,
   rewriteClaudeHookCommandsForGlobal,
+  rewriteClaudeHookCommandsForProject,
   unescapeHookPathFromDoubleQuotes,
 } from '../../../../src/core/presets/hook-command-paths';
 
@@ -19,6 +21,63 @@ describe('hook-command-paths', () => {
     expect(isRelativeClaudeHookCommand('node .claude/hooks/invoke-hook.cjs pre-tool')).toBe(true);
     expect(isRelativeClaudeHookCommand('node "./.claude/hooks/invoke-hook.cjs" post-tool')).toBe(true);
     expect(isRelativeClaudeHookCommand('node /home/u/.claude/hooks/invoke-hook.cjs pre-tool')).toBe(false);
+  });
+
+  test('project-dir anchored commands are project-scoped but not cwd-relative', () => {
+    const braced = 'node "${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs" pre-tool';
+    const bare = 'node "$CLAUDE_PROJECT_DIR/.claude/hooks/invoke-hook.cjs" pre-tool';
+    for (const command of [braced, bare]) {
+      expect(isRelativeClaudeHookCommand(command)).toBe(false);
+      expect(isProjectScopedClaudeHookCommand(command)).toBe(true);
+      expect(parseClaudeHookCommand(command)?.rest).toBe('pre-tool');
+    }
+    expect(isProjectScopedClaudeHookCommand('node .claude/hooks/invoke-hook.cjs pre-tool')).toBe(true);
+    expect(isProjectScopedClaudeHookCommand('node /home/u/.claude/hooks/invoke-hook.cjs pre-tool')).toBe(false);
+  });
+
+  test('rewrites project hooks to the braced CLAUDE_PROJECT_DIR form and is idempotent', () => {
+    const commands = [
+      'node .claude/hooks/invoke-hook.cjs pre-tool',
+      'node "./.claude/hooks/invoke-hook.cjs" post-tool',
+      'node "$CLAUDE_PROJECT_DIR/.claude/hooks/invoke-hook.cjs" session-start',
+      'node /home/u/.claude/hooks/invoke-hook.cjs stop',
+      'node scripts/other.js',
+    ];
+    const settings = {
+      hooks: { PreToolUse: [{ hooks: commands.map((command) => ({ type: 'command', command })) }] },
+    };
+
+    const first = rewriteClaudeHookCommandsForProject(settings);
+    const rewritten = (first.settings.hooks as { PreToolUse: Array<{ hooks: Array<{ command: string }> }> })
+      .PreToolUse[0].hooks.map((hook) => hook.command);
+    expect(rewritten).toEqual([
+      'node "${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs" pre-tool',
+      'node "${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs" post-tool',
+      'node "${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs" session-start',
+      'node /home/u/.claude/hooks/invoke-hook.cjs stop',
+      'node scripts/other.js',
+    ]);
+    expect(first.changes).toHaveLength(3);
+
+    const second = rewriteClaudeHookCommandsForProject(first.settings);
+    expect(second.changes).toHaveLength(0);
+    expect(second.settings).toEqual(first.settings);
+  });
+
+  test('global rewrite and doctor inspection treat project-dir anchored commands as non-absolute', () => {
+    const command = 'node "${CLAUDE_PROJECT_DIR}/.claude/hooks/invoke-hook.cjs" pre-tool';
+    const settings = {
+      hooks: { PreToolUse: [{ hooks: [{ type: 'command', command }] }] },
+    };
+    expect(inspectClaudeHookCommandPaths(settings)).toEqual([{ command, reason: 'relative' }]);
+
+    const home = '/tmp/cc-home-example';
+    const { settings: rewritten, changes } = rewriteClaudeHookCommandsForGlobal(settings, home);
+    expect(changes).toHaveLength(1);
+    const absolute = normalizeHookScriptPath(resolve(home, '.claude/hooks/invoke-hook.cjs'));
+    const pre = (rewritten.hooks as { PreToolUse: Array<{ hooks: Array<{ command: string }> }> })
+      .PreToolUse[0].hooks[0].command;
+    expect(pre).toBe(`node ${absolute} pre-tool`);
   });
 
   test('rewrites relative global hooks to absolute paths and is idempotent', () => {

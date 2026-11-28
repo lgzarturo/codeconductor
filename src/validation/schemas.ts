@@ -1080,6 +1080,45 @@ export const AgentOutputSchema = z.object({
   next_actions: z.array(z.string()).default([]),
 });
 
+/** Tester deliverable: scenarios that acceptance criteria map onto. */
+export const TestPlanOutputSchema = AgentOutputSchema.extend({
+  scenarios: z.array(z.object({
+    id: z.string().min(1),
+    description: z.string().min(1),
+    acceptanceCriteria: z.array(z.string()).default([]),
+  })).min(1),
+  coverageNotes: z.string().optional(),
+});
+
+/** Complexity auditor deliverable: findings with severity, not a bare agent envelope. */
+export const ComplexityAuditOutputSchema = AgentOutputSchema.extend({
+  findings: z.array(z.object({
+    severity: z.enum(['CRITICAL', 'WARNING', 'SUGGESTION']),
+    message: z.string().min(1),
+    path: z.string().optional(),
+    metric: z.string().optional(),
+  })).min(1),
+  summary: z.string().min(1),
+});
+
+/** Contract-builder deliverable: named endpoints / schemas under change. */
+export const ApiContractOutputSchema = AgentOutputSchema.extend({
+  contracts: z.array(z.object({
+    name: z.string().min(1),
+    kind: z.enum(['openapi', 'json-schema', 'typescript', 'proto', 'other']),
+    path: z.string().optional(),
+    summary: z.string().min(1),
+  })).min(1),
+});
+
+/** PageSpeed report deliverable: scored URL with strategy. */
+export const PagespeedReportOutputSchema = AgentOutputSchema.extend({
+  url: z.string().url(),
+  strategy: z.enum(['mobile', 'desktop', 'both']),
+  performanceScore: z.number().min(0).max(100),
+  reportPath: z.string().optional(),
+});
+
 export const ImplementerTestsSchema = z.object({
   runner: z.string(),
   result: z.enum(['passed', 'failed']),

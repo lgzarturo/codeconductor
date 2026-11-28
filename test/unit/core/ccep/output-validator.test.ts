@@ -53,6 +53,11 @@ describe('core/ccep/output-validator', () => {
     test('an unknown schema with no special role is returned unchanged', () => {
       expect(resolveOutputSchemaName('agent-output', 'docs')).toBe('agent-output');
     });
+
+    test('an unknown schema id is not remapped by role', () => {
+      expect(resolveOutputSchemaName('not-a-real-schema', 'implementer')).toBe('not-a-real-schema');
+      expect(validateAgentOutputBySchema('not-a-real-schema', implementerOutput, 'implementer').valid).toBe(false);
+    });
   });
 
   describe('validateAgentOutputBySchema', () => {
@@ -73,6 +78,39 @@ describe('core/ccep/output-validator', () => {
       const result = validateAgentOutputBySchema('planner-output', { status: 'success' });
       expect(result.valid).toBe(false);
       expect(result.errors?.length).toBeGreaterThan(0);
+    });
+
+    test('generic agent-output shape is insufficient for specialized contracts', () => {
+      for (const schema of ['test-plan', 'complexity-audit', 'api-contract', 'pagespeed-report'] as const) {
+        const result = validateAgentOutputBySchema(schema, agentOutput);
+        expect(result.valid).toBe(false);
+        expect(result.schema).toBe(schema);
+      }
+    });
+
+    test('specialized deliverables validate their required fields', () => {
+      expect(validateAgentOutputBySchema('test-plan', {
+        ...agentOutput,
+        scenarios: [{ id: 's1', description: 'covers AC1', acceptanceCriteria: ['AC1'] }],
+      }).valid).toBe(true);
+
+      expect(validateAgentOutputBySchema('complexity-audit', {
+        ...agentOutput,
+        summary: 'one hot spot',
+        findings: [{ severity: 'WARNING', message: 'complexity 18', path: 'src/a.ts' }],
+      }).valid).toBe(true);
+
+      expect(validateAgentOutputBySchema('api-contract', {
+        ...agentOutput,
+        contracts: [{ name: 'CreateUser', kind: 'openapi', summary: 'POST /users' }],
+      }).valid).toBe(true);
+
+      expect(validateAgentOutputBySchema('pagespeed-report', {
+        ...agentOutput,
+        url: 'https://example.com/',
+        strategy: 'mobile',
+        performanceScore: 72,
+      }).valid).toBe(true);
     });
   });
 

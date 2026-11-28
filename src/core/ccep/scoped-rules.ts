@@ -249,20 +249,38 @@ export function buildContextManifest(input: {
   return { ...body, hash: sha256(stableStringify(body)) };
 }
 
-async function listRuleFiles(projectRoot: string, dir: string): Promise<string[]> {
+async function listRuleFiles(
+  projectRoot: string,
+  dir: string,
+): Promise<{ files: string[]; diagnostics: RuleDiagnostic[] }> {
   let entries;
   try {
     entries = await readdir(join(projectRoot, dir), { withFileTypes: true });
-  } catch {
-    return [];
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') return { files: [], diagnostics: [] };
+    return {
+      files: [],
+      diagnostics: [{
+        code: 'rule_dir_unreadable',
+        severity: 'blocking',
+        message: `Cannot enumerate ${dir}: ${error instanceof Error ? error.message : String(error)}`,
+      }],
+    };
   }
-  const out: string[] = [];
+  const files: string[] = [];
+  const diagnostics: RuleDiagnostic[] = [];
   for (const entry of entries) {
     const rel = `${dir}/${entry.name}`;
-    if (entry.isDirectory()) out.push(...(await listRuleFiles(projectRoot, rel)));
-    else if (/\.ya?ml$/.test(entry.name)) out.push(rel);
+    if (entry.isDirectory()) {
+      const nested = await listRuleFiles(projectRoot, rel);
+      files.push(...nested.files);
+      diagnostics.push(...nested.diagnostics);
+    } else if (/\.ya?ml$/.test(entry.name)) {
+      files.push(rel);
+    }
   }
-  return out.sort(byText);
+  return { files: files.sort(byText), diagnostics };
 }
 
 /** Loads `.codeconductor/rules/**` as `repository` sources; unreadable or invalid files are reported, never skipped. */
@@ -274,7 +292,9 @@ export async function loadRuleSources(
   const reject = (code: string, message: string): void => {
     diagnostics.push({ code, severity: 'blocking', message });
   };
-  for (const sourcePath of await listRuleFiles(projectRoot, RULES_DIR)) {
+  const listed = await listRuleFiles(projectRoot, RULES_DIR);
+  diagnostics.push(...listed.diagnostics);
+  for (const sourcePath of listed.files) {
     const raw = await readContained(projectRoot, sourcePath);
     if (raw === undefined) {
       reject('rule_source_unreadable', `${sourcePath} is not a readable file inside the project root`);

@@ -83,7 +83,11 @@ function manifestHash(paths: readonly RddReceiptPath[]): string {
 interface ReceiptRegistryEntry {
   readonly manifestHash: string;
   readonly taskId: string;
+  readonly phase: RddPhase;
+  readonly outcome: 'passed' | 'failed';
+  readonly command?: string;
   readonly capturedAt: string;
+  readonly receiptHash: string;
 }
 
 function receiptRegistryDir(projectRoot: string): string {
@@ -94,17 +98,54 @@ function isWellFormedNonce(nonce: unknown): nonce is string {
   return typeof nonce === 'string' && /^[0-9a-f]{32}$/.test(nonce);
 }
 
+/** Canonical hash of receipt metadata that must stay bound to the registry nonce. */
+function receiptContentHash(receipt: RddReceipt): string {
+  const paths = [...receipt.paths]
+    .map((entry) => ({ path: entry.path, hash: entry.hash }))
+    .sort((left, right) => left.path.localeCompare(right.path));
+  return sha256(JSON.stringify({
+    version: receipt.version,
+    taskId: receipt.taskId,
+    phase: receipt.phase,
+    paths,
+    coverage: receipt.coverage,
+    manifestHash: receipt.manifestHash,
+    command: receipt.command ?? null,
+    outcome: receipt.outcome,
+    capturedAt: receipt.capturedAt,
+    nonce: receipt.nonce ?? null,
+  }));
+}
+
+function isCompleteRegistryEntry(entry: Partial<ReceiptRegistryEntry>): entry is ReceiptRegistryEntry {
+  return typeof entry.manifestHash === 'string'
+    && typeof entry.taskId === 'string'
+    && typeof entry.phase === 'string'
+    && (entry.outcome === 'passed' || entry.outcome === 'failed')
+    && typeof entry.capturedAt === 'string'
+    && typeof entry.receiptHash === 'string'
+    && (entry.command === undefined || typeof entry.command === 'string');
+}
+
 /**
  * True only when this receipt was minted by captureReceipt in this project:
  * the nonce is well-formed, a registry entry exists for it, and the entry
- * binds the nonce to this exact manifest. Anything else fails closed.
+ * binds the nonce to this exact receipt metadata (task, phase, outcome,
+ * command, timestamps, and manifest). Incomplete legacy entries fail closed.
  */
 export async function isRegisteredReceipt(projectRoot: string, receipt: RddReceipt): Promise<boolean> {
   if (!isWellFormedNonce(receipt.nonce)) return false;
   try {
     const raw = await readFile(join(receiptRegistryDir(projectRoot), `${receipt.nonce}.json`), 'utf-8');
     const entry = JSON.parse(raw) as Partial<ReceiptRegistryEntry>;
-    return entry.manifestHash === receipt.manifestHash;
+    if (!isCompleteRegistryEntry(entry)) return false;
+    return entry.manifestHash === receipt.manifestHash
+      && entry.taskId === receipt.taskId
+      && entry.phase === receipt.phase
+      && entry.outcome === receipt.outcome
+      && entry.command === receipt.command
+      && entry.capturedAt === receipt.capturedAt
+      && entry.receiptHash === receiptContentHash(receipt);
   } catch {
     return false;
   }
@@ -160,7 +201,15 @@ export async function captureReceipt(
   };
   const directory = receiptRegistryDir(projectRoot);
   await mkdir(directory, { recursive: true });
-  const entry: ReceiptRegistryEntry = { manifestHash: hashed, taskId: input.taskId, capturedAt };
+  const entry: ReceiptRegistryEntry = {
+    manifestHash: hashed,
+    taskId: input.taskId,
+    phase: input.phase,
+    outcome: input.outcome,
+    command: input.command,
+    capturedAt,
+    receiptHash: receiptContentHash(receipt),
+  };
   await writeFile(join(directory, `${nonce}.json`), JSON.stringify(entry, null, 2), 'utf-8');
   return receipt;
 }

@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { parse } from 'yaml';
 import type { RunnerTargetInput } from '../../validation/schemas';
 import { POLICY_PATH } from '../presets/package-paths';
+import { INDIVIDUAL_TARGETS, type IndividualRunnerTarget } from '../runner/runner-target';
 
 export interface TargetSecurityCompatibility {
   readonly target: Exclude<RunnerTargetInput, 'all'>;
@@ -16,20 +17,13 @@ interface PolicyTarget {
 }
 
 interface PolicyModel {
-  readonly targets?: Partial<Record<Exclude<RunnerTargetInput, 'all'>, PolicyTarget>>;
+  readonly targets?: Partial<Record<IndividualRunnerTarget, PolicyTarget>>;
 }
 
 export async function loadTargetSecurityCompatibility(): Promise<TargetSecurityCompatibility[]> {
   const policy = parse(await readFile(POLICY_PATH, 'utf-8')) as PolicyModel;
-  const targets: Array<Exclude<RunnerTargetInput, 'all'>> = [
-    'opencode',
-    'claude',
-    'codex',
-    'gemini',
-    'cursor',
-  ];
 
-  return targets.map((target) => {
+  return INDIVIDUAL_TARGETS.map((target) => {
     const policyTarget = policy.targets?.[target];
     if (!policyTarget) {
       return {

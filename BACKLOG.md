@@ -51,6 +51,53 @@ problemas son el contexto original, no una afirmación de que sigan vigentes.
   - [ ] Un mapa válido generado por buildSymbolMap sigue leyéndose sin cambios; los tests existentes pasan.
 
 ## Archive
+### BC-033 | CI automático + Static Harness Validation slice
+
+- Priority: P0
+- Status: DONE
+- Type: feature
+- Depends on: none
+- Description: ci.yml solo tenía workflow_dispatch. Se habilita push/PR. Doctor gana `--static` con checks de schemas especializados, cobertura de matriz (8 runners) y referencias de outputSchema. Hooks fallan cerrados ante JSON inválido. Schemas test-plan/complexity-audit/api-contract/pagespeed-report dejan de ser AgentOutputSchema.
+- Scope: .github/workflows/ci.yml, src/commands/doctor.command.ts, src/core/hooks/hook-runner.ts, src/core/ccep/{output-validator,scoped-rules}.ts, src/core/security/target-compatibility.ts, policy.yml, src/validation/schemas.ts
+- Out of scope: Execution Kernel GateResult; policy compiler; bench-baseline auto-trigger
+- Progress: 100%
+- Reviewer: reviewer
+- Acceptance:
+  - [x] ci.yml dispara en push/PR
+  - [x] doctor --static omite spawn del hook runner y valida schemas/matriz
+  - [x] PreToolUse con stdin corrupto → deny
+  - [x] agy/pi/muse en policy.yml y target-compatibility
+
+### BC-032 | Scope guard incluye untracked y glob seguro
+
+- Priority: P0
+- Status: DONE
+- Type: bug
+- Depends on: none
+- Description: git diff --name-only omitía untracked; el glob allowlist no escapaba metacaracteres. Unificado con porcelain=v1 -z compartido con la state-machine.
+- Scope: src/core/verification/{scope-guard,git-working-tree,harness/state-machine}.ts, test/scope-guard.test.ts
+- Out of scope: análisis semántico de símbolos
+- Progress: 100%
+- Reviewer: reviewer
+- Acceptance:
+  - [x] Archivo realmente untracked fuera de scope → violación
+  - [x] `**/*.ts` y literales con `+`/`.` se comportan correctamente
+
+### BC-031 | Integridad RDD: registro vincula taskId/phase/outcome
+
+- Priority: P0
+- Status: DONE
+- Type: bug
+- Depends on: none
+- Description: isRegisteredReceipt solo comparaba manifestHash; un recibo podía reutilizarse con otro taskId/phase/outcome. El registro ahora vincula metadatos completos y receiptHash canónico; entradas legacy incompletas fallan cerradas.
+- Scope: src/core/verification/rdd-receipt.ts, test/rdd-receipt.test.ts
+- Out of scope: ancla de confianza fuera del árbol; GateResult en HarnessRunner
+- Progress: 100%
+- Reviewer: reviewer
+- Acceptance:
+  - [x] Mismo nonce+manifestHash con taskId/phase/outcome distintos → inválido
+  - [x] Entry legacy sin phase/receiptHash → inválido
+
 ### BC-028 | Scorecard sin PASS vacío cuando el trabajo ya está commiteado
 
 - Priority: P2

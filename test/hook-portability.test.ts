@@ -48,7 +48,8 @@ describe('hook host contracts and portability', () => {
 
   test('Antigravity accepts the documented toolCall payload', () => {
     expect(parseAgyPayload(JSON.stringify({ toolCall: { name: 'run_command', args: { CommandLine: 'git push', Cwd: 'C:\\project' } } }))).toEqual({
-      toolName: 'run_command', command: 'git push', filePath: undefined,
+      ok: true,
+      input: { toolName: 'run_command', command: 'git push', filePath: undefined },
     });
     const result = invoke({ toolCall: { name: 'view_file', args: { AbsolutePath: 'C:\\project\\.env' } } }, 'agy');
     expect(JSON.parse(result.stdout).decision).toBe('deny');
@@ -58,9 +59,14 @@ describe('hook host contracts and portability', () => {
     expect(JSON.parse(formatHookOutput(evaluateCommand('git push'), 'agy')).reason).toContain('autoridad');
   });
 
-  test('empty, malformed and legacy Antigravity payloads remain safe to parse', () => {
-    for (const input of ['', '{', 'null', '[]']) expect(parseAgyPayload(input)).toEqual({});
-    expect(parseAgyPayload('{"toolName":"run_command","arguments":{"CommandLine":"git status"}}').command).toBe('git status');
+  test('empty and malformed Antigravity payloads fail closed instead of allowing', () => {
+    for (const input of ['', '{', 'null', '[]']) {
+      const parsed = parseAgyPayload(input);
+      expect(parsed.ok).toBe(false);
+    }
+    const legacy = parseAgyPayload('{"toolName":"run_command","arguments":{"CommandLine":"git status"}}');
+    expect(legacy.ok).toBe(true);
+    if (legacy.ok) expect(legacy.input.command).toBe('git status');
   });
 
   for (const command of ['C:\\Git\\bin\\git.exe push', '"C:\\Program Files\\Git\\bin\\git.exe" push', '& "C:\\Program Files\\Git\\bin\\git.exe" reset --hard', '/usr/bin/git push', 'git -C "C:\\project" push', 'git status && git push']) {

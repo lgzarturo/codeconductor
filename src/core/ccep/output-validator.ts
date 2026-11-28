@@ -1,14 +1,18 @@
 import type { z } from 'zod';
 import {
   AgentOutputSchema,
+  ApiContractOutputSchema,
   CanonicalTaskCardSchema,
+  ComplexityAuditOutputSchema,
   CouncilVerdictSchema,
   FixIntakeOutputSchema,
   ImplementerOutputSchema,
+  PagespeedReportOutputSchema,
   PlannerOutputSchema,
   ReviewerOutputSchema,
   ScorecardRecordSchema,
   TechnicalPlanOutputSchema,
+  TestPlanOutputSchema,
   validateImplementerOutput,
   validatePlannerOutput,
   validateReviewerOutput,
@@ -32,6 +36,14 @@ export const OUTPUT_SCHEMA_NAMES = [
 
 export type OutputSchemaName = (typeof OUTPUT_SCHEMA_NAMES)[number];
 
+/** Schemas that must not resolve to the generic agent envelope. */
+export const SPECIALIZED_OUTPUT_SCHEMAS = [
+  'test-plan',
+  'complexity-audit',
+  'api-contract',
+  'pagespeed-report',
+] as const;
+
 const SCHEMA_REGISTRY: Record<string, z.ZodTypeAny> = {
   'planner-output': PlannerOutputSchema,
   'implementer-output': ImplementerOutputSchema,
@@ -41,15 +53,19 @@ const SCHEMA_REGISTRY: Record<string, z.ZodTypeAny> = {
   'council-verdict': CouncilVerdictSchema,
   'agent-output': AgentOutputSchema,
   taskcard: CanonicalTaskCardSchema,
-  'test-plan': AgentOutputSchema,
-  'complexity-audit': AgentOutputSchema,
-  'api-contract': AgentOutputSchema,
-  'pagespeed-report': AgentOutputSchema,
+  'test-plan': TestPlanOutputSchema,
+  'complexity-audit': ComplexityAuditOutputSchema,
+  'api-contract': ApiContractOutputSchema,
+  'pagespeed-report': PagespeedReportOutputSchema,
   'scorecard-record': ScorecardRecordSchema,
 };
 
 export function isRegisteredOutputSchema(name: string): boolean {
   return SCHEMA_REGISTRY[name] !== undefined;
+}
+
+export function getRegisteredOutputSchema(name: string): z.ZodTypeAny | undefined {
+  return SCHEMA_REGISTRY[name];
 }
 
 export interface ValidationResult {
@@ -59,11 +75,16 @@ export interface ValidationResult {
   readonly data?: unknown;
 }
 
+/**
+ * Resolve a schema name for validation.
+ * Role remapping applies only to the generic `agent-output` alias.
+ * Unknown schema identifiers are returned unchanged so validation fails closed.
+ */
 export function resolveOutputSchemaName(
   schemaName: string,
   role?: string,
 ): string {
-  if (schemaName !== 'agent-output' && SCHEMA_REGISTRY[schemaName]) {
+  if (schemaName !== 'agent-output') {
     return schemaName;
   }
   if (role === 'implementer') {
@@ -73,7 +94,7 @@ export function resolveOutputSchemaName(
     return 'review-report';
   }
   if (role === 'task-coach' || role === 'architect') {
-    return schemaName === 'technical-plan' ? 'technical-plan' : 'planner-output';
+    return 'planner-output';
   }
   return schemaName;
 }

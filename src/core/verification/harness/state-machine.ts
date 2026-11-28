@@ -1,6 +1,7 @@
 import { lstat, mkdir } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { isInside, resolveOutputWithinRoot, resolveWithinRoot } from '../../filesystem/path-containment';
+import { parsePorcelainStatus } from '../git-working-tree';
 import { FREEZE_LOCK_FILE, freezeTestSuite, verifyTestFreeze } from '../test-freeze';
 import { checkProductionFiles, checkTestFiles, countAssertions } from './gatekeeper';
 import { runGit } from './git';
@@ -30,20 +31,6 @@ async function pathExists(path: string): Promise<boolean> {
 /** A regular file; symlinks (dangling or not) are not followed. */
 async function isRegularFile(path: string): Promise<boolean> {
   return lstat(path).then((s) => s.isFile(), () => false);
-}
-
-/** `git status --porcelain=v1 -z`: `XY path\0`, and renames/copies add `orig\0`. Deleted paths are skipped. */
-function parseStatus(raw: string): string[] {
-  const out: string[] = [];
-  const entries = raw.split('\0');
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i] ?? '';
-    if (entry.length < 4) continue;
-    const [x, y] = [entry[0], entry[1]];
-    if (x === 'R' || x === 'C') i++;
-    if (x !== 'D' && y !== 'D') out.push(entry.slice(3));
-  }
-  return out;
 }
 
 /**
@@ -111,7 +98,7 @@ export class HarnessStateMachine {
     if (status === null && (await pathExists(join(root, '.git')))) {
       throw new Error('git status failed in the worktree; refusing to trust the runner-reported file list');
     }
-    const fromGit = parseStatus(status ?? '');
+    const fromGit = parsePorcelainStatus(status ?? '');
     const sealed = new Set(this.sealedPaths);
     const isSealed = (p: string): boolean => [...sealed].some((s) => p === s || p.startsWith(`${s}/`));
     // One spelling per file: `./src/a.ts` from the runner and `src/a.ts` from git are the same file.

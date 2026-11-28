@@ -42,6 +42,7 @@ const LSP_EXAMPLES: readonly string[] = [
 
 const AFTER_INSTALL_EXAMPLES: readonly (readonly [string, string])[] = [
   ['cc-codeconductor doctor', 'validates the installation'],
+  ['cc-codeconductor doctor --static', 'static harness checks only (no live probes)'],
   ['cc-codeconductor status', 'shows what is installed'],
   ['cc-codeconductor update --dry-run', 'previews reconciliation of managed files after upgrading'],
   ['cc-codeconductor update --force', 'applies reconciliation of managed files after upgrading'],

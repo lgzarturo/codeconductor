@@ -15,40 +15,51 @@ const MUSE_PRETOOL_FIXTURE = JSON.stringify({
 describe('core/hooks/muse-hook-format', () => {
   test('happy path: parses the documented muse PreToolUse payload', () => {
     expect(parseMusePayload(MUSE_PRETOOL_FIXTURE)).toEqual({
-      toolName: 'bash',
-      command: 'git push origin main',
-      filePath: undefined,
+      ok: true,
+      input: {
+        toolName: 'bash',
+        command: 'git push origin main',
+        filePath: undefined,
+      },
     });
   });
 
   test('happy path: reads file_path for file tools', () => {
-    const input = parseMusePayload(
+    const parsed = parseMusePayload(
       JSON.stringify({
         hook_event_name: 'PreToolUse',
         tool_name: 'read',
         tool_input: { file_path: '.env' },
       }),
     );
-    expect(input.filePath).toBe('.env');
-    expect(input.toolName).toBe('read');
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.input.filePath).toBe('.env');
+      expect(parsed.input.toolName).toBe('read');
+    }
   });
 
-  test('edge case: empty and malformed stdin parse to a safe empty input', () => {
+  test('edge case: empty and malformed stdin fail closed', () => {
     for (const raw of ['', '   ', '{', 'null', '[]']) {
-      expect(parseMusePayload(raw)).toEqual({});
+      expect(parseMusePayload(raw).ok).toBe(false);
     }
   });
 
   test('edge case: payload without tool fields yields no command or path', () => {
     expect(parseMusePayload(JSON.stringify({ hook_event_name: 'PreToolUse' }))).toEqual({
-      toolName: undefined,
-      command: undefined,
-      filePath: undefined,
+      ok: true,
+      input: {
+        toolName: undefined,
+        command: undefined,
+        filePath: undefined,
+      },
     });
   });
 
   test('contract: a destructive muse command evaluates to deny', () => {
-    expect(evaluatePreTool(parseMusePayload(MUSE_PRETOOL_FIXTURE)).action).toBe('deny');
+    const parsed = parseMusePayload(MUSE_PRETOOL_FIXTURE);
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) expect(evaluatePreTool(parsed.input).action).toBe('deny');
   });
 
   test('contract: ask verdicts use the permission-decision output', () => {

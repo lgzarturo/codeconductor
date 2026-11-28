@@ -22,6 +22,11 @@ export interface DoctorOptions {
   readonly projectRoot: string;
   /** Override home directory when inspecting global Claude settings (tests). */
   readonly homeDir?: string;
+  /**
+   * When true, skip live process probes (hook runner spawn) and run only
+   * deterministic static harness checks.
+   */
+  readonly staticMode?: boolean;
 }
 
 /**
@@ -32,6 +37,7 @@ export async function doctorCommand(
 ): Promise<{ code: number; data?: unknown }> {
   const { projectRoot, output } = options;
   const home = options.homeDir ?? homedir();
+  const staticMode = options.staticMode === true;
 
   const checks: { name: string; status: 'pass' | 'fail' | 'warn' | 'info'; message: string }[] = [];
 
@@ -56,6 +62,7 @@ export async function doctorCommand(
           success: false,
           command: 'doctor',
           checks,
+          staticMode,
         },
       };
     }
@@ -80,29 +87,38 @@ export async function doctorCommand(
           success: false,
           command: 'doctor',
           checks,
+          staticMode,
         },
       };
     }
 
-    // Check 3: Runner directories
-    const hookProbe = spawnSync(process.execPath, [join(ROOT_PRESETS_DIR, 'shared', 'invoke-hook.cjs'), '--check'], {
-      cwd: projectRoot,
-      input: '',
-      encoding: 'utf8',
-      timeout: 12000,
-      env: { ...process.env, PROJECT_ROOT: projectRoot },
-    });
-    let hookOperational = false;
-    try {
-      hookOperational = hookProbe.status === 0 && JSON.parse(hookProbe.stdout).operational === true;
-    } catch { /* An invalid probe is an unavailable guard. */ }
-    checks.push({
-      name: 'hook-runner',
-      status: hookOperational ? 'pass' : 'warn',
-      message: hookOperational
-        ? 'CodeConductor hook runner is operational.'
-        : 'Hook guard unavailable. Install cc-codeconductor locally; CC_DEV=1 is reserved for trusted development. CC_HOOK_FAIL_CLOSED=1 denies pre-tool when unavailable.',
-    });
+    // Check 3: Runner directories (skipped under --static)
+    if (staticMode) {
+      checks.push({
+        name: 'hook-runner',
+        status: 'info',
+        message: 'Skipped under --static (no live process probe)',
+      });
+    } else {
+      const hookProbe = spawnSync(process.execPath, [join(ROOT_PRESETS_DIR, 'shared', 'invoke-hook.cjs'), '--check'], {
+        cwd: projectRoot,
+        input: '',
+        encoding: 'utf8',
+        timeout: 12000,
+        env: { ...process.env, PROJECT_ROOT: projectRoot },
+      });
+      let hookOperational = false;
+      try {
+        hookOperational = hookProbe.status === 0 && JSON.parse(hookProbe.stdout).operational === true;
+      } catch { /* An invalid probe is an unavailable guard. */ }
+      checks.push({
+        name: 'hook-runner',
+        status: hookOperational ? 'pass' : 'warn',
+        message: hookOperational
+          ? 'CodeConductor hook runner is operational.'
+          : 'Hook guard unavailable. Install cc-codeconductor locally; CC_DEV=1 is reserved for trusted development. CC_HOOK_FAIL_CLOSED=1 denies pre-tool when unavailable.',
+      });
+    }
 
     // Global Claude hooks must use absolute script paths. Relative
     // `node .claude/hooks/...` commands resolve against the process cwd and
@@ -412,6 +428,85 @@ export async function doctorCommand(
       });
     }
 
+    // Static harness: matrix must cover every registered runner target.
+    const matrixTargets = new Set(securityCompatibility.map((c) => c.target));
+    const missingMatrix = INDIVIDUAL_TARGETS.filter((t) => !matrixTargets.has(t));
+    const failedMatrix = securityCompatibility.filter((c) => c.status === 'fail');
+    if (missingMatrix.length > 0 || failedMatrix.length > 0) {
+      checks.push({
+        name: 'security-matrix-coverage',
+        status: 'fail',
+        message: missingMatrix.length > 0
+          ? `Security matrix missing targets: ${missingMatrix.join(', ')}`
+          : `Security matrix has no policy entry for: ${failedMatrix.map((c) => c.target).join(', ')}`,
+      });
+    } else {
+      checks.push({
+        name: 'security-matrix-coverage',
+        status: 'pass',
+        message: `Security matrix covers all ${INDIVIDUAL_TARGETS.length} runner targets`,
+      });
+    }
+
+    // Static harness: specialized output schemas must reject a bare agent envelope.
+    const {
+      SPECIALIZED_OUTPUT_SCHEMAS,
+      validateAgentOutputBySchema,
+      isRegisteredOutputSchema,
+    } = await import('../core/ccep/output-validator');
+    const genericEnvelope = { status: 'success', confidence: 0.9 };
+    const weakSchemas: string[] = [];
+    for (const name of SPECIALIZED_OUTPUT_SCHEMAS) {
+      if (!isRegisteredOutputSchema(name)) {
+        weakSchemas.push(`${name} (unregistered)`);
+        continue;
+      }
+      if (validateAgentOutputBySchema(name, genericEnvelope).valid) {
+        weakSchemas.push(`${name} (accepts generic agent-output)`);
+      }
+    }
+    checks.push({
+      name: 'specialized-output-schemas',
+      status: weakSchemas.length === 0 ? 'pass' : 'fail',
+      message: weakSchemas.length === 0
+        ? `Specialized schemas enforce deliverable fields (${SPECIALIZED_OUTPUT_SCHEMAS.join(', ')})`
+        : `Specialized schemas too weak: ${weakSchemas.join('; ')}`,
+    });
+
+    // Static harness: workflow outputSchema references must exist in the registry.
+    const { readdir, readFile: readUtf } = await import('node:fs/promises');
+    const { parse: parseYaml } = await import('yaml');
+    const workflowDirs = [
+      join(projectRoot, 'src', 'core', 'ccep', 'workflows'),
+      join(projectRoot, '.codeconductor', 'workflows'),
+    ];
+    const unknownSchemas: string[] = [];
+    for (const dir of workflowDirs) {
+      let entries: string[] = [];
+      try {
+        entries = (await readdir(dir)).filter((f) => /\.ya?ml$/.test(f));
+      } catch {
+        continue;
+      }
+      for (const file of entries) {
+        const raw = await readUtf(join(dir, file), 'utf-8');
+        const doc = parseYaml(raw) as { phases?: Array<{ outputSchema?: string }> };
+        for (const phase of doc.phases ?? []) {
+          const schema = phase.outputSchema;
+          if (schema && !isRegisteredOutputSchema(schema)) {
+            unknownSchemas.push(`${file}: ${schema}`);
+          }
+        }
+      }
+    }
+    checks.push({
+      name: 'workflow-output-schemas',
+      status: unknownSchemas.length === 0 ? 'pass' : 'fail',
+      message: unknownSchemas.length === 0
+        ? 'All workflow outputSchema references are registered'
+        : `Unknown outputSchema references: ${unknownSchemas.join('; ')}`,
+    });
+
     // Product OS artifacts
     const { existsSync } = await import('node:fs');
     const { ProductGraphSchema } = await import('../validation/schemas');
@@ -477,6 +572,7 @@ export async function doctorCommand(
           success: false,
           command: 'doctor',
           checks,
+          staticMode,
         },
       };
     }
@@ -488,6 +584,7 @@ export async function doctorCommand(
         command: 'doctor',
         checks,
         securityCompatibility,
+        staticMode,
       },
     };
   } catch (error) {
@@ -497,6 +594,7 @@ export async function doctorCommand(
         success: false,
         command: 'doctor',
         errors: [String(error)],
+        staticMode,
       },
     };
   }

@@ -437,19 +437,34 @@ export function claudeExitCode(verdict: HookVerdict): number {
 }
 
 /**
+ * Result of parsing a host PreToolUse stdin payload.
+ * Malformed or empty stdin fails closed — callers must deny, not treat as allow.
+ */
+export type PreToolParseResult =
+  | { readonly ok: true; readonly input: PreToolInput }
+  | { readonly ok: false; readonly reason: string };
+
+const PARSE_EMPTY = 'Bloqueado: PreToolUse payload vacío o ilegible';
+const PARSE_INVALID = 'Bloqueado: PreToolUse payload JSON inválido';
+
+/**
  * Parse a Muse PreToolUse payload. Muse speaks the Claude-compatible hook
  * protocol (`hook_event_name` / `tool_name` / `tool_input` over stdin), so
  * this shares the field extraction — kept as its own function so future
  * Muse-only fields have a home without disturbing the Claude path.
  */
-export function parseMusePayload(stdinText: string): PreToolInput {
+export function parseMusePayload(stdinText: string): PreToolParseResult {
   return parseClaudePayload(stdinText);
 }
 
-export function parseAgyPayload(raw: string): PreToolInput {
-  if (!raw.trim()) return {};
+export function parseAgyPayload(raw: string): PreToolParseResult {
+  if (!raw.trim()) return { ok: false, reason: PARSE_EMPTY };
   try {
-    const parsed = JSON.parse(raw) as {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return { ok: false, reason: PARSE_INVALID };
+    }
+    const record = parsed as {
       toolCall?: { name?: string; args?: { CommandLine?: string; TargetFile?: string; AbsolutePath?: string } };
       toolName?: string;
       arguments?: {
@@ -458,28 +473,45 @@ export function parseAgyPayload(raw: string): PreToolInput {
         AbsolutePath?: string;
       };
     };
-    const args = parsed.toolCall?.args ?? parsed.arguments ?? {};
+    const args = record.toolCall?.args ?? record.arguments ?? {};
     return {
-      toolName: typeof (parsed.toolCall?.name ?? parsed.toolName) === 'string' ? parsed.toolCall?.name ?? parsed.toolName : undefined,
-      command: typeof args.CommandLine === 'string' ? args.CommandLine : undefined,
-      filePath: typeof args.TargetFile === 'string' ? args.TargetFile : typeof args.AbsolutePath === 'string' ? args.AbsolutePath : undefined,
+      ok: true,
+      input: {
+        toolName: typeof (record.toolCall?.name ?? record.toolName) === 'string'
+          ? record.toolCall?.name ?? record.toolName
+          : undefined,
+        command: typeof args.CommandLine === 'string' ? args.CommandLine : undefined,
+        filePath: typeof args.TargetFile === 'string'
+          ? args.TargetFile
+          : typeof args.AbsolutePath === 'string'
+            ? args.AbsolutePath
+            : undefined,
+      },
     };
   } catch {
-    return {};
+    return { ok: false, reason: PARSE_INVALID };
   }
 }
 
-export function parseClaudePayload(raw: string): PreToolInput {
+export function parseClaudePayload(raw: string): PreToolParseResult {
+  if (!raw.trim()) return { ok: false, reason: PARSE_EMPTY };
   try {
-    const parsed = JSON.parse(raw);
-    const input = parsed.tool_input ?? {};
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return { ok: false, reason: PARSE_INVALID };
+    }
+    const record = parsed as { tool_name?: unknown; tool_input?: Record<string, unknown> };
+    const input = record.tool_input ?? {};
     return {
-      toolName: typeof parsed.tool_name === 'string' ? parsed.tool_name : undefined,
-      command: typeof input.command === 'string' ? input.command : undefined,
-      filePath: typeof input.file_path === 'string' ? input.file_path : undefined,
+      ok: true,
+      input: {
+        toolName: typeof record.tool_name === 'string' ? record.tool_name : undefined,
+        command: typeof input.command === 'string' ? input.command : undefined,
+        filePath: typeof input.file_path === 'string' ? input.file_path : undefined,
+      },
     };
   } catch {
-    return {};
+    return { ok: false, reason: PARSE_INVALID };
   }
 }
 

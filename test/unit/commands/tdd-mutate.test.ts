@@ -3,7 +3,11 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs, routeCommand } from '../../../src/cli/router';
-import { generateMutants, runMutationGate } from '../../../src/core/verification/mutation-runner';
+import {
+  filterMutantsByLines,
+  generateMutants,
+  runMutationGate,
+} from '../../../src/core/verification/mutation-runner';
 
 const MATH = `export function isPositive(n: number): boolean {
   return n > 0;
@@ -58,6 +62,31 @@ describe('tdd mutation gate', () => {
       '2:!==->===',
     ]);
     expect(mutants[0]?.id).toBe('MUT_000_L2');
+  });
+
+  test('generateMutants and filterMutantsByLines support selective line scopes', () => {
+    const source = 'export function f(n: number) {\n  return n > 0 && n < 10;\n}\n';
+    const all = generateMutants(source, 's.ts');
+    expect(all.length).toBeGreaterThan(1);
+    const onlyLine2 = generateMutants(source, 's.ts', { lines: new Set([2]) });
+    expect(onlyLine2.every((m) => m.line === 2)).toBe(true);
+    expect(filterMutantsByLines(all, [2]).map((m) => m.id)).toEqual(onlyLine2.map((m) => m.id));
+    expect(filterMutantsByLines(all, [])).toEqual([]);
+  });
+
+  test('changedLines limits the mutation gate to diff-scoped mutants', async () => {
+    await makeProj('check.test.ts', STRONG_TEST);
+    // MATH line 6 is `if (v > 100) return 100;` — skip line 2 (`return n > 0`).
+    const result = await runMutationGate(dir, {
+      target: 'src/math.ts',
+      testCommand: 'bun test check.test.ts',
+      timeoutMs: 30000,
+      changedLines: [6],
+    });
+    expect(result.success).toBe(true);
+    if (!result.success || result.data.status !== 'PASS') return;
+    expect(result.data.totalMutants).toBe(1);
+    expect(result.data.killed).toBe(1);
   });
 
   test('strong suite kills every mutant and restores the source', async () => {

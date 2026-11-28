@@ -163,29 +163,39 @@ function isTracked(symbol: SymbolEntry): boolean {
   return !generic || symbol.name.length >= MIN_FUNCTION_NAME_LENGTH;
 }
 
-export async function findCollisions(
-  mapPath: string,
-  stubFiles: readonly string[],
-  root: string,
-): Promise<Collision[]> {
-  let raw: unknown;
-  try {
-    raw = JSON.parse(await readFile(mapPath, 'utf-8'));
-  } catch (e) {
-    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return [];
-    throw e;
-  }
-  const parsed = SymbolMapSchema.safeParse(raw);
-  if (!parsed.success) {
-    throw new Error(`SYMBOL_MAP.json is invalid: ${parsed.error.issues[0]?.message ?? 'schema mismatch'}`);
-  }
-  const map = parsed.data;
+function loadSymbolRegistry(map: SymbolMap): Map<string, string[]> {
   const registry = new Map<string, string[]>();
   for (const [file, mod] of Object.entries(map.modules)) {
     for (const symbol of mod.symbols) {
       if (isTracked(symbol)) registry.set(symbol.name, [...(registry.get(symbol.name) ?? []), file]);
     }
   }
+  return registry;
+}
+
+async function readSymbolMap(mapPath: string): Promise<SymbolMap | null> {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(await readFile(mapPath, 'utf-8'));
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return null;
+    throw e;
+  }
+  const parsed = SymbolMapSchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new Error(`SYMBOL_MAP.json is invalid: ${parsed.error.issues[0]?.message ?? 'schema mismatch'}`);
+  }
+  return parsed.data;
+}
+
+export async function findCollisions(
+  mapPath: string,
+  stubFiles: readonly string[],
+  root: string,
+): Promise<Collision[]> {
+  const map = await readSymbolMap(mapPath);
+  if (!map) return [];
+  const registry = loadSymbolRegistry(map);
   const collisions: Collision[] = [];
   for (const stub of stubFiles) {
     const stubFile = relative(root, stub).replace(/\\/g, '/');
@@ -195,6 +205,79 @@ export async function findCollisions(
       if (isTracked(symbol) && existingFile !== undefined) {
         collisions.push({ name: symbol.name, stubFile, existingFile });
       }
+    }
+  }
+  return collisions;
+}
+
+/**
+ * Selective TypeChecker pass: resolve stub module exports (including aliases /
+ * re-exports) and compare against the SYMBOL_MAP registry. Falls back to the
+ * syntactic finder when the program cannot bind the stub.
+ */
+export async function findCollisionsSemantic(
+  mapPath: string,
+  stubFiles: readonly string[],
+  root: string,
+): Promise<Collision[]> {
+  const syntactic = await findCollisions(mapPath, stubFiles, root);
+  const map = await readSymbolMap(mapPath);
+  if (!map || stubFiles.length === 0) return syntactic;
+
+  const registry = loadSymbolRegistry(map);
+  const options: ts.CompilerOptions = {
+    target: ts.ScriptTarget.ESNext,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
+    noEmit: true,
+    skipLibCheck: true,
+    allowJs: true,
+  };
+  // Include map modules so re-exports from stubs can resolve for TypeChecker.
+  const mapRoots = Object.keys(map.modules).map((rel) => join(root, rel));
+  const program = ts.createProgram([...new Set([...stubFiles, ...mapRoots])], options);
+  const checker = program.getTypeChecker();
+  const seen = new Set(syntactic.map((c) => `${c.name}|${c.stubFile}|${c.existingFile}`));
+  const collisions = [...syntactic];
+
+  for (const stub of stubFiles) {
+    const sf = program.getSourceFile(stub);
+    if (!sf) continue;
+    const stubFile = relative(root, stub).replace(/\\/g, '/');
+    const moduleSymbol =
+      checker.getSymbolAtLocation(sf) ??
+      ((sf as ts.SourceFile & { symbol?: ts.Symbol }).symbol ?? undefined);
+    if (!moduleSymbol) continue;
+    for (const exported of checker.getExportsOfModule(moduleSymbol)) {
+      const name = exported.getName();
+      if (name === 'default' || name.length < MIN_FUNCTION_NAME_LENGTH) continue;
+      let tracked = exported;
+      if (exported.flags & ts.SymbolFlags.Alias) {
+        try {
+          tracked = checker.getAliasedSymbol(exported);
+        } catch {
+          tracked = exported;
+        }
+      }
+      const kindHint =
+        tracked.flags & ts.SymbolFlags.Class
+          ? 'class'
+          : tracked.flags & ts.SymbolFlags.Interface
+            ? 'interface'
+            : tracked.flags & ts.SymbolFlags.TypeAlias
+              ? 'type'
+              : tracked.flags & ts.SymbolFlags.Function
+                ? 'function'
+                : tracked.flags & ts.SymbolFlags.Enum
+                  ? 'enum'
+                  : 'const';
+      if (!isTracked({ name, kind: kindHint, signature: '' })) continue;
+      const existingFile = registry.get(name)?.find((f) => f !== stubFile);
+      if (existingFile === undefined) continue;
+      const key = `${name}|${stubFile}|${existingFile}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      collisions.push({ name, stubFile, existingFile });
     }
   }
   return collisions;

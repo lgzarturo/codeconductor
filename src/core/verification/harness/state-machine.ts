@@ -3,9 +3,15 @@ import { join, relative, resolve } from 'node:path';
 import { isInside, resolveOutputWithinRoot, resolveWithinRoot } from '../../filesystem/path-containment';
 import { parsePorcelainStatus } from '../git-working-tree';
 import { FREEZE_LOCK_FILE, freezeTestSuite, verifyTestFreeze } from '../test-freeze';
-import { checkProductionFiles, checkTestFiles, countAssertions } from './gatekeeper';
+import {
+  checkProductionFiles,
+  checkTestFiles,
+  collectProductionMetricsFromText,
+  countAssertions,
+  type FileMetrics,
+} from './gatekeeper';
 import { runGit } from './git';
-import { findCollisions } from './symbol-map';
+import { findCollisionsSemantic } from './symbol-map';
 import { persistHarnessTransition } from './transition-store';
 import {
   GatekeeperError,
@@ -139,8 +145,28 @@ export class HarnessStateMachine {
     return present;
   }
 
+  private async loadProductionBaseline(
+    absFiles: readonly string[],
+  ): Promise<Map<string, FileMetrics>> {
+    const baseline = new Map<string, FileMetrics>();
+    const root = this.ctx.worktreeRoot;
+    for (const file of absFiles) {
+      const rel = relative(root, file).replace(/\\/g, '/');
+      if (rel.startsWith('..')) continue;
+      const text = await runGit(root, ['show', `HEAD:${rel}`]);
+      if (text === null) continue;
+      baseline.set(file, collectProductionMetricsFromText(file, text));
+    }
+    return baseline;
+  }
+
   private async assertProduction(files: readonly string[]): Promise<void> {
-    const violations = await checkProductionFiles(this.abs(files));
+    const absFiles = this.abs(files);
+    const baseline = await this.loadProductionBaseline(absFiles);
+    const violations = await checkProductionFiles(absFiles, {}, {
+      mode: 'regression',
+      baseline,
+    });
     if (violations.length > 0) throw new GatekeeperError(violations);
   }
 
@@ -159,7 +185,7 @@ export class HarnessStateMachine {
   private async handleStubs(): Promise<HarnessState> {
     const stubs = await this.runner.generateStubs(this.ctx);
     await this.assertProduction(stubs);
-    const collisions = await findCollisions(
+    const collisions = await findCollisionsSemantic(
       join(this.ctx.worktreeRoot, 'SYMBOL_MAP.json'),
       this.abs(stubs),
       this.ctx.worktreeRoot,

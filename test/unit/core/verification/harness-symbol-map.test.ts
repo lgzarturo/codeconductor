@@ -2,7 +2,11 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { buildSymbolMap, findCollisions } from '../../../../src/core/verification/harness/symbol-map';
+import {
+  buildSymbolMap,
+  findCollisions,
+  findCollisionsSemantic,
+} from '../../../../src/core/verification/harness/symbol-map';
 
 let dir: string;
 let mapPath: string;
@@ -168,5 +172,29 @@ describe('findCollisions', () => {
     expect(parsed).toBe(1);
     expect(reused).toBe(0);
     expect(map.modules['src/a.ts']?.symbols[0]?.name).toBe('A');
+  });
+});
+
+describe('findCollisionsSemantic', () => {
+  test('matches syntactic collisions for a direct class export', async () => {
+    await write('src/pricing.ts', 'export class PriceCalculator {}\n');
+    await buildSymbolMap(dir, mapPath);
+    await write('src/new-stub.ts', 'export class PriceCalculator {}\n');
+    const c = await findCollisionsSemantic(mapPath, [join(dir, 'src/new-stub.ts')], dir);
+    expect(c).toEqual([
+      { name: 'PriceCalculator', stubFile: 'src/new-stub.ts', existingFile: 'src/pricing.ts' },
+    ]);
+  });
+
+  test('detects a named re-export the syntactic extractor misses', async () => {
+    await write('src/pricing.ts', 'export class PriceCalculator {}\n');
+    await buildSymbolMap(dir, mapPath);
+    // Named re-export is invisible to extractSymbols (statement is ExportDeclaration).
+    await write('src/new-stub.ts', "export { PriceCalculator } from './pricing';\n");
+    expect(await findCollisions(mapPath, [join(dir, 'src/new-stub.ts')], dir)).toEqual([]);
+    const c = await findCollisionsSemantic(mapPath, [join(dir, 'src/new-stub.ts')], dir);
+    expect(c).toEqual([
+      { name: 'PriceCalculator', stubFile: 'src/new-stub.ts', existingFile: 'src/pricing.ts' },
+    ]);
   });
 });

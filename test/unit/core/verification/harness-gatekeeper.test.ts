@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import {
   checkProductionFiles,
   checkTestFiles,
+  collectProductionMetrics,
+  collectProductionMetricsFromText,
   countAssertions,
 } from '../../../../src/core/verification/harness/gatekeeper';
 
@@ -82,6 +84,57 @@ describe('checkProductionFiles', () => {
     const f = await write('lim.ts', 'export function f(a: number, b: number) { return a + b; }\n');
     const v = await checkProductionFiles([f], { maxParams: 1 });
     expect(v.map((x) => x.rule)).toEqual(['max-params']);
+  });
+});
+
+describe('checkProductionFiles regression mode', () => {
+  const branches = (n: number) =>
+    `export function f(x: number) {\n${Array.from({ length: n }, (_, i) => `  if (x === ${i}) return ${i};`).join('\n')}\n  return -1;\n}\n`;
+
+  test('improvement below absolute ceiling still passes (15→12 with max 10)', async () => {
+    const baselineText = branches(14); // complexity 15
+    const currentText = branches(11); // complexity 12
+    const f = await write('improve.ts', currentText);
+    const baseline = new Map([[f, collectProductionMetricsFromText(f, baselineText)]]);
+    expect(await checkProductionFiles([f], {}, { mode: 'regression', baseline })).toEqual([]);
+  });
+
+  test('worsening complexity fails even when absolute mode would also fail', async () => {
+    const baselineText = branches(11); // complexity 12
+    const currentText = branches(12); // complexity 13
+    const f = await write('worse.ts', currentText);
+    const baseline = new Map([[f, collectProductionMetricsFromText(f, baselineText)]]);
+    const v = await checkProductionFiles([f], {}, { mode: 'regression', baseline });
+    const complexity = v.filter((x) => x.rule === 'max-complexity');
+    expect(complexity).toHaveLength(1);
+    expect(complexity[0]?.message).toMatch(/regression/);
+  });
+
+  test('new over-limit function without baseline still fails absolute ceiling', async () => {
+    const f = await write('newfn.ts', branches(10)); // complexity 11
+    const empty = new Map<string, ReturnType<typeof collectProductionMetricsFromText>>();
+    const v = await checkProductionFiles([f], {}, { mode: 'regression', baseline: empty });
+    expect(v.map((x) => x.rule)).toEqual(['max-complexity']);
+    expect(v[0]?.message).not.toMatch(/regression/);
+  });
+
+  test('line-count regression only fires when the file grows', async () => {
+    const baselineText = 'export const x = 1;\n'.repeat(260);
+    const shrunk = 'export const x = 1;\n'.repeat(255);
+    const grown = 'export const x = 1;\n'.repeat(270);
+    const f = await write('lines.ts', shrunk);
+    const baseline = new Map([[f, collectProductionMetricsFromText(f, baselineText)]]);
+    expect(await checkProductionFiles([f], {}, { mode: 'regression', baseline })).toEqual([]);
+    await writeFile(f, grown, 'utf-8');
+    const v = await checkProductionFiles([f], {}, { mode: 'regression', baseline });
+    expect(v.map((x) => x.rule)).toEqual(['max-lines']);
+  });
+
+  test('collectProductionMetrics mirrors check inputs', async () => {
+    const f = await write('m.ts', 'export function f(a: number) { return a; }\n');
+    const map = await collectProductionMetrics([f]);
+    expect(map.get(f)?.functions[0]?.name).toBe('f');
+    expect(map.get(f)?.functions[0]?.params).toBe(1);
   });
 });
 

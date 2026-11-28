@@ -9,10 +9,40 @@ export interface ProductionLimits {
   readonly maxComplexity: number;
 }
 
+/** Structural metrics for one function-like declaration (declaration order). */
+export interface FunctionMetrics {
+  readonly name: string;
+  readonly line: number;
+  readonly params: number;
+  readonly complexity: number;
+}
+
+export interface FileMetrics {
+  readonly lines: number;
+  readonly functions: readonly FunctionMetrics[];
+}
+
+/**
+ * `absolute` — enforce DEFAULT_LIMITS / overrides as hard ceilings.
+ * `regression` — for symbols present in `baseline`, only fail when metrics worsen;
+ * new symbols and files without baseline still use absolute ceilings.
+ */
+export type ProductionCheckMode = 'absolute' | 'regression';
+
+export interface ProductionCheckOptions {
+  readonly mode?: ProductionCheckMode;
+  /** Keyed by the same absolute paths passed in `files`. */
+  readonly baseline?: ReadonlyMap<string, FileMetrics>;
+}
+
 const DEFAULT_LIMITS: ProductionLimits = { maxParams: 4, maxLines: 250, maxComplexity: 10 };
 
 async function parse(file: string): Promise<ts.SourceFile> {
   const text = await readFile(file, 'utf-8');
+  return ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
+}
+
+function parseText(file: string, text: string): ts.SourceFile {
   return ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
 }
 
@@ -30,6 +60,23 @@ function isFunctionLike(node: ts.Node): node is ts.FunctionLikeDeclaration {
     ts.isGetAccessorDeclaration(node) ||
     ts.isSetAccessorDeclaration(node)
   );
+}
+
+function functionName(fn: ts.FunctionLikeDeclaration): string {
+  if (fn.name && (ts.isIdentifier(fn.name) || ts.isPrivateIdentifier(fn.name))) {
+    return fn.name.text;
+  }
+  if (ts.isConstructorDeclaration(fn)) return 'constructor';
+  const parent = fn.parent;
+  if (ts.isVariableDeclaration(parent) && ts.isIdentifier(parent.name)) return parent.name.text;
+  if (
+    (ts.isPropertyDeclaration(parent) || ts.isPropertyAssignment(parent)) &&
+    parent.name &&
+    ts.isIdentifier(parent.name)
+  ) {
+    return parent.name.text;
+  }
+  return '<anonymous>';
 }
 
 function isDecision(node: ts.Node): boolean {
@@ -79,42 +126,140 @@ function lineCount(text: string): number {
   return text.endsWith('\n') ? lines.length - 1 : lines.length;
 }
 
+function metricsFromSourceFile(sf: ts.SourceFile): FileMetrics {
+  const functions: FunctionMetrics[] = [];
+  const visit = (node: ts.Node): void => {
+    if (isFunctionLike(node)) {
+      functions.push({
+        name: functionName(node),
+        line: lineOf(sf, node),
+        params: countParams(node),
+        complexity: complexityOf(node),
+      });
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return { lines: lineCount(sf.text), functions };
+}
+
+export function collectProductionMetricsFromText(file: string, text: string): FileMetrics {
+  return metricsFromSourceFile(parseText(file, text));
+}
+
+export async function collectProductionMetrics(
+  files: readonly string[],
+): Promise<Map<string, FileMetrics>> {
+  const out = new Map<string, FileMetrics>();
+  for (const file of files) {
+    out.set(file, metricsFromSourceFile(await parse(file)));
+  }
+  return out;
+}
+
+function baselineFnQueue(
+  baseline: FileMetrics | undefined,
+): Map<string, FunctionMetrics[]> {
+  const queue = new Map<string, FunctionMetrics[]>();
+  if (!baseline) return queue;
+  for (const fn of baseline.functions) {
+    const list = queue.get(fn.name) ?? [];
+    list.push(fn);
+    queue.set(fn.name, list);
+  }
+  return queue;
+}
+
+function takeBaselineFn(
+  queue: Map<string, FunctionMetrics[]>,
+  name: string,
+): FunctionMetrics | undefined {
+  const list = queue.get(name);
+  if (!list || list.length === 0) return undefined;
+  return list.shift();
+}
+
+function checkFileMetrics(
+  file: string,
+  current: FileMetrics,
+  max: ProductionLimits,
+  mode: ProductionCheckMode,
+  baseline: FileMetrics | undefined,
+): Violation[] {
+  const violations: Violation[] = [];
+  const regression = mode === 'regression' && baseline !== undefined;
+
+  if (regression) {
+    if (current.lines > baseline.lines) {
+      violations.push({
+        file,
+        line: 1,
+        rule: 'max-lines',
+        message: `${current.lines} lines (was ${baseline.lines}; regression)`,
+      });
+    }
+  } else if (current.lines > max.maxLines) {
+    violations.push({
+      file,
+      line: 1,
+      rule: 'max-lines',
+      message: `${current.lines} lines (max ${max.maxLines})`,
+    });
+  }
+
+  const queue = baselineFnQueue(baseline);
+  for (const fn of current.functions) {
+    const prior = regression ? takeBaselineFn(queue, fn.name) : undefined;
+    if (prior) {
+      if (fn.params > prior.params) {
+        violations.push({
+          file,
+          line: fn.line,
+          rule: 'max-params',
+          message: `${fn.params} parameters (was ${prior.params}; regression)`,
+        });
+      }
+      if (fn.complexity > prior.complexity) {
+        violations.push({
+          file,
+          line: fn.line,
+          rule: 'max-complexity',
+          message: `cyclomatic complexity ${fn.complexity} (was ${prior.complexity}; regression)`,
+        });
+      }
+      continue;
+    }
+    if (fn.params > max.maxParams) {
+      violations.push({
+        file,
+        line: fn.line,
+        rule: 'max-params',
+        message: `${fn.params} parameters (max ${max.maxParams})`,
+      });
+    }
+    if (fn.complexity > max.maxComplexity) {
+      violations.push({
+        file,
+        line: fn.line,
+        rule: 'max-complexity',
+        message: `cyclomatic complexity ${fn.complexity} (max ${max.maxComplexity})`,
+      });
+    }
+  }
+  return violations;
+}
+
 export async function checkProductionFiles(
   files: readonly string[],
   limits: Partial<ProductionLimits> = {},
+  options: ProductionCheckOptions = {},
 ): Promise<Violation[]> {
   const max = { ...DEFAULT_LIMITS, ...limits };
+  const mode = options.mode ?? 'absolute';
   const violations: Violation[] = [];
   for (const file of files) {
-    const sf = await parse(file);
-    const lines = lineCount(sf.text);
-    if (lines > max.maxLines) {
-      violations.push({ file, line: 1, rule: 'max-lines', message: `${lines} lines (max ${max.maxLines})` });
-    }
-    const visit = (node: ts.Node): void => {
-      if (isFunctionLike(node)) {
-        const params = countParams(node);
-        if (params > max.maxParams) {
-          violations.push({
-            file,
-            line: lineOf(sf, node),
-            rule: 'max-params',
-            message: `${params} parameters (max ${max.maxParams})`,
-          });
-        }
-        const complexity = complexityOf(node);
-        if (complexity > max.maxComplexity) {
-          violations.push({
-            file,
-            line: lineOf(sf, node),
-            rule: 'max-complexity',
-            message: `cyclomatic complexity ${complexity} (max ${max.maxComplexity})`,
-          });
-        }
-      }
-      ts.forEachChild(node, visit);
-    };
-    visit(sf);
+    const current = metricsFromSourceFile(await parse(file));
+    violations.push(...checkFileMetrics(file, current, max, mode, options.baseline?.get(file)));
   }
   return violations;
 }

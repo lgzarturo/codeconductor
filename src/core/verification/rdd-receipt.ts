@@ -167,6 +167,24 @@ export function isRddReceipt(value: unknown): value is RddReceipt {
     typeof receipt.capturedAt === 'string';
 }
 
+async function writeRegistryEntry(projectRoot: string, receipt: RddReceipt): Promise<void> {
+  if (!isWellFormedNonce(receipt.nonce)) {
+    throw new Error('RDD registry updates require a well-formed nonce');
+  }
+  const directory = receiptRegistryDir(projectRoot);
+  await mkdir(directory, { recursive: true });
+  const entry: ReceiptRegistryEntry = {
+    manifestHash: receipt.manifestHash,
+    taskId: receipt.taskId,
+    phase: receipt.phase,
+    outcome: receipt.outcome,
+    command: receipt.command,
+    capturedAt: receipt.capturedAt,
+    receiptHash: receiptContentHash(receipt),
+  };
+  await writeFile(join(directory, `${receipt.nonce}.json`), JSON.stringify(entry, null, 2), 'utf-8');
+}
+
 export async function captureReceipt(
   projectRoot: string,
   input: {
@@ -199,19 +217,24 @@ export async function captureReceipt(
     capturedAt,
     nonce,
   };
-  const directory = receiptRegistryDir(projectRoot);
-  await mkdir(directory, { recursive: true });
-  const entry: ReceiptRegistryEntry = {
-    manifestHash: hashed,
-    taskId: input.taskId,
-    phase: input.phase,
-    outcome: input.outcome,
-    command: input.command,
-    capturedAt,
-    receiptHash: receiptContentHash(receipt),
-  };
-  await writeFile(join(directory, `${nonce}.json`), JSON.stringify(entry, null, 2), 'utf-8');
+  await writeRegistryEntry(projectRoot, receipt);
   return receipt;
+}
+
+/**
+ * Re-bind a minted receipt after its suite outcome is known.
+ * TDD capture fingerprints the candidate before the suite runs, then sets
+ * outcome from the exit code; the registry must track that final outcome or
+ * verification fails closed on the metadata binding.
+ */
+export async function finalizeReceiptOutcome(
+  projectRoot: string,
+  receipt: RddReceipt,
+  outcome: 'passed' | 'failed',
+): Promise<RddReceipt> {
+  const finalized: RddReceipt = { ...receipt, outcome };
+  await writeRegistryEntry(projectRoot, finalized);
+  return finalized;
 }
 
 /**

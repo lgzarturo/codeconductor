@@ -33,6 +33,16 @@ export interface ScopeGuardOptions {
   allowedSymbols?: Record<string, string[]>;
 }
 
+/** Harness-owned runtime paths are not part of the implementer's deliverable scope. */
+const HARNESS_RUNTIME_PREFIXES = ['.codeconductor/', '.harness/'] as const;
+
+function isHarnessRuntimePath(file: string): boolean {
+  const normalized = file.split('\\').join('/');
+  return HARNESS_RUNTIME_PREFIXES.some(
+    (prefix) => normalized === prefix.slice(0, -1) || normalized.startsWith(prefix),
+  );
+}
+
 function isAllowlisted(file: string, allowlist: string[]): boolean {
   return allowlist.some((pattern) => matchAllowlistPattern(file, pattern));
 }
@@ -51,7 +61,7 @@ export async function checkScopeCompliance(options: ScopeGuardOptions): Promise<
     };
   }
 
-  const changedFiles = [...changed.files];
+  const changedFiles = changed.files.filter((file) => !isHarnessRuntimePath(file));
   const impact = await detectChanges(cwd, baseBranch);
   const touchedByFile = new Map<string, string[]>();
   for (const symbol of impact.affectedSymbols) {

@@ -133,5 +133,14 @@ describe('RDD receipts', () => {
 
       expect(await rdd.isRegisteredReceipt(projectRoot, receipt)).toBe(false);
     });
+
+    test('finalizeReceiptOutcome rebinds the registry so outcome can change after capture', async () => {
+      const receipt = await capture();
+      expect(receipt.outcome).toBe('failed');
+      const finalized = await rdd.finalizeReceiptOutcome(projectRoot, receipt, 'passed');
+      expect(finalized.outcome).toBe('passed');
+      expect(await rdd.isRegisteredReceipt(projectRoot, finalized)).toBe(true);
+      expect(await rdd.isRegisteredReceipt(projectRoot, receipt)).toBe(false);
+    });
   });
 });

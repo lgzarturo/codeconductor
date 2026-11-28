@@ -106,5 +106,41 @@ describe('RDD receipts', () => {
 
       expect(await rdd.isRegisteredReceipt(projectRoot, withoutNonce)).toBe(false);
     });
+
+    test('is false when taskId differs from the registered binding', async () => {
+      const receipt = await capture();
+      expect(await rdd.isRegisteredReceipt(projectRoot, { ...receipt, taskId: 'other-task' })).toBe(false);
+    });
+
+    test('is false when phase differs from the registered binding', async () => {
+      const receipt = await capture();
+      expect(await rdd.isRegisteredReceipt(projectRoot, { ...receipt, phase: 'green' })).toBe(false);
+    });
+
+    test('is false when outcome differs from the registered binding', async () => {
+      const receipt = await capture();
+      expect(await rdd.isRegisteredReceipt(projectRoot, { ...receipt, outcome: 'passed' })).toBe(false);
+    });
+
+    test('is false for a legacy registry entry that only stores manifestHash', async () => {
+      const receipt = await capture();
+      const registryPath = join(projectRoot, '.codeconductor', 'rdd-receipts', `${receipt.nonce}.json`);
+      await writeFile(registryPath, JSON.stringify({
+        manifestHash: receipt.manifestHash,
+        taskId: receipt.taskId,
+        capturedAt: receipt.capturedAt,
+      }, null, 2));
+
+      expect(await rdd.isRegisteredReceipt(projectRoot, receipt)).toBe(false);
+    });
+
+    test('finalizeReceiptOutcome rebinds the registry so outcome can change after capture', async () => {
+      const receipt = await capture();
+      expect(receipt.outcome).toBe('failed');
+      const finalized = await rdd.finalizeReceiptOutcome(projectRoot, receipt, 'passed');
+      expect(finalized.outcome).toBe('passed');
+      expect(await rdd.isRegisteredReceipt(projectRoot, finalized)).toBe(true);
+      expect(await rdd.isRegisteredReceipt(projectRoot, receipt)).toBe(false);
+    });
   });
 });

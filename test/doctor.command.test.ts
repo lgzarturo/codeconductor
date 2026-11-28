@@ -56,6 +56,30 @@ describe('doctor.command skills-registry check', () => {
   });
 });
 
+describe('doctor.command --static', () => {
+  test('skips the live hook probe and reports static harness checks', async () => {
+    await writeMinimalConfig();
+
+    const result = await doctorCommand({
+      projectRoot,
+      output: 'json',
+      homeDir: fakeHome,
+      staticMode: true,
+    });
+
+    const data = result.data as {
+      staticMode?: boolean;
+      checks: Array<{ name: string; status: string; message: string }>;
+    };
+    expect(data.staticMode).toBe(true);
+    expect(data.checks.find((c) => c.name === 'hook-runner')?.status).toBe('info');
+    expect(data.checks.find((c) => c.name === 'hook-runner')?.message).toContain('Skipped under --static');
+    expect(data.checks.find((c) => c.name === 'security-matrix-coverage')?.status).toBe('pass');
+    expect(data.checks.find((c) => c.name === 'specialized-output-schemas')?.status).toBe('pass');
+    expect(data.checks.find((c) => c.name === 'workflow-output-schemas')?.status).toBe('pass');
+  });
+});
+
 describe('doctor.command global-hook-paths check', () => {
   test('reports info when no global Claude settings exist', async () => {
     await writeMinimalConfig();

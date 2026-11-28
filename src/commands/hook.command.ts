@@ -59,31 +59,60 @@ export async function readStdinText(): Promise<string> {
   return Buffer.concat(chunks).toString('utf8');
 }
 
-function resolvePreToolInput(options: HookOptions, stdinText: string, format: HookFormat): PreToolInput {
-  const fromStdin =
+type ResolvedPreTool =
+  | { readonly ok: true; readonly input: PreToolInput }
+  | { readonly ok: false; readonly reason: string };
+
+function hasCliPreToolOverrides(options: HookOptions): boolean {
+  return Boolean(
+    options.command
+      || options.filePath
+      || options.scopeFiles?.length
+      || options.dispatchMode
+      || options.leaf
+      || process.env.CLAUDE_TOOL_INPUT_COMMAND
+      || process.env.CLAUDE_TOOL_INPUT_FILE_PATH,
+  );
+}
+
+function resolvePreToolInput(options: HookOptions, stdinText: string, format: HookFormat): ResolvedPreTool {
+  const parsed =
     format === 'agy'
       ? parseAgyPayload(stdinText)
       : format === 'muse'
         ? parseMusePayload(stdinText)
         : parseClaudePayload(stdinText);
+
+  if (!parsed.ok) {
+    // CLI/env overrides (tests and explicit flags) may supply the tool context
+    // without a host stdin payload; otherwise fail closed.
+    if (!hasCliPreToolOverrides(options)) {
+      return { ok: false, reason: parsed.reason };
+    }
+  }
+
+  const fromStdin = parsed.ok ? parsed.input : {};
   const filePath =
     options.filePath ??
     (process.env.CLAUDE_TOOL_INPUT_FILE_PATH || undefined) ??
     fromStdin.filePath;
   return {
-    command:
-      options.command ??
-      (process.env.CLAUDE_TOOL_INPUT_COMMAND || undefined) ??
-      fromStdin.command,
-    filePath,
-    toolName: fromStdin.toolName,
-    scopeFiles: options.scopeFiles,
-    dispatchMode: options.dispatchMode,
-    leaf: options.leaf,
-    exists:
-      options.dispatchMode && filePath
-        ? existsSync(resolve(options.projectRoot, filePath))
-        : undefined,
+    ok: true,
+    input: {
+      command:
+        options.command ??
+        (process.env.CLAUDE_TOOL_INPUT_COMMAND || undefined) ??
+        fromStdin.command,
+      filePath,
+      toolName: fromStdin.toolName,
+      scopeFiles: options.scopeFiles,
+      dispatchMode: options.dispatchMode,
+      leaf: options.leaf,
+      exists:
+        options.dispatchMode && filePath
+          ? existsSync(resolve(options.projectRoot, filePath))
+          : undefined,
+    },
   };
 }
 
@@ -147,7 +176,8 @@ export async function hookCommand(
   }
 
   if (event === 'post-tool') {
-    const filePath = resolvePreToolInput(options, stdinText, format).filePath;
+    const resolved = resolvePreToolInput(options, stdinText, format);
+    const filePath = resolved.ok ? resolved.input.filePath : undefined;
     formatWrittenFile(filePath, options.projectRoot);
     const envelope = parseClaudeHookEnvelope(stdinText);
     await emitPostToolTelemetry(options.projectRoot, envelope);
@@ -157,8 +187,10 @@ export async function hookCommand(
     return { code: 0, data: { success: true, command: 'hook post-tool' } };
   }
 
-  const input = resolvePreToolInput(options, stdinText, format);
-  const verdict = evaluatePreTool(input);
+  const resolved = resolvePreToolInput(options, stdinText, format);
+  const verdict = resolved.ok
+    ? evaluatePreTool(resolved.input)
+    : { action: 'deny' as const, message: resolved.reason, exitCode: 2 };
 
   if (format === 'agy') {
     process.stdout.write(`${formatHookOutput(verdict, 'agy')}\n`);

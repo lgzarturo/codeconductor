@@ -102,6 +102,35 @@ targets:
     warnings:
       - "Cursor preset currently represents policy intent through agent files; runtime enforcement depends on Cursor
         capabilities."
+  agy:
+    unsupportedRules:
+      - "denyRead"
+      - "denyWrite"
+      - "runtime.network"
+      - "runtime.user"
+      - "runtime.cleanEnv"
+    warnings:
+      - "Antigravity (agy) enforces PreToolUse via hooks when installed; filesystem and network isolation are partial."
+      - "Policy conformance is Partial until native sandbox capabilities are declared."
+  pi:
+    unsupportedRules:
+      - "denyRead"
+      - "denyWrite"
+      - "runtime.network"
+      - "runtime.user"
+      - "runtime.cleanEnv"
+      - "commands"
+    warnings:
+      - "Pi preset currently represents policy intent through agent files; runtime enforcement depends on Pi capabilities."
+  muse:
+    unsupportedRules:
+      - "denyRead"
+      - "denyWrite"
+      - "runtime.network"
+      - "runtime.user"
+      - "runtime.cleanEnv"
+    warnings:
+      - "Muse speaks the Claude-compatible hook protocol for PreToolUse; filesystem and network boundaries remain host-dependent."
 
 commands:
   allow:

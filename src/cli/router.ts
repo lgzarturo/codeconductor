@@ -373,6 +373,7 @@ export async function routeCommand(
       return doctorCommand({
         projectRoot,
         output: flags.output,
+        staticMode: options.static === true || options.static === 'true',
       } as DoctorOptions);
     }
 

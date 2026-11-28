@@ -313,10 +313,12 @@ describe('Hook runner — extra policy and agy format', () => {
   });
 
   test('agy payload maps CommandLine', () => {
-    const input = parseAgyPayload(
+    const parsed = parseAgyPayload(
       JSON.stringify({ toolName: 'run_command', arguments: { CommandLine: 'git push' } })
     );
-    expect(evaluatePreTool(input).action).toBe('deny');
-    expect(JSON.parse(formatHookOutput(evaluatePreTool(input), 'agy')).decision).toBe('deny');
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(evaluatePreTool(parsed.input).action).toBe('deny');
+    expect(JSON.parse(formatHookOutput(evaluatePreTool(parsed.input), 'agy')).decision).toBe('deny');
   });
 });

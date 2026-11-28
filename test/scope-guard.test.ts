@@ -118,4 +118,70 @@ describe('scope-guard', () => {
     expect(result.violations[0]?.file).toBe('(git)');
     expect(result.violations[0]?.reason).toContain("Could not read git diff against 'HEAD~1'");
   });
+
+  test('Truly untracked file outside scope is a violation', async () => {
+    await writeFile(join(testDir, 'leaked-untracked.ts'), 'secret');
+
+    const result = await checkScopeCompliance({
+      cwd: testDir,
+      allowedFiles: ['file1.ts'],
+      baseBranch: 'HEAD',
+    });
+
+    expect(result.passed).toBe(false);
+    expect(result.violations.some((v) => v.file === 'leaked-untracked.ts')).toBe(true);
+
+    await rm(join(testDir, 'leaked-untracked.ts'), { force: true });
+  });
+
+  test('Harness runtime paths under .codeconductor are not scope violations', async () => {
+    await mkdir(join(testDir, '.codeconductor'), { recursive: true });
+    await writeFile(join(testDir, '.codeconductor', 'history.jsonl'), '{}\n');
+
+    const result = await checkScopeCompliance({
+      cwd: testDir,
+      allowedFiles: ['file1.ts'],
+      baseBranch: 'HEAD',
+    });
+
+    expect(result.passed).toBe(true);
+    expect(result.checkedFiles.some((f) => f.startsWith('.codeconductor/'))).toBe(false);
+
+    await rm(join(testDir, '.codeconductor'), { recursive: true, force: true });
+  });
+
+  test('Allowlist glob **/*.ts matches nested files and escapes regex metacharacters', async () => {
+    await mkdir(join(testDir, 'nested'), { recursive: true });
+    await writeFile(join(testDir, 'nested', 'extra.ts'), 'new');
+
+    const withGlob = await checkScopeCompliance({
+      cwd: testDir,
+      allowedFiles: ['file1.ts'],
+      allowlist: ['**/*.ts'],
+      baseBranch: 'HEAD',
+    });
+    expect(withGlob.passed).toBe(true);
+
+    await rm(join(testDir, 'nested'), { recursive: true, force: true });
+    await writeFile(join(testDir, 'plus+file.ts'), 'new');
+
+    const withLiteralPlus = await checkScopeCompliance({
+      cwd: testDir,
+      allowedFiles: ['file1.ts'],
+      allowlist: ['plus+file.ts'],
+      baseBranch: 'HEAD',
+    });
+    expect(withLiteralPlus.passed).toBe(true);
+
+    const metacharDoesNotWildcard = await checkScopeCompliance({
+      cwd: testDir,
+      allowedFiles: ['file1.ts'],
+      allowlist: ['plus.file.ts'],
+      baseBranch: 'HEAD',
+    });
+    expect(metacharDoesNotWildcard.passed).toBe(false);
+    expect(metacharDoesNotWildcard.violations.some((v) => v.file === 'plus+file.ts')).toBe(true);
+
+    await rm(join(testDir, 'plus+file.ts'), { force: true });
+  });
 });

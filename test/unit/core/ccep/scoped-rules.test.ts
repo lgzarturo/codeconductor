@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import {
@@ -201,6 +201,19 @@ rules:
 
   test('sin directorio de reglas no hay fuentes ni diagnósticos', async () => {
     expect(await loadRuleSources(root)).toEqual({ sources: [], diagnostics: [] });
+  });
+
+  test('un directorio de reglas ilegible produce diagnóstico bloqueante (no silencio)', async () => {
+    const rulesDir = join(root, '.codeconductor/rules');
+    await mkdir(rulesDir, { recursive: true });
+    await chmod(rulesDir, 0o000);
+    try {
+      const { sources, diagnostics } = await loadRuleSources(root);
+      expect(sources).toEqual([]);
+      expect(diagnostics).toMatchObject([{ code: 'rule_dir_unreadable', severity: 'blocking' }]);
+    } finally {
+      await chmod(rulesDir, 0o755);
+    }
   });
 
   test('carga reglas válidas como clase repository con hash del contenido', async () => {

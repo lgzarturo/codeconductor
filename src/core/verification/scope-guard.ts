@@ -1,8 +1,8 @@
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import { detectChanges, type ChangedSymbol } from '../impact/detect-changes';
-
-const execFileAsync = promisify(execFile);
+import {
+  listChangedAndWorkingTreePaths,
+  matchAllowlistPattern,
+} from './git-working-tree';
 
 export interface ScopeViolation {
   file: string;
@@ -33,49 +33,23 @@ export interface ScopeGuardOptions {
   allowedSymbols?: Record<string, string[]>;
 }
 
-type ChangedFilesResult =
-  | { readonly ok: true; readonly files: string[] }
-  | { readonly ok: false; readonly error: string };
+/** Harness-owned runtime paths are not part of the implementer's deliverable scope. */
+const HARNESS_RUNTIME_PREFIXES = ['.codeconductor/', '.harness/'] as const;
 
-async function getChangedFiles(cwd: string, base: string): Promise<ChangedFilesResult> {
-  try {
-    const { stdout } = await execFileAsync('git', ['diff', '--name-only', base], { cwd, encoding: 'utf8' });
-    return { ok: true, files: stdout.trim().split('\n').filter(Boolean) };
-  } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
-    return {
-      ok: false,
-      error: `Could not read git diff against '${base}': ${message}. Scope guard fails closed when evidence is missing.`,
-    };
-  }
+function isHarnessRuntimePath(file: string): boolean {
+  const normalized = file.split('\\').join('/');
+  return HARNESS_RUNTIME_PREFIXES.some(
+    (prefix) => normalized === prefix.slice(0, -1) || normalized.startsWith(prefix),
+  );
 }
 
 function isAllowlisted(file: string, allowlist: string[]): boolean {
-  for (const pattern of allowlist) {
-    if (pattern.includes('*')) {
-      // Basic glob matching: * matches anything except /, ** matches anything
-      let regexStr = pattern;
-      if (pattern.includes('**')) {
-        regexStr = regexStr.replace(/\*\*/g, '.*');
-      } else {
-        regexStr = regexStr.replace(/\*/g, '[^/]*');
-      }
-      regexStr = '^' + regexStr + '$';
-      if (new RegExp(regexStr).test(file)) {
-        return true;
-      }
-    } else {
-      if (file === pattern) {
-        return true;
-      }
-    }
-  }
-  return false;
+  return allowlist.some((pattern) => matchAllowlistPattern(file, pattern));
 }
 
 export async function checkScopeCompliance(options: ScopeGuardOptions): Promise<ScopeGuardResult> {
   const { cwd, allowedFiles, allowlist = [], baseBranch = 'HEAD~1', allowedSymbols = {} } = options;
-  const changed = await getChangedFiles(cwd, baseBranch);
+  const changed = await listChangedAndWorkingTreePaths(cwd, baseBranch);
   if (!changed.ok) {
     return {
       passed: false,
@@ -87,7 +61,7 @@ export async function checkScopeCompliance(options: ScopeGuardOptions): Promise<
     };
   }
 
-  const changedFiles = changed.files;
+  const changedFiles = changed.files.filter((file) => !isHarnessRuntimePath(file));
   const impact = await detectChanges(cwd, baseBranch);
   const touchedByFile = new Map<string, string[]>();
   for (const symbol of impact.affectedSymbols) {

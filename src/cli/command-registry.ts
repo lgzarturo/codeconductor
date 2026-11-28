@@ -25,7 +25,16 @@ export const COMMANDS: readonly CommandDefinition[] = [
   ] },
   { name: 'version', group: 'maintenance', summary: 'Show CLI and project harness versions.', usage: ['cc-codeconductor version [--json]'] },
   { name: 'status', group: 'maintenance', summary: 'Show installed harness state.', usage: ['cc-codeconductor status [--json]'] },
-  { name: 'doctor', group: 'maintenance', summary: 'Diagnose the installation.', usage: ['cc-codeconductor doctor'] },
+  {
+    name: 'doctor',
+    group: 'maintenance',
+    summary: 'Diagnose the installation.',
+    usage: [
+      'cc-codeconductor doctor',
+      'cc-codeconductor doctor --static',
+      'cc-codeconductor doctor --static --output json',
+    ],
+  },
   { name: 'update', group: 'maintenance', summary: 'Safely reconcile managed harness files.', usage: ['cc-codeconductor update [--dry-run] [--force]'] },
   { name: 'migrate', group: 'maintenance', summary: 'Apply compatibility migrations.', usage: ['cc-codeconductor migrate [--dry-run]'] },
   { name: 'docs', group: 'maintenance', summary: 'Read bundled command documentation.', usage: ['cc-codeconductor docs [command]'] },

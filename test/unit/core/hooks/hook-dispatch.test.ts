@@ -129,6 +129,19 @@ describe('core/hooks/hook-runner dispatch modes', () => {
     expect(result.data).toMatchObject({ success: false });
   });
 
+  test('hook pre-tool denies malformed stdin without CLI overrides', async () => {
+    for (const stdinText of ['', '{', 'null', '[]']) {
+      const result = await hookCommand({
+        event: 'pre-tool',
+        projectRoot: ROOT,
+        output: 'json',
+        stdinText,
+      });
+      expect(result.code).toBe(2);
+      expect(result.data).toMatchObject({ success: false });
+    }
+  });
+
   test('router --dispatch flag wires modes into hook pre-tool', async () => {
     const denied = await routeCommand(
       parseArgs(['hook', 'pre-tool', '--file', 'src/api/a.ts', '--dispatch', 'test-add']),

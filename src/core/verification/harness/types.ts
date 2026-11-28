@@ -41,14 +41,46 @@ export interface ImplementerStepResult {
   readonly challenge: ChallengeCertificate | null;
 }
 
+/**
+ * Deterministic gate outcome. A runner may not satisfy a gate by returning
+ * bare `true` — status and violations travel with the result.
+ */
+export type GateStatus = 'passed' | 'failed' | 'blocked' | 'not-applicable' | 'unverified';
+
+export interface GateResult {
+  readonly gateId: string;
+  readonly status: GateStatus;
+  readonly violations: readonly string[];
+  readonly detail?: string;
+  readonly evidenceRefs?: readonly string[];
+}
+
+export function gateSatisfied(result: GateResult): boolean {
+  return result.status === 'passed' || result.status === 'not-applicable';
+}
+
+export function gateResult(
+  gateId: string,
+  passed: boolean,
+  violations: readonly string[] = [],
+  detail?: string,
+): GateResult {
+  return {
+    gateId,
+    status: passed ? 'passed' : 'failed',
+    violations: passed ? [] : (violations.length > 0 ? violations : [`${gateId} failed`]),
+    detail,
+  };
+}
+
 /** Injected by the caller; the state machine never talks to an LLM itself. */
 export interface HarnessRunner {
   generateStubs(ctx: TaskContext): Promise<string[]>;
   authorTests(ctx: TaskContext, fixInstruction: string | null): Promise<void>;
-  verifyRedPhase(ctx: TaskContext): Promise<boolean>;
+  verifyRedPhase(ctx: TaskContext): Promise<GateResult>;
   runImplementerStep(ctx: TaskContext): Promise<ImplementerStepResult>;
   invokeBlindArbiter(cert: ChallengeCertificate, taskCardPath: string): Promise<ArbiterVerdict>;
-  runDiffMutation(ctx: TaskContext): Promise<boolean>;
+  runDiffMutation(ctx: TaskContext): Promise<GateResult>;
 }
 
 export interface Violation {

@@ -154,4 +154,19 @@ describe('findCollisions', () => {
     await write('src/stub.ts', 'export class X {}\n');
     expect(await findCollisions(join(dir, 'missing.json'), [join(dir, 'src/stub.ts')], dir)).toEqual([]);
   });
+
+  test('fails closed when SYMBOL_MAP.json has an invalid shape', async () => {
+    await writeFile(mapPath, JSON.stringify({ baseCommitSha: 'abc', modules: 'nope' }), 'utf-8');
+    await write('src/stub.ts', 'export class X {}\n');
+    await expect(findCollisions(mapPath, [join(dir, 'src/stub.ts')], dir)).rejects.toThrow(/invalid/i);
+  });
+
+  test('discards an invalid cache and rebuilds the map', async () => {
+    await writeFile(mapPath, JSON.stringify({ broken: true }), 'utf-8');
+    await write('src/a.ts', 'export class A {}\n');
+    const { map, parsed, reused } = await buildSymbolMap(dir, mapPath);
+    expect(parsed).toBe(1);
+    expect(reused).toBe(0);
+    expect(map.modules['src/a.ts']?.symbols[0]?.name).toBe('A');
+  });
 });

@@ -8,13 +8,16 @@ import {
   GatekeeperError,
   SealViolationError,
   SymbolCollisionError,
+  gateResult,
   type ArbiterVerdict,
   type ChallengeCertificate,
+  type GateResult,
   type HarnessRunner,
   type TaskContext,
 } from '../../../../src/core/verification/harness/types';
 import { freezeTestSuite } from '../../../../src/core/verification/test-freeze';
 import { buildSymbolMap } from '../../../../src/core/verification/harness/symbol-map';
+import { loadHarnessTransitionState } from '../../../../src/core/verification/harness/transition-store';
 
 const TEST_SRC = (n: number) =>
   `import { expect, test } from 'bun:test';\ntest('t', () => {\n${Array.from({ length: n }, (_, i) => `  expect(${i}).toBe(${i});`).join('\n')}\n});\n`;
@@ -84,7 +87,7 @@ function fakeRunner(script: Script): HarnessRunner & { arbiterArgs: unknown[][];
     },
     async verifyRedPhase() {
       calls.push('red');
-      return script.red ?? true;
+      return gateResult('verify-red', script.red ?? true);
     },
     async runImplementerStep() {
       calls.push('impl');
@@ -99,7 +102,7 @@ function fakeRunner(script: Script): HarnessRunner & { arbiterArgs: unknown[][];
     },
     async runDiffMutation() {
       calls.push('mutation');
-      return mutation.shift() ?? true;
+      return gateResult('diff-mutation', mutation.shift() ?? true);
     },
   };
 }
@@ -109,6 +112,10 @@ describe('HarnessStateMachine — happy path and gates', () => {
     const state = await new HarnessStateMachine(ctx, fakeRunner({})).execute();
     expect(state).toBe('COMPLETED');
     expect(calls).toEqual(['stubs', 'author', 'red', 'impl', 'mutation']);
+    const persisted = await loadHarnessTransitionState(root);
+    expect(persisted?.state).toBe('COMPLETED');
+    expect(persisted?.redVerified).toBe(true);
+    expect(persisted?.transitions.some((t) => t.to === 'COMPLETED')).toBe(true);
   });
 
   test('surviving mutants send the work back to the implementer', async () => {
@@ -329,9 +336,9 @@ describe('HarnessStateMachine — seal hardening', () => {
 
   test('sealed files edited during the mutation gate are caught before COMPLETED', async () => {
     const runner = fakeRunner({});
-    runner.runDiffMutation = async () => {
+    runner.runDiffMutation = async (): Promise<GateResult> => {
       await writeFile(join(root, 'tests/a.test.ts'), TEST_SRC(1));
-      return true;
+      return gateResult('diff-mutation', true);
     };
     await expect(new HarnessStateMachine(ctx, runner).execute()).rejects.toBeInstanceOf(SealViolationError);
   });

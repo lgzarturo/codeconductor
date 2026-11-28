@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { spawnSync } from 'node:child_process';
-import { ROOT_PRESETS_DIR } from '../core/presets/package-paths';
+import { PACKAGE_ROOT, ROOT_PRESETS_DIR } from '../core/presets/package-paths';
 import { configExists, loadConfig } from '../core/config/config-loader';
 import { loadTargetSecurityCompatibility } from '../core/security/target-compatibility';
 import {
@@ -473,42 +473,45 @@ export async function doctorCommand(
         : `Specialized schemas too weak: ${weakSchemas.join('; ')}`,
     });
 
-    // Static harness: workflow outputSchema references must exist in the registry.
-    const { readdir, readFile: readUtf } = await import('node:fs/promises');
-    const { parse: parseYaml } = await import('yaml');
-    const workflowDirs = [
-      join(projectRoot, 'src', 'core', 'ccep', 'workflows'),
-      join(projectRoot, '.codeconductor', 'workflows'),
-    ];
-    const unknownSchemas: string[] = [];
-    for (const dir of workflowDirs) {
-      let entries: string[] = [];
-      try {
-        entries = (await readdir(dir)).filter((f) => /\.ya?ml$/.test(f));
-      } catch {
-        continue;
-      }
-      for (const file of entries) {
-        const raw = await readUtf(join(dir, file), 'utf-8');
-        const doc = parseYaml(raw) as { phases?: Array<{ outputSchema?: string }> };
-        for (const phase of doc.phases ?? []) {
-          const schema = phase.outputSchema;
-          if (schema && !isRegisteredOutputSchema(schema)) {
-            unknownSchemas.push(`${file}: ${schema}`);
-          }
-        }
-      }
+    // Static harness: referential integrity across workflow profiles.
+    const { checkWorkflowReferentialIntegrity } = await import('../core/ccep/workflow-referential');
+    // Prefer package workflows when doctor runs against a consumer project root.
+    const referentialRoot = join(PACKAGE_ROOT, 'src', 'core', 'ccep', 'workflows');
+    const { existsSync } = await import('node:fs');
+    const referential = await checkWorkflowReferentialIntegrity(
+      existsSync(referentialRoot) ? PACKAGE_ROOT : projectRoot,
+    );
+    const referentialFails = referential.findings.filter((f) => f.severity === 'fail');
+    const referentialWarns = referential.findings.filter((f) => f.severity === 'warn');
+    if (referentialFails.length > 0) {
+      checks.push({
+        name: 'workflow-referential',
+        status: 'fail',
+        message: `Workflow referential errors: ${referentialFails.map((f) => f.message).join('; ')}`,
+      });
+    } else if (referentialWarns.length > 0) {
+      checks.push({
+        name: 'workflow-referential',
+        status: 'warn',
+        message: `Workflow referential warnings: ${referentialWarns.map((f) => f.message).join('; ')}`,
+      });
+    } else {
+      checks.push({
+        name: 'workflow-referential',
+        status: 'pass',
+        message: `Workflow referential integrity ok (${referential.profilesChecked} profiles)`,
+      });
     }
+    // Keep the specialized-schema name for compatibility with prior doctor JSON consumers.
     checks.push({
       name: 'workflow-output-schemas',
-      status: unknownSchemas.length === 0 ? 'pass' : 'fail',
-      message: unknownSchemas.length === 0
-        ? 'All workflow outputSchema references are registered'
-        : `Unknown outputSchema references: ${unknownSchemas.join('; ')}`,
+      status: referentialFails.some((f) => f.code === 'unknown_output_schema') ? 'fail' : 'pass',
+      message: referentialFails.some((f) => f.code === 'unknown_output_schema')
+        ? `Unknown outputSchema references: ${referentialFails.filter((f) => f.code === 'unknown_output_schema').map((f) => f.message).join('; ')}`
+        : 'All workflow outputSchema references are registered',
     });
 
     // Product OS artifacts
-    const { existsSync } = await import('node:fs');
     const { ProductGraphSchema } = await import('../validation/schemas');
     const graphPath = join(projectRoot, '.codeconductor', 'product-graph.json');
     if (existsSync(graphPath)) {

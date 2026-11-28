@@ -6,10 +6,12 @@ import { FREEZE_LOCK_FILE, freezeTestSuite, verifyTestFreeze } from '../test-fre
 import { checkProductionFiles, checkTestFiles, countAssertions } from './gatekeeper';
 import { runGit } from './git';
 import { findCollisions } from './symbol-map';
+import { persistHarnessTransition } from './transition-store';
 import {
   GatekeeperError,
   SealViolationError,
   SymbolCollisionError,
+  gateSatisfied,
   type ChallengeCertificate,
   type HarnessRunner,
   type HarnessState,
@@ -59,9 +61,28 @@ export class HarnessStateMachine {
 
   async execute(): Promise<HarnessState> {
     while (!TERMINAL.includes(this.state)) {
+      const from = this.state;
       this.state = await this.step();
+      await this.persistTransition(from, this.state);
     }
     return this.state;
+  }
+
+  private async persistTransition(from: HarnessState, to: HarnessState): Promise<void> {
+    const lockDir = this.lockDir || join(this.ctx.worktreeRoot, LOCK_DIR);
+    await mkdir(lockDir, { recursive: true });
+    await persistHarnessTransition({
+      worktreeRoot: this.ctx.worktreeRoot,
+      lockDir: relative(this.ctx.worktreeRoot, lockDir) || LOCK_DIR,
+      from,
+      to,
+      attempts: this.attempts,
+      challengesUsed: this.challengesUsed,
+      redVerified: this.redVerified,
+      sealHash: this.sealHash,
+      sealedPaths: this.sealedPaths,
+      assertionBaseline: this.assertionBaseline,
+    });
   }
 
   private step(): Promise<HarnessState> {
@@ -170,7 +191,8 @@ export class HarnessStateMachine {
   private async handleSeal(): Promise<HarnessState> {
     // A re-sealed fix cannot be RED again: the implementation already exists.
     if (!this.redVerified) {
-      if (!(await this.runner.verifyRedPhase(this.ctx))) return 'ABORTED';
+      const red = await this.runner.verifyRedPhase(this.ctx);
+      if (!gateSatisfied(red)) return 'ABORTED';
       this.redVerified = true;
     }
     await this.resolveSealedPaths();
@@ -237,8 +259,8 @@ export class HarnessStateMachine {
 
   private async handleMutation(): Promise<HarnessState> {
     await this.verifySeal();
-    const killed = await this.runner.runDiffMutation(this.ctx);
+    const mutation = await this.runner.runDiffMutation(this.ctx);
     await this.verifySeal();
-    return killed ? 'COMPLETED' : 'IMPLEMENTATION_LOOP';
+    return gateSatisfied(mutation) ? 'COMPLETED' : 'IMPLEMENTATION_LOOP';
   }
 }

@@ -35,6 +35,23 @@ problemas son el contexto original, no una afirmación de que sigan vigentes.
   - [ ] Un payload JSON válido enviado por stdin sigue procesándose igual.
 
 ## Archive
+### BC-035 | P2 Semantic Verification slice (StackVerifier + regression gatekeeper)
+
+- Priority: P2
+- Status: DONE
+- Type: feature
+- Depends on: none
+- Description: Contrato StackVerifier con adaptador TypeScript (tsc → GateResult, unverified si falta la herramienta); gatekeeper en modo regression vs absolute; findCollisionsSemantic con TypeChecker selectivo; mutation gate filtrable por changedLines; doctor --static reporta stack-verifiers.
+- Scope: src/core/verification/{stack-verifier,stack-verifiers/typescript,mutation-runner}.ts, src/core/verification/harness/{gatekeeper,symbol-map,state-machine}.ts, src/commands/doctor.command.ts y tests asociados
+- Out of scope: policy compiler; más adaptadores de stack; rewrite completo de SYMBOL_MAP con Program; benchmarks de contexto (Fase 6)
+- Progress: 100%
+- Reviewer: reviewer
+- Acceptance:
+  - [x] verifyWithStack('typescript') → unverified sin tsc local; passed/failed con tsc
+  - [x] checkProductionFiles mode=regression: mejora 15→12 pasa; empeora falla; función nueva over-limit falla
+  - [x] findCollisionsSemantic detecta re-export nombrado que el extractor sintáctico omite
+  - [x] runMutationGate con changedLines limita mutantes al diff
+
 ### BC-034 | P1 Execution Kernel + referential static validation
 
 - Priority: P1

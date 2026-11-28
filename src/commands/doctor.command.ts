@@ -511,6 +511,18 @@ export async function doctorCommand(
         : 'All workflow outputSchema references are registered',
     });
 
+    // Stack verifiers: detect native adapters (missing tools stay unverified at verify-time).
+    const { detectStackVerifiers } = await import('../core/verification/stack-verifier');
+    const detectedStacks = await detectStackVerifiers(projectRoot);
+    checks.push({
+      name: 'stack-verifiers',
+      status: 'pass',
+      message:
+        detectedStacks.length > 0
+          ? `Detected stack verifiers: ${detectedStacks.map((v) => `${v.id}[${v.capabilities.join(',')}]`).join(', ')}`
+          : 'No stack verifiers detected for this project root',
+    });
+
     // Product OS artifacts
     const { ProductGraphSchema } = await import('../validation/schemas');
     const graphPath = join(projectRoot, '.codeconductor', 'product-graph.json');

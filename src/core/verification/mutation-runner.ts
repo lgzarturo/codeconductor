@@ -55,6 +55,11 @@ export interface MutationGateOptions {
   readonly allowCompileCheck?: boolean;
   readonly timeoutMs?: number;
   readonly maxMutants?: number;
+  /**
+   * When set, only mutants on these 1-based lines are evaluated (selective /
+   * diff-scoped mutation). An empty list evaluates zero mutants and PASSes.
+   */
+  readonly changedLines?: readonly number[];
 }
 
 const DEFAULT_TIMEOUT_MS = 60_000;
@@ -139,10 +144,17 @@ function isMasked(spans: readonly MaskedSpan[], index: number, length: number): 
   return spans.some((span) => index < span.end && index + length > span.start);
 }
 
-export function generateMutants(source: string, file: string): Mutant[] {
+export function generateMutants(
+  source: string,
+  file: string,
+  options: { readonly lines?: ReadonlySet<number> } = {},
+): Mutant[] {
   const mutants: Mutant[] = [];
   const lines = source.split('\n');
+  const only = options.lines;
   for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+    const lineNo = lineIdx + 1;
+    if (only !== undefined && !only.has(lineNo)) continue;
     const line = lines[lineIdx]!;
     const spans = maskedSpans(line);
     let col = 0;
@@ -158,11 +170,11 @@ export function generateMutants(source: string, file: string): Mutant[] {
             (!isWordChar(line[col - 1]) && !isWordChar(line[col + candidate.from.length]))),
       );
       if (rule) {
-        const id = `MUT_${String(mutants.length).padStart(3, '0')}_L${lineIdx + 1}`;
+        const id = `MUT_${String(mutants.length).padStart(3, '0')}_L${lineNo}`;
         mutants.push({
           id,
           file,
-          line: lineIdx + 1,
+          line: lineNo,
           column: col,
           originalOp: rule.from,
           mutatedOp: rule.to,
@@ -174,6 +186,16 @@ export function generateMutants(source: string, file: string): Mutant[] {
     }
   }
   return mutants;
+}
+
+/** Keep mutants whose line is in `changedLines` (1-based). */
+export function filterMutantsByLines(
+  mutants: readonly Mutant[],
+  changedLines: readonly number[],
+): Mutant[] {
+  if (changedLines.length === 0) return [];
+  const set = new Set(changedLines);
+  return mutants.filter((m) => set.has(m.line));
 }
 
 function applyMutant(source: string, mutant: Mutant): string {
@@ -245,9 +267,13 @@ export async function runMutationGate(
   }
 
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const allMutants = generateMutants(originalSource, options.target);
+  const discovered = generateMutants(originalSource, options.target);
+  const scoped =
+    options.changedLines !== undefined
+      ? filterMutantsByLines(discovered, options.changedLines)
+      : discovered;
   const mutants =
-    options.maxMutants !== undefined ? allMutants.slice(0, Math.max(0, options.maxMutants)) : allMutants;
+    options.maxMutants !== undefined ? scoped.slice(0, Math.max(0, options.maxMutants)) : scoped;
 
   const preflight = await runCompileCheck({ command: options.testCommand, cwd: projectRoot, timeoutMs });
   if (!preflight.success) {
@@ -280,7 +306,7 @@ export async function runMutationGate(
       };
       return ok({
         status: 'HANDS_OFF',
-        totalMutants: allMutants.length,
+        totalMutants: scoped.length,
         evaluated: killed + 1,
         killed,
         timeouts,
@@ -295,7 +321,7 @@ export async function runMutationGate(
   const evaluated = mutants.length;
   return ok({
     status: 'PASS',
-    totalMutants: allMutants.length,
+    totalMutants: scoped.length,
     evaluated,
     killed,
     timeouts,

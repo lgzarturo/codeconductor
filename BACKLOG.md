@@ -34,23 +34,24 @@ problemas son el contexto original, no una afirmación de que sigan vigentes.
   - [ ] Los tests de hook-dispatch pasan con stdin heredado como pipe abierto, como TTY y como /dev/null.
   - [ ] Un payload JSON válido enviado por stdin sigue procesándose igual.
 
-### BC-030 | SYMBOL_MAP.json validado con esquema al leerlo
+## Archive
+### BC-034 | P1 Execution Kernel + referential static validation
 
-- Priority: P3
-- Status: TODO
-- Type: tech-debt
+- Priority: P1
+- Status: DONE
+- Type: feature
 - Depends on: none
-- Description: readExistingMap() en src/core/verification/harness/symbol-map.ts hace JSON.parse(...) as SymbolMap sin validar. Un SYMBOL_MAP.json manipulado o corrupto puede ocultar colisiones en findCollisions o contaminar la caché incremental de buildSymbolMap. Quedó diferido en la revisión del council del arnés (sugerencia G2 del security-reviewer).
-- Scope: src/core/verification/harness/symbol-map.ts con un esquema zod (ya es dependencia) y sus tests en test/unit/core/verification/harness-symbol-map.test.ts.
-- Out of scope: cambiar la forma de SymbolMap, la regla de colisiones o añadir firmas criptográficas al mapa.
-- Progress: 0%
+- Description: GateResult sustituye booleanos de verifyRedPhase/runDiffMutation; la state-machine persiste transiciones en .harness/state.json; doctor --static valida integridad referencial de workflows; SYMBOL_MAP.json se valida con Zod (BC-030).
+- Scope: src/core/verification/harness/{types,state-machine,transition-store,symbol-map}.ts, src/core/ccep/workflow-referential.ts, src/commands/doctor.command.ts y tests asociados
+- Out of scope: policy compiler; resume CLI; análisis semántico ts.Program
+- Progress: 100%
 - Reviewer: reviewer
 - Acceptance:
-  - [ ] findCollisions falla con un error claro cuando el mapa tiene una forma inválida, en vez de devolver una lista vacía.
-  - [ ] buildSymbolMap descarta una caché inválida y reconstruye el mapa completo.
-  - [ ] Un mapa válido generado por buildSymbolMap sigue leyéndose sin cambios; los tests existentes pasan.
+  - [x] HarnessRunner gates devuelven GateResult y la máquina no avanza con status failed
+  - [x] Tras execute() existe .harness/state.json con historial de transiciones
+  - [x] doctor --static reporta workflow-referential pass en este repo
+  - [x] findCollisions falla cerrado ante SYMBOL_MAP inválido
 
-## Archive
 ### BC-033 | CI automático + Static Harness Validation slice
 
 - Priority: P0

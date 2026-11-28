@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import ts from 'typescript';
+import { z } from 'zod';
 import { writeContainedFile } from '../../filesystem/path-containment';
 import { runGit } from './git';
 import type { Collision } from './types';
@@ -9,22 +10,26 @@ import type { Collision } from './types';
 const IGNORED_DIRS = new Set(['node_modules', '.git', 'dist', 'test', 'tests', '.worktrees']);
 const MIN_FUNCTION_NAME_LENGTH = 13;
 
-export interface SymbolEntry {
-  readonly name: string;
-  readonly kind: 'class' | 'function' | 'interface' | 'type' | 'enum' | 'const';
-  readonly signature: string;
-  readonly members?: readonly string[];
-}
+const SymbolEntrySchema = z.object({
+  name: z.string().min(1),
+  kind: z.enum(['class', 'function', 'interface', 'type', 'enum', 'const']),
+  signature: z.string(),
+  members: z.array(z.string()).optional(),
+});
 
-export interface ModuleContract {
-  readonly sha256: string;
-  readonly symbols: readonly SymbolEntry[];
-}
+const ModuleContractSchema = z.object({
+  sha256: z.string().min(1),
+  symbols: z.array(SymbolEntrySchema),
+});
 
-export interface SymbolMap {
-  readonly baseCommitSha: string;
-  readonly modules: Record<string, ModuleContract>;
-}
+export const SymbolMapSchema = z.object({
+  baseCommitSha: z.string().min(1),
+  modules: z.record(z.string(), ModuleContractSchema),
+});
+
+export type SymbolEntry = z.infer<typeof SymbolEntrySchema>;
+export type ModuleContract = z.infer<typeof ModuleContractSchema>;
+export type SymbolMap = z.infer<typeof SymbolMapSchema>;
 
 export interface BuildResult {
   readonly map: SymbolMap;
@@ -117,7 +122,8 @@ async function listSourceFiles(root: string): Promise<string[]> {
 
 async function readExistingMap(path: string): Promise<SymbolMap | null> {
   try {
-    return JSON.parse(await readFile(path, 'utf-8')) as SymbolMap;
+    const parsed = SymbolMapSchema.safeParse(JSON.parse(await readFile(path, 'utf-8')));
+    return parsed.success ? parsed.data : null;
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === 'ENOENT') return null;
     throw e;
@@ -162,8 +168,18 @@ export async function findCollisions(
   stubFiles: readonly string[],
   root: string,
 ): Promise<Collision[]> {
-  const map = await readExistingMap(mapPath);
-  if (!map) return [];
+  let raw: unknown;
+  try {
+    raw = JSON.parse(await readFile(mapPath, 'utf-8'));
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return [];
+    throw e;
+  }
+  const parsed = SymbolMapSchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new Error(`SYMBOL_MAP.json is invalid: ${parsed.error.issues[0]?.message ?? 'schema mismatch'}`);
+  }
+  const map = parsed.data;
   const registry = new Map<string, string[]>();
   for (const [file, mod] of Object.entries(map.modules)) {
     for (const symbol of mod.symbols) {

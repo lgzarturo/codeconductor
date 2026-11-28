@@ -77,6 +77,7 @@ describe('doctor.command --static', () => {
     expect(data.checks.find((c) => c.name === 'security-matrix-coverage')?.status).toBe('pass');
     expect(data.checks.find((c) => c.name === 'specialized-output-schemas')?.status).toBe('pass');
     expect(data.checks.find((c) => c.name === 'workflow-output-schemas')?.status).toBe('pass');
+    expect(data.checks.find((c) => c.name === 'workflow-referential')?.status).toBe('pass');
   });
 });
 
